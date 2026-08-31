@@ -1,7 +1,7 @@
 """
-H3M File Parser for Heroes of Might and Magic III
+H3M File Parser and Writer for Heroes of Might and Magic III
 
-This module reads .h3m files (which are gzip-compressed) and extracts information
+This module reads and writes .h3m files (which are gzip-compressed) and extracts/stores information
 into a structured dictionary format based on the specification from h3m_description.english.txt.
 
 The H3M format uses LITTLE-ENDIAN for multi-byte integers.
@@ -394,3 +394,375 @@ def save_to_json(map_data, output_path):
         json.dump(json_data, f, indent=2, ensure_ascii=False)
     
     print("Map data saved to " + output_path)
+
+
+def write_h3m(map_data, output_path):
+    """
+    Write map data to a Heroes of Might and Magic III map file (.h3m).
+    
+    Args:
+        map_data: OrderedDict containing map information (from parse_h3m)
+        output_path: Path to save the .h3m file
+        
+    Returns:
+        None
+    """
+    # Inverse mappings
+    VERSION_INVERSE = {
+        'RoE (Restoration of Erathia)': b'\x0E\x00\x00\x00',
+        'AB (Armageddon Blade)': b'\x15\x00\x00\x00',
+        'SoD (Shadow of Death)': b'\x1C\x00\x00\x00'
+    }
+    
+    DIFFICULTY_INVERSE = {'Easy': 0, 'Normal': 1, 'Hard': 2, 'Expert': 3, 'Impossible': 4}
+    BEHAVIOR_INVERSE = {'Random': 0, 'Warrior': 1, 'Builder': 2, 'Explorer': 3}
+    
+    TERRAIN_INVERSE = {
+        'Dirt': 0x00, 'Sand': 0x01, 'Grass': 0x02, 'Snow': 0x03,
+        'Swamp': 0x04, 'Rough': 0x05, 'Subterranean': 0x06, 'Lava': 0x07,
+        'Water': 0x08, 'Rock': 0x09
+    }
+    
+    RIVER_INVERSE = {'None': 0x00, 'Clear': 0x01, 'Icy': 0x02, 'Muddy': 0x03, 'Lava': 0x04}
+    ROAD_INVERSE = {'None': 0x00, 'Dirt': 0x01, 'Gravel': 0x02, 'Cobblestone': 0x03}
+    
+    PLAYER_COLORS = ['Red', 'Blue', 'Tan', 'Green', 'Orange', 'Purple', 'Teal', 'Pink']
+    TOWN_TYPES = ['Castle', 'Rampart', 'Tower', 'Inferno', 'Necropolis', 
+                  'Dungeon', 'Stronghold', 'Fortress', 'Conflux']
+    
+    buffer = BytesIO()
+    
+    basic = map_data.get('Basic Parameters', {})
+    players_attr = map_data.get('Players Attributes', {}).get('Players', [])
+    
+    # === Basic Map Parameters ===
+    # Format identifier
+    version_str = basic.get('Version', 'RoE (Restoration of Erathia)')
+    format_id = VERSION_INVERSE.get(version_str, b'\x0E\x00\x00\x00')
+    buffer.write(format_id)
+    
+    # Has Hero flag
+    has_hero = 1 if basic.get('Has Hero', False) else 0
+    buffer.write(struct.pack('<B', has_hero))
+    
+    # Map size
+    map_size = basic.get('Map Size', 72)
+    buffer.write(struct.pack('<i', map_size))
+    
+    # Map level (0 = single, 1 = two-level)
+    has_underground = basic.get('Has Underground', False)
+    map_level = 1 if has_underground else 0
+    buffer.write(struct.pack('<B', map_level))
+    
+    # Map name
+    map_name = basic.get('Map Name', '')
+    name_bytes = map_name.encode('utf-8', errors='replace')
+    buffer.write(struct.pack('<i', len(name_bytes)))
+    buffer.write(name_bytes)
+    
+    # Map description
+    map_desc = basic.get('Map Description', '')
+    desc_bytes = map_desc.encode('utf-8', errors='replace')
+    buffer.write(struct.pack('<i', len(desc_bytes)))
+    buffer.write(desc_bytes)
+    
+    # Difficulty
+    difficulty_str = basic.get('Difficulty', 'Normal')
+    difficulty = DIFFICULTY_INVERSE.get(difficulty_str, 1)
+    buffer.write(struct.pack('<B', difficulty))
+    
+    # === Players' Attributes ===
+    for player in players_attr:
+        # Heroes' mastery level cap
+        mastery_cap = player.get('Heroes Mastery Level Cap', 0)
+        buffer.write(struct.pack('<B', mastery_cap))
+        
+        # Human playable
+        human = 1 if player.get('Human Playable', False) else 0
+        buffer.write(struct.pack('<B', human))
+        
+        # AI playable
+        ai = 1 if player.get('AI Playable', False) else 0
+        buffer.write(struct.pack('<B', ai))
+        
+        # Behavior
+        behavior_str = player.get('Behavior', 'Random')
+        behavior = BEHAVIOR_INVERSE.get(behavior_str, 0)
+        buffer.write(struct.pack('<B', behavior))
+        
+        # Has defined towns
+        has_towns = 1 if player.get('Has Defined Towns', False) else 0
+        buffer.write(struct.pack('<B', has_towns))
+        
+        # Owned towns bitfield
+        owned_towns = player.get('Owned Towns', {})
+        towns_bits = 0
+        for i, town in enumerate(TOWN_TYPES):
+            if owned_towns.get(town, False):
+                towns_bits |= (1 << i)
+        buffer.write(struct.pack('<H', towns_bits))
+        
+        # Owns random town
+        owns_random = 1 if player.get('Owns Random Town', False) else 0
+        buffer.write(struct.pack('<B', owns_random))
+        
+        # Main town
+        main_town = 1 if player.get('Main Town', False) else 0
+        buffer.write(struct.pack('<B', main_town))
+        
+        # Create hero
+        create_hero = player.get('Create Hero', False)
+        if create_hero:
+            buffer.write(struct.pack('<B', 1))
+            town_type = player.get('Town Type', 0xFF)
+            if town_type == 'Random':
+                town_type = 0xFF
+            buffer.write(struct.pack('<B', town_type))
+            castle_x = player.get('Castle X', 0)
+            castle_y = player.get('Castle Y', 0)
+            castle_z = player.get('Castle Z', 0)
+            buffer.write(struct.pack('<B', castle_x))
+            buffer.write(struct.pack('<B', castle_y))
+            buffer.write(struct.pack('<B', castle_z))
+        else:
+            buffer.write(struct.pack('<B', 0))
+    
+    # === Player's Available Heroes ===
+    player_heroes = map_data.get('Player Heroes', {}).get('Player Heroes', [])
+    for ph in player_heroes:
+        # Has random hero
+        has_random = 1 if ph.get('Has Random Hero', False) else 0
+        buffer.write(struct.pack('<B', has_random))
+        
+        # Hero type
+        hero_type = ph.get('Hero Type', 0xFF)
+        buffer.write(struct.pack('<B', hero_type))
+        
+        # If hero_type != 0xFF, write face, name, and garbage byte
+        if hero_type != 0xFF:
+            hero_face = ph.get('Hero Face', 0xFF)
+            buffer.write(struct.pack('<B', hero_face))
+            hero_name = ph.get('Hero Name', '')
+            name_bytes = hero_name.encode('utf-8', errors='replace')
+            buffer.write(struct.pack('<I', len(name_bytes)))
+            buffer.write(name_bytes)
+            buffer.write(struct.pack('<B', 0))  # garbage byte
+        
+        # Number of heroes
+        num_heroes = ph.get('Number of Heroes', 0)
+        buffer.write(struct.pack('<I', num_heroes))
+        
+        # Hero details (simplified - just write placeholder data)
+        for j in range(num_heroes):
+            buffer.write(struct.pack('<B', 0))  # hero identifier
+            buffer.write(struct.pack('<I', 0))  # name length (0 = default name)
+    
+    # === Special Victory Condition ===
+    vic = map_data.get('Victory Condition', {})
+    vic_type = vic.get('Type', 0xFF)
+    if vic_type == 'None':
+        buffer.write(struct.pack('<B', 0xFF))
+        buffer.write(b'\x00\x00\x00\x00\x00\x00')  # 6 bytes of details
+    else:
+        # For now, just write the type and zeros
+        if isinstance(vic_type, str) and vic_type.startswith('0x'):
+            vic_byte = int(vic_type, 16)
+        else:
+            vic_byte = 0
+        buffer.write(struct.pack('<B', vic_byte))
+        buffer.write(b'\x00\x00\x00\x00\x00\x00')  # 6 bytes of details
+    
+    # === Special Loss Condition ===
+    loss = map_data.get('Loss Condition', {})
+    loss_type = loss.get('Type', 0xFF)
+    if loss_type == 'None':
+        buffer.write(struct.pack('<B', 0xFF))
+        buffer.write(b'\x00\x00\x00\x00')  # 4 bytes of details
+    else:
+        if isinstance(loss_type, str) and loss_type.startswith('0x'):
+            loss_byte = int(loss_type, 16)
+        else:
+            loss_byte = 0
+        buffer.write(struct.pack('<B', loss_byte))
+        buffer.write(b'\x00\x00\x00\x00')  # 4 bytes of details
+    
+    # === Teams ===
+    teams = map_data.get('Teams', {})
+    num_teams = teams.get('Number of Teams', 0)
+    buffer.write(struct.pack('<B', num_teams))
+    
+    if num_teams > 0:
+        assignments = teams.get('Team Assignments', {})
+        for color in PLAYER_COLORS:
+            team_num = assignments.get(color, 0)
+            buffer.write(struct.pack('<B', team_num))
+    
+    # === Available Heroes ===
+    avail_heroes = map_data.get('Available Heroes', {})
+    bitfield = avail_heroes.get('Bitfield', '')
+    if bitfield:
+        buffer.write(bytes.fromhex(bitfield))
+    else:
+        buffer.write(b'\x00' * 20)  # 20 bytes of zeros
+    buffer.write(b'\x00\x00\x00\x00')  # 4 empty bytes
+    
+    # === Custom Heroes ===
+    # For now, write 0 custom heroes
+    buffer.write(struct.pack('<B', 0))
+    
+    # === Random Artifacts ===
+    rand_artifacts = map_data.get('Random Artifacts', {})
+    bitfield = rand_artifacts.get('Bitfield', '')
+    if bitfield:
+        buffer.write(bytes.fromhex(bitfield))
+    else:
+        buffer.write(b'\x00' * 18)  # 18 bytes of zeros
+    
+    # === Rumors ===
+    rumors = map_data.get('Rumors', {})
+    num_rumors = rumors.get('Number of Rumors', 0)
+    buffer.write(struct.pack('<I', num_rumors))
+    
+    for rumor in rumors.get('Rumors', []):
+        name = rumor.get('Name', '')
+        name_bytes = name.encode('utf-8', errors='replace')
+        buffer.write(struct.pack('<I', len(name_bytes)))
+        buffer.write(name_bytes)
+        
+        text = rumor.get('Text', '')
+        text_bytes = text.encode('utf-8', errors='replace')
+        buffer.write(struct.pack('<I', len(text_bytes)))
+        buffer.write(text_bytes)
+    
+    # === Hero Settings ===
+    # For now, write 156 entries with no settings (0)
+    for i in range(156):
+        buffer.write(struct.pack('<B', 0))
+    
+    # === Reserved Bytes ===
+    reserved = map_data.get('Reserved Bytes', '')
+    if reserved:
+        buffer.write(bytes.fromhex(reserved))
+    else:
+        buffer.write(b'\x00' * 31)
+    
+    # === Surface Map ===
+    surface = map_data.get('Surface Map', {})
+    grid = surface.get('Grid', [])
+    
+    for cell in grid:
+        # Terrain Type
+        terrain_str = cell.get('Terrain Type', 'Dirt')
+        terrain = TERRAIN_INVERSE.get(terrain_str, 0x00)
+        
+        # If terrain is a hex string like "Unknown (0x09)", extract the value
+        if isinstance(terrain_str, str) and '0x' in terrain_str:
+            try:
+                terrain = int(terrain_str.split('0x')[1].split(')')[0], 16)
+            except:
+                terrain = 0x00
+        
+        buffer.write(struct.pack('<B', terrain))
+        
+        # Terrain Picture
+        terrain_pic = cell.get('Terrain Picture', 0)
+        buffer.write(struct.pack('<B', terrain_pic))
+        
+        # River Type
+        river_str = cell.get('River Type', 'None')
+        river = RIVER_INVERSE.get(river_str, 0x00)
+        if isinstance(river_str, str) and '0x' in river_str:
+            try:
+                river = int(river_str.split('0x')[1].split(')')[0], 16)
+            except:
+                river = 0x00
+        buffer.write(struct.pack('<B', river))
+        
+        # River Properties
+        river_prop = cell.get('River Properties', 0)
+        buffer.write(struct.pack('<B', river_prop))
+        
+        # Road Type
+        road_str = cell.get('Road Type', 'None')
+        road = ROAD_INVERSE.get(road_str, 0x00)
+        if isinstance(road_str, str) and '0x' in road_str:
+            try:
+                road = int(road_str.split('0x')[1].split(')')[0], 16)
+            except:
+                road = 0x00
+        buffer.write(struct.pack('<B', road))
+        
+        # Road Properties
+        road_prop = cell.get('Road Properties', 0)
+        buffer.write(struct.pack('<B', road_prop))
+        
+        # Mirroring
+        mirroring_str = cell.get('Mirroring', '0x00')
+        if isinstance(mirroring_str, str) and mirroring_str.startswith('0x'):
+            mirroring = int(mirroring_str, 16)
+        else:
+            mirroring = 0
+        buffer.write(struct.pack('<B', mirroring))
+    
+    # === Underground Map ===
+    if has_underground:
+        underground = map_data.get('Underground Map', {})
+        ug_grid = underground.get('Grid', [])
+        
+        for cell in ug_grid:
+            terrain_str = cell.get('Terrain Type', 'Dirt')
+            terrain = TERRAIN_INVERSE.get(terrain_str, 0x00)
+            if isinstance(terrain_str, str) and '0x' in terrain_str:
+                try:
+                    terrain = int(terrain_str.split('0x')[1].split(')')[0], 16)
+                except:
+                    terrain = 0x00
+            buffer.write(struct.pack('<B', terrain))
+            
+            terrain_pic = cell.get('Terrain Picture', 0)
+            buffer.write(struct.pack('<B', terrain_pic))
+            
+            river_str = cell.get('River Type', 'None')
+            river = RIVER_INVERSE.get(river_str, 0x00)
+            if isinstance(river_str, str) and '0x' in river_str:
+                try:
+                    river = int(river_str.split('0x')[1].split(')')[0], 16)
+                except:
+                    river = 0x00
+            buffer.write(struct.pack('<B', river))
+            
+            river_prop = cell.get('River Properties', 0)
+            buffer.write(struct.pack('<B', river_prop))
+            
+            road_str = cell.get('Road Type', 'None')
+            road = ROAD_INVERSE.get(road_str, 0x00)
+            if isinstance(road_str, str) and '0x' in road_str:
+                try:
+                    road = int(road_str.split('0x')[1].split(')')[0], 16)
+                except:
+                    road = 0x00
+            buffer.write(struct.pack('<B', road))
+            
+            road_prop = cell.get('Road Properties', 0)
+            buffer.write(struct.pack('<B', road_prop))
+            
+            mirroring_str = cell.get('Mirroring', '0x00')
+            if isinstance(mirroring_str, str) and mirroring_str.startswith('0x'):
+                mirroring = int(mirroring_str, 16)
+            else:
+                mirroring = 0
+            buffer.write(struct.pack('<B', mirroring))
+    
+    # === Objects ===
+    objects = map_data.get('Objects', {})
+    num_objects = objects.get('Number of Objects', 0)
+    buffer.write(struct.pack('<I', num_objects))
+    
+    # Get the raw data to write
+    all_data = buffer.getvalue()
+    
+    # Write compressed to file
+    with gzip.open(output_path, 'wb') as f:
+        f.write(all_data)
+    
+    print("H3M file written to " + output_path)
