@@ -1,4 +1,4 @@
-from h3m_decoder import parse_h3m
+from h3decoder import parse_h3m
 import json
 
 def main():
