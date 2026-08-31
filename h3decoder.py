@@ -71,7 +71,7 @@ def parse_h3m(file_path):
     TOWN_TYPES = ['Castle', 'Rampart', 'Tower', 'Inferno', 'Necropolis', 
                   'Dungeon', 'Stronghold', 'Fortress', 'Conflux']
     
-    MAX_HEROES_PER_PLAYER = 255
+    MAX_HEROES_PER_PLAYER = 8
     MAX_CUSTOM_HEROES = 100
     MAX_RUMORS = 100
     MAX_OBJECTS = 10000
