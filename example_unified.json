@@ -1,0 +1,81 @@
+{
+    "sourceGame": "h3m",
+    "sourceVersion": "RoE",
+    "name": "Les Frères Ennemis",
+    "description": "Deux frères que tout oppose se disputent le contrôle du royaume. Choisissez votre camp et préparez-vous à la guerre.",
+    "creatorNotes": "",
+    "difficulty": "Normal",
+    "mapSize": {
+        "width": 72,
+        "height": 72
+    },
+    "hasUnderground": false,
+    "mainLanguage": 0,
+    "players": {
+        "availableColors": ["Red", "Blue"],
+        "humanColors": ["Red", "Blue"],
+        "computerColors": ["Red", "Blue"]
+    },
+    "playerDetails": [
+        {
+            "color": "Red",
+            "race": null,
+            "sourceRace": "Random",
+            "mainTown": {
+                "generateHero": true,
+                "x": 41,
+                "y": 47,
+                "z": 0
+            }
+        },
+        {
+            "color": "Blue",
+            "race": null,
+            "sourceRace": "Random",
+            "mainTown": {
+                "generateHero": true,
+                "x": 30,
+                "y": 25,
+                "z": 0
+            }
+        }
+    ],
+    "teams": [],
+    "victoryCondition": {
+        "type": "defeatEveryone",
+        "allowNormalVictory": true,
+        "appliesToAI": true,
+        "metadata": []
+    },
+    "lossCondition": {
+        "type": "loseEverything",
+        "metadata": []
+    },
+    "rumors": [
+        {
+            "name": "Le sage ermite",
+            "text": "On dit qu'un ermite vivant dans les montagnes connaît l'emplacement d'un artefact oublié."
+        },
+        {
+            "name": "Marchands rumeurs",
+            "text": "Les marchands de la région jurent que le seigneur de l'est a levé une armée de squelettes."
+        }
+    ],
+    "terrain": {
+        "levels": [
+            {
+                "grid": [
+                    {"x": 41, "y": 47, "z": 0, "terrain": "Grass", "sourceTerrain": "Grass"},
+                    {"x": 42, "y": 47, "z": 0, "terrain": "Grass", "sourceTerrain": "Grass"},
+                    {"x": 43, "y": 47, "z": 0, "terrain": "Dirt", "sourceTerrain": "Dirt"},
+                    {"x": 41, "y": 48, "z": 0, "terrain": "Rock", "sourceTerrain": "Rock"},
+                    {"x": 42, "y": 48, "z": 0, "terrain": "Grass", "sourceTerrain": "Grass"},
+                    {"x": 43, "y": 48, "z": 0, "terrain": "Water", "sourceTerrain": "Water"},
+                    {"x": 41, "y": 49, "z": 0, "terrain": "Grass", "sourceTerrain": "Grass"},
+                    {"x": 42, "y": 49, "z": 0, "terrain": "Snow", "sourceTerrain": "Snow"},
+                    {"x": 43, "y": 49, "z": 0, "terrain": "Grass", "sourceTerrain": "Grass"}
+                ]
+            }
+        ]
+    }
+}
