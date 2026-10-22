@@ -1,0 +1,312 @@
+Description of the JSON fields produced by h2decoder.py (parse_fh2m) for .fh2m files
+   ╔╦╦╦════════════════════════════════════════════════════════════════════╦╦╦╗
+   ║║║║  JSON fields for fheroes2 native maps                              ║║║║
+   ║║║║  (as written by main.py into the outputjson/ directory)            ║║║║
+   ╚╩╩╩════════════════════════════════════════════════════════════════════╩╩╩╝
+
+   This document describes the JSON structure produced by parse_fh2m() in
+   h2decoder.py. The binary format itself is described in
+   h2m_description.english.txt. Notation below:
+
+   (v9+)   { field only present in map format version 9 or later
+   (v10+)  { field only present in map format version 10 or later
+   (v11+)  { field only present in map format version 11 or later
+   (v<10)  { field only present in map format versions below 10
+   (cond.) { field only present under the condition stated in its description
+
+   Important: dictionary keys are always serialized as strings by JSON.
+   The keys of the metadata maps below are the object identifiers (UIDs)
+   of the map, stored as decimal strings (e.g. "273"). write_fh2m()
+   converts them back to integers.
+
+   The root object contains the following sections, in this order:
+   "version", "isCampaign", "difficulty", "availablePlayerColors",
+   "humanPlayerColors", "computerPlayerColors", "alliances", "playerRaceId",
+   "playerRace", "victoryConditionType", "isVictoryConditionApplicableForAI",
+   "allowNormalVictory", "victoryConditionMetadata", "lossConditionType",
+   "lossConditionMetadata", "width", "height", "mainLanguage", "name",
+   "description", "creatorNotes" (v9+), "translations" (v11+),
+   "additionalInfo", "tiles", "dailyEvents", "rumors", "castleMetadata",
+   "heroMetadata", "sphinxMetadata", "signMetadata",
+   "adventureMapEventMetadata", "selectionObjectMetadata",
+   "capturableObjectsMetadata" (v9+), "standardObjectMetadata" (v<10),
+   "monsterMetadata" (v10+), "artifactMetadata" (v10+),
+   "resourceMetadata" (v10+), "translationInfo" (v11+).
+
+
+████████████████████████████████████████████████████████════════════████████████
+██                          Basic map parameters                            ██
+████████████████████████████████████════════════════════════════████████████
+
+ Field                    Type        Description
+
+   "version"               int         Map format version (2 to 13)
+   "isCampaign"            bool        Whether the map is a campaign map
+   "difficulty"            string      "Easy", "Normal", "Hard", "Expert" or
+                                        "Impossible"
+   "availablePlayerColors" list        Names of the available player colors
+                                        ("Blue", "Green", "Red", "Yellow",
+                                        "Orange", "Purple")
+   "humanPlayerColors"     list        Names of the human player colors
+   "computerPlayerColors"  list        Names of the computer player colors
+   "alliances"             list        One entry per alliance; each entry is
+                                        the bit mask (int) of the colors
+                                        belonging to it
+   "playerRaceId"          list        6 entries, race code of each player
+                                        (0-Random, 1-Knight, 2-Barbarian,
+                                        3-Sorceress, 4-Warlock, 5-Wizard,
+                                        6-Necromancer)
+   "playerRace"            list        6 entries, race name of each player
+                                        ("Random", "Knight", "Barbarian",
+                                        "Sorceress", "Warlock", "Wizard",
+                                        "Necromancer" or "Unknown" for
+                                        undocumented codes)
+   "victoryConditionType"  int         Victory condition type (0-default)
+   "isVictoryConditionApplicableForAI" bool Whether the victory condition
+                                        applies to the AI as well
+   "allowNormalVictory"    bool        Allow winning the usual way
+   "victoryConditionMetadata" list     4-byte values, meaning depends on
+                                        the victory condition type
+   "lossConditionType"     int         Loss condition type
+   "lossConditionMetadata" list       4-byte values, meaning depends on
+                                        the loss condition type
+   "width"                 int         Width of the map in tiles
+   "height"                int         Height of the map in tiles (equal to
+                                        "width", maps are square)
+   "mainLanguage"          int         Main language of the map (0-English,
+                                        1-French, 2-Polish, 3-German,
+                                        4-Russian, ...)
+   "name"                  string      Name of the map
+   "description"           string      Description of the map
+   "creatorNotes"          string      Notes of the map maker, visible in
+                                        the Editor only (v9+)
+   "translations"          object      Map translations (v11+): one entry
+                                        per language, key is the language
+                                        code as a decimal string. Each entry
+                                        has:
+     "name"                string      Translated map name
+     "description"         string      Translated map description
+     "creatorNotes"        string      Translated map creator notes
+
+████████████████████████████══════════════════════════════████████████████
+██                                 Tiles                                    ██
+████████████████████████████████════════════════════════════████████████████
+
+   "additionalInfo"        list        4-byte values, used only for campaign
+                                        maps
+   "tiles"                 list        One entry per tile (width x height
+                                        total), in row-major order. Each
+                                        entry has:
+     "terrainIndex"        int         Terrain index
+     "terrainFlags"        int         Terrain flags
+     "objects"             list        Objects placed on the tile, each with:
+       "id"                int         Object identifier (unique per map,
+                                        used as key in the metadata maps)
+       "group"             string      Object group name: "NONE", "ROADS",
+                                        "STREAMS", "LANDSCAPE_MOUNTAINS",
+                                        "LANDSCAPE_ROCKS", "LANDSCAPE_TREES",
+                                        "LANDSCAPE_WATER",
+                                        "LANDSCAPE_MISCELLANEOUS",
+                                        "LANDSCAPE_TOWN_BASEMENTS",
+                                        "LANDSCAPE_FLAGS",
+                                        "ADVENTURE_ARTIFACTS",
+                                        "ADVENTURE_DWELLINGS",
+                                        "ADVENTURE_MINES",
+                                        "ADVENTURE_POWER_UPS",
+                                        "ADVENTURE_TREASURES",
+                                        "ADVENTURE_WATER",
+                                        "ADVENTURE_MISCELLANEOUS",
+                                        "KINGDOM_HEROES", "KINGDOM_TOWNS",
+                                        "MONSTERS", "MAP_EXTRAS"
+       "index"             int         Object index within its group
+
+████████████████████████████████════════════════════════════████████████████
+██                            Daily events                                  ██
+████████████████████████████════════════════════════════════████████████████
+
+   "dailyEvents"           list        One entry per daily event:
+     "message"            string      Event message
+     "humanPlayerColors"  list        Names of the human player colors
+                                        concerned by the event
+     "computerPlayerColors" list     Names of the computer player colors
+                                        concerned by the event
+     "firstOccurrenceDay" int         First occurrence day (default: 1)
+     "repeatPeriodInDays" int         Repeat period in days (0 means no
+                                        repetition)
+     "resources"          object      Resources to be given as a reward:
+                                        "wood", "mercury", "ore", "sulfur",
+                                        "crystal", "gems", "gold" (each an
+                                        int)
+
+   "rumors"                list        One string per rumor
+
+████████████████████████████══════════════════════════════████████████████
+██                          Castle metadata                                 ██
+████████████████████══════════════════════════════════════════════████████
+
+   "castleMetadata"       object      One entry per castle, key is the
+                                        castle object UID as a decimal
+                                        string:
+     "customName"         string      Custom name (empty - the engine sets a
+                                        random name)
+     "defenderMonsterType" list       5 entries, type of the defending
+                                        monster in each army slot (< 0 -
+                                        default units for a neutral race,
+                                        0 - empty slot)
+     "defenderMonsterCount" list      5 entries, count of the defending
+                                        monster in each army slot
+     "customBuildings"    bool        Whether the buildings are customized
+     "builtBuildings"     list        List of built building identifiers
+     "bannedBuildings"   list        List of building identifiers that
+                                        cannot be built
+     "mustHaveSpells"     object      Spells that must appear in the Mage
+                                        Guild: key is the position index
+                                        (tens digit - spell level 0-4,
+                                        units digit - position 0-4),
+                                        value is the spell index
+     "bannedSpells"       list        Spell indexes that must NOT appear in
+                                        the Mage Guild
+     "availableToHireMonsterCount" list 6 entries, number of monsters
+                                        available to hire in each dwelling
+                                        (negative - no change applied)
+
+████████████████══════════════════════════════════════════████████████████
+██                            Hero metadata                                 ██
+████████████████══════════════════════════════════════════════████████████
+
+   "heroMetadata"         object      One entry per hero, key is the hero
+                                        object UID as a decimal string:
+     "customName"         string      Custom name (empty - the engine sets a
+                                        random name)
+     "customPortrait"     int         Custom portrait (0 or negative - no
+                                        customization)
+     "armyMonsterType"    list        5 entries, custom army monster type
+                                        (0 means not set)
+     "armyMonsterCount"  list        5 entries, custom army monster count
+     "artifacts"          list        14 entries, artifact types (0 means
+                                        not set)
+     "artifactMetadata"   list        14 entries, artifact metadata
+     "availableSpells"   list        Custom spells in the Spell Book (empty
+                                        - default spells)
+     "isOnPatrol"         bool        Whether the hero is on patrol (AI
+                                        heroes only)
+     "patrolRadius"      int         Patrol radius
+     "secondarySkill"    list        8 entries, secondary skill types
+                                        (0 means not set)
+     "secondarySkillLevel" list      8 entries, secondary skill levels
+     "customLevel"       int         Custom level (-1 means not set)
+     "customExperience"  int         Custom experience (-1 means not set)
+     "customAttack"      int         Custom Attack bonus (-1 - default)
+     "customDefense"     int         Custom Defense bonus (-1 - default)
+     "customKnowledge"   int         Custom Knowledge bonus (-1 - default)
+     "customSpellPower"  int         Custom Spell Power bonus (-1 - default)
+     "magicPoints"       int         Magic points (mana), negative means
+                                        not set
+     "raceId"             int         Raw race code, kept for a faithful
+                                        round-trip of undocumented values
+     "race"               string      "Knight", "Barbarian", "Sorceress",
+                                        "Warlock", "Wizard", "Necromancer"
+                                        or "Unknown"
+
+████████████████████══════════════════════════════════════████████████████
+██                     Sphinx, sign and event metadata                      ██
+████████████████████══════════════════════════════════════████████████████
+
+   "sphinxMetadata"       object      One entry per sphinx, key is the
+                                        sphinx object UID as a decimal
+                                        string:
+     "riddle"             string      Riddle text
+     "answers"            list        One string per accepted answer
+     "artifact"          int         Artifact to be given as a reward
+                                        (0 - none)
+     "artifactMetadata"  int         Artifact metadata
+     "resources"         object      Resources to be given as a reward
+                                        (same 7 fields as daily events)
+
+   "signMetadata"         object      One entry per sign, key is the sign
+                                        object UID as a decimal string:
+     "message"            string      Sign message
+
+   "adventureMapEventMetadata" object One entry per adventure map event,
+                                        key is the event object UID:
+     "message"            string      Event message
+     "humanPlayerColors"  list        Names of the human player colors
+     "computerPlayerColors" list     Names of the computer player colors
+     "isRecurringEvent"  bool        Does this event occur more than once
+     "artifact"          int         Artifact to be given as a reward
+     "artifactMetadata"  int         Artifact metadata
+     "resources"         object      Resources to be given as a reward
+     "attack"            int         Attack bonus
+     "defense"           int         Defense bonus
+     "knowledge"         int         Knowledge bonus
+     "spellPower"        int         Spell power bonus
+     "experience"        int         Experience to be given
+     "secondarySkill"    int         Secondary skill to be given
+     "secondarySkillLevel" int       Level of the secondary skill
+     "monsterType"       int         Monster type to be given (0 - none)
+     "monsterCount"      int         Monster count
+
+   "selectionObjectMetadata" object   One entry per selection object (e.g.
+                                        a ocean bottle), key is the object
+                                        UID:
+     "selectedItems"     list        Selected item values
+
+████████████════════════════════════════════════════════████████████████
+██                Capturable objects and other metadata                     ██
+████████████══════════════════════════════════════════████████████████████
+
+   "capturableObjectsMetadata" object (v9+) One entry per capturable object
+                                        (e.g. a mine), key is the object
+                                        UID:
+     "ownerColor"         list        Names of the owner color (empty list
+                                        for a neutral object)
+
+   "monsterMetadata"      object (v10+) One entry per monster, key is the
+                                        monster object UID:
+     "count"             int         Monster count
+     "joinCondition"     int         Reserved for the future (always 0)
+     "isWeeklyGrowthDisabled" bool  Reserved for the future (always
+                                        false)
+     "selected"          list        Selected monster types (only for
+                                        random monsters)
+
+   "artifactMetadata"     object (v10+) One entry per artifact, key is the
+                                        artifact object UID:
+     "radius"            int         Radius (only for Random Ultimate
+                                        Artifact)
+     "captureCondition" int         Reserved for the future (always 0)
+     "selected"          list        Selected items (only for random
+                                        artifacts and Scroll Spell; for a
+                                        Scroll Spell the item is the spell)
+
+   "resourceMetadata"     object (v10+) One entry per resource pile, key
+                                        is the resource object UID:
+     "count"             int         Resource count
+
+   "standardObjectMetadata" object (v<10) Deprecated before version 10:
+                                        monster counts, artifact radii and
+                                        resource counts were stored in this
+                                        single map, keyed by object UID:
+     "metadata"          list        Three 4-byte metadata values
+
+████████████════════════════════════════════════════████████████████████
+██                        Translation info (v11+)                           ██
+████████████══════════════════════════════════════████████████████████
+
+   "translationInfo"      object      One entry per language, key is the
+                                        language code as a decimal string.
+                                        Each entry has:
+     "dailyEvents"        list        One translated event message per daily
+                                        event (same order)
+     "rumors"            list        One translated rumor text per rumor
+     "castleMetadata"    object      Key is the castle object UID, value is
+                                        the translated custom name
+     "heroMetadata"      object      Key is the hero object UID, value is
+                                        the translated custom name
+     "sphinxMetadata"    object      Key is the sphinx object UID:
+       "riddle"          string      Translated riddle text
+       "answers"         list        One translated answer text per answer
+     "signMetadata"      object      Key is the sign object UID, value is
+                                        the translated message
+     "adventureMapEventMetadata" object Key is the event object UID, value
+                                        is the translated message
