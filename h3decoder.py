@@ -735,20 +735,43 @@ def write_h3m(map_data, output_path):
 # reference h3m2json implementation, used to know how to decode each object's
 # data. Classes not listed here have no per-object data ('none').
 OBJECT_CLASS_KINDS = {
-    6: 'pandoraBox', 26: 'event', 53: 'ownable', 59: 'sign', 91: 'sign',
-    62: 'hero', 34: 'hero', 70: 'hero', 98: 'town', 77: 'town',
+    # ground events and pandora boxes
+    6: 'pandoraBox', 26: 'event',
+    # mines and dwellings (ownable)
+    53: 'ownable', 17: 'ownable', 18: 'ownable',
+    19: 'ownable', 20: 'ownable', 42: 'ownable', 87: 'ownable',
+    220: 'abandonedMine',
+    # signs
+    59: 'sign', 91: 'sign',
+    # heroes
+    62: 'hero', 34: 'hero', 70: 'hero', 214: 'heroPlaceholder',
+    # towns
+    98: 'town', 77: 'town',
+    # random dwellings
+    216: 'randomDwelling', 217: 'randomDwelling', 218: 'randomDwelling',
+    # monsters
     54: 'monster', 71: 'monster', 72: 'monster', 73: 'monster',
     74: 'monster', 75: 'monster', 162: 'monster', 163: 'monster',
-    164: 'monster', 5: 'artifact', 65: 'artifact', 66: 'artifact',
-    67: 'artifact', 68: 'artifact', 69: 'artifact', 79: 'resource',
-    76: 'resource', 214: 'heroPlaceholder', 17: 'ownable', 18: 'ownable',
-    19: 'ownable', 20: 'ownable', 42: 'ownable', 87: 'ownable',
-    33: 'garrison', 217: 'garrison', 218: 'garrison', 219: 'garrison',
-    220: 'garrison', 221: 'garrison', 113: 'event', 88: 'shrine',
-    89: 'shrine', 90: 'shrine', 36: 'witchHut', 51: 'witchHut',
-    83: 'seerHut', 215: 'questGuard', 81: 'scholar',
+    164: 'monster',
+    # artifacts and scrolls
+    5: 'artifact', 65: 'artifact', 66: 'artifact',
+    67: 'artifact', 68: 'artifact', 69: 'artifact', 93: 'scroll',
+    # resources
+    79: 'resource', 76: 'resource',
+    # garrisons
+    33: 'garrison', 219: 'garrison',
+    # grail
+    36: 'grail',
+    # shrines
+    88: 'shrine', 89: 'shrine', 90: 'shrine',
+    # witch huts
+    113: 'witchHut',
+    # seer huts and quest guards
+    83: 'seerHut', 215: 'questGuard',
+    # scholars
+    81: 'scholar',
+    # banks
     16: 'bank', 24: 'bank', 25: 'bank', 84: 'bank', 85: 'bank',
-    6: 'pandoraBox', 26: 'event',
 }
 
 
@@ -1103,6 +1126,33 @@ def parse_h3m_objects(raw_objects, level_ab, level_sod, artifact_id_bytes,
         elif kind_name is None:
             # Unknown object class: decoding cannot continue safely.
             break
+        elif kind_name == 'grail':
+            safe_read(buffer, 4)  # radius
+        elif kind_name == 'scroll':
+            # Spell scroll: optional guard, then the spell.
+            is_guarded = safe_read(buffer, 1)[0]
+            if is_guarded:
+                if _parse_h3m_guarded(buffer, creature_id_bytes) is None:
+                    break
+            spell_data = safe_read(buffer, 4)
+            if len(spell_data) < 4:
+                break
+            artifact_metadata[str(object_id)] = OrderedDict([
+                ('spell', None if struct.unpack('<I', spell_data)[0] == 0xFF else struct.unpack('<I', spell_data)[0]),
+            ])
+        elif kind_name == 'randomDwelling':
+            safe_read(buffer, 4)  # owner
+            if obj_class in (216, 217):
+                object_id_data = safe_read(buffer, 4)
+                if len(object_id_data) < 4:
+                    break
+                if struct.unpack('<I', object_id_data)[0] == 0:
+                    safe_read(buffer, 2)  # towns bitfield
+            if obj_class in (216, 218):
+                safe_read(buffer, 2)  # minLevel, maxLevel
+        elif kind_name == 'abandonedMine':
+            safe_read(buffer, 4)  # owner
+            safe_read(buffer, 4)  # potentialResources bitfield
         elif kind_name in ('seerHut', 'questGuard'):
             # quest (RoE seer huts read an artifact quest instead) then reward.
             if kind_name == 'seerHut' and not level_ab:
@@ -1120,14 +1170,16 @@ def parse_h3m_objects(raw_objects, level_ab, level_sod, artifact_id_bytes,
             if kind_name == 'seerHut':
                 safe_read(buffer, 2)
         elif kind_name == 'scholar':
-            # rewardType; 0xFF means random, then unknown bytes.
+            # Scholar rewards (scholarReward factory) are different from the
+            # standard rewards: 0 primarySkill, 1 skill, 2 spell - each with a
+            # 1-byte payload. 0xFF means random reward.
             reward_type_data = safe_read(buffer, 1)
             if len(reward_type_data) < 1:
                 break
             if reward_type_data[0] == 0xFF:
                 safe_read(buffer, 1)
-            else:
-                _parse_h3m_reward(buffer, artifact_id_bytes, creature_id_bytes)
+            elif reward_type_data[0] in (0, 1, 2):
+                safe_read(buffer, 1)
             safe_read(buffer, 6)
         elif kind_name == 'bank':
             # Banks have no per-object data outside of HotA.
