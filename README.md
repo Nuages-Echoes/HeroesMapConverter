@@ -16,7 +16,7 @@ Why all the bother ?
 Because by using the json format, I hope we will be able to convert heroes maps to any heroes using the common json file. In the long run it will save time to convert any file to json and then to whichever heroes format you want then to convert directly from heroesX to hereosY
 
 Can I help ?
-Yes you can, it's a pet project feel free to modify or clone it. 
+Yes you can, it's a pet project feel free to modify or clone it. Just don't sell it or make money out of it.
 
 No UI ?
 No, not yet. I'd like to make it work first and then think about UI. Also, I don't much about UI so it's harder for me to review or correct UI related bugs. Even if the project is vibe coded (because honestly setting up the parsing sucks) doesn't mean I don't look at it and modify it by hand.
