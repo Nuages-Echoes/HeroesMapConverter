@@ -53,15 +53,15 @@ FH2M_LOSS_CONDITIONS = {
 FH2M_PLAYER_COLORS = ["Blue", "Green", "Red", "Yellow", "Orange", "Purple"]
 
 # h3m town type -> unified race (Heroes II hero races)
+# h3m town type -> unified race; Inferno and Fortress have no Heroes II
+# race equivalent and are intentionally absent (race stays null)
 H3M_TOWN_RACES = {
     "Castle": "Knight",
     "Rampart": "Sorceress",
     "Tower": "Wizard",
-    "Inferno": "Warlock",
     "Necropolis": "Necromancer",
     "Dungeon": "Warlock",
     "Stronghold": "Barbarian",
-    "Fortress": "Sorceress",
 }
 
 # fh2m race -> unified race (identity, kept explicit)
