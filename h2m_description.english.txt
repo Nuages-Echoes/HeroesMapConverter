@@ -1,0 +1,328 @@
+Based on the fheroes2 engine source code: https://github.com/ihhub/fheroes2/tree/master/src/fheroes2/maps
+   ╔╦╦╦════════════════════════════════════════════════════════════════════╦╦╦╗
+   ║║║║  Description of the map format for the game fheroes2                 ║║║║
+   ║║║║  (native .fh2m maps for Heroes of Might and Magic II)                ║║║║
+   ║║║║  Derived from src/fheroes2/maps/map_format_info.cpp                  ║║║║
+   ╚╩╩╩════════════════════════════════════════════════════════════════════╩╩╩╝
+
+   Attention: only the header (basic map parameters) is stored uncompressed.
+   The rest of the file is compressed with the zlib archiver (deflate stream,
+   no length prefix: the compressed blob goes up to the end of the file).
+
+   All multi-byte integers are stored in BIG ENDIAN byte order.
+
+
+   Notation:
+   The first number in a line is the length of an element.
+
+   1     { element length in bytes
+   ├─ 1  { these elements are only present for some values
+   └─ 1  { of the previous element; their amount may also vary
+
+   *     { same length as for the previous element
+   #     { a string: 4 bytes of length, then that many bytes of text
+   ?     { purpose unknown, the default value is in parentheses
+   (?)    { change of value doesn't affect the game
+
+████████████████████████████████████████████████████████████████████████████████
+██                          File identification                             ██
+████████████████████████████████████████████████████████████████████████████████████
+
+ Length Description (code)
+
+   6   Magic identifier: 68 32 6D 61 70 00 - ASCII "h2map\0"
+       (files shorter than 512 bytes are rejected as corrupted)
+
+████████████████████████████████████████████████████████████████████████████████████
+██                         Basic map parameters                            ██
+████████████████████████████████████████████████████████████████████████████████████
+
+ Length Description (code)
+
+   2   Format version
+           02 00 - minimum supported version
+           0D 00 - 13, current version
+       (the loader refuses files with a version < 2 or > 13)
+   1   ? Is it a campaign map ( 0 )
+   1   Map difficulty (0-Easy, 1-Normal, 2-Hard, 3-Expert, 4-Impossible)
+   1   Available player colors (bit mask)
+           Bit0 01 Blue
+           Bit1 02 Green
+           Bit2 04 Red
+           Bit3 08 Yellow
+           Bit4 10 Orange
+           Bit5 20 Purple
+   1   Human player colors (same bit mask as above)
+   1   Computer player colors (same bit mask as above)
+   4   Length of the alliances list in bytes
+   *   Alliances: for each alliance, 1 byte with the bit mask of the
+       colors belonging to it
+   4   Number of player races (always 06 00 00 00, only 6 players are
+       allowed per map)
+   6   Race of each player (0-Random, 1-Knight, 2-Barbarian, 3-Sorceress,
+       4-Warlock, 5-Wizard, 6-Necromancer)
+   1   Victory condition type (see Special Victory Condition)
+   1   Is the victory condition applicable to the AI as well
+   1   Allow normal victory (winning the usual way)
+   4   Length of the victory condition metadata list in bytes
+   *   Victory condition metadata (4 bytes per entry)
+   1   Loss condition type (see Special Loss Condition)
+   4   Length of the loss condition metadata list in bytes
+   *   Loss condition metadata (4 bytes per entry)
+   4   Width of the map in tiles (the map is square; the value must be > 0)
+   1   Main language of the map (0-English, 1-French, 2-Polish, 3-German,
+       4-Russian, 5-Italian, 6-Czech, 7-Spanish, 8-Belarusian, 9-Bulgarian,
+       10-Danish, 11-Dutch, 12-Esperanto, 13-Greek, 14-Hungarian,
+       15-Norwegian, 16-Portuguese, ...)
+   #   Map name
+   #   Map description
+   ├─ #   Map creator notes (only from version 9; visible in the Editor
+   │      only, doesn't affect the gameplay)
+   └─ 4+  Map translations (only from version 11): number of entries,
+          then for each language:
+       ├─ 1   Language identifier (same codes as the main language)
+       ├─ #   Translated map name
+       ├─ #   Translated map description
+       └─ #   Translated map creator notes
+
+████████████████████████████████████████████████████████████████████████████████████
+██                    Compressed part (zlib archive)                       ██
+████████████████████████████████████████████████████████████████████████████████████
+
+   Everything below is a single zlib-compressed (deflate) blob, written
+   up to the end of the file. Once decompressed, the data is read in
+   BIG ENDIAN byte order, in the following order:
+
+ Length Description (code)
+
+   4   Length of the additional info list in bytes (used only for
+       campaign maps)
+   *   Additional info (4 bytes per entry)
+   4   Number of tiles (must be equal to width x width, otherwise the
+       file is rejected as corrupted)
+   *   For each tile:
+       ├─ 2   Terrain index
+       ├─ 1   Terrain flags
+       └─ 4   Number of objects placed on the tile, then for each object:
+           ├─ 4   Object identifier (unique per map)
+           ├─ 1   Object group
+           │       00 NONE
+           │       01 ROADS
+           │       02 STREAMS
+           │       03 LANDSCAPE_MOUNTAINS
+           │       04 LANDSCAPE_ROCKS
+           │       05 LANDSCAPE_TREES
+           │       06 LANDSCAPE_WATER
+           │       07 LANDSCAPE_MISCELLANEOUS
+           │       08 LANDSCAPE_TOWN_BASEMENTS
+           │       09 LANDSCAPE_FLAGS
+           │       0A ADVENTURE_ARTIFACTS
+           │       0B ADVENTURE_DWELLINGS
+           │       0C ADVENTURE_MINES
+           │       0D ADVENTURE_POWER_UPS
+           │       0E ADVENTURE_TREASURES
+           │       0F ADVENTURE_WATER
+           │       10 ADVENTURE_MISCELLANEOUS
+           │       11 KINGDOM_HEROES
+           │       12 KINGDOM_TOWNS
+           │       13 MONSTERS
+           │       14 MAP_EXTRAS
+           └─ 4   Object index within its group
+
+   4   Number of daily events, then for each event:
+       ├─ #   Event message
+       ├─ 1   Human player colors (bit mask)
+       ├─ 1   Computer player colors (bit mask)
+       ├─ 4   First occurrence day (default: 1)
+       ├─ 4   Repeat period in days (0 means no repetition)
+       └─ 28  Resources to be given as a reward (4 bytes each):
+             wood, mercury, ore, sulfur, crystal, gems, gold
+
+   4   Number of rumors, then for each rumor:
+       └─ #   Rumor text
+
+   4   Number of castle metadata entries, then for each entry:
+       ├─ 4   Object identifier of the castle
+       └─ Castle metadata (see below)
+
+   4   Number of hero metadata entries, then for each entry:
+       ├─ 4   Object identifier of the hero
+       └─ Hero metadata (see below)
+
+   4   Number of sphinx metadata entries, then for each entry:
+       ├─ 4   Object identifier of the sphinx
+       ├─ #   Riddle text
+       ├─ 4   Number of answers, then for each answer:
+       │   └─ #   Answer text
+       ├─ 4   Artifact to be given as a reward (0 - none)
+       ├─ 4   Artifact metadata
+       └─ 28  Resources to be given as a reward
+
+   4   Number of sign metadata entries, then for each entry:
+       ├─ 4   Object identifier of the sign
+       └─ #   Sign message
+
+   4   Number of adventure map event metadata entries, then for each:
+       ├─ 4   Object identifier of the event
+       ├─ #   Event message
+       ├─ 1   Human player colors (bit mask)
+       ├─ 1   Computer player colors (bit mask)
+       ├─ 1   Does this event occur more than once
+       ├─ 4   Artifact to be given as a reward (0 - none)
+       ├─ 4   Artifact metadata
+       ├─ 28  Resources to be given as a reward
+       ├─ 2   Attack bonus
+       ├─ 2   Defense bonus
+       ├─ 2   Knowledge bonus
+       ├─ 2   Spell power bonus
+       ├─ 4   Experience to be given
+       ├─ 1   Secondary skill to be given
+       ├─ 1   Level of the secondary skill
+       ├─ 4   Monster type to be given (0 - none)
+       └─ 4   Monster count
+
+   4   Number of selection object metadata entries, then for each entry:
+       ├─ 4   Object identifier of the object
+       ├─ 4   Number of selected items, then for each item:
+       └─ 4   Selected item
+
+   ├─ 4   Number of capturable object metadata entries (only from
+   │      version 9), then for each entry:
+   │   ├─ 4   Object identifier of the object
+   │   └─ 1   Owner color (0-NONE, 1-Blue, 2-Green, 4-Red, 8-Yellow,
+   │          16-Orange, 32-Purple)
+   │
+   ├─ 4   Number of standard object metadata entries (only up to
+   │      version 9, deprecated), then for each entry:
+   │   ├─ 4   Object identifier
+   │   └─ 12  Three 4-byte metadata values
+   │
+   ├─ 4   Number of monster metadata entries (only from version 10),
+   │      then for each entry:
+   │   ├─ 4   Object identifier of the monster
+   │   ├─ 4   Monster count
+   │   ├─ 4   ? Join condition ( 0, reserved for the future)
+   │   ├─ 1   ? Is weekly growth disabled ( 00, reserved for the future)
+   │   ├─ 4   Number of selected monsters (only for random monsters),
+   │   │      then for each monster:
+   │   └─ 4   Monster type
+   │
+   ├─ 4   Number of artifact metadata entries (only from version 10),
+   │      then for each entry:
+   │   ├─ 4   Object identifier of the artifact
+   │   ├─ 4   Radius (only for Random Ultimate Artifact)
+   │   ├─ 4   ? Capture condition ( 0, reserved for the future)
+   │   ├─ 4   Number of selected items (only for random artifacts and
+   │   │      Scroll Spell), then for each item:
+   │   └─ 4   Selected item (spell for a Scroll Spell)
+   │
+   ├─ 4   Number of resource metadata entries (only from version 10),
+   │      then for each entry:
+   │   ├─ 4   Object identifier of the resource
+   │   └─ 4   Resource count
+   │
+   └─ 4   Number of translation info entries (only from version 11),
+          then for each language:
+       ├─ 1   Language identifier
+       ├─ 4   Number of daily events, then for each event:
+       │   └─ #   Translated event message
+       ├─ 4   Number of rumors, then for each rumor:
+       │   └─ #   Translated rumor text
+       ├─ 4   Number of castle metadata entries, then for each entry:
+       │   ├─ 4   Object identifier of the castle
+       │   └─ #   Translated castle custom name
+       ├─ 4   Number of hero metadata entries, then for each entry:
+       │   ├─ 4   Object identifier of the hero
+       │   └─ #   Translated hero custom name
+       ├─ 4   Number of sphinx metadata entries, then for each entry:
+       │   ├─ 4   Object identifier of the sphinx
+       │   ├─ #   Translated riddle text
+       │   ├─ 4   Number of answers, then for each answer:
+       │   └─ #   Translated answer text
+       ├─ 4   Number of sign metadata entries, then for each entry:
+       │   ├─ 4   Object identifier of the sign
+       │   └─ #   Translated sign message
+       └─ 4   Number of adventure map event metadata entries, then for
+               each entry:
+           ├─ 4   Object identifier of the event
+           └─ #   Translated event message
+
+████████████████████████████████████████████████████████████████████████████████████
+██                            Castle metadata                              ██
+████████████████████████████████████████████████████████████████████████████████████
+
+   Color, type and whether it is a castle or a town come from the object
+   itself. If the custom name is empty a random name is going to be set
+   by the engine.
+
+   #   Custom name (empty - default name)
+   4   Number of defending monster types (always 05 00 00 00), then
+       5 x 4 bytes: type of the defending monster in each army slot
+       ( < 0 - default units for a neutral race, 0 - empty slot)
+   4   Number of defending monster counts (always 05 00 00 00), then
+       5 x 4 bytes: count of the defending monster in each army slot
+   1   Whether the buildings are customized
+   4   Number of built buildings, then for each building:
+   *   Building identifier (4 bytes)
+   4   Number of buildings that cannot be built, then for each building:
+   *   Building identifier (4 bytes)
+   4   Number of spells that must appear in the Mage Guild, then for
+       each spell:
+       ├─ 1   Position index in the Guild: the tens digit indicates the
+       │      spell level (0-4), the units digit (0-4) represents its
+       │      position from left to right
+       └─ 4   Spell index
+   4   Number of spells that must NOT appear in the Mage Guild, then for
+       each spell:
+   *   Spell index (4 bytes)
+   4   Number of monsters available to hire in dwellings (always
+       06 00 00 00), then 6 x 4 bytes: the number of monsters available
+       to hire in each dwelling (a negative value means that no change
+       will be applied)
+
+████████████████████████████████████████████████████████████████████████████████████
+██                             Hero metadata                                ██
+████████████████████████████████████████████████████████████████████████████████████
+
+   Hero's color and type come from the object itself. If the custom name
+   is empty a random name is going to be set by the engine.
+
+   #   Custom name (empty - default name)
+   4   Custom portrait (a negative or zero value means no customization)
+   4   Number of army slots (always 05 00 00 00), then 5 x 4 bytes:
+       custom army monster type (0 means not set)
+   4   Number of army counts (always 05 00 00 00), then 5 x 4 bytes:
+       custom army monster count
+   4   Number of artifacts (always 0E 00 00 00 - 14 slots), then
+       14 x 4 bytes: artifact types (0 means not set)
+   4   Number of artifact metadata values (always 0E 00 00 00), then
+       14 x 4 bytes: artifact metadata
+   4   Number of custom spells available in a Spell Book, then for each
+       spell:
+   *   Spell index (4 bytes; if no spells are set then default spells
+       will be set for the hero)
+   1   Is the hero on patrol (only applicable for AI heroes)
+   1   Patrol radius
+   4   Number of secondary skills (always 08 00 00 00), then 8 bytes:
+       secondary skill types (0 means not set)
+   4   Number of secondary skill levels (always 08 00 00 00), then
+       8 bytes: secondary skill levels
+   2   Custom level (-1 means not set; mutually exclusive with the
+       custom experience below)
+   4   Custom experience (-1 means not set)
+   2   Custom Attack bonus (-1 - default value applied)
+   2   Custom Defense bonus (-1 - default value applied)
+   2   Custom Knowledge bonus (-1 - default value applied)
+   2   Custom Spell Power bonus (-1 - default value applied)
+   2   Magic points (mana), a negative value means it is not set
+   1   Hero race (0-Knight, 1-Barbarian, 2-Sorceress, 3-Warlock,
+       4-Wizard, 5-Necromancer)
+
+████████████████████████████████████████████████████████████████████████████████████
+██                       Special Victory Condition                          ██
+████████████████████████████████████████████████████████████████████████████████████
+
+   1   Victory condition type stored in the basic map parameters:
+       00 - default (win by capturing enemy towns)
+       other values - the exact list of metadata entries depends on
+       the condition; each metadata entry is a 4-byte value
