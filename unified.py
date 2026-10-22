@@ -12,6 +12,7 @@ normalized terrain grid. Game-specific structures without a common
 representation are dropped (see the description document).
 """
 
+import struct
 from collections import OrderedDict
 
 H3M_VICTORY_CONDITIONS = {
@@ -368,6 +369,11 @@ def _h3m_objects_to_unified(map_data):
     result.update(metadata)
     if dropped:
         result["dropped"] = dropped
+    # Raw object section bytes (h3m only), for a byte-perfect round-trip:
+    # the binary writer re-encodes them verbatim.
+    raw_data = objects_section.get("Raw Data", "")
+    if raw_data:
+        result["rawData"] = raw_data
     return result
 
 
@@ -747,10 +753,14 @@ def unified_to_h3m(unified):
 
     objects_section = _unified_objects_from_h3m(unified)
     if objects_section:
-        object_count = sum(len(objs) for objs in objects_section["tiles"].values())
+        raw_data = objects_section.get("rawData", "")
+        if raw_data:
+            object_count = struct.unpack("<I", bytes.fromhex(raw_data)[:4])[0]
+        else:
+            object_count = sum(len(objs) for objs in objects_section["tiles"].values())
         data["Objects"] = OrderedDict([
             ("Number of Objects", object_count),
-            ("Raw Data", ""),
+            ("Raw Data", raw_data),
             ("Tiles", objects_section),
         ])
     else:
@@ -1042,7 +1052,10 @@ def _unified_objects_from_h3m(unified):
     result = OrderedDict()
     result["tiles"] = tiles
     for key, value_map in objects_section.items():
-        if key in ("tiles", "dropped"):
+        if key in ("tiles", "dropped", "rawData"):
             continue
         result[key] = OrderedDict(value_map)
+    raw_data = objects_section.get("rawData")
+    if raw_data:
+        result["rawData"] = raw_data
     return result
