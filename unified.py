@@ -642,6 +642,12 @@ def unified_to_fh2m(unified):
     Returns:
         OrderedDict: The map in the h2decoder.py format.
     """
+    if unified.get("hasUnderground", False):
+        raise ValueError(
+            "Heroes of Might and Magic 2 ne permet pas de jouer avec le sous-sol, "
+            "la carte {} ne peut pas être convertie".format(unified.get("name", ""))
+        )
+
     data = OrderedDict()
 
     if unified.get("sourceGame") == "fh2m":
