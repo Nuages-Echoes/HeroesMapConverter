@@ -86,6 +86,26 @@ Values used in the unified JSON format and their equivalents in .fh2m and .h3m
    (undocumented race code) have no unified value: they only appear in
    the sourceRace field and convert to race = null.
 
+████████████████████████████████████████████████████████████████████
+██ Starting heroes (playerDetails[].hasStartingHero)                     ██
+████████████████████████████████████████████████████████████████████
+
+| JSON unified                        | FH2M                                | H3M                                   |
+|-------------------------------------|-------------------------------------|---------------------------------------|
+| playerDetails[].hasStartingHero:    | tiles[].objects with group          | Player Heroes > Has Random Hero      |
+| true                                | "KINGDOM_HEROES": the starting      | / Hero Type                          |
+|                                     | hero is a hero object placed on     |                                       |
+|                                     | a tile                              |                                       |
+| playerDetails[].race (of a hero):   | object index = color * 7 + race:     | Player Heroes > Hero Type            |
+| "Knight"                            | metadata[0] = color (0-5),           | (00-7F, FF = no hero)                |
+|                                     | metadata[1] = race (0-6)             |                                       |
+
+   The FH2M format has no explicit starting hero field: a player has a
+   starting hero if and only if a KINGDOM_HEROES object of his color is
+   placed on the map. The conversion creates one object per available
+   player (placed near the main town when it exists) and back-extracts
+   hasStartingHero and the hero race from the object index.
+
 ████████████████══════════════════════════════════████████████████████
 ██ Victory condition type                                                 ██
 ████████████══════════════════════════════════════════████████████████
@@ -187,7 +207,8 @@ List for FH2M (no unified equivalent yet):
 - isCampaign (campaign maps have a different structure)
 - additionalInfo (campaign maps only)
 - tiles[].terrainFlags (image mirroring flags)
-- tiles[].objects (placed objects: id, group, index)
+- tiles[].objects (placed objects: id, group, index; starting heroes
+  are converted, everything else is not yet)
 - castleMetadata (custom names, garrison, buildings, spells, hiring)
 - heroMetadata (names, portraits, armies, artifacts, spells, patrol,
   skills, experience, primary skills, mana, race)
@@ -210,8 +231,8 @@ List for H3M (no unified equivalent yet):
   3-Explorer)
 - Players Attributes > Owned Towns (detailed per-town ownership)
 - Players Attributes > Owns Random Town
-- Player Heroes (starting heroes: random hero, type, face, name,
-  number of heroes)
+- Player Heroes > Hero Face and Hero Name (converted heroes carry the
+  default face and name; Has Random Hero / Hero Type are converted)
 - Available Heroes > Bitfield
 - Random Artifacts > Bitfield
 - Allowed Spells > Bitfield
