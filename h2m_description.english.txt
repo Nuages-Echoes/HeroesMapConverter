@@ -99,8 +99,7 @@ Based on the fheroes2 engine source code: https://github.com/ihhub/fheroes2/tree
        campaign maps)
    *   Additional info (4 bytes per entry)
    4   Number of tiles (must be equal to width x width, otherwise the
-       file is rejected as corrupted)
-   *   For each tile:
+       file is rejected as corrupted), then for each tile:
        ├─ 2   Terrain index
        ├─ 1   Terrain flags
        └─ 4   Number of objects placed on the tile, then for each object:
