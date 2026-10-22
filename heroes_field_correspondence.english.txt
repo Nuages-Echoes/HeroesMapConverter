@@ -108,6 +108,22 @@ Values used in the unified JSON format and their equivalents in .fh2m and .h3m
    player (placed near the main town when it exists) and back-extracts
    hasStartingHero and the hero race from the object index.
 
+████████████████████████████████████════════════════════████████████
+██ Player details (round-trip fields)                                   ██
+████████████████████════════════════════════════════████████████████
+
+| JSON unified                          | FH2M                        | H3M                                        |
+|---------------------------------------|-----------------------------|--------------------------------------------|
+| playerDetails[].sourceRaceId          | playerRaceId (raw race      | UNDEFINE                                    |
+|   (raw race code, kept verbatim for   |   code, kept verbatim)      |                                             |
+|   undocumented race codes)             |                             |                                             |
+| playerDetails[].ownedTowns            | UNDEFINE (castle ownership  | Players Attributes > Owned Towns            |
+|   (per-town ownership map, h3m only)   |   is in castleMetadata)     |                                             |
+| playerDetails[].ownsRandomTown         | UNDEFINE                    | Players Attributes > Owns Random Town       |
+| hasHero (h3m only)                     | UNDEFINE                    | Basic Parameters > Has Hero                  |
+| availableHeroesBitfield (hex, h3m      | UNDEFINE                    | Available Heroes > Bitfield                  |
+|   only)                                |                             |                                             |
+
 ████████████████══════════════════════════════════████████████████████
 ██ Victory condition type                                                 ██
 ████████████══════════════════════════════════════════████████████████
@@ -166,6 +182,18 @@ Values used in the unified JSON format and their equivalents in .fh2m and .h3m
 
    sourceTerrain keeps the raw value: "terrain:<imageIndex>" for FH2M
    (e.g. "terrain:92"), the terrain name for H3M (e.g. "Snow").
+
+   Per-tile fields kept for a faithful round-trip:
+
+| JSON unified (grid cell)       | FH2M                        | H3M                                 |
+|--------------------------------|-----------------------------|-------------------------------------|
+| flags                          | terrainFlags (uint8)        | UNDEFINE (no per-tile flags)       |
+| sourcePicture                  | UNDEFINE                    | Terrain Picture                     |
+| sourceMirroring                | UNDEFINE                    | Mirroring ("0x00"-"0xFF")           |
+| sourceRoad / sourceRoadProperties | UNDEFINE (roads are     | Road Type / Road Properties        |
+|                                | objects of the ROADS group) |                                     |
+| sourceRiver / sourceRiverProperties | UNDEFINE (rivers are   | River Type / River Properties       |
+|                                | objects of the STREAMS group)|                                    |
 
 ████████████════════════════════════════════════████████████████████████
 ██ mainLanguage                                                          ██
@@ -241,6 +269,10 @@ Values used in the unified JSON format and their equivalents in .fh2m and .h3m
 |   capturableObjectsMetadata           | capturableObjectsMetadata   |                                            |
 | objects.dropped[] (ids of objects     | UNDEFINE                    | Objects whose OBJECTS.TXT class has no     |
 |   whose class has no unified group)   |                             |   unified group mapping                    |
+| objects.rawData (hex of the raw       | UNDEFINE                    | Objects > Raw Data (the raw object         |
+|   object section, h3m only; the       |                             |   section bytes, re-encoded verbatim       |
+|   binary writer re-encodes it         |                             |   by write_h3m for a byte-perfect          |
+|   verbatim)                           |                             |   round-trip)                              |
 
    Note: h3m "UNDEFINED_*" classes are mostly landscape/decoration
    objects (trees, rocks, mountains...) which have no gameplay data and
@@ -255,7 +287,6 @@ Values used in the unified JSON format and their equivalents in .fh2m and .h3m
 List for FH2M (no unified equivalent yet):
 - isCampaign (campaign maps have a different structure)
 - additionalInfo (campaign maps only)
-- tiles[].terrainFlags (image mirroring flags)
 - tiles[].objects joinCondition / isWeeklyGrowthDisabled / selected
   (the object placement itself is converted)
 - castleMetadata garrison, buildings, spells, hiring (owner, name and
@@ -263,39 +294,23 @@ List for FH2M (no unified equivalent yet):
 - heroMetadata portraits, armies, artifacts, spells, patrol, skills,
   experience, primary skills, mana (owner and type are converted)
 - sphinxMetadata riddles, answers, rewards (placement is converted)
-- signMetadata (message is converted)
 - adventureMapEventMetadata rewards, skills, monsters (message is
   converted)
 - selectionObjectMetadata selected items (placement is converted)
 - capturableObjectsMetadata details beyond the owner color
 - monsterMetadata joinCondition, isWeeklyGrowthDisabled, selected
 - artifactMetadata radius, captureCondition, selected
-- resourceMetadata (count and type are converted)
-- standardObjectMetadata (deprecated, pre-v10)
 - translations (translated name/description/creatorNotes)
 - translationInfo (all translated texts)
 
 List for H3M (no unified equivalent yet):
-- Basic Parameters > Has Hero
 - Basic Parameters > Heroes Mastery Level Cap
 - Players Attributes > Behavior (0-Random, 1-Warrior, 2-Builder,
   3-Explorer)
-- Players Attributes > Owned Towns (detailed per-town ownership)
-- Players Attributes > Owns Random Town
 - Player Heroes > Hero Face and Hero Name (converted heroes carry the
   default face and name; Has Random Hero / Hero Type are converted)
-- Available Heroes > Bitfield
 - Random Artifacts > Bitfield
 - Allowed Spells > Bitfield
 - Allowed Abilities > Bitfield
 - Reserved Bytes
 - Hero Settings (predefined hero settings, skipped by h3decoder.py)
-- Objects > Raw Data (the object instances are decoded into
-  Objects > Tiles and mapped to the unified format; the raw bytes are
-  kept for reference)
-- Victory/Loss condition details (allow normal victory, applies to AI,
-  condition metadata: coordinates, artifact/creature codes, amounts)
-- Surface/Underground Map > Grid > Terrain Picture
-- Surface/Underground Map > Grid > River Type / River Properties
-- Surface/Underground Map > Grid > Road Type / Road Properties
-- Surface/Underground Map > Grid > Mirroring
