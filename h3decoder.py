@@ -384,9 +384,13 @@ def parse_h3m(file_path):
     num_objects_data = safe_read(buffer, 4)
     if len(num_objects_data) == 4:
         num_objects = struct.unpack('<I', num_objects_data)[0]
+        raw_objects = num_objects_data + safe_read(buffer, buffer.getbuffer().nbytes - buffer.tell())
         data['Objects'] = OrderedDict([
             ('Number of Objects', num_objects),
-            ('Raw Data', (num_objects_data + safe_read(buffer, buffer.getbuffer().nbytes - buffer.tell())).hex())
+            ('Raw Data', raw_objects.hex()),
+            ('Tiles', parse_h3m_objects(raw_objects, level_ab, level_sod,
+                                        artifact_id_bytes,
+                                        creature_id_bytes, artifact_slots))
         ])
     else:
         data['Objects'] = OrderedDict([('Note', 'End of file')])
@@ -725,3 +729,567 @@ def write_h3m(map_data, output_path):
         f.write(struct.pack('<II', crc, len(all_data) & 0xFFFFFFFF))
 
     print("H3M file written to " + output_path)
+
+
+# Object classes (OBJECTS.TXT) mapped to the object details factories of the
+# reference h3m2json implementation, used to know how to decode each object's
+# data. Classes not listed here have no per-object data ('none').
+OBJECT_CLASS_KINDS = {
+    6: 'pandoraBox', 26: 'event', 53: 'ownable', 59: 'sign', 91: 'sign',
+    62: 'hero', 34: 'hero', 70: 'hero', 98: 'town', 77: 'town',
+    54: 'monster', 71: 'monster', 72: 'monster', 73: 'monster',
+    74: 'monster', 75: 'monster', 162: 'monster', 163: 'monster',
+    164: 'monster', 5: 'artifact', 65: 'artifact', 66: 'artifact',
+    67: 'artifact', 68: 'artifact', 69: 'artifact', 79: 'resource',
+    76: 'resource', 214: 'heroPlaceholder', 17: 'ownable', 18: 'ownable',
+    19: 'ownable', 20: 'ownable', 42: 'ownable', 87: 'ownable',
+    33: 'garrison', 217: 'garrison', 218: 'garrison', 219: 'garrison',
+    220: 'garrison', 221: 'garrison', 113: 'event', 88: 'shrine',
+    89: 'shrine', 90: 'shrine', 36: 'witchHut', 51: 'witchHut',
+    83: 'seerHut', 215: 'questGuard', 81: 'scholar',
+    16: 'bank', 24: 'bank', 25: 'bank', 84: 'bank', 85: 'bank',
+    6: 'pandoraBox', 26: 'event',
+}
+
+
+# Object classes with no per-object data ('none' factory of h3m2json):
+# these objects only carry the 5 unknown bytes after their position header.
+OBJECT_NONE_CLASSES = {
+    8, 124, 21, 46, 125, 176, 175, 222, 224, 225, 226, 227, 228, 229, 231,
+    223, 230, 139, 141, 142, 144, 145, 146, 0, 40, 114, 115, 116, 117, 118,
+    119, 120, 121, 122, 123, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135,
+    136, 137, 138, 143, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157,
+    158, 159, 160, 161, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 177,
+    178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191, 192,
+    193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207,
+    208, 209, 210, 211, 2, 3, 4, 7, 13, 11, 14, 15, 22, 23, 27, 28, 30, 31,
+    32, 35, 37, 38, 39, 41, 47, 48, 49, 51, 52, 55, 56, 57, 58, 60, 61, 64, 9,
+    10, 78, 80, 92, 94, 95, 96, 97, 99, 100, 102, 104, 105, 106, 107, 108,
+    109, 110, 111, 112, 50, 1, 221, 63, 212, 213, 43, 44, 12, 29, 82, 86, 101,
+    45, 103,
+}
+
+# h3m object class -> fh2m-style object group (Maps::ObjectGroup enum)
+H3M_CLASS_TO_GROUP = {
+    6: 'ADVENTURE_MISCELLANEOUS',   # pandora box
+    26: 'ADVENTURE_MISCELLANEOUS',   # event
+    5: 'ADVENTURE_ARTIFACTS',
+    65: 'ADVENTURE_ARTIFACTS',       # random artifact
+    66: 'ADVENTURE_ARTIFACTS',
+    67: 'ADVENTURE_ARTIFACTS',
+    68: 'ADVENTURE_ARTIFACTS',
+    69: 'ADVENTURE_ARTIFACTS',
+    17: 'ADVENTURE_DWELLINGS',
+    18: 'ADVENTURE_DWELLINGS',
+    19: 'ADVENTURE_DWELLINGS',
+    20: 'ADVENTURE_DWELLINGS',
+    42: 'ADVENTURE_MINES',
+    53: 'ADVENTURE_MINES',
+    87: 'ADVENTURE_MINES',
+    59: 'ADVENTURE_MISCELLANEOUS',   # sign
+    91: 'ADVENTURE_MISCELLANEOUS',   # sign
+    34: 'KINGDOM_HEROES',
+    70: 'KINGDOM_HEROES',            # random hero
+    62: 'KINGDOM_HEROES',            # prison
+    214: 'KINGDOM_HEROES',           # hero placeholder
+    98: 'KINGDOM_TOWNS',
+    77: 'KINGDOM_TOWNS',             # random town
+    54: 'MONSTERS',
+    71: 'MONSTERS',                  # random monster
+    72: 'MONSTERS',
+    73: 'MONSTERS',
+    74: 'MONSTERS',
+    75: 'MONSTERS',
+    162: 'MONSTERS',
+    163: 'MONSTERS',
+    164: 'MONSTERS',
+    79: 'ADVENTURE_TREASURES',       # resource
+    76: 'ADVENTURE_TREASURES',       # random resource
+    33: 'ADVENTURE_MISCELLANEOUS',   # garrison
+    217: 'ADVENTURE_MISCELLANEOUS',
+    218: 'ADVENTURE_MISCELLANEOUS',
+    219: 'ADVENTURE_MISCELLANEOUS',
+    220: 'ADVENTURE_MISCELLANEOUS',
+    221: 'ADVENTURE_MISCELLANEOUS',
+    113: 'ADVENTURE_MISCELLANEOUS',  # event
+    88: 'ADVENTURE_MISCELLANEOUS',   # shrine
+    89: 'ADVENTURE_MISCELLANEOUS',
+    90: 'ADVENTURE_MISCELLANEOUS',
+    36: 'ADVENTURE_MISCELLANEOUS',   # witch hut
+    51: 'ADVENTURE_MISCELLANEOUS',
+    83: 'ADVENTURE_MISCELLANEOUS',   # seer hut
+    215: 'ADVENTURE_MISCELLANEOUS',  # quest guard / gate
+    81: 'ADVENTURE_MISCELLANEOUS',  # scholar
+    16: 'ADVENTURE_DWELLINGS',      # creature bank
+    24: 'ADVENTURE_DWELLINGS',
+    25: 'ADVENTURE_DWELLINGS',
+    84: 'ADVENTURE_DWELLINGS',
+    85: 'ADVENTURE_DWELLINGS',
+}
+
+
+def parse_h3m_objects(raw_objects, level_ab, level_sod, artifact_id_bytes,
+                      creature_id_bytes, artifact_slots):
+    """
+    Decode the object section of an h3m map into an fh2m-like structure:
+    objects are stored per tile (x_y_z key) with separate metadata maps
+    keyed by object id, as the fh2m format does.
+
+    Args:
+        raw_objects: Raw bytes of the object section (definitions + instances).
+        level_ab: Whether the map is Armageddon's Blade or later.
+        level_sod: Whether the map is Shadow of Death or later.
+        artifact_id_bytes: 1 for RoE, 2 for AB and later.
+        creature_id_bytes: 1 for RoE, 2 for AB and later.
+        artifact_slots: Number of artifact slots (18 RoE/AB, 19 SoD).
+
+    Returns:
+        OrderedDict with 'tiles' (tile key -> object list) and the decoded
+        metadata maps, or None when the section cannot be decoded reliably.
+    """
+    buffer = BytesIO(raw_objects)
+
+    # --- Object definitions (catalog) ---
+    defs_count_data = safe_read(buffer, 4)
+    if len(defs_count_data) < 4:
+        return None
+    defs_count = struct.unpack('<I', defs_count_data)[0]
+    if defs_count > 10000:
+        return None
+
+    catalog = []
+    for _ in range(defs_count):
+        name_length_data = safe_read(buffer, 4)
+        if len(name_length_data) < 4:
+            return None
+        name_length = struct.unpack('<i', name_length_data)[0]
+        if name_length < 0 or name_length > 260:
+            return None
+        sprite_name = safe_read(buffer, name_length)
+        rest = safe_read(buffer, 42)
+        if len(rest) < 42:
+            return None
+        # rest = 6 passability + 6 actionability + 2 allowedLandscapes +
+        #        2 landscapeGroups + 4 class + 4 subclass + 1 group +
+        #        1 ground + 16 unknown
+        obj_class = struct.unpack('<I', rest[16:20])[0]
+        obj_subclass = struct.unpack('<I', rest[20:24])[0]
+        catalog.append(OrderedDict([
+            ('sprite name', sprite_name),
+            ('class', obj_class),
+            ('subclass', obj_subclass),
+        ]))
+
+    # --- Object instances ---
+    count_data = safe_read(buffer, 4)
+    if len(count_data) < 4:
+        return None
+    object_count = struct.unpack('<I', count_data)[0]
+    object_count = min(object_count, 10000)
+
+    tiles = OrderedDict()
+    monster_metadata = OrderedDict()
+    resource_metadata = OrderedDict()
+    artifact_metadata = OrderedDict()
+    hero_metadata = OrderedDict()
+    sign_metadata = OrderedDict()
+    ownable_metadata = OrderedDict()
+    town_metadata = OrderedDict()
+    event_metadata = OrderedDict()
+    shrine_metadata = OrderedDict()
+
+    for object_id in range(object_count):
+        header = safe_read(buffer, 7)
+        if len(header) < 7:
+            break
+        x, y, z = struct.unpack('<BBB', header[:3])
+        kind = struct.unpack('<I', header[3:])[0]
+        if kind >= len(catalog):
+            break
+
+        obj_class = catalog[kind]['class']
+        obj_subclass = catalog[kind]['subclass']
+        kind_name = OBJECT_CLASS_KINDS.get(obj_class)
+        group = H3M_CLASS_TO_GROUP.get(obj_class)
+
+
+        obj = OrderedDict()
+        obj['id'] = object_id
+        obj['group'] = group if group else 'UNDEFINED_{}'.format(obj_class)
+        obj['index'] = kind
+
+        # Every object carries 5 unknown bytes before its details.
+        safe_read(buffer, 5)
+
+        # --- Object-specific data ---
+        if kind_name == 'monster':
+            if level_ab:
+                safe_read(buffer, 4)  # objectID
+            count2 = safe_read(buffer, 3)
+            if len(count2) < 3:
+                break
+            count, _disposition = struct.unpack('<HB', count2)
+            monster_metadata[str(object_id)] = OrderedDict([
+                ('count', count if count else None),
+                ('creature', None if obj_class == 71 else obj_subclass),
+            ])
+            has_treasure = safe_read(buffer, 1)[0]
+            if has_treasure:
+                msg_len = struct.unpack('<i', safe_read(buffer, 4))[0]
+                safe_read(buffer, msg_len)
+                safe_read(buffer, 4 * 7)  # resources
+                safe_read(buffer, artifact_id_bytes)
+            safe_read(buffer, 4)  # canFlee/canGrow + 2 unknown
+        elif kind_name == 'resource':
+            # Guarded object: an optional guard comes first.
+            is_guarded = safe_read(buffer, 1)[0]
+            if is_guarded:
+                if _parse_h3m_guarded(buffer, creature_id_bytes) is None:
+                    break
+            qty_data = safe_read(buffer, 4 + 4)
+            if len(qty_data) < 8:
+                break
+            qty = struct.unpack('<I', qty_data[:4])[0]
+            resource_metadata[str(object_id)] = OrderedDict([
+                ('count', qty if qty else None),
+                ('resource', None if obj_class == 76 else obj_subclass),
+            ])
+        elif kind_name == 'sign':
+            msg_len_data = safe_read(buffer, 4)
+            if len(msg_len_data) < 4:
+                break
+            msg_len = struct.unpack('<i', msg_len_data)[0]
+            message = read_string(buffer, msg_len)
+            safe_read(buffer, 4)
+            sign_metadata[str(object_id)] = OrderedDict([('message', message)])
+        elif kind_name == 'artifact':
+            # All artifacts carry an optional guard first (isGuarded byte),
+            # even fixed ones (class 5).
+            is_guarded = safe_read(buffer, 1)[0]
+            if is_guarded:
+                if _parse_h3m_guarded(buffer, creature_id_bytes) is None:
+                    break
+            artifact_metadata[str(object_id)] = OrderedDict([
+                ('artifact', obj_subclass if obj_class == 5 else None),
+            ])
+        elif kind_name == 'hero':
+            hero_meta = _parse_h3m_hero_object(buffer, level_ab,
+                                               artifact_id_bytes,
+                                               creature_id_bytes,
+                                               artifact_slots)
+            if hero_meta is None:
+                break
+            hero_metadata[str(object_id)] = hero_meta
+        elif kind_name == 'heroPlaceholder':
+            safe_read(buffer, 1)
+        elif kind_name == 'ownable':
+            owner_data = safe_read(buffer, 4)
+            if len(owner_data) < 4:
+                break
+            ownable_metadata[str(object_id)] = OrderedDict([
+                ('owner', struct.unpack('<I', owner_data)[0]),
+            ])
+        elif kind_name == 'town':
+            if level_ab:
+                safe_read(buffer, 4)  # objectID
+            owner_data = safe_read(buffer, 1)
+            if len(owner_data) < 1:
+                break
+            has_name = safe_read(buffer, 1)[0]
+            if has_name:
+                name_len = struct.unpack('<i', safe_read(buffer, 4))[0]
+                town_name = read_string(buffer, name_len)
+            else:
+                town_name = None
+            has_creatures = safe_read(buffer, 1)[0]
+            if has_creatures:
+                for _slot in range(7):
+                    safe_read(buffer, creature_id_bytes + 2)
+            safe_read(buffer, 1)  # formation
+            has_buildings = safe_read(buffer, 1)[0]
+            if has_buildings:
+                safe_read(buffer, 6 + 6)  # built + disabled
+            else:
+                safe_read(buffer, 1)  # hasFort
+            if level_ab:
+                safe_read(buffer, 9)  # existingSpells (bitfield)
+            safe_read(buffer, 9)  # impossibleSpells (bitfield)
+            event_count = struct.unpack('<I', safe_read(buffer, 4))[0]
+            for _evt in range(event_count):
+                # town event: name, message, resources, players, days
+                evt_name_len = struct.unpack('<i', safe_read(buffer, 4))[0]
+                safe_read(buffer, evt_name_len)
+                evt_msg_len = struct.unpack('<i', safe_read(buffer, 4))[0]
+                safe_read(buffer, evt_msg_len)
+                safe_read(buffer, 4 * 7)  # resources
+                safe_read(buffer, 1 + 1 + 4 + 4)  # players, applyToComputer, days
+            if level_sod:
+                safe_read(buffer, 1)  # randomType
+            safe_read(buffer, 3)
+            town_metadata[str(object_id)] = OrderedDict([
+                ('owner', None if owner_data[0] == 0xFF else owner_data[0]),
+                ('customName', town_name),
+                ('type', obj_subclass if obj_class == 98 else None),
+            ])
+        elif kind_name == 'pandoraBox':
+            # guard (optional), then bonuses: experience, spell points,
+            # morale, luck, resources, skills, artifacts, spells, creatures.
+            is_guarded = safe_read(buffer, 1)[0]
+            if is_guarded:
+                guard_msg_len = struct.unpack('<i', safe_read(buffer, 4))[0]
+                safe_read(buffer, guard_msg_len)
+                has_creatures = safe_read(buffer, 1)[0]
+                if has_creatures:
+                    for _slot in range(7):
+                        safe_read(buffer, creature_id_bytes + 2)
+                safe_read(buffer, 4)
+            safe_read(buffer, 4 + 2 + 1 + 1)  # experience, spellPoints, morale, luck
+            safe_read(buffer, 2 * 7)  # resources
+            safe_read(buffer, 4)  # attack, defense, spellPower, knowledge
+            skill_count = safe_read(buffer, 1)[0]
+            safe_read(buffer, skill_count * 2)
+            artifact_count = safe_read(buffer, 1)[0]
+            safe_read(buffer, artifact_count * artifact_id_bytes)
+            spell_count = safe_read(buffer, 1)[0]
+            safe_read(buffer, spell_count)
+            creature_count = safe_read(buffer, 1)[0]
+            for _cr in range(creature_count):
+                safe_read(buffer, creature_id_bytes + 2)
+            safe_read(buffer, 8)  # unknown
+        elif kind_name == 'event':
+            # Ground event: message, then bonuses (as pandora box), then
+            # players, applyToComputer, removeAfterVisit, unknown.
+            evt = OrderedDict()
+            msg_len_data = safe_read(buffer, 4)
+            if len(msg_len_data) < 4:
+                break
+            msg_len = struct.unpack('<i', msg_len_data)[0]
+            evt['message'] = read_string(buffer, msg_len)
+            safe_read(buffer, 2 * 7)  # resources
+            skill_count = safe_read(buffer, 1)[0]
+            safe_read(buffer, skill_count * 2)
+            artifact_count = safe_read(buffer, 1)[0]
+            safe_read(buffer, artifact_count * artifact_id_bytes)
+            spell_count = safe_read(buffer, 1)[0]
+            safe_read(buffer, spell_count)
+            creature_count = safe_read(buffer, 1)[0]
+            for _cr in range(creature_count):
+                safe_read(buffer, creature_id_bytes + 2)
+            safe_read(buffer, 1 + 1 + 1)  # players, applyToComputer, removeAfterVisit
+            safe_read(buffer, 4)  # unknown
+            event_metadata[str(object_id)] = evt
+        elif kind_name == 'garrison':
+            owner_data = safe_read(buffer, 4)
+            if len(owner_data) < 4:
+                break
+            for _slot in range(7):
+                safe_read(buffer, creature_id_bytes + 2)
+            if level_ab:
+                safe_read(buffer, 1)  # canTake
+            safe_read(buffer, 8)
+        elif kind_name == 'witchHut':
+            if level_ab:
+                safe_read(buffer, 4)  # potentialSkills
+        elif kind_name == 'shrine':
+            spell_data = safe_read(buffer, 4)
+            if len(spell_data) < 4:
+                break
+            shrine_metadata[str(object_id)] = OrderedDict([
+                ('spell', None if struct.unpack('<I', spell_data)[0] == 0xFF else struct.unpack('<I', spell_data)[0]),
+            ])
+        elif kind_name is None and obj_class in OBJECT_NONE_CLASSES:
+            # No per-object data: nothing more to read.
+            pass
+        elif kind_name is None:
+            # Unknown object class: decoding cannot continue safely.
+            break
+        elif kind_name in ('seerHut', 'questGuard'):
+            # quest (RoE seer huts read an artifact quest instead) then reward.
+            if kind_name == 'seerHut' and not level_ab:
+                quest_artifact = safe_read(buffer, 1)[0]
+                if quest_artifact != 0xFF:
+                    pass  # artifact quest: nothing more
+            else:
+                if _parse_h3m_quest(buffer, level_ab, artifact_id_bytes,
+                                    creature_id_bytes) is None:
+                    # Empty quest or unsupported type: stop to stay aligned
+                    # only when the quest could not be skipped precisely.
+                    pass
+            reward_type = _parse_h3m_reward(buffer, artifact_id_bytes,
+                                            creature_id_bytes)
+            if kind_name == 'seerHut':
+                safe_read(buffer, 2)
+        elif kind_name == 'scholar':
+            # rewardType; 0xFF means random, then unknown bytes.
+            reward_type_data = safe_read(buffer, 1)
+            if len(reward_type_data) < 1:
+                break
+            if reward_type_data[0] == 0xFF:
+                safe_read(buffer, 1)
+            else:
+                _parse_h3m_reward(buffer, artifact_id_bytes, creature_id_bytes)
+            safe_read(buffer, 6)
+        elif kind_name == 'bank':
+            # Banks have no per-object data outside of HotA.
+            pass
+        else:
+            # Any remaining kind with a variable per-object payload that is
+            # not decoded yet: stop to stay aligned.
+            break
+
+        tile_key = '{}_{}_{}'.format(x, y, z)
+        if tile_key not in tiles:
+            tiles[tile_key] = []
+        tiles[tile_key].append(obj)
+
+    result = OrderedDict()
+    result['tiles'] = tiles
+    if monster_metadata:
+        result['monsterMetadata'] = monster_metadata
+    if resource_metadata:
+        result['resourceMetadata'] = resource_metadata
+    if artifact_metadata:
+        result['artifactMetadata'] = artifact_metadata
+    if hero_metadata:
+        result['heroMetadata'] = hero_metadata
+    if sign_metadata:
+        result['signMetadata'] = sign_metadata
+    if ownable_metadata:
+        result['ownableMetadata'] = ownable_metadata
+    if town_metadata:
+        result['townMetadata'] = town_metadata
+    if event_metadata:
+        result['eventMetadata'] = event_metadata
+    if shrine_metadata:
+        result['shrineMetadata'] = shrine_metadata
+    return result
+
+
+def _parse_h3m_guarded(buffer, creature_id_bytes):
+    """
+    Parse a Guarded structure: a message, an optional monster stack
+    (7 slots) and 4 unknown bytes.
+    """
+    msg_len_data = safe_read(buffer, 4)
+    if len(msg_len_data) < 4:
+        return None
+    msg_len = struct.unpack('<i', msg_len_data)[0]
+    safe_read(buffer, msg_len)
+    has_creatures = safe_read(buffer, 1)[0]
+    if has_creatures:
+        for _slot in range(7):
+            safe_read(buffer, creature_id_bytes + 2)
+    safe_read(buffer, 4)
+    return OrderedDict([('message', None)])
+
+
+def _parse_h3m_hero_object(buffer, level_ab, artifact_id_bytes,
+                           creature_id_bytes, artifact_slots):
+    """Parse the data of a hero object instance."""
+    meta = OrderedDict()
+    owner_data = safe_read(buffer, 1)
+    if len(owner_data) < 1:
+        return None
+    meta['owner'] = owner_data[0]
+
+    # Hero type (RoE: 1 byte, AB+: variable - 0xFF means random).
+    if not level_ab:
+        type_data = safe_read(buffer, 1)
+        if len(type_data) < 1:
+            return None
+        meta['type'] = None if type_data[0] == 0xFF else type_data[0]
+    else:
+        type_data = safe_read(buffer, 1)
+        if len(type_data) < 1:
+            return None
+        meta['type'] = None if type_data[0] == 0xFF else type_data[0]
+
+    return meta
+
+
+def _parse_h3m_quest(buffer, level_ab, artifact_id_bytes, creature_id_bytes):
+    """
+    Parse a quest (QuestGuard / SeerHut). Returns the quest type or None
+    when the quest is empty (type 0).
+    """
+    type_data = safe_read(buffer, 1)
+    if len(type_data) < 1:
+        return None
+    quest_type = type_data[0]
+    if quest_type == 0:
+        return None
+
+    if quest_type == 1:  # reach level
+        safe_read(buffer, 4)
+    elif quest_type == 2:  # primary skills
+        safe_read(buffer, 4 * 4)
+    elif quest_type == 3:  # defeat hero (objectID AB+)
+        if level_ab:
+            safe_read(buffer, 4)
+    elif quest_type == 4:  # defeat monster (objectID AB+)
+        if level_ab:
+            safe_read(buffer, 4)
+    elif quest_type == 5:  # collect artifacts (count + list)
+        count = safe_read(buffer, 1)[0]
+        safe_read(buffer, count * artifact_id_bytes)
+    elif quest_type == 6:  # collect creatures
+        count = safe_read(buffer, 1)[0]
+        for _cr in range(count):
+            safe_read(buffer, creature_id_bytes + 2)
+    elif quest_type == 7:  # collect resources
+        safe_read(buffer, 4 * 7)
+    elif quest_type == 8:  # be a specific hero
+        safe_read(buffer, 1)
+    elif quest_type == 9:  # be a specific player
+        safe_read(buffer, 1)
+    else:
+        return None
+
+    # deadline + messages
+    safe_read(buffer, 4)  # deadline
+    for _msg in range(3):  # first, unmet, met messages
+        msg_len_data = safe_read(buffer, 4)
+        if len(msg_len_data) < 4:
+            return None
+        msg_len = struct.unpack('<i', msg_len_data)[0]
+        safe_read(buffer, msg_len)
+    return quest_type
+
+
+def _parse_h3m_reward(buffer, artifact_id_bytes, creature_id_bytes):
+    """
+    Parse a reward (SeerHut / Scholar). Returns the reward type or None
+    when there is no reward (type 0).
+    """
+    type_data = safe_read(buffer, 1)
+    if len(type_data) < 1:
+        return None
+    reward_type = type_data[0]
+    if reward_type == 0xFF:
+        return None
+    if reward_type == 0:
+        return None
+
+    if reward_type == 1:  # experience
+        safe_read(buffer, 4)
+    elif reward_type == 2:  # spell points
+        safe_read(buffer, 4)
+    elif reward_type == 3:  # morale
+        safe_read(buffer, 1)
+    elif reward_type == 4:  # luck
+        safe_read(buffer, 1)
+    elif reward_type == 5:  # resource
+        safe_read(buffer, 1 + 4)
+    elif reward_type == 6:  # primary skill
+        safe_read(buffer, 1 + 1)
+    elif reward_type == 7:  # secondary skill
+        safe_read(buffer, 1 + 1)
+    elif reward_type == 8:  # artifact
+        safe_read(buffer, artifact_id_bytes)
+    elif reward_type == 9:  # spell
+        safe_read(buffer, 1)
+    elif reward_type == 10:  # creature
+        safe_read(buffer, creature_id_bytes + 2)
+    else:
+        return None
+    return reward_type
