@@ -29,6 +29,10 @@ PLAYER_COLOR_NAMES = ["Blue", "Green", "Red", "Yellow", "Orange", "Purple"]
 RACE_MAP = {0: "Random", 1: "Knight", 2: "Barbarian", 3: "Sorceress",
             4: "Warlock", 5: "Wizard", 6: "Necromancer"}
 
+RACE_MAP_REVERSE = {name: value for value, name in RACE_MAP.items()}
+
+DIFFICULTY_MAP_REVERSE = {name: value for value, name in DIFFICULTY_MAP.items()}
+
 OBJECT_GROUP_NAMES = [
     "NONE", "ROADS", "STREAMS", "LANDSCAPE_MOUNTAINS", "LANDSCAPE_ROCKS",
     "LANDSCAPE_TREES", "LANDSCAPE_WATER", "LANDSCAPE_MISCELLANEOUS",
@@ -193,7 +197,9 @@ def read_hero_metadata(buffer):
     metadata["customKnowledge"] = read_i16(buffer)
     metadata["customSpellPower"] = read_i16(buffer)
     metadata["magicPoints"] = read_i16(buffer)
-    metadata["race"] = RACE_MAP.get(read_u8(buffer), "Unknown")
+    race_id = read_u8(buffer)
+    metadata["raceId"] = race_id
+    metadata["race"] = RACE_MAP.get(race_id, "Unknown")
     return metadata
 
 
@@ -310,7 +316,9 @@ def parse_base_map(buffer, data, version):
     data["humanPlayerColors"] = color_names(read_u8(buffer))
     data["computerPlayerColors"] = color_names(read_u8(buffer))
     data["alliances"] = read_list(buffer, read_u8)
-    data["playerRace"] = [RACE_MAP.get(race, "Unknown") for race in read_list(buffer, read_u8)]
+    race_ids = read_list(buffer, read_u8)
+    data["playerRaceId"] = race_ids
+    data["playerRace"] = [RACE_MAP.get(race, "Unknown") for race in race_ids]
     data["victoryConditionType"] = read_u8(buffer)
     data["isVictoryConditionApplicableForAI"] = read_u8(buffer) != 0
     data["allowNormalVictory"] = read_u8(buffer) != 0
@@ -419,3 +427,301 @@ def parse_fh2m(file_path):
     parse_compressed_section(BytesIO(decompressed), data, version)
 
     return data
+
+
+def write_string(out, value):
+    """Write a length-prefixed (4 bytes, big-endian) string."""
+    encoded = value.encode("utf-8")
+    out += struct.pack(">I", len(encoded))
+    out += encoded
+
+
+def write_u8(out, value):
+    out += struct.pack(">B", value)
+
+
+def write_u16(out, value):
+    out += struct.pack(">H", value)
+
+
+def write_u32(out, value):
+    out += struct.pack(">I", value)
+
+
+def write_i8(out, value):
+    out += struct.pack(">b", value)
+
+
+def write_i16(out, value):
+    out += struct.pack(">h", value)
+
+
+def write_i32(out, value):
+    out += struct.pack(">i", value)
+
+
+def write_list(out, items, write_item):
+    """Write a u32-count-prefixed list of items."""
+    write_u32(out, len(items))
+    for item in items:
+        write_item(out, item)
+
+
+def write_map(out, mapping, write_key, write_value):
+    """Write a u32-count-prefixed map of key/value pairs."""
+    write_u32(out, len(mapping))
+    for key, value in mapping.items():
+        if isinstance(key, str) and key.isdigit():
+            key = int(key)
+        write_key(out, key)
+        write_value(out, value)
+
+
+def color_mask(names):
+    """Convert a list of color names into a player color bit mask."""
+    mask = 0
+    for name in names:
+        try:
+            mask |= 1 << PLAYER_COLOR_NAMES.index(name)
+        except ValueError:
+            pass
+    return mask
+
+
+def object_group_id(group_name):
+    try:
+        return OBJECT_GROUP_NAMES.index(group_name)
+    except ValueError:
+        return 0
+
+
+def write_tile_object(out, obj):
+    write_u32(out, obj["id"])
+    write_u8(out, object_group_id(obj["group"]))
+    write_u32(out, obj["index"])
+
+
+def write_tile(out, tile):
+    write_u16(out, tile["terrainIndex"])
+    write_u8(out, tile["terrainFlags"])
+    write_list(out, tile["objects"], write_tile_object)
+
+
+def write_daily_event(out, event):
+    write_string(out, event["message"])
+    write_u8(out, color_mask(event["humanPlayerColors"]))
+    write_u8(out, color_mask(event["computerPlayerColors"]))
+    write_u32(out, event["firstOccurrenceDay"])
+    write_u32(out, event["repeatPeriodInDays"])
+    write_funds(out, event["resources"])
+
+
+def write_funds(out, funds):
+    for name in RESOURCE_NAMES:
+        write_i32(out, funds[name])
+
+
+def write_castle_metadata(out, metadata):
+    write_string(out, metadata["customName"])
+    write_list(out, metadata["defenderMonsterType"], write_i32)
+    write_list(out, metadata["defenderMonsterCount"], write_i32)
+    write_u8(out, 1 if metadata["customBuildings"] else 0)
+    write_list(out, metadata["builtBuildings"], write_u32)
+    write_list(out, metadata["bannedBuildings"], write_u32)
+    write_map(out, metadata["mustHaveSpells"], write_u8, write_i32)
+    write_list(out, metadata["bannedSpells"], write_i32)
+    write_list(out, metadata["availableToHireMonsterCount"], write_i32)
+
+
+def write_hero_metadata(out, metadata):
+    write_string(out, metadata["customName"])
+    write_i32(out, metadata["customPortrait"])
+    write_list(out, metadata["armyMonsterType"], write_i32)
+    write_list(out, metadata["armyMonsterCount"], write_i32)
+    write_list(out, metadata["artifacts"], write_i32)
+    write_list(out, metadata["artifactMetadata"], write_i32)
+    write_list(out, metadata["availableSpells"], write_i32)
+    write_u8(out, 1 if metadata["isOnPatrol"] else 0)
+    write_u8(out, metadata["patrolRadius"])
+    write_list(out, metadata["secondarySkill"], write_i8)
+    write_list(out, metadata["secondarySkillLevel"], write_u8)
+    write_i16(out, metadata["customLevel"])
+    write_i32(out, metadata["customExperience"])
+    write_i16(out, metadata["customAttack"])
+    write_i16(out, metadata["customDefense"])
+    write_i16(out, metadata["customKnowledge"])
+    write_i16(out, metadata["customSpellPower"])
+    write_i16(out, metadata["magicPoints"])
+    write_u8(out, metadata.get("raceId", RACE_MAP_REVERSE.get(metadata["race"], 0)))
+
+
+def write_sphinx_metadata(out, metadata):
+    write_string(out, metadata["riddle"])
+    write_list(out, metadata["answers"], write_string)
+    write_i32(out, metadata["artifact"])
+    write_i32(out, metadata["artifactMetadata"])
+    write_funds(out, metadata["resources"])
+
+
+def write_sign_metadata(out, metadata):
+    write_string(out, metadata["message"])
+
+
+def write_adventure_map_event_metadata(out, metadata):
+    write_string(out, metadata["message"])
+    write_u8(out, color_mask(metadata["humanPlayerColors"]))
+    write_u8(out, color_mask(metadata["computerPlayerColors"]))
+    write_u8(out, 1 if metadata["isRecurringEvent"] else 0)
+    write_i32(out, metadata["artifact"])
+    write_i32(out, metadata["artifactMetadata"])
+    write_funds(out, metadata["resources"])
+    write_i16(out, metadata["attack"])
+    write_i16(out, metadata["defense"])
+    write_i16(out, metadata["knowledge"])
+    write_i16(out, metadata["spellPower"])
+    write_i32(out, metadata["experience"])
+    write_u8(out, metadata["secondarySkill"])
+    write_u8(out, metadata["secondarySkillLevel"])
+    write_i32(out, metadata["monsterType"])
+    write_i32(out, metadata["monsterCount"])
+
+
+def write_selection_object_metadata(out, metadata):
+    write_list(out, metadata["selectedItems"], write_i32)
+
+
+def write_capturable_object_metadata(out, metadata):
+    write_u8(out, color_mask(metadata["ownerColor"]))
+
+
+def write_monster_metadata(out, metadata):
+    write_i32(out, metadata["count"])
+    write_i32(out, metadata["joinCondition"])
+    write_u8(out, 1 if metadata["isWeeklyGrowthDisabled"] else 0)
+    write_list(out, metadata["selected"], write_i32)
+
+
+def write_artifact_metadata(out, metadata):
+    write_i32(out, metadata["radius"])
+    write_i32(out, metadata["captureCondition"])
+    write_list(out, metadata["selected"], write_i32)
+
+
+def write_resource_metadata(out, metadata):
+    write_i32(out, metadata["count"])
+
+
+def write_standard_object_metadata(out, metadata):
+    write_list(out, metadata["metadata"], write_i32)
+
+
+def write_translation_sphinx_metadata(out, metadata):
+    write_string(out, metadata["riddle"])
+    write_list(out, metadata["answers"], write_string)
+
+
+def write_translation_base_map_metadata(out, metadata):
+    write_string(out, metadata["name"])
+    write_string(out, metadata["description"])
+    write_string(out, metadata["creatorNotes"])
+
+
+def write_translation_format(out, metadata):
+    write_list(out, metadata["dailyEvents"], write_string)
+    write_list(out, metadata["rumors"], write_string)
+    write_map(out, metadata["castleMetadata"], write_u32, write_string)
+    write_map(out, metadata["heroMetadata"], write_u32, write_string)
+    write_map(out, metadata["sphinxMetadata"], write_u32, write_translation_sphinx_metadata)
+    write_map(out, metadata["signMetadata"], write_u32, write_string)
+    write_map(out, metadata["adventureMapEventMetadata"], write_u32, write_string)
+
+
+def write_base_map(out, data):
+    """Write the uncompressed BaseMapFormat part of the file."""
+    version = data["version"]
+    write_u16(out, version)
+    write_u8(out, 1 if data["isCampaign"] else 0)
+    write_u8(out, DIFFICULTY_MAP_REVERSE.get(data["difficulty"], 1))
+    write_u8(out, color_mask(data["availablePlayerColors"]))
+    write_u8(out, color_mask(data["humanPlayerColors"]))
+    write_u8(out, color_mask(data["computerPlayerColors"]))
+    write_list(out, data["alliances"], write_u8)
+    if "playerRaceId" in data:
+        race_ids = data["playerRaceId"]
+    else:
+        race_ids = [RACE_MAP_REVERSE.get(race, 0) for race in data["playerRace"]]
+    write_list(out, race_ids, write_u8)
+    write_u8(out, data["victoryConditionType"])
+    write_u8(out, 1 if data["isVictoryConditionApplicableForAI"] else 0)
+    write_u8(out, 1 if data["allowNormalVictory"] else 0)
+    write_list(out, data["victoryConditionMetadata"], write_u32)
+    write_u8(out, data["lossConditionType"])
+    write_list(out, data["lossConditionMetadata"], write_u32)
+    write_i32(out, data["width"])
+    write_u8(out, data["mainLanguage"])
+    write_string(out, data["name"])
+    write_string(out, data["description"])
+    if version >= 9:
+        write_string(out, data["creatorNotes"])
+    if version >= 11:
+        write_map(out, data["translations"], write_u8, write_translation_base_map_metadata)
+
+
+def write_compressed_section(out, data):
+    """Write the zlib-compressed MapFormat part of the file."""
+    version = data["version"]
+    write_list(out, data["additionalInfo"], write_u32)
+    write_list(out, data["tiles"], write_tile)
+    write_list(out, data["dailyEvents"], write_daily_event)
+    write_list(out, data["rumors"], write_string)
+
+    if version < 10:
+        write_map(out, data.get("standardObjectMetadata", {}), write_u32, write_standard_object_metadata)
+
+    write_map(out, data["castleMetadata"], write_u32, write_castle_metadata)
+    write_map(out, data["heroMetadata"], write_u32, write_hero_metadata)
+    write_map(out, data["sphinxMetadata"], write_u32, write_sphinx_metadata)
+    write_map(out, data["signMetadata"], write_u32, write_sign_metadata)
+    write_map(out, data["adventureMapEventMetadata"], write_u32, write_adventure_map_event_metadata)
+    write_map(out, data["selectionObjectMetadata"], write_u32, write_selection_object_metadata)
+
+    if version > 8:
+        write_map(out, data["capturableObjectsMetadata"], write_u32, write_capturable_object_metadata)
+
+    if version > 9:
+        write_map(out, data["monsterMetadata"], write_u32, write_monster_metadata)
+        write_map(out, data["artifactMetadata"], write_u32, write_artifact_metadata)
+        write_map(out, data["resourceMetadata"], write_u32, write_resource_metadata)
+
+    if version >= 11:
+        write_map(out, data["translationInfo"], write_u8, write_translation_format)
+
+
+def write_fh2m(map_data, output_path):
+    """
+    Write a fheroes2 native map file (.fh2m) from a structured dictionary,
+    as produced by parse_fh2m and the JSON files in outputjson/.
+
+    Args:
+        map_data: Dictionary containing map information.
+        output_path: Path of the .fh2m file to write.
+    """
+    version = map_data.get("version", CURRENT_SUPPORTED_VERSION)
+    map_data = dict(map_data)
+    map_data["version"] = version
+
+    if version < MINIMUM_SUPPORTED_VERSION or version > CURRENT_SUPPORTED_VERSION:
+        raise ValueError("Unsupported map format version: {}".format(version))
+
+    base = bytearray()
+    write_base_map(base, map_data)
+
+    compressed_section = bytearray()
+    write_compressed_section(compressed_section, map_data)
+
+    content = MAGIC_WORD + bytes(base) + zlib.compress(bytes(compressed_section), 6)
+    if len(content) < MIN_FILE_SIZE:
+        content += b"\x00" * (MIN_FILE_SIZE - len(content))
+
+    with open(output_path, "wb") as f:
+        f.write(content)
