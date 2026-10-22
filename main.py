@@ -1,7 +1,7 @@
 import json
 import os
 
-from h2decoder import parse_fh2m
+from h2decoder import parse_fh2m, write_fh2m
 from h3decoder import parse_h3m, write_h3m
 
 INPUT_DIR = "input"
@@ -38,14 +38,18 @@ def main():
                 json.dump(result, json_file, indent=4, ensure_ascii=False)
             print(f"JSON écrit dans '{json_file_path}'")
 
-            # Étape 2 : lecture du JSON et écriture du .h3m dans le dossier output
-            # (uniquement pour les cartes Heroes III, il n'y a pas encore d'écrivain .fh2m)
-            if file_name.lower().endswith(".h3m"):
-                with open(json_file_path, "r", encoding="utf-8") as json_file:
-                    map_data = json.load(json_file)
+            # Étape 2 : lecture du JSON et écriture du fichier dans le dossier output
+            with open(json_file_path, "r", encoding="utf-8") as json_file:
+                map_data = json.load(json_file)
 
+            if file_name.lower().endswith(".fh2m"):
+                fh2m_output_path = os.path.join(OUTPUT_DIR, f"{base_name}.fh2m")
+                write_fh2m(map_data, fh2m_output_path)
+                print(f"FH2M file written to {fh2m_output_path}")
+            else:
                 h3m_output_path = os.path.join(OUTPUT_DIR, f"{base_name}.h3m")
                 write_h3m(map_data, h3m_output_path)
+                print(f"H3M file written to {h3m_output_path}")
         except Exception as e:
             print(f"Erreur lors de la conversion de '{file_name}': {e}")
             continue
