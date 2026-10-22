@@ -18,12 +18,27 @@ jobs:
       - name: Syntax check
         run: python -m compileall h3decoder.py main.py
 
-      - name: Convert maps from input/
+      # Étapes 1-3 : lecture des cartes de input/, conversion en JSON
+      # dans un dossier temporaire, puis réécriture en .h3m dans output/
+      - name: Convert maps (input -> JSON temp -> h3m in output/)
         run: python main.py
 
-      - name: Check outputs
+      # Étape 4 : les fichiers régénérés doivent être égaux aux originaux
+      - name: Verify output files match input files
         run: |
+          fail=0
           for f in input/*.h3m; do
-            name=$(basename "$f" .h3m)
-            test -f "output/$name.json" || { echo "Missing output/$name.json"; exit 1; }
+            name=$(basename "$f")
+            if [ ! -f "output/$name" ]; then
+              echo "Missing output/$name"
+              fail=1
+              continue
+            fi
+            if cmp -s "$f" "output/$name"; then
+              echo "$name : identical"
+            else
+              echo "$name : differs from input"
+              fail=1
+            fi
           done
+          exit $fail

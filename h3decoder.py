@@ -11,6 +11,7 @@ Header layout differs between RoE, AB and SoD versions and is handled accordingl
 
 import gzip
 import struct
+import zlib
 from collections import OrderedDict
 from io import BytesIO
 
@@ -383,8 +384,10 @@ def parse_h3m(file_path):
     num_objects_data = safe_read(buffer, 4)
     if len(num_objects_data) == 4:
         num_objects = struct.unpack('<I', num_objects_data)[0]
-        num_objects = min(num_objects, MAX_OBJECTS)
-        data['Objects'] = OrderedDict([('Number of Objects', num_objects)])
+        data['Objects'] = OrderedDict([
+            ('Number of Objects', num_objects),
+            ('Raw Data', (num_objects_data + safe_read(buffer, buffer.getbuffer().nbytes - buffer.tell())).hex())
+        ])
     else:
         data['Objects'] = OrderedDict([('Note', 'End of file')])
 
@@ -703,12 +706,22 @@ def write_h3m(map_data, output_path):
 
     # === Objects ===
     objects = map_data.get('Objects', {})
-    num_objects = objects.get('Number of Objects', 0)
-    buffer.write(struct.pack('<I', num_objects))
+    raw_data = objects.get('Raw Data', '')
+    if raw_data:
+        buffer.write(bytes.fromhex(raw_data))
+    else:
+        num_objects = objects.get('Number of Objects', 0)
+        buffer.write(struct.pack('<I', num_objects))
 
     all_data = buffer.getvalue()
 
-    with gzip.open(output_path, 'wb') as f:
-        f.write(all_data)
+    compressor = zlib.compressobj(6, zlib.DEFLATED, -15)
+    deflated = compressor.compress(all_data) + compressor.flush()
+    crc = zlib.crc32(all_data) & 0xFFFFFFFF
+
+    with open(output_path, 'wb') as f:
+        f.write(b'\x1f\x8b\x08\x00\x00\x00\x00\x00\x00\x0b')
+        f.write(deflated)
+        f.write(struct.pack('<II', crc, len(all_data) & 0xFFFFFFFF))
 
     print("H3M file written to " + output_path)
