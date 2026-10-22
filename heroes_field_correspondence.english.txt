@@ -1,0 +1,174 @@
+Table of correspondences between the unified JSON format, .fh2m and .h3m files
+   ╔╦╦╦════════════════════════════════════════════════════════════════════╦╦╦╗
+   ║║║║  Unified JSON / FH2M / H3M field correspondences                    ║║║║
+   ╚╩╩╩════════════════════════════════════════════════════════════════════╩╩╩╝
+
+   Each row gives the location of a piece of information in the three
+   formats. Enum values are favored whenever they exist. UNDEFINE means
+   the value has no direct or obvious equivalent in that column.
+
+   Paths use the following shorthand:
+   - JSON column: path in the unified format (heroes_json_description)
+   - FH2M column: the C++ field of fheroes2 (Map_Format::MapFormat etc.)
+   - H3M column: the JSON key of h3decoder.py (h3m_json_description)
+
+██████████████████████████████████████████████████████████████████████████████
+██ Identification                                                          ██
+████████████████████████████████████████████████████████════════════════════
+
+| JSON unified                                 | FH2M                          | H3M                                             |
+|----------------------------------------------|-------------------------------|-------------------------------------------------|
+| sourceGame                                   | UNDEFINE                      | UNDEFINE                                        |
+| sourceVersion                                | version (uint16)              | Basic Parameters > Format Identifier            |
+| name                                         | name (std::string)           | Basic Parameters > Map Name                     |
+| description                                  | description (std::string)     | Basic Parameters > Map Description              |
+| creatorNotes                                 | creatorNotes (std::string)    | UNDEFINE                                        |
+| mainLanguage                                 | mainLanguage (SupportedLanguage)| UNDEFINE                                       |
+| difficulty                                   | difficulty (uint8)           | Basic Parameters > Difficulty                   |
+| mapSize.width                                | width (int32)                 | Basic Parameters > Map Size                     |
+| mapSize.height                                | width (identical, square maps)| Basic Parameters > Map Size                     |
+| hasUnderground                               | UNDEFINE (no underground)     | Basic Parameters > Has Underground             |
+
+████████████████████████████████████████████████══════════════════════════██
+██ Players                                                                 ██
+████████████████████████████████══════════════════════════════════════════
+
+| JSON unified                                 | FH2M                          | H3M                                             |
+|----------------------------------------------|-------------------------------|-------------------------------------------------|
+| players.availableColors                      | availablePlayerColors (PlayerColorsSet)| Players Attributes > Human Playable /   |
+|                                              |                               | AI Playable (per color)                        |
+| players.humanColors                           | humanPlayerColors (PlayerColorsSet)| Players Attributes > Human Playable        |
+| players.computerColors                        | computerPlayerColors (PlayerColorsSet)| Players Attributes > AI Playable           |
+| playerDetails[].color                        | PlayerColor (BLUE, GREEN, RED,| Players Attributes > Players > Color           |
+|                                              | YELLOW, ORANGE, PURPLE)       | (Red, Blue, Tan, Green, Orange,                |
+|                                              |                               | Purple, Teal, Pink)                            |
+| playerDetails[].race                         | playerRace (Race::KNGT, BARB, | UNDEFINE (factions are town types, not        |
+|                                              | SORC, WRLK, WZRD, NECR, RAND)  | hero races)                                    |
+| playerDetails[].sourceRace                   | playerRace (raw enum)         | Players Attributes > Owned Towns (TOWN_TYPES)   |
+| playerDetails[].mainTown.generateHero        | UNDEFINE (heroes come from   | Players Attributes > Generate Hero At Main     |
+|                                              | hero objects)                 | Town                                            |
+| playerDetails[].mainTown.x                   | UNDEFINE (no main town in     | Players Attributes > Castle X                   |
+|                                              | the format)                   |                                                 |
+| playerDetails[].mainTown.y                   | UNDEFINE                      | Players Attributes > Castle Y                   |
+| playerDetails[].mainTown.z                   | UNDEFINE                      | Players Attributes > Castle Z                   |
+
+████████████████████████████████████████══════════════════════════████████
+██ Teams                                                                   ██
+████████████████████████████════════════════════════════════════════████████
+
+| JSON unified                                 | FH2M                          | H3M                                             |
+|----------------------------------------------|-------------------------------|-------------------------------------------------|
+| teams[] (list of color name lists)           | alliances (list of             | Teams > Team Assignments (color -> team        |
+|                                              | PlayerColorsSet masks)         | number)                                         |
+
+████████████████████████████████════════════════════════════████████████
+██ Victory and loss conditions                                             ██
+████████████████████████════════════════════════════════════════████████
+
+| JSON unified                                 | FH2M                          | H3M                                             |
+|----------------------------------------------|-------------------------------|-------------------------------------------------|
+| victoryCondition.type                        | victoryConditionType          | Victory Condition > Type (0x0-0xA or None)     |
+|                                              | (FileInfo::VictoryCondition:  |                                                 |
+|                                              | VICTORY_DEFEAT_EVERYONE, ... ) |                                                |
+| victoryCondition.allowNormalVictory         | allowNormalVictory (bool)     | UNDEFINE (read but not extracted by             |
+|                                              |                               | h3decoder.py)                                   |
+| victoryCondition.appliesToAI                 | isVictoryConditionApplicableForAI| UNDEFINE (read but not extracted by         |
+|                                              | (bool)                        | h3decoder.py)                                   |
+| victoryCondition.metadata                    | victoryConditionMetadata      | UNDEFINE (details skipped by h3decoder.py)      |
+| lossCondition.type                           | lossConditionType             | Loss Condition > Type (0x0-0x2 or None)         |
+|                                              | (FileInfo::LossCondition:     |                                                 |
+|                                              | LOSS_EVERYTHING, ...)          |                                                 |
+| lossCondition.metadata                       | lossConditionMetadata         | UNDEFINE (details skipped by h3decoder.py)     |
+
+████████████████████████══════════════════════════════████████████████████
+██ Rumors and daily events                                                 ██
+████████████████████████══════════════════════════════████████████████████
+
+| JSON unified                                 | FH2M                          | H3M                                             |
+|----------------------------------------------|-------------------------------|-------------------------------------------------|
+| rumors[].text                                | rumors (std::vector<std::string>)| Rumors > Rumors > Text                        |
+| rumors[].name                                | UNDEFINE (no name)            | Rumors > Rumors > Name                          |
+| dailyEvents[].message                        | dailyEvents > message          | UNDEFINE (no daily events in H3)                |
+| dailyEvents[].humanColors                    | dailyEvents > humanPlayerColors| UNDEFINE                                       |
+| dailyEvents[].computerColors                 | dailyEvents > computerPlayerColors| UNDEFINE                                     |
+| dailyEvents[].firstOccurrenceDay             | dailyEvents > firstOccurrenceDay (uint32)| UNDEFINE                               |
+| dailyEvents[].repeatPeriodInDays             | dailyEvents > repeatPeriodInDays (uint32)| UNDEFINE                               |
+| dailyEvents[].resources.wood                 | dailyEvents > resources > wood| UNDEFINE                                        |
+| dailyEvents[].resources.mercury              | dailyEvents > resources > mercury| UNDEFINE                                      |
+| dailyEvents[].resources.ore                 | dailyEvents > resources > ore | UNDEFINE                                        |
+| dailyEvents[].resources.sulfur              | dailyEvents > resources > sulfur| UNDEFINE                                       |
+| dailyEvents[].resources.crystal             | dailyEvents > resources > crystal| UNDEFINE                                      |
+| dailyEvents[].resources.gems                 | dailyEvents > resources > gems | UNDEFINE                                       |
+| dailyEvents[].resources.gold                | dailyEvents > resources > gold | UNDEFINE                                       |
+
+████████████████══════════════════════════════════████████████████████████
+██ Terrain                                                                 ██
+████████████████████══════════════════════════════════════████████████████
+
+| JSON unified                                 | FH2M                          | H3M                                             |
+|----------------------------------------------|-------------------------------|-------------------------------------------------|
+| terrain.levels[].grid[].x                    | tile index % width            | Surface/Underground Map > Grid > X              |
+| terrain.levels[].grid[].y                    | tile index / width             | Surface/Underground Map > Grid > Y              |
+| terrain.levels[].grid[].z                    | UNDEFINE (single level)       | Surface/Underground Map > Grid > Z              |
+| terrain.levels[].grid[].terrain (Water)      | Maps::Ground::WATER           | Water                                           |
+| terrain.levels[].grid[].terrain (Grass)     | Maps::Ground::GRASS           | Grass                                           |
+| terrain.levels[].grid[].terrain (Snow)       | Maps::Ground::SNOW            | Snow                                            |
+| terrain.levels[].grid[].terrain (Swamp)      | Maps::Ground::SWAMP           | Swamp                                           |
+| terrain.levels[].grid[].terrain (Lava)      | Maps::Ground::LAVA            | Lava                                            |
+| terrain.levels[].grid[].terrain (Dirt)      | Maps::Ground::DIRT            | Dirt                                            |
+| terrain.levels[].grid[].terrain (Wasteland)  | Maps::Ground::WASTELAND      | Rough                                           |
+| terrain.levels[].grid[].terrain (Desert)     | Maps::Ground::DESERT          | UNDEFINE (no desert in H3)                      |
+| terrain.levels[].grid[].terrain (Beach)      | Maps::Ground::BEACH           | UNDEFINE (Sand is not identical to Beach)       |
+| terrain.levels[].grid[].terrain (Sand)       | UNDEFINE (BEACH is not        | Sand                                            |
+|                                              | identical to Sand)            |                                                 |
+| terrain.levels[].grid[].terrain (Subterranean)| UNDEFINE (no underground)     | Subterranean                                    |
+| terrain.levels[].grid[].terrain (Rock)       | UNDEFINE (Rock tiles are      | Rock                                            |
+|                                              | impassable terrain images)    |                                                 |
+| terrain.levels[].grid[].sourceTerrain        | terrainIndex (uint16)         | Terrain Type                                    |
+
+
+████████████████████████████════════════════════════════████████████████████
+██ Values not converted to the unified format                               ██
+████████████████████████████════════════════════════════████████████████████
+
+List for FH2M (no unified equivalent yet):
+- isCampaign (campaign maps have a different structure)
+- additionalInfo (campaign maps only)
+- tiles[].terrainFlags (image mirroring flags)
+- tiles[].objects (placed objects: id, group, index)
+- castleMetadata (custom names, garrison, buildings, spells, hiring)
+- heroMetadata (names, portraits, armies, artifacts, spells, patrol,
+  skills, experience, primary skills, mana, race)
+- sphinxMetadata (riddles, answers, rewards)
+- signMetadata (sign messages)
+- adventureMapEventMetadata (messages, rewards, skills, monsters)
+- selectionObjectMetadata (selected items)
+- capturableObjectsMetadata (owner colors of capturable objects)
+- monsterMetadata (counts, join conditions, random monster selections)
+- artifactMetadata (radii, scroll spells, random artifact selections)
+- resourceMetadata (resource counts)
+- standardObjectMetadata (deprecated, pre-v10)
+- translations (translated name/description/creatorNotes)
+- translationInfo (all translated texts)
+
+List for H3M (no unified equivalent yet):
+- Basic Parameters > Has Hero
+- Basic Parameters > Heroes Mastery Level Cap
+- Players Attributes > Behavior (Random, Warrior, Builder, Explorer)
+- Players Attributes > Owned Towns (detailed per-town ownership)
+- Players Attributes > Owns Random Town
+- Player Heroes (starting heroes: random hero, type, face, name,
+  number of heroes)
+- Available Heroes > Bitfield
+- Random Artifacts > Bitfield
+- Allowed Spells > Bitfield
+- Allowed Abilities > Bitfield
+- Reserved Bytes
+- Hero Settings (predefined hero settings, skipped by h3decoder.py)
+- Objects (Raw Data: object entries are not decoded)
+- Victory/Loss condition details (allow normal victory, applies to AI,
+  condition metadata: coordinates, artifact/creature codes, amounts)
+- Surface/Underground Map > Grid > Terrain Picture
+- Surface/Underground Map > Grid > River Type / River Properties
+- Surface/Underground Map > Grid > Road Type / Road Properties
+- Surface/Underground Map > Grid > Mirroring
