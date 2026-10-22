@@ -16,19 +16,21 @@ jobs:
           python-version: "3.12"
 
       - name: Syntax check
-        run: python -m compileall h3decoder.py main.py
+        run: python -m compileall h2decoder.py h3decoder.py unified.py main.py verify_roundtrip.py
 
-      # Étapes 1-3 : lecture des cartes de input/, conversion en JSON
-      # dans le dossier outputjson/, puis réécriture en .h3m dans output/
-      - name: Convert maps (input -> outputjson -> h3m in output/)
+      # Conversion de toutes les cartes de input/ : JSON détaillé dans
+      # outputjson/, JSON unifié dans outputunified/, fichiers régénérés
+      # dans output/
+      - name: Convert maps
         run: python main.py
 
       # Vérification que chaque carte a bien son JSON dans outputjson/
       - name: Verify JSON outputs
         run: |
           fail=0
-          for f in input/*.h3m; do
-            name=$(basename "$f" .h3m)
+          for f in input/*.h3m input/*.fh2m; do
+            name=$(basename "$f")
+            name="${name%.*}"
             if [ -f "outputjson/$name.json" ]; then
               echo "$name.json : present"
             else
@@ -38,22 +40,7 @@ jobs:
           done
           exit $fail
 
-      # Étape 4 : les fichiers régénérés doivent être égaux aux originaux
-      - name: Verify output files match input files
-        run: |
-          fail=0
-          for f in input/*.h3m; do
-            name=$(basename "$f")
-            if [ ! -f "output/$name" ]; then
-              echo "Missing output/$name"
-              fail=1
-              continue
-            fi
-            if cmp -s "$f" "output/$name"; then
-              echo "$name : identical"
-            else
-              echo "$name : differs from input"
-              fail=1
-            fi
-          done
-          exit $fail
+      # Vérification de l'aller-retour: parse(input) -> unifié -> write ->
+      # parse(output) doit redonner les mêmes données que parse(input)
+      - name: Verify round-trip (h3m -> h3m and fh2m -> fh2m)
+        run: python verify_roundtrip.py

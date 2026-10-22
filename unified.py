@@ -208,6 +208,16 @@ def convert_h3m_to_unified(map_data):
         detail["color"] = color
         detail["race"] = _h3m_unified_race(source_race)
         detail["sourceRace"] = source_race
+        # Detailed per-town ownership and random town flag (h3m only),
+        # carried independently for a faithful round-trip.
+        owned_towns = OrderedDict()
+        for town, owned in player.get("Owned Towns", {}).items():
+            if owned:
+                owned_towns[town] = True
+        if owned_towns:
+            detail["ownedTowns"] = owned_towns
+        if player.get("Owns Random Town", False):
+            detail["ownsRandomTown"] = True
         if player.get("Main Town", False):
             main_town = OrderedDict()
             main_town["generateHero"] = bool(player.get("Generate Hero At Main Town", True))
@@ -223,6 +233,11 @@ def convert_h3m_to_unified(map_data):
         ("computerColors", computer),
     ])
     unified["playerDetails"] = player_details
+
+    # h3m-only global fields kept for a faithful round-trip.
+    basic_hero = map_data.get("Basic Parameters", {}).get("Has Hero", False)
+    unified["hasHero"] = bool(basic_hero)
+    unified["availableHeroesBitfield"] = map_data.get("Available Heroes", {}).get("Bitfield", "")
 
     # Teams
     teams = []
@@ -287,6 +302,12 @@ def convert_h3m_to_unified(map_data):
                 ("z", z),
                 ("terrain", _h3m_terrain_name(source_terrain)),
                 ("sourceTerrain", source_terrain),
+                ("sourcePicture", cell.get("Terrain Picture", 0)),
+                ("sourceMirroring", cell.get("Mirroring", "0x00")),
+                ("sourceRoad", cell.get("Road Type", "None")),
+                ("sourceRoadProperties", cell.get("Road Properties", 0)),
+                ("sourceRiver", cell.get("River Type", "None")),
+                ("sourceRiverProperties", cell.get("River Properties", 0)),
             ]))
         levels.append(OrderedDict([("grid", grid)]))
     unified["terrain"] = OrderedDict([("levels", levels)])
@@ -394,24 +415,26 @@ def convert_fh2m_to_unified(map_data):
                 if 0 <= color_id < len(FH2M_PLAYER_COLORS):
                     color = FH2M_PLAYER_COLORS[color_id]
                     hero_object_colors[color] = obj.get("index", 0)
-    for color in unified["players"]["availableColors"]:
-        if color not in FH2M_PLAYER_COLORS:
-            continue
-        index = FH2M_PLAYER_COLORS.index(color)
-        source_race = "Random"
+    race_ids = map_data.get("playerRaceId", [])
+    for index, color in enumerate(FH2M_PLAYER_COLORS):
+        # The race of every player is carried, available or not, so that
+        # the round-trip preserves playerRace for all 6 colors. The raw
+        # race id is kept for undocumented race codes.
+        source_race = races[index] if index < len(races) else "Random"
+        detail = OrderedDict()
+        detail["color"] = color
+        detail["available"] = color in unified["players"]["availableColors"]
+        detail["race"] = FH2M_RACES.get(source_race)
+        detail["sourceRace"] = source_race
+        if index < len(race_ids):
+            detail["sourceRaceId"] = race_ids[index]
         if color in hero_object_colors:
             # A starting hero object exists for this color: its race is part
             # of the object index (color * 7 + race).
             hero_race_id = int(hero_object_colors[color]) % 7
-            source_race = [name for name, code in UNIFIED_TO_FH2M_RACE_CODES.items() if code == hero_race_id]
-            source_race = source_race[0] if source_race else "Random"
-        elif index < len(races):
-            source_race = races[index]
-        detail = OrderedDict()
-        detail["color"] = color
-        detail["race"] = FH2M_RACES.get(source_race)
-        detail["sourceRace"] = source_race
-        if color in hero_object_colors:
+            hero_race = [name for name, code in UNIFIED_TO_FH2M_RACE_CODES.items() if code == hero_race_id]
+            hero_race = hero_race[0] if hero_race else "Random"
+            detail["startingHeroRace"] = hero_race
             detail["hasStartingHero"] = True
         player_details.append(detail)
     unified["playerDetails"] = player_details
@@ -468,6 +491,7 @@ def convert_fh2m_to_unified(map_data):
             ("z", 0),
             ("terrain", _fh2m_terrain_name(tile.get("terrainIndex", 0))),
             ("sourceTerrain", "terrain:{}".format(tile.get("terrainIndex", 0))),
+            ("flags", tile.get("terrainFlags", 0)),
         ]))
     unified["terrain"] = OrderedDict([
         ("levels", [OrderedDict([("grid", grid)])]),
@@ -578,6 +602,7 @@ def unified_to_h3m(unified):
     basic["Map Name"] = unified.get("name", "")
     basic["Map Description"] = unified.get("description", "")
     basic["Difficulty"] = unified.get("difficulty", "Normal")
+    basic["Has Hero"] = bool(unified.get("hasHero", False))
     data["Basic Parameters"] = basic
 
     players = unified.get("players", {})
@@ -597,13 +622,19 @@ def unified_to_h3m(unified):
         player["Behavior"] = "Random"
 
         owned_towns = OrderedDict((town, False) for town in H3M_TOWN_TYPES)
-        if source_race in owned_towns:
+        detail_owned = detail.get("ownedTowns", {})
+        if detail_owned:
+            # Detailed per-town ownership carried by the unified format.
+            for town in detail_owned:
+                if town in owned_towns:
+                    owned_towns[town] = True
+            player["Has Defined Towns"] = True
+        elif source_race in owned_towns:
             owned_towns[source_race] = True
             player["Has Defined Towns"] = True
-            player["Owns Random Town"] = False
         else:
             player["Has Defined Towns"] = False
-            player["Owns Random Town"] = True
+        player["Owns Random Town"] = bool(detail.get("ownsRandomTown", False))
         player["Owned Towns"] = owned_towns
 
         main_town = detail.get("mainTown")
@@ -659,7 +690,9 @@ def unified_to_h3m(unified):
         team_data["Team Assignments"] = assignments
     data["Teams"] = team_data
 
-    data["Available Heroes"] = OrderedDict([("Bitfield", "")])
+    data["Available Heroes"] = OrderedDict([
+        ("Bitfield", unified.get("availableHeroesBitfield", "")),
+    ])
     data["Reserved Bytes"] = ""
 
     rumors = unified.get("rumors", [])
@@ -678,7 +711,13 @@ def unified_to_h3m(unified):
                     terrain_name = UNIFIED_TO_H3M_TERRAINS.get(cell.get("terrain", "Dirt"), "Dirt")
             else:
                 terrain_name = UNIFIED_TO_H3M_TERRAINS.get(cell.get("terrain", "Grass"), "Dirt")
-            grid[(cell.get("x", 0), cell.get("y", 0))] = (cell.get("z", 0), terrain_name)
+            grid[(cell.get("x", 0), cell.get("y", 0))] = (cell.get("z", 0), terrain_name,
+                                                           cell.get("sourcePicture", 0),
+                                                           cell.get("sourceMirroring", "0x00"),
+                                                           cell.get("sourceRoad", "None"),
+                                                           cell.get("sourceRoadProperties", 0),
+                                                           cell.get("sourceRiver", "None"),
+                                                           cell.get("sourceRiverProperties", 0))
         terrain_by_level.append(grid)
 
     def build_section(z):
@@ -686,14 +725,15 @@ def unified_to_h3m(unified):
         cells = []
         for y in range(map_size):
             for x in range(map_size):
-                cell_z, terrain_name = level_grid.get((x, y), (z, "Dirt"))
+                cell_z, terrain_name, picture, mirroring, road, road_props, river, river_props = level_grid.get(
+                    (x, y), (z, "Dirt", 0, "0x00", "None", 0, "None", 0))
                 cells.append(OrderedDict([
                     ("X", x), ("Y", y), ("Z", cell_z),
                     ("Terrain Type", terrain_name),
-                    ("Terrain Picture", 0),
-                    ("River Type", "None"), ("River Properties", 0),
-                    ("Road Type", "None"), ("Road Properties", 0),
-                    ("Mirroring", "0x00"),
+                    ("Terrain Picture", picture),
+                    ("River Type", river), ("River Properties", river_props),
+                    ("Road Type", road), ("Road Properties", road_props),
+                    ("Mirroring", mirroring),
                 ]))
         return OrderedDict([
             ("Size", map_size * map_size * 7),
@@ -759,8 +799,14 @@ def unified_to_fh2m(unified):
     race_names = []
     for color in FH2M_PLAYER_COLORS:
         detail = details_by_color.get(color, {})
-        source_race = detail.get("sourceRace") or "Random"
-        race_ids.append(race_reverse.get(source_race, 0))
+        source_race = detail.get("sourceRace")
+        if source_race is None:
+            # Fall back to the normalized race when no source race exists.
+            source_race = detail.get("race") or "Random"
+        source_race_id = detail.get("sourceRaceId")
+        if source_race_id is None:
+            source_race_id = race_reverse.get(source_race, 0)
+        race_ids.append(source_race_id)
         race_names.append(source_race)
     data["playerRaceId"] = race_ids
     data["playerRace"] = race_names
@@ -798,7 +844,7 @@ def unified_to_fh2m(unified):
                     terrain_index = int(source_terrain[len("terrain:"):])
                 else:
                     terrain_index = UNIFIED_TO_FH2M_TERRAIN_INDEX.get(cell.get("terrain", "Grass"), 30)
-                terrain_by_position[(cell.get("x", 0), cell.get("y", 0))] = terrain_index
+                terrain_by_position[(cell.get("x", 0), cell.get("y", 0))] = (terrain_index, cell.get("flags", 0))
 
     # Objects placed on tiles, from the unified objects section.
     objects_by_tile = {}
@@ -812,34 +858,41 @@ def unified_to_fh2m(unified):
             continue
         objects_by_tile[(x, y)] = [OrderedDict(obj) for obj in obj_list]
 
+    default_terrain = (UNIFIED_TO_FH2M_TERRAIN_INDEX.get("Grass", 30), 0)
     tiles = []
     for y in range(data["height"]):
         for x in range(width):
+            terrain_index, terrain_flags = terrain_by_position.get((x, y), default_terrain)
             tiles.append(OrderedDict([
-                ("terrainIndex", terrain_by_position.get((x, y), UNIFIED_TO_FH2M_TERRAIN_INDEX.get("Grass", 30))),
-                ("terrainFlags", 0),
+                ("terrainIndex", terrain_index),
+                ("terrainFlags", terrain_flags),
                 ("objects", objects_by_tile.get((x, y), [])),
             ]))
-
-    # Metadata maps keyed by object id, from the unified objects section.
-    for key in ("castleMetadata", "heroMetadata", "sphinxMetadata",
-                "signMetadata", "adventureMapEventMetadata",
-                "selectionObjectMetadata", "monsterMetadata",
-                "artifactMetadata", "resourceMetadata"):
-        value_map = objects_section.get(key)
-        if value_map:
-            data[key] = OrderedDict(value_map)
 
     # Starting heroes: an fh2m hero is an object of the KINGDOM_HEROES group
     # placed on a tile. The object index is color * 7 + race (see the
     # populateKingdomHeroes function of the fheroes2 engine: 6 colors x 7
-    # races, race 6 being a random race).
-    next_object_id = 1
+    # races, race 6 being a random race). When the unified map already
+    # carries a KINGDOM_HEROES object for the color (converted from an
+    # fh2m map), it is kept as is; only missing ones are generated.
+    existing_hero_colors = set()
+    existing_ids = set()
+    for tile in tiles:
+        for obj in tile["objects"]:
+            existing_ids.add(obj.get("id", 0))
+            if obj.get("group") == "KINGDOM_HEROES":
+                hero_color_id = int(obj.get("index", 0)) // 7
+                if 0 <= hero_color_id < len(FH2M_PLAYER_COLORS):
+                    existing_hero_colors.add(FH2M_PLAYER_COLORS[hero_color_id])
+
+    next_object_id = (max(existing_ids) + 1) if existing_ids else 1
     for detail in unified.get("playerDetails", []):
         color = detail.get("color")
         if color not in FH2M_PLAYER_COLORS:
             continue
         if color not in data["availablePlayerColors"]:
+            continue
+        if color in existing_hero_colors:
             continue
         race = detail.get("race") or "Random"
         race_id = UNIFIED_TO_FH2M_RACE_CODES.get(race, 0)
@@ -896,6 +949,20 @@ def unified_to_fh2m(unified):
         data["resourceMetadata"] = OrderedDict()
     if version >= 11:
         data["translationInfo"] = OrderedDict()
+
+    # Metadata maps keyed by object id, from the unified objects section,
+    # overriding the empty defaults above.
+    for key in ("castleMetadata", "heroMetadata", "sphinxMetadata",
+                "signMetadata", "adventureMapEventMetadata",
+                "selectionObjectMetadata", "capturableObjectsMetadata",
+                "monsterMetadata", "artifactMetadata", "resourceMetadata"):
+        value_map = objects_section.get(key)
+        if value_map:
+            data[key] = OrderedDict(value_map)
+    if version < 10:
+        value_map = objects_section.get("standardObjectMetadata")
+        if value_map:
+            data["standardObjectMetadata"] = OrderedDict(value_map)
 
     return data
 
