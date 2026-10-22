@@ -340,7 +340,9 @@ def parse_compressed_section(buffer, data, version):
     data["additionalInfo"] = read_list(buffer, read_u32)
 
     tile_count = data["width"] * data["height"]
-    data["tiles"] = [read_tile(buffer) for _ in range(tile_count)]
+    data["tiles"] = read_list(buffer, read_tile)
+    if len(data["tiles"]) != tile_count:
+        raise ValueError("Invalid number of tiles: expected {}, got {}".format(tile_count, len(data["tiles"])))
 
     data["dailyEvents"] = read_list(buffer, read_daily_event)
     data["rumors"] = read_list(buffer, read_string)
