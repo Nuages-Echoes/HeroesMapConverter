@@ -1,0 +1,260 @@
+Description of the unified JSON format produced from .h3m and .fh2m maps
+   ╔╦╦╦════════════════════════════════════════════════════════════════════╦╦╦╗
+   ║║║║  Unified JSON fields for Heroes maps                              ║║║║
+   ║║║║  (common ground between .h3m and .fh2m)                            ║║║║
+   ╚╩╩╩════════════════════════════════════════════════════════════════════╩╩╩╝
+
+   This document describes the unified JSON format. A map from either game
+   can be converted to this format without losing the common information.
+   The game-specific input formats are described in
+   h3m_json_description.english.txt and h2m_json_description.english.txt.
+
+   Notation below:
+
+   (h3m)   { field only fillable from a .h3m map
+   (fh2m)  { field only fillable from a .fh2m map
+   (cond.) { field only present under the condition stated in its
+             description
+
+   The root object contains the following sections, in this order:
+   "sourceGame", "sourceVersion", "name", "description", "creatorNotes",
+   "difficulty", "mapSize", "hasUnderground", "mainLanguage", "players",
+   "playerDetails", "teams", "victoryCondition", "lossCondition", "rumors",
+   "dailyEvents" (fh2m), "terrain".
+
+
+████████████████████████████████████████████══════════════════════████████████
+██                          Map identification                              ██
+████████████████████████████████████════════════════════════████████████████
+
+ Field                Type        Description
+
+   "sourceGame"        string      Game the map was converted from:
+                                        "h3m" - Heroes of Might and Magic III
+                                        "fh2m" - fheroes2 native map
+   "sourceVersion"     string      Version of the source format:
+                                        (h3m) "RoE", "AB" or "SoD"
+                                        (fh2m) the numeric map format
+                                        version as a string ("2" to "13")
+   "name"              string      Name of the map
+   "description"       string      Description of the map
+   "creatorNotes"      string      Notes of the map maker (fh2m; empty
+                                    string for h3m)
+   "difficulty"        string      "Easy", "Normal", "Hard", "Expert" or
+                                    "Impossible" (same values in both games)
+   "mapSize"           object      Size of the map in squares:
+     "width"           int         Width (maps are square, equal to height)
+     "height"          int         Height
+   "hasUnderground"    bool        Whether the map has an underground level
+                                    (always false for fh2m, no underground
+                                    in Heroes II)
+   "mainLanguage"      int         Main language of the map (fh2m; 0 -
+                                    English; always 0 for h3m)
+
+
+████████████████████████████████════════════════════════████████████████████
+██                                 Players                                  ██
+████████████████████████████════════════════════════════════████████████████
+
+   The color names are normalized. The unified color set is the union of
+   both games:
+   "Blue", "Green", "Red", "Yellow", "Orange", "Purple" (both games) and
+   "Tan", "Teal", "Pink" (h3m only).
+
+   "players"           object      Player availability, style fh2m:
+     "availableColors" list        Names of the available player colors
+                                    (fh2m: direct; h3m: colors with
+                                    "Human Playable" or "AI Playable" true)
+     "humanColors"     list        Names of the human player colors
+     "computerColors"  list        Names of the computer player colors
+
+   "playerDetails"     list        (cond.) One entry per player with known
+                                    details, in the fixed color order of the
+                                    source game. Each entry has:
+     "color"           string      Player color name
+     "race"            string|null Normalized race, when an equivalent
+                                    exists in the other game (see the
+                                    correspondence table below); null if
+                                    no mapping exists
+     "sourceRace"      string      Raw race/faction value of the source
+                                    game:
+                                        (fh2m) "Random", "Knight",
+                                        "Barbarian", "Sorceress",
+                                        "Warlock", "Wizard",
+                                        "Necromancer" or "Unknown"
+                                        (h3m) one of the owned town types
+                                        ("Castle", "Rampart", ...), or
+                                        "Random"
+     "mainTown"        object      (cond.) Main town, when defined:
+       "generateHero"  bool        Whether to create a hero at the main
+                                    town (h3m AB+; true for fh2m)
+       "x"             int         X-coordinate
+       "y"             int         Y-coordinate
+       "z"             int         Z-coordinate (0-surface, 1-underground)
+
+   Race correspondence (h3m town type to fh2m hero race):
+   Castle-Knight, Rampart-Sorceress, Tower-Wizard, Inferno-Warlock,
+   Necropolis-Necromancer, Dungeon-Warlock, Stronghold-Barbarian,
+   Fortress-Sorceress, Conflux-none (no equivalent in Heroes II),
+   Random-Random.
+
+
+████████████████████████████████════════════════════════████████████████████
+██                          Teams and alliances                             ██
+████████████████████████══════════════════════════════════████████████████
+
+   "teams"             list        One entry per team or alliance; each
+                                    entry is the list of the color names
+                                    belonging to it. An empty list means
+                                    no teams (free for all):
+                                        (fh2m) from "alliances" (bit masks
+                                        converted to color names)
+                                        (h3m) from "Teams" > "Team
+                                        Assignments" (one team per team
+                                        number, in ascending order)
+
+
+████████████████████████████══════════════════════════════████████████████
+██                    Victory and loss conditions                           ██
+████████████████████████████════════════════════════════████████████████
+
+   Condition types are normalized to common labels. A condition that
+   doesn't exist in the other game keeps its own label; the label set is
+   the union of both games.
+
+   "victoryCondition"  object:
+     "type"            string      One of:
+     "defeatEveryone"              Default (no special condition):
+                                        (fh2m) 0 (VICTORY_DEFEAT_EVERYONE)
+                                        (h3m) "None"
+     "captureTown"                 Capture a specific town:
+                                        (fh2m) 1 (VICTORY_CAPTURE_TOWN)
+                                        (h3m) 0x6
+     "killHero"                    Defeat a specific hero:
+                                        (fh2m) 2 (VICTORY_KILL_HERO)
+                                        (h3m) 0x5
+     "obtainArtifact"              Acquire a specific artifact:
+                                        (fh2m) 3 (VICTORY_OBTAIN_ARTIFACT)
+                                        (h3m) 0x0
+     "defeatOtherSide"             Defeat the other side (alliances):
+                                        (fh2m) 4 (VICTORY_DEFEAT_OTHER_SIDE)
+                                        (h3m) deduced from "Teams" when
+                                        there are at least 2 teams
+     "collectGold"                 Accumulate gold:
+                                        (fh2m) 5 (VICTORY_COLLECT_ENOUGH_GOLD)
+                                        (h3m) 0x2 (Accumulate resources,
+                                        gold only)
+     "accumulateCreatures"         (h3m) 0x1
+     "upgradeTown"                 (h3m) 0x3
+     "buildGrail"                  (h3m) 0x4
+     "defeatMonster"               (h3m) 0x7
+     "flagDwellings"               (h3m) 0x8
+     "flagMines"                   (h3m) 0x9
+     "transportArtifact"           (h3m) 0xA
+     "allowNormalVictory" bool     Whether the game can also be won the
+                                    usual way (fh2m "allowNormalVictory";
+                                    h3m "Regular ending also possible")
+     "appliesToAI"     bool        Whether the computer can reach the
+                                    condition (fh2m
+                                    "isVictoryConditionApplicableForAI"; h3m
+                                    "Whether the computer can reach it")
+     "metadata"        list        Raw condition metadata values of the
+                                    source game (4-byte values for fh2m;
+                                    the raw detail bytes for h3m)
+
+   "lossCondition"     object:
+     "type"            string      One of:
+     "loseEverything"              Default (no special condition):
+                                        (fh2m) 0 (LOSS_EVERYTHING)
+                                        (h3m) "None"
+     "loseTown"                    Lose a specific town:
+                                        (fh2m) 1 (LOSS_TOWN)
+                                        (h3m) 0x0
+     "loseHero"                    Lose a specific hero:
+                                        (fh2m) 2 (LOSS_HERO)
+                                        (h3m) 0x1
+     "outOfTime"                   Time expires:
+                                        (fh2m) 3 (LOSS_OUT_OF_TIME)
+                                        (h3m) 0x2
+     "metadata"        list        Raw condition metadata values of the
+                                    source game
+
+
+████████████████████████████════════════════════════════████████████████
+██                           Rumors and daily events                        ██
+████████████████████════════════════════════════════════████████████████
+
+   "rumors"            list        One entry per rumor:
+     "name"            string|null Name of the rumor (h3m; null for fh2m)
+     "text"            string      Text of the rumor
+
+   "dailyEvents"       list        (fh2m) One entry per daily event (h3m
+                                    has no daily events):
+     "message"         string      Event message
+     "humanColors"     list        Names of the human player colors
+                                    concerned by the event
+     "computerColors"  list        Names of the computer player colors
+                                    concerned by the event
+     "firstOccurrenceDay" int      First occurrence day
+     "repeatPeriodInDays" int      Repeat period in days (0 means no
+                                    repetition)
+     "resources"       object      Resources to be given as a reward:
+                                        "wood", "mercury", "ore",
+                                        "sulfur", "crystal", "gems", "gold"
+                                        (each an int)
+
+
+████████████████████████══════════════════════════════████████████████████
+██                                 Terrain                                   ██
+████████████████════════════════════════════════════════████████████████
+
+   Only the normalized terrain information is kept, per square, in
+   row-major order (Y then X). Game-specific technical details (terrain
+   picture, mirroring, rivers, roads for h3m; terrain flags and object
+   lists for fh2m) are not part of the unified format.
+
+   "terrain"           object:
+     "levels"          list        One entry per map level ("surface",
+                                    then "underground" when
+                                    "hasUnderground" is true). Each entry:
+       "grid"          list        One entry per square, each with:
+         "x"          int         Column of the square
+         "y"          int         Row of the square
+         "z"          int         0-surface, 1-underground
+         "terrain"    string      Normalized terrain name, common ground
+                                    between both games:
+                                        "Water" (h3m Water / fh2m water
+                                        tiles), "Rock", "Dirt", "Sand",
+                                        "Grass", "Snow", "Swamp",
+                                        "Lava", "Wasteland" (h3m Rough /
+                                        fh2m wasteland), "Desert"
+                                        (fh2m), "Subterranean" (h3m)
+         "sourceTerrain" string   Raw terrain value of the source game:
+                                        (h3m) "Dirt", "Sand", "Grass",
+                                        "Snow", "Swamp", "Rough",
+                                        "Subterranean", "Lava", "Water",
+                                        "Rock" or "Unknown (0xNN)"
+                                        (fh2m) "terrain:<index>" where
+                                        index is the raw terrain index
+                                        of the tile
+
+
+████████████████════════════════════════════════════████████████████████
+██                     Not part of the unified format                      ██
+████████████████════════════════════════════════════████████████████████
+
+   The following source sections have no unified equivalent and are
+   dropped by the conversion:
+   - h3m: "Available Heroes", "Random Artifacts", "Allowed Spells",
+     "Allowed Abilities", "Reserved Bytes", "Hero Settings", "Objects"
+     (the objects and their events are not decoded by h3decoder.py)
+   - fh2m: "tiles" object lists, "translations", "translationInfo",
+     "additionalInfo", and all metadata maps (castleMetadata,
+     heroMetadata, sphinxMetadata, signMetadata,
+     adventureMapEventMetadata, selectionObjectMetadata,
+     capturableObjectsMetadata, monsterMetadata, artifactMetadata,
+     resourceMetadata, standardObjectMetadata)
+
+   These may be added to the unified format later, once a common
+   representation is defined for them (heroes, castles, objects and
+   events exist in both games but with very different structures).
