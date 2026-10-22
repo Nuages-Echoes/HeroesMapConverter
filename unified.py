@@ -291,7 +291,63 @@ def convert_h3m_to_unified(map_data):
         levels.append(OrderedDict([("grid", grid)]))
     unified["terrain"] = OrderedDict([("levels", levels)])
 
+    # Objects (decoded instances stored per tile, fh2m-style)
+    unified["objects"] = _h3m_objects_to_unified(map_data)
+
     return unified
+
+
+def _h3m_objects_to_unified(map_data):
+    """
+    Convert the decoded h3m object instances into the unified objects
+    section: objects stored per tile with metadata maps keyed by object
+    id, as the fh2m format does.
+
+    Objects whose group could not be mapped to a unified group are
+    dropped (UNDEFINED_* groups); their ids are listed under "dropped".
+    """
+    objects_section = map_data.get("Objects", {})
+    tiles_data = objects_section.get("Tiles")
+    if not tiles_data:
+        return None
+
+    tiles = OrderedDict()
+    dropped = []
+    for tile_key, obj_list in tiles_data.get("tiles", {}).items():
+        x, y, z = tile_key.split("_")
+        unified_objs = []
+        for obj in obj_list:
+            group = obj.get("group", "")
+            if group.startswith("UNDEFINED"):
+                dropped.append(obj.get("id"))
+                continue
+            unified_objs.append(OrderedDict([
+                ("id", obj.get("id")),
+                ("group", group),
+                ("index", obj.get("index")),
+            ]))
+        if unified_objs:
+            tiles[tile_key] = unified_objs
+
+    # Metadata maps are already keyed by object id and use unified-friendly
+    # field names; pass them through, dropping ids of dropped objects.
+    dropped_set = set(dropped)
+    metadata = OrderedDict()
+    for key, value_map in tiles_data.items():
+        if key == "tiles":
+            continue
+        cleaned = OrderedDict()
+        for obj_id, value in value_map.items():
+            if int(obj_id) not in dropped_set:
+                cleaned[obj_id] = value
+        if cleaned:
+            metadata[key] = cleaned
+
+    result = OrderedDict([("tiles", tiles)])
+    result.update(metadata)
+    if dropped:
+        result["dropped"] = dropped
+    return result
 
 
 def convert_fh2m_to_unified(map_data):
@@ -416,6 +472,9 @@ def convert_fh2m_to_unified(map_data):
     unified["terrain"] = OrderedDict([
         ("levels", [OrderedDict([("grid", grid)])]),
     ])
+
+    # Objects (stored per tile with metadata maps keyed by object id)
+    unified["objects"] = _fh2m_objects_to_unified(map_data)
 
     return unified
 
@@ -646,7 +705,16 @@ def unified_to_h3m(unified):
     if has_underground:
         data["Underground Map"] = build_section(1)
 
-    data["Objects"] = OrderedDict([("Number of Objects", 0), ("Raw Data", "")])
+    objects_section = _unified_objects_from_h3m(unified)
+    if objects_section:
+        object_count = sum(len(objs) for objs in objects_section["tiles"].values())
+        data["Objects"] = OrderedDict([
+            ("Number of Objects", object_count),
+            ("Raw Data", ""),
+            ("Tiles", objects_section),
+        ])
+    else:
+        data["Objects"] = OrderedDict([("Number of Objects", 0), ("Raw Data", "")])
 
     return data
 
@@ -732,14 +800,35 @@ def unified_to_fh2m(unified):
                     terrain_index = UNIFIED_TO_FH2M_TERRAIN_INDEX.get(cell.get("terrain", "Grass"), 30)
                 terrain_by_position[(cell.get("x", 0), cell.get("y", 0))] = terrain_index
 
+    # Objects placed on tiles, from the unified objects section.
+    objects_by_tile = {}
+    objects_section = unified.get("objects") or {}
+    for tile_key, obj_list in objects_section.get("tiles", {}).items():
+        parts = tile_key.split("_")
+        if len(parts) != 3:
+            continue
+        x, y, z = int(parts[0]), int(parts[1]), int(parts[2])
+        if z != 0:
+            continue
+        objects_by_tile[(x, y)] = [OrderedDict(obj) for obj in obj_list]
+
     tiles = []
     for y in range(data["height"]):
         for x in range(width):
             tiles.append(OrderedDict([
                 ("terrainIndex", terrain_by_position.get((x, y), UNIFIED_TO_FH2M_TERRAIN_INDEX.get("Grass", 30))),
                 ("terrainFlags", 0),
-                ("objects", []),
+                ("objects", objects_by_tile.get((x, y), [])),
             ]))
+
+    # Metadata maps keyed by object id, from the unified objects section.
+    for key in ("castleMetadata", "heroMetadata", "sphinxMetadata",
+                "signMetadata", "adventureMapEventMetadata",
+                "selectionObjectMetadata", "monsterMetadata",
+                "artifactMetadata", "resourceMetadata"):
+        value_map = objects_section.get(key)
+        if value_map:
+            data[key] = OrderedDict(value_map)
 
     # Starting heroes: an fh2m hero is an object of the KINGDOM_HEROES group
     # placed on a tile. The object index is color * 7 + race (see the
@@ -826,3 +915,67 @@ def convert_from_unified(unified, source_game):
     if source_game == "fh2m":
         return unified_to_fh2m(unified)
     return unified_to_h3m(unified)
+
+
+def _fh2m_objects_to_unified(map_data):
+    """
+    Convert the fh2m object instances into the unified objects section.
+    The fh2m storage is already the unified one: objects per tile with
+    metadata maps keyed by object id; the metadata maps are passed
+    through with their original keys.
+    """
+    tiles = OrderedDict()
+    width = map_data.get("width", 0)
+    for tile_index, tile in enumerate(map_data.get("tiles", [])):
+        objects = tile.get("objects", [])
+        if not objects:
+            continue
+        x = tile_index % width
+        y = tile_index // width
+        tile_key = "{}_{}_{}".format(x, y, 0)
+        unified_objs = []
+        for obj in objects:
+            unified_objs.append(OrderedDict([
+                ("id", obj.get("id")),
+                ("group", obj.get("group")),
+                ("index", obj.get("index")),
+            ]))
+        tiles[tile_key] = unified_objs
+
+    result = OrderedDict([("tiles", tiles)])
+
+    # Metadata maps keyed by object id
+    for key in ("castleMetadata", "heroMetadata", "sphinxMetadata",
+                "signMetadata", "adventureMapEventMetadata",
+                "selectionObjectMetadata", "capturableObjectsMetadata",
+                "monsterMetadata", "artifactMetadata", "resourceMetadata",
+                "standardObjectMetadata"):
+        value_map = map_data.get(key)
+        if value_map:
+            result[key] = value_map
+
+    return result
+
+
+def _unified_objects_from_h3m(unified):
+    """
+    Convert the unified objects section back into the h3decoder.py
+    structure expected by write_h3m. The h3m binary writer does not
+    re-encode object instances yet, so the objects are carried in the
+    JSON structure only (Objects > Tiles) for round-tripping.
+    """
+    objects_section = unified.get("objects")
+    if not objects_section:
+        return None
+
+    tiles = OrderedDict()
+    for tile_key, obj_list in objects_section.get("tiles", {}).items():
+        tiles[tile_key] = [OrderedDict(obj) for obj in obj_list]
+
+    result = OrderedDict()
+    result["tiles"] = tiles
+    for key, value_map in objects_section.items():
+        if key in ("tiles", "dropped"):
+            continue
+        result[key] = OrderedDict(value_map)
+    return result

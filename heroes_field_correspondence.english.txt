@@ -201,6 +201,53 @@ Values used in the unified JSON format and their equivalents in .fh2m and .h3m
    FH2M and H3M files: hasUnderground (H3M only: 0-Single-level,
    1-Two-level), players' Human/AI Playable, etc.
 
+████████████████████████████████████████══════════════════════████████████
+██ Objects (placed on the map)                                          ██
+████████████████████████████══════════════════════════════████████████
+
+   The unified format stores placed objects the fh2m way: per tile
+   (key "x_y_z") with metadata maps keyed by object id.
+
+| JSON unified                          | FH2M                        | H3M                                        |
+|---------------------------------------|-----------------------------|--------------------------------------------|
+| objects.tiles["x_y_z"][]               | tiles[].objects (objects    | Objects > Tiles > tiles (decoded           |
+|   .id / .group / .index               |   are on their tile in      |   instances, stored per tile)              |
+|                                       |   the tile list)            |   .group mapped from the OBJECTS.TXT       |
+|                                       |                             |   class via H3M_CLASS_TO_GROUP             |
+| objects.monsterMetadata[id]           | monsterMetadata             | Objects > Tiles > monsterMetadata           |
+|   (count, creature)                   |   (count, joinCondition,   |   (count, creature)                        |
+|                                       |    selected)                |                                            |
+| objects.resourceMetadata[id]          | resourceMetadata (count)    | Objects > Tiles > resourceMetadata          |
+|   (count, resource)                   |                             |   (count, resource)                        |
+| objects.artifactMetadata[id]          | artifactMetadata (radius,   | Objects > Tiles > artifactMetadata          |
+|   (artifact, spell for scrolls)       |   captureCondition,        |   (artifact; spell for spell scrolls)      |
+|                                       |   selected)                 |                                            |
+| objects.signMetadata[id] (message)    | signMetadata (message)      | Objects > Tiles > signMetadata (message)   |
+| objects.ownableMetadata[id] (owner)   | capturableObjectsMetadata   | Objects > Tiles > ownableMetadata (owner   |
+|                                       |   (ownerColor)              |   of mines and dwellings)                  |
+| objects.townMetadata[id] (owner,     | castleMetadata (customName, | Objects > Tiles > townMetadata (owner,      |
+|   customName, type)                   |   garrison, buildings,     |   customName, type)                        |
+|                                       |   spells, hiring)           |                                            |
+| objects.heroMetadata[id]              | heroMetadata (full hero     | Objects > Tiles > heroMetadata (owner,      |
+|   (owner, type)                       |   customization)            |   type)                                    |
+| objects.eventMetadata[id] (message)   | adventureMapEventMetadata  | Objects > Tiles > eventMetadata            |
+|                                       |   (message, rewards...)    |   (message)                                |
+| objects.shrineMetadata[id] (spell)    | UNDEFINE (no shrines in     | Objects > Tiles > shrineMetadata (spell)    |
+|                                       |   the fh2m object set)      |                                            |
+| objects.castleMetadata /              | castleMetadata              | UNDEFINE (town metadata is stored in       |
+|   sphinxMetadata /                    | sphinxMetadata              |   townMetadata, differently structured)    |
+|   adventureMapEventMetadata /         | adventureMapEventMetadata   |                                            |
+|   selectionObjectMetadata /           | selectionObjectMetadata     |                                            |
+|   capturableObjectsMetadata           | capturableObjectsMetadata   |                                            |
+| objects.dropped[] (ids of objects     | UNDEFINE                    | Objects whose OBJECTS.TXT class has no     |
+|   whose class has no unified group)   |                             |   unified group mapping                    |
+
+   Note: h3m "UNDEFINED_*" classes are mostly landscape/decoration
+   objects (trees, rocks, mountains...) which have no gameplay data and
+   no fh2m object equivalent; they are dropped and their ids are listed
+   in objects.dropped.
+
+
 ████████████████══════════════════════════════════████████████████████
 ██ Values not converted to the unified format                             ██
 ████████████══════════════════════════════════════════████████████████
@@ -209,19 +256,21 @@ List for FH2M (no unified equivalent yet):
 - isCampaign (campaign maps have a different structure)
 - additionalInfo (campaign maps only)
 - tiles[].terrainFlags (image mirroring flags)
-- tiles[].objects (placed objects: id, group, index; starting heroes
-  are converted, everything else is not yet)
-- castleMetadata (custom names, garrison, buildings, spells, hiring)
-- heroMetadata (names, portraits, armies, artifacts, spells, patrol,
-  skills, experience, primary skills, mana, race)
-- sphinxMetadata (riddles, answers, rewards)
-- signMetadata (sign messages)
-- adventureMapEventMetadata (messages, rewards, skills, monsters)
-- selectionObjectMetadata (selected items)
-- capturableObjectsMetadata (owner colors of capturable objects)
-- monsterMetadata (counts, join conditions, random monster selections)
-- artifactMetadata (radii, scroll spells, random artifact selections)
-- resourceMetadata (resource counts)
+- tiles[].objects joinCondition / isWeeklyGrowthDisabled / selected
+  (the object placement itself is converted)
+- castleMetadata garrison, buildings, spells, hiring (owner, name and
+  type are converted)
+- heroMetadata portraits, armies, artifacts, spells, patrol, skills,
+  experience, primary skills, mana (owner and type are converted)
+- sphinxMetadata riddles, answers, rewards (placement is converted)
+- signMetadata (message is converted)
+- adventureMapEventMetadata rewards, skills, monsters (message is
+  converted)
+- selectionObjectMetadata selected items (placement is converted)
+- capturableObjectsMetadata details beyond the owner color
+- monsterMetadata joinCondition, isWeeklyGrowthDisabled, selected
+- artifactMetadata radius, captureCondition, selected
+- resourceMetadata (count and type are converted)
 - standardObjectMetadata (deprecated, pre-v10)
 - translations (translated name/description/creatorNotes)
 - translationInfo (all translated texts)
@@ -241,7 +290,9 @@ List for H3M (no unified equivalent yet):
 - Allowed Abilities > Bitfield
 - Reserved Bytes
 - Hero Settings (predefined hero settings, skipped by h3decoder.py)
-- Objects (Raw Data: object entries are not decoded)
+- Objects > Raw Data (the object instances are decoded into
+  Objects > Tiles and mapped to the unified format; the raw bytes are
+  kept for reference)
 - Victory/Loss condition details (allow normal victory, applies to AI,
   condition metadata: coordinates, artifact/creature codes, amounts)
 - Surface/Underground Map > Grid > Terrain Picture
