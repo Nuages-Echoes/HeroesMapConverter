@@ -75,6 +75,17 @@ FH2M_RACES = {
     "Necromancer": "Necromancer",
 }
 
+# unified race -> fh2m race code
+UNIFIED_TO_FH2M_RACE_CODES = {
+    "Random": 0,
+    "Knight": 1,
+    "Barbarian": 2,
+    "Sorceress": 3,
+    "Warlock": 4,
+    "Wizard": 5,
+    "Necromancer": 6,
+}
+
 # h3m terrain -> unified terrain
 H3M_TERRAINS = {
     "Dirt": "Dirt",
@@ -403,3 +414,355 @@ def convert_to_unified(map_data, source_game):
     if source_game == "fh2m":
         return convert_fh2m_to_unified(map_data)
     return convert_h3m_to_unified(map_data)
+
+
+H3M_VERSION_NAMES = {
+    "RoE": "RoE (Restoration of Erathia)",
+    "AB": "AB (Armageddon Blade)",
+    "SoD": "SoD (Shadow of Death)",
+}
+
+H3M_PLAYER_COLORS = ["Red", "Blue", "Tan", "Green", "Orange", "Purple", "Teal", "Pink"]
+
+H3M_TOWN_TYPES = ["Castle", "Rampart", "Tower", "Inferno", "Necropolis",
+                  "Dungeon", "Stronghold", "Fortress", "Conflux"]
+
+# unified terrain -> h3m terrain name
+UNIFIED_TO_H3M_TERRAINS = {
+    "Water": "Water",
+    "Grass": "Grass",
+    "Snow": "Snow",
+    "Swamp": "Swamp",
+    "Lava": "Lava",
+    "Desert": "Sand",
+    "Dirt": "Dirt",
+    "Wasteland": "Rough",
+    "Beach": "Sand",
+    "Subterranean": "Subterranean",
+    "Rock": "Rock",
+}
+
+# unified terrain -> default fh2m terrain image index (best-effort default,
+# used when the unified terrain has no fh2m source index)
+UNIFIED_TO_FH2M_TERRAIN_INDEX = {
+    "Water": 0,
+    "Grass": 30,
+    "Snow": 92,
+    "Swamp": 146,
+    "Lava": 208,
+    "Desert": 262,
+    "Dirt": 321,
+    "Wasteland": 361,
+    "Beach": 415,
+    "Sand": 415,
+    "Subterranean": 321,
+    "Rock": 321,
+}
+
+
+def _color_mask(color_names, known_colors):
+    mask = 0
+    for name in color_names:
+        if name in known_colors:
+            mask |= 1 << known_colors.index(name)
+    return mask
+
+
+def unified_to_h3m(unified):
+    """
+    Convert a map in the unified format back into the h3m JSON structure
+    expected by write_h3m.
+
+    Args:
+        unified: Dictionary in the unified format.
+
+    Returns:
+        OrderedDict: The map in the h3decoder.py format.
+    """
+    from h3decoder import write_h3m  # noqa: F401  (documentation of the output)
+
+    data = OrderedDict()
+
+    if unified.get("sourceGame") == "h3m":
+        version_name = H3M_VERSION_NAMES.get(unified.get("sourceVersion"), "SoD (Shadow of Death)")
+    else:
+        version_name = "SoD (Shadow of Death)"
+
+    basic = OrderedDict()
+    basic["Version"] = version_name
+    basic["Has Hero"] = False
+    map_size = unified.get("mapSize", {}).get("width", 72)
+    basic["Map Size"] = map_size
+    has_underground = bool(unified.get("hasUnderground", False))
+    basic["Map Level"] = "Two-level" if has_underground else "Single-level"
+    basic["Has Underground"] = has_underground
+    basic["Map Name"] = unified.get("name", "")
+    basic["Map Description"] = unified.get("description", "")
+    basic["Difficulty"] = unified.get("difficulty", "Normal")
+    data["Basic Parameters"] = basic
+
+    players = unified.get("players", {})
+    human_colors = set(players.get("humanColors", []))
+    computer_colors = set(players.get("computerColors", []))
+    details_by_color = {d.get("color"): d for d in unified.get("playerDetails", [])}
+
+    players_list = []
+    for color in H3M_PLAYER_COLORS:
+        detail = details_by_color.get(color, {})
+        source_race = detail.get("sourceRace", "Random")
+
+        player = OrderedDict()
+        player["Color"] = color
+        player["Human Playable"] = color in human_colors
+        player["AI Playable"] = color in computer_colors
+        player["Behavior"] = "Random"
+
+        owned_towns = OrderedDict((town, False) for town in H3M_TOWN_TYPES)
+        if source_race in owned_towns:
+            owned_towns[source_race] = True
+            player["Has Defined Towns"] = True
+            player["Owns Random Town"] = False
+        else:
+            player["Has Defined Towns"] = False
+            player["Owns Random Town"] = True
+        player["Owned Towns"] = owned_towns
+
+        main_town = detail.get("mainTown")
+        if main_town:
+            player["Main Town"] = True
+            player["Generate Hero At Main Town"] = bool(main_town.get("generateHero", True))
+            player["Castle X"] = main_town.get("x", 0)
+            player["Castle Y"] = main_town.get("y", 0)
+            player["Castle Z"] = main_town.get("z", 0)
+        else:
+            player["Main Town"] = False
+            player["Castle X"] = None
+            player["Castle Y"] = None
+            player["Castle Z"] = None
+        players_list.append(player)
+
+    data["Players Attributes"] = OrderedDict([("Players", players_list)])
+    data["Player Heroes"] = OrderedDict([("Player Heroes", [
+        OrderedDict([("Color", color), ("Has Random Hero", False), ("Hero Type", None)])
+        for color in H3M_PLAYER_COLORS
+    ])])
+
+    victory = unified.get("victoryCondition", {})
+    victory_type = victory.get("type", "defeatEveryone")
+    victory_codes = {name: code for code, name in H3M_VICTORY_CONDITIONS.items()}
+    if victory_type == "defeatEveryone":
+        data["Victory Condition"] = OrderedDict([("Type", "None")])
+    else:
+        data["Victory Condition"] = OrderedDict([
+            ("Type", hex(victory_codes.get(victory_type, 0x6))),
+        ])
+
+    loss = unified.get("lossCondition", {})
+    loss_type = loss.get("type", "loseEverything")
+    loss_codes = {name: code for code, name in H3M_LOSS_CONDITIONS.items()}
+    if loss_type == "loseEverything":
+        data["Loss Condition"] = OrderedDict([("Type", "None")])
+    else:
+        data["Loss Condition"] = OrderedDict([
+            ("Type", hex(loss_codes.get(loss_type, 0x0))),
+        ])
+
+    teams = unified.get("teams", [])
+    team_data = OrderedDict([("Number of Teams", len(teams))])
+    if teams:
+        assignments = OrderedDict()
+        for color in H3M_PLAYER_COLORS:
+            assignments[color] = 0
+            for team_number, team in enumerate(teams):
+                if color in team:
+                    assignments[color] = team_number
+                    break
+        team_data["Team Assignments"] = assignments
+    data["Teams"] = team_data
+
+    data["Available Heroes"] = OrderedDict([("Bitfield", "")])
+    data["Reserved Bytes"] = ""
+
+    rumors = unified.get("rumors", [])
+    data["Rumors"] = OrderedDict([
+        ("Number of Rumors", len(rumors)),
+        ("Rumors", [OrderedDict([("Name", r.get("name") or ""), ("Text", r.get("text", ""))]) for r in rumors]),
+    ])
+
+    terrain_by_level = []
+    for level in unified.get("terrain", {}).get("levels", []):
+        grid = OrderedDict()
+        for cell in level.get("grid", []):
+            if unified.get("sourceGame") == "h3m":
+                terrain_name = cell.get("sourceTerrain", cell.get("terrain", "Dirt"))
+                if terrain_name not in H3M_TOWN_TYPES and terrain_name not in UNIFIED_TO_H3M_TERRAINS.values():
+                    terrain_name = UNIFIED_TO_H3M_TERRAINS.get(cell.get("terrain", "Dirt"), "Dirt")
+            else:
+                terrain_name = UNIFIED_TO_H3M_TERRAINS.get(cell.get("terrain", "Grass"), "Dirt")
+            grid[(cell.get("x", 0), cell.get("y", 0))] = (cell.get("z", 0), terrain_name)
+        terrain_by_level.append(grid)
+
+    def build_section(z):
+        level_grid = terrain_by_level[z] if z < len(terrain_by_level) else {}
+        cells = []
+        for y in range(map_size):
+            for x in range(map_size):
+                cell_z, terrain_name = level_grid.get((x, y), (z, "Dirt"))
+                cells.append(OrderedDict([
+                    ("X", x), ("Y", y), ("Z", cell_z),
+                    ("Terrain Type", terrain_name),
+                    ("Terrain Picture", 0),
+                    ("River Type", "None"), ("River Properties", 0),
+                    ("Road Type", "None"), ("Road Properties", 0),
+                    ("Mirroring", "0x00"),
+                ]))
+        return OrderedDict([
+            ("Size", map_size * map_size * 7),
+            ("Raw Data Length", map_size * map_size * 7),
+            ("Grid", cells),
+        ])
+
+    data["Surface Map"] = build_section(0)
+    if has_underground:
+        data["Underground Map"] = build_section(1)
+
+    data["Objects"] = OrderedDict([("Number of Objects", 0), ("Raw Data", "")])
+
+    return data
+
+
+def unified_to_fh2m(unified):
+    """
+    Convert a map in the unified format back into the fh2m JSON structure
+    expected by write_fh2m.
+
+    Args:
+        unified: Dictionary in the unified format.
+
+    Returns:
+        OrderedDict: The map in the h2decoder.py format.
+    """
+    data = OrderedDict()
+
+    if unified.get("sourceGame") == "fh2m":
+        version = int(unified.get("sourceVersion", 13))
+    else:
+        version = 13
+    data["version"] = version
+    data["isCampaign"] = False
+    data["difficulty"] = unified.get("difficulty", "Normal")
+
+    players = unified.get("players", {})
+    data["availablePlayerColors"] = list(players.get("availableColors", []))
+    data["humanPlayerColors"] = list(players.get("humanColors", []))
+    data["computerPlayerColors"] = list(players.get("computerColors", []))
+
+    data["alliances"] = [_color_mask(team, FH2M_PLAYER_COLORS) for team in unified.get("teams", [])]
+
+    details_by_color = {d.get("color"): d for d in unified.get("playerDetails", [])}
+    race_reverse = UNIFIED_TO_FH2M_RACE_CODES
+    race_ids = []
+    race_names = []
+    for color in FH2M_PLAYER_COLORS:
+        detail = details_by_color.get(color, {})
+        source_race = detail.get("sourceRace") or "Random"
+        race_ids.append(race_reverse.get(source_race, 0))
+        race_names.append(source_race)
+    data["playerRaceId"] = race_ids
+    data["playerRace"] = race_names
+
+    victory = unified.get("victoryCondition", {})
+    victory_codes = {name: code for code, name in FH2M_VICTORY_CONDITIONS.items()}
+    data["victoryConditionType"] = victory_codes.get(victory.get("type", "defeatEveryone"), 0)
+    data["isVictoryConditionApplicableForAI"] = bool(victory.get("appliesToAI", False))
+    data["allowNormalVictory"] = bool(victory.get("allowNormalVictory", False))
+    data["victoryConditionMetadata"] = list(victory.get("metadata", []))
+
+    loss = unified.get("lossCondition", {})
+    loss_codes = {name: code for code, name in FH2M_LOSS_CONDITIONS.items()}
+    data["lossConditionType"] = loss_codes.get(loss.get("type", "loseEverything"), 0)
+    data["lossConditionMetadata"] = list(loss.get("metadata", []))
+
+    width = unified.get("mapSize", {}).get("width", 0)
+    data["width"] = width
+    data["height"] = unified.get("mapSize", {}).get("height", width)
+    data["mainLanguage"] = unified.get("mainLanguage", 0)
+    data["name"] = unified.get("name", "")
+    data["description"] = unified.get("description", "")
+    data["creatorNotes"] = unified.get("creatorNotes", "")
+    if version >= 11:
+        data["translations"] = OrderedDict()
+
+    data["additionalInfo"] = []
+
+    terrain_by_position = {}
+    for level in unified.get("terrain", {}).get("levels", []):
+        for cell in level.get("grid", []):
+            if cell.get("z", 0) == 0:
+                source_terrain = cell.get("sourceTerrain", "")
+                if source_terrain.startswith("terrain:"):
+                    terrain_index = int(source_terrain[len("terrain:"):])
+                else:
+                    terrain_index = UNIFIED_TO_FH2M_TERRAIN_INDEX.get(cell.get("terrain", "Grass"), 30)
+                terrain_by_position[(cell.get("x", 0), cell.get("y", 0))] = terrain_index
+
+    tiles = []
+    for y in range(data["height"]):
+        for x in range(width):
+            tiles.append(OrderedDict([
+                ("terrainIndex", terrain_by_position.get((x, y), UNIFIED_TO_FH2M_TERRAIN_INDEX.get("Grass", 30))),
+                ("terrainFlags", 0),
+                ("objects", []),
+            ]))
+    data["tiles"] = tiles
+
+    daily_events = []
+    for event in unified.get("dailyEvents", []):
+        daily_events.append(OrderedDict([
+            ("message", event.get("message", "")),
+            ("humanPlayerColors", list(event.get("humanColors", []))),
+            ("computerPlayerColors", list(event.get("computerColors", []))),
+            ("firstOccurrenceDay", event.get("firstOccurrenceDay", 1)),
+            ("repeatPeriodInDays", event.get("repeatPeriodInDays", 0)),
+            ("resources", OrderedDict((name, value) for name, value in event.get("resources", {}).items())),
+        ]))
+    data["dailyEvents"] = daily_events
+
+    data["rumors"] = [r.get("text", "") for r in unified.get("rumors", [])]
+
+    data["castleMetadata"] = OrderedDict()
+    data["heroMetadata"] = OrderedDict()
+    data["sphinxMetadata"] = OrderedDict()
+    data["signMetadata"] = OrderedDict()
+    data["adventureMapEventMetadata"] = OrderedDict()
+    data["selectionObjectMetadata"] = OrderedDict()
+
+    if version > 8:
+        data["capturableObjectsMetadata"] = OrderedDict()
+    if version < 10:
+        data["standardObjectMetadata"] = OrderedDict()
+    if version > 9:
+        data["monsterMetadata"] = OrderedDict()
+        data["artifactMetadata"] = OrderedDict()
+        data["resourceMetadata"] = OrderedDict()
+    if version >= 11:
+        data["translationInfo"] = OrderedDict()
+
+    return data
+
+
+def convert_from_unified(unified, source_game):
+    """
+    Convert a map in the unified format into the JSON structure of the
+    given game, ready to be written by write_h3m or write_fh2m.
+
+    Args:
+        unified: Dictionary in the unified format.
+        source_game: "h3m" or "fh2m".
+
+    Returns:
+        OrderedDict: The map in the game-specific format.
+    """
+    if source_game == "fh2m":
+        return unified_to_fh2m(unified)
+    return unified_to_h3m(unified)

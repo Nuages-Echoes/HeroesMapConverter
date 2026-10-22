@@ -3,7 +3,7 @@ import os
 
 from h2decoder import parse_fh2m, write_fh2m
 from h3decoder import parse_h3m, write_h3m
-from unified import convert_to_unified
+from unified import convert_to_unified, convert_from_unified
 
 INPUT_DIR = "input"
 OUTPUT_DIR = "output"
@@ -49,9 +49,11 @@ def main():
                 json.dump(unified_result, json_file, indent=4, ensure_ascii=False)
             print(f"JSON unifié écrit dans '{unified_file_path}'")
 
-            # Étape 2 : lecture du JSON et écriture du fichier dans le dossier output
-            with open(json_file_path, "r", encoding="utf-8") as json_file:
-                map_data = json.load(json_file)
+            # Étape 2 : lecture du JSON unifié et écriture du fichier dans le dossier output
+            with open(unified_file_path, "r", encoding="utf-8") as json_file:
+                unified_data = json.load(json_file)
+
+            map_data = convert_from_unified(unified_data, source_game)
 
             if file_name.lower().endswith(".fh2m"):
                 fh2m_output_path = os.path.join(OUTPUT_DIR, f"{base_name}.fh2m")
