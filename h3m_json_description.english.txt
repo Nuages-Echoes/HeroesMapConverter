@@ -1,0 +1,222 @@
+Description of the JSON fields produced by h3decoder.py (parse_h3m) for .h3m files
+   ╔╦╦╦════════════════════════════════════════════════════════════════════╦╦╦╗
+   ║║║║  JSON fields for Heroes of Might and Magic III maps                ║║║║
+   ║║║║  (as written by main.py into the outputjson/ directory)            ║║║║
+   ╚╩╩╩════════════════════════════════════════════════════════════════════╩╩╩╝
+
+   This document describes the JSON structure produced by parse_h3m() in
+   h3decoder.py. The binary format itself is described in
+   h3m_description.english.txt. Notation below:
+
+   (RoE)   { field only present in Restoration of Erathia maps
+   (AB)    { field only present in Armageddon Blade maps or later
+   (SoD)   { field only present in Shadow of Death maps
+   (AB+)   { field present in Armageddon Blade maps and later
+   (cond.) { field only present under the condition stated in its description
+
+   The root object contains the following sections, in this order:
+   "Basic Parameters", "Players Attributes", "Player Heroes",
+   "Victory Condition", "Loss Condition", "Teams", "Available Heroes",
+   "Reserved Bytes", "Random Artifacts" (AB+), "Allowed Spells" (SoD),
+   "Allowed Abilities" (SoD), "Rumors", "Hero Settings" (SoD),
+   "Surface Map", "Underground Map" (cond.), "Objects".
+
+
+████████████████████████████████████████████████████████████████████████████████
+██                          Basic Parameters                               ██
+████████████████████████████████████████████════════════════════════════════████
+
+ Field                Type        Description
+
+   "Format Identifier"  string     4-byte map format identifier, hex-encoded
+                                    and uppercased
+                                        0E000000 - RoE
+                                        15000000 - AB
+                                        1C000000 - SoD
+   "Version"            string     Human-readable version name
+                                        "RoE (Restoration of Erathia)"
+                                        "AB (Armageddon Blade)"
+                                        "SoD (Shadow of Death)"
+   "Has Hero"           bool       Whether there's at least one hero on the map
+   "Map Size"           int        Height and width of the map in squares
+                                    (the map is square)
+   "Map Level"          string     "Single-level" or "Two-level"
+   "Has Underground"    bool       Whether the map has an underground level
+   "Map Name"           string     Name of the map
+   "Map Description"    string     Description of the map
+   "Difficulty"         string     "Easy", "Normal", "Hard", "Expert" or
+                                    "Impossible"
+   "Heroes Mastery Level Cap" int Heroes' mastery level cap (AB+)
+
+████████████████████████████████████████████████████████████████████████████████
+██                          Players Attributes                             ██
+████████████████████████████████████████████████████════════════════════════████
+
+   Contains a single field "Players": a list of 8 player entries, one for
+   each color in this order:
+   Red, Blue, Tan, Green, Orange, Purple, Teal, Pink
+
+   Each player entry has these fields:
+
+   "Color"               string    Player color name (see list above)
+   "Human Playable"       bool      Whether it can be played by a human
+   "AI Playable"         bool      Whether it can be played by an AI
+   "Behavior"            string    "Random", "Warrior", "Builder" or "Explorer"
+   "Has Defined Towns"    bool      Whether specific towns are assigned
+   "Owned Towns"          object    One boolean per town type; true if the
+                                    player owns it
+                                        "Castle", "Rampart", "Tower",
+                                        "Inferno", "Necropolis", "Dungeon",
+                                        "Stronghold", "Fortress" (AB+:
+                                        also "Conflux")
+   "Owns Random Town"    bool      Whether the player owns a Random Town
+   "Main Town"           bool      Whether a main town is defined
+   "Generate Hero At Main Town" bool (AB+, only if "Main Town" is true)
+                                    Whether to create a hero at the main town
+   "Castle X"            int|null  X-coordinate of the main town (null if
+                                    "Main Town" is false)
+   "Castle Y"            int|null  Y-coordinate of the main town
+   "Castle Z"            int|null  Z-coordinate of the main town (0-surface,
+                                    1-underground)
+
+████████████████████████████████████████████████████════════════════════════████
+██                             Player Heroes                               ██
+████████████████████████████████████████████████████████════════════════════████
+
+   Contains a single field "Player Heroes": a list of 8 entries in the same
+   color order as the players.
+
+ Field                Type        Description
+
+   "Color"               string    Player color name
+   "Has Random Hero"     bool      Whether the player has a Random Hero
+   "Hero Type"          int|null   Hero type from 00 to 7F, null when there's
+                                    no hero (FF in the file)
+   "Hero Face"          int        Number of the hero's face (cond., only if
+                                    "Hero Type" is not null)
+   "Hero Name"          string     Custom name of the hero (cond., only if
+                                    "Hero Type" is not null; empty string
+                                    means default name)
+   "Number of Heroes"    int       Player's amount of heroes (AB+)
+
+████████████████████████████████████████████████══════════════════════════████
+██                       Victory and Loss Conditions                       ██
+████████████████████████████████████████════████════════════════════════████
+
+   "Victory Condition" object:
+   "Type"                string    "None" (FF in the file) or the condition
+                                    type as a hex string ("0x0" -
+                                    Acquire a specific artifact, "0x1" -
+                                    Accumulate creatures, etc.)
+       (the condition details themselves are not extracted; they are
+        skipped according to the per-type binary layout)
+
+   "Loss Condition" object:
+   "Type"                string    "None" (FF in the file) or the condition
+                                    type as a hex string ("0x0" - Lose a
+                                    specific town, "0x1" - Lose a specific
+                                    hero, "0x2" - Run out of time)
+
+████████████████████████████████████████████══════════════════════════████
+██                                 Teams                                    ██
+████████████████████████████████████████████████████████████████████████████████
+
+ Field                Type        Description
+
+   "Number of Teams"     int       0 means no teams (free for all)
+   "Team Assignments"   object     (cond., only if "Number of Teams" > 0)
+                                    One entry per player color, value is the
+                                    team number (0 to "Number of Teams" - 1)
+
+████████████████████████████████████████══════════════════════════████████████
+██                    Heroes, Artifacts, Spells, Abilities                ██
+████████████████████████████████████████████══════════════════════════████████
+
+   "Available Heroes" object:
+   "Bitfield"            string    Bitfield of available hero types,
+                                    hex-encoded (heroes with bit set to 1
+                                    are unavailable)
+
+   "Random Artifacts" object (AB+):
+   "Bitfield"            string    Bitfield of allowed random artifact types,
+                                    hex-encoded
+
+   "Allowed Spells" object (SoD):
+   "Bitfield"            string    Bitfield of allowed spells, hex-encoded
+
+   "Allowed Abilities" object (SoD):
+   "Bitfield"            string    Bitfield of allowed secondary skills,
+                                    hex-encoded
+
+   "Reserved Bytes"      string    31 reserved bytes of the file,
+                                    hex-encoded
+
+████████████████████████████████████████████══════════════════════════████████
+██                                 Rumors                                   ██
+████████████████████████████████████████████████████████════════════════════████
+
+ Field                Type        Description
+
+   "Number of Rumors"    int       Number of rumors in the list below
+   "Rumors"              list      One entry per rumor:
+     "Name"              string    Name of the rumor
+     "Text"              string    Text of the rumor
+
+████████████████████████████████████════════════════════════════████████████
+██                          Hero Settings (SoD)                             ██
+████████████████████████████████████████════════════════════════════████████
+
+   "Hero Settings" object:
+   "Note"                string    Always "Skipped for performance"; the
+                                    per-hero settings of the 156 predefined
+                                    heroes (experience, secondary skills,
+                                    artifacts, biography, spells, primary
+                                    skills...) are read from the file but
+                                    not extracted into JSON
+
+████████████████████████████████══════════════════════════════████████████
+██                          Surface and Underground Maps                    ██
+████████████████████████████████████══════════════════════════════████████
+
+   "Surface Map" is always present; "Underground Map" has the same fields
+   and is only present when "Basic Parameters" > "Has Underground" is true.
+
+ Field                Type        Description
+
+   "Size"                int       Size of the terrain data in the file
+                                    (Map Size x Map Size x 7 bytes)
+   "Raw Data Length"    int       Number of terrain bytes actually read
+                                    (may be smaller than "Size" on
+                                    truncated files)
+   "Grid"                list      One entry per map square, in row-major
+                                    order (Y then X). Each entry has:
+     "X"                 int       Column of the square
+     "Y"                 int       Row of the square
+     "Z"                 int       0 for the Surface Map, 1 for the
+                                    Underground Map
+     "Terrain Type"       string    "Dirt", "Sand", "Grass", "Snow",
+                                    "Swamp", "Rough", "Subterranean",
+                                    "Lava", "Water", "Rock" or
+                                    "Unknown (0xNN)" for unknown values
+     "Terrain Picture"   int       Variant of the terrain image
+     "River Type"        string    "None", "Clear", "Icy", "Muddy", "Lava"
+                                    or "Unknown (0xNN)"
+     "River Properties"  int       Variant/properties of the river image
+     "Road Type"         string    "None", "Dirt", "Gravel", "Cobblestone"
+                                    or "Unknown (0xNN)"
+     "Road Properties"   int       Variant/properties of the road image
+     "Mirroring"         string    Bitfield of image mirroring flags,
+                                    hex-encoded ("0x00" to "0xFF")
+
+████████████████████████████████════════════════════════════████████████████
+██                                 Objects                                  ██
+████████████████████████████████████████════════════════════════════████████
+
+   "Objects" object:
+   "Number of Objects"   int       Number of objects declared in the file
+   "Raw Data"            string    The object data, hex-encoded, starting
+                                    with the 4-byte count; objects are NOT
+                                    decoded into structured JSON (cond.,
+                                    absent if the file is truncated)
+   "Note"                string    "End of file" (cond., only on truncated
+                                    files)
