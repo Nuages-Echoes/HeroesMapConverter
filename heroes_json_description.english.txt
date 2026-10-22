@@ -92,11 +92,13 @@ Description of the unified JSON format produced from .h3m and .fh2m maps
        "y"             int         Y-coordinate
        "z"             int         Z-coordinate (0-surface, 1-underground)
 
-   Race correspondence (h3m town type to fh2m hero race):
-   Castle-Knight, Rampart-Sorceress, Tower-Wizard, Inferno-Warlock,
+   The unified race set is the union of both games. Races existing only
+   in one game keep their name and have no equivalent in the other:
+   Castle-Knight, Rampart-Sorceress, Tower-Wizard,
    Necropolis-Necromancer, Dungeon-Warlock, Stronghold-Barbarian,
-   Fortress-Sorceress, Conflux-none (no equivalent in Heroes II),
-   Random-Random.
+   Random-Random; "Inferno", "Fortress" and "Conflux" exist in the
+   unified format (h3m town types) but have no Heroes II race
+   equivalent: converting them to fh2m yields a random race.
 
 
 ████████████████████████████████════════════════════════████████████████████
