@@ -326,17 +326,33 @@ def convert_fh2m_to_unified(map_data):
 
     player_details = []
     races = map_data.get("playerRace", [])
+    hero_object_colors = {}
+    for tile in map_data.get("tiles", []):
+        for obj in tile.get("objects", []):
+            if obj.get("group") == "KINGDOM_HEROES":
+                color_id = int(obj.get("index", 0)) // 7
+                if 0 <= color_id < len(FH2M_PLAYER_COLORS):
+                    color = FH2M_PLAYER_COLORS[color_id]
+                    hero_object_colors[color] = obj.get("index", 0)
     for color in unified["players"]["availableColors"]:
         if color not in FH2M_PLAYER_COLORS:
             continue
         index = FH2M_PLAYER_COLORS.index(color)
-        if index >= len(races):
-            continue
-        source_race = races[index]
+        source_race = "Random"
+        if color in hero_object_colors:
+            # A starting hero object exists for this color: its race is part
+            # of the object index (color * 7 + race).
+            hero_race_id = int(hero_object_colors[color]) % 7
+            source_race = [name for name, code in UNIFIED_TO_FH2M_RACE_CODES.items() if code == hero_race_id]
+            source_race = source_race[0] if source_race else "Random"
+        elif index < len(races):
+            source_race = races[index]
         detail = OrderedDict()
         detail["color"] = color
         detail["race"] = FH2M_RACES.get(source_race)
         detail["sourceRace"] = source_race
+        if color in hero_object_colors:
+            detail["hasStartingHero"] = True
         player_details.append(detail)
     unified["playerDetails"] = player_details
 
@@ -720,6 +736,40 @@ def unified_to_fh2m(unified):
                 ("terrainFlags", 0),
                 ("objects", []),
             ]))
+
+    # Starting heroes: an fh2m hero is an object of the KINGDOM_HEROES group
+    # placed on a tile. The object index is color * 7 + race (see the
+    # populateKingdomHeroes function of the fheroes2 engine: 6 colors x 7
+    # races, race 6 being a random race).
+    next_object_id = 1
+    for detail in unified.get("playerDetails", []):
+        color = detail.get("color")
+        if color not in FH2M_PLAYER_COLORS:
+            continue
+        if color not in data["availablePlayerColors"]:
+            continue
+        race = detail.get("race") or "Random"
+        race_id = UNIFIED_TO_FH2M_RACE_CODES.get(race, 0)
+        color_id = FH2M_PLAYER_COLORS.index(color)
+        hero_object_index = color_id * 7 + race_id
+
+        # Place the hero near the main town when it exists, otherwise at the
+        # first tile of the map edge.
+        main_town = detail.get("mainTown")
+        if main_town:
+            x = min(max(int(main_town.get("x", 0)), 0), width - 1)
+            y = min(max(int(main_town.get("y", 0)) - 1, 0), data["height"] - 1)
+        else:
+            x = 0
+            y = data["height"] - 1
+
+        tiles[y * width + x]["objects"].append(OrderedDict([
+            ("id", next_object_id),
+            ("group", "KINGDOM_HEROES"),
+            ("index", hero_object_index),
+        ]))
+        next_object_id += 1
+
     data["tiles"] = tiles
 
     daily_events = []
