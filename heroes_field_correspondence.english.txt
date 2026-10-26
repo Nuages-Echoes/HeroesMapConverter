@@ -350,16 +350,17 @@ List for H3M (no unified equivalent yet):
 ██                            Creatures                             ██
 ████████████████████████████████████████████████████████████████████████
 
-   The creatures are grouped by faction: Faction 1 to Faction 6 are
-   anchored on the Heroes II factions (their Heroes III counterparts
-   and secondary factions share the table), plus the neutral
-   creatures. Within a faction, each tier matches the H2 creatures
-   with the H3 creatures of the same tier. The upgrade chains are
-   written with '->' inside a cell; several entries in the H3 column
-   are separated by ';'. UNDEFINE marks a creature with no
-   equivalent. The h3m random monsters are converted through their
-   object class: Random Monster (any level), Random Monster 1 to
-   Random Monster 4 (h3m classes 71 to 75 -> fh2m ids 67 to 71).
+   The creatures are grouped by faction: Faction 1 to 6 pair each
+   Heroes II faction with its primary Heroes III counterpart, Faction
+   7 to 9 pair the Heroes II factions with the Heroes III factions
+   that have no Heroes II equivalent (Inferno, Fortress, Conflux),
+   plus the neutral creatures. Within a faction, each tier matches
+   the H2 creatures with the H3 creatures of the same tier. The
+   upgrade chains are written with '->' inside a cell. UNDEFINE marks
+   a creature with no equivalent. The h3m random monsters are
+   converted through their object class: Random Monster (any level),
+   Random Monster 1 to Random Monster 4 (h3m classes 71 to 75 ->
+   fh2m ids 67 to 71).
 
    Faction 1 (Knight <-> Castle):
 
@@ -373,29 +374,29 @@ List for H3M (no unified equivalent yet):
 | T6   | Cavalry -> Champion       | Cavalier -> Champion        |
 | T7   | Paladin -> Crusader       | Angel -> Archangel          |
 
-   Faction 2 (Barbarian <-> Stronghold, Fortress):
+   Faction 2 (Barbarian <-> Stronghold):
 
 | Tier | H2                        | H3                          |
 |------|---------------------------|-----------------------------|
-| T1   | Goblin                    | Goblin -> Hobgoblin ; Gnoll -> Gnoll Marauder |
-| T2   | Orc -> Orc Chief          | Goblin Wolf Rider -> Hobgoblin Wolf Rider ; Lizardman -> Lizard Warrior |
-| T3   | Wolf                      | Orc -> Orc Chieftain ; Serpent Fly -> Fire Dragon Fly |
-| T4   | Ogre -> Ogre Lord         | Ogre -> Ogre Mage ; Basilisk -> Greater Basilisk |
-| T5   | Troll -> War Troll        | Roc -> Thunderbird ; Gorgon -> Mighty Gorgon |
-| T6   | Cyclops                   | Cyclops -> Cyclops King ; Wyvern -> Wyvern Monarch |
-| T7   | Cyclops                   | Behemoth -> Ancient Behemoth ; Hydra -> Chaos Hydra |
+| T1   | Goblin                    | Goblin -> Hobgoblin         |
+| T2   | Orc -> Orc Chief          | Goblin Wolf Rider -> Hobgoblin Wolf Rider |
+| T3   | Wolf                      | Orc -> Orc Chieftain        |
+| T4   | Ogre -> Ogre Lord         | Ogre -> Ogre Mage           |
+| T5   | Troll -> War Troll        | Roc -> Thunderbird          |
+| T6   | Cyclops                   | Cyclops -> Cyclops King     |
+| T7   | Cyclops                   | Behemoth -> Ancient Behemoth |
 
-   Faction 3 (Sorceress <-> Rampart, Conflux):
+   Faction 3 (Sorceress <-> Rampart):
 
 | Tier | H2                        | H3                          |
 |------|---------------------------|-----------------------------|
-| T1   | Sprite                    | Centaur -> Centaur Captain ; Pixie -> Sprite |
-| T2   | Dwarf -> Battle Dwarf     | Dwarf -> Battle Dwarf ; Air Elemental -> Storm Elemental |
-| T3   | Elf -> Grand Elf          | Wood Elf -> Grand Elf ; Water Elemental -> Ice Elemental |
-| T4   | Druid -> Greater Druid    | Pegasus -> Silver Pegasus ; Fire Elemental -> Energy Elemental |
-| T5   | Druid -> Greater Druid    | Dendroid Guard -> Dendroid Soldier ; Earth Elemental -> Magma Elemental |
-| T6   | Unicorn                   | Unicorn -> War Unicorn ; Psychic Elemental -> Magic Elemental |
-| T7   | Phoenix                   | Green Dragon -> Gold Dragon ; Firebird -> Phoenix |
+| T1   | Sprite                    | Centaur -> Centaur Captain  |
+| T2   | Dwarf -> Battle Dwarf     | Dwarf -> Battle Dwarf       |
+| T3   | Elf -> Grand Elf          | Wood Elf -> Grand Elf       |
+| T4   | Druid -> Greater Druid    | Pegasus -> Silver Pegasus   |
+| T5   | Druid -> Greater Druid    | Dendroid Guard -> Dendroid Soldier |
+| T6   | Unicorn                   | Unicorn -> War Unicorn      |
+| T7   | Phoenix                   | Green Dragon -> Gold Dragon |
 
    Faction 4 (Wizard <-> Tower):
 
@@ -409,17 +410,17 @@ List for H3M (no unified equivalent yet):
 | T6   |                           | Naga -> Naga Queen          |
 | T7   | Giant -> Titan            | Giant -> Titan              |
 
-   Faction 5 (Warlock <-> Dungeon, Inferno):
+   Faction 5 (Warlock <-> Dungeon):
 
 | Tier | H2                        | H3                          |
 |------|---------------------------|-----------------------------|
-| T1   | Centaur                   | Troglodyte -> Infernal Troglodyte ; Imp -> Familiar |
-| T2   | Gargoyle                  | Harpy -> Harpy Hag ; Gog -> Magog |
-| T3   | Griffin                   | Beholder -> Evil Eye ; Hell Hound -> Cerberus |
-| T4   | Minotaur -> Minotaur King | Medusa -> Medusa Queen ; Demon -> Horned Demon |
-| T5   | Minotaur -> Minotaur King | Minotaur -> Minotaur King ; Pit Fiend -> Pit Lord |
-| T6   | Hydra                     | Manticore -> Scorpicore ; Efreet -> Efreet Sultan |
-| T7   | Green Dragon -> Red Dragon -> Black Dragon | Red Dragon -> Black Dragon ; Devil -> Arch Devil |
+| T1   | Centaur                   | Troglodyte -> Infernal Troglodyte |
+| T2   | Gargoyle                  | Harpy -> Harpy Hag          |
+| T3   | Griffin                   | Beholder -> Evil Eye        |
+| T4   | Minotaur -> Minotaur King | Medusa -> Medusa Queen      |
+| T5   | Minotaur -> Minotaur King | Minotaur -> Minotaur King   |
+| T6   | Hydra                     | Manticore -> Scorpicore     |
+| T7   | Green Dragon -> Red Dragon -> Black Dragon | Red Dragon -> Black Dragon  |
 
    Faction 6 (Necromancer <-> Necropolis):
 
@@ -432,6 +433,42 @@ List for H3M (no unified equivalent yet):
 | T5   | Lich -> Power Lich        | Lich -> Power Lich          |
 | T6   | Lich -> Power Lich        | Black Knight -> Dread Knight |
 | T7   | Bone Dragon               | Bone Dragon -> Ghost Dragon |
+
+   Faction 7 (Warlock <-> Inferno):
+
+| Tier | H2                        | H3                          |
+|------|---------------------------|-----------------------------|
+| T1   | Centaur                   | Imp -> Familiar             |
+| T2   | Gargoyle                  | Gog -> Magog                |
+| T3   | Griffin                   | Hell Hound -> Cerberus      |
+| T4   | Minotaur -> Minotaur King | Demon -> Horned Demon       |
+| T5   | Minotaur -> Minotaur King | Pit Fiend -> Pit Lord       |
+| T6   | Hydra                     | Efreet -> Efreet Sultan     |
+| T7   | Green Dragon -> Red Dragon -> Black Dragon | Devil -> Arch Devil         |
+
+   Faction 8 (Barbarian <-> Fortress):
+
+| Tier | H2                        | H3                          |
+|------|---------------------------|-----------------------------|
+| T1   | Goblin                    | Gnoll -> Gnoll Marauder     |
+| T2   | Orc -> Orc Chief          | Lizardman -> Lizard Warrior |
+| T3   | Wolf                      | Serpent Fly -> Fire Dragon Fly |
+| T4   | Ogre -> Ogre Lord         | Basilisk -> Greater Basilisk |
+| T5   | Troll -> War Troll        | Gorgon -> Mighty Gorgon     |
+| T6   | Cyclops                   | Wyvern -> Wyvern Monarch    |
+| T7   | Cyclops                   | Hydra -> Chaos Hydra        |
+
+   Faction 9 (Sorceress <-> Conflux):
+
+| Tier | H2                        | H3                          |
+|------|---------------------------|-----------------------------|
+| T1   | Sprite                    | Pixie -> Sprite             |
+| T2   | Dwarf -> Battle Dwarf     | Air Elemental -> Storm Elemental |
+| T3   | Elf -> Grand Elf          | Water Elemental -> Ice Elemental |
+| T4   | Druid -> Greater Druid    | Fire Elemental -> Energy Elemental |
+| T5   | Druid -> Greater Druid    | Earth Elemental -> Magma Elemental |
+| T6   | Unicorn                   | Psychic Elemental -> Magic Elemental |
+| T7   | Phoenix                   | Firebird -> Phoenix         |
 
    Neutral creatures:
 
