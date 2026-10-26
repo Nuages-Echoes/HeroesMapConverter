@@ -15,6 +15,16 @@ representation are dropped (see the description document).
 import struct
 from collections import OrderedDict
 
+from correspondence import (
+    fh2m_artifact_name,
+    fh2m_building_name,
+    fh2m_join_condition_name,
+    fh2m_monster_name,
+    fh2m_secondary_skill_name,
+    fh2m_skill_level_name,
+    fh2m_spell_name,
+)
+
 H3M_VICTORY_CONDITIONS = {
     0x0: "obtainArtifact",
     0x1: "accumulateCreatures",
@@ -968,7 +978,10 @@ def unified_to_fh2m(unified):
                 "monsterMetadata", "artifactMetadata", "resourceMetadata"):
         value_map = objects_section.get(key)
         if value_map:
-            data[key] = OrderedDict(value_map)
+            data[key] = OrderedDict(
+                (obj_id, _unified_metadata_to_fh2m(key, entry))
+                for obj_id, entry in value_map.items()
+            )
     if version < 10:
         value_map = objects_section.get("standardObjectMetadata")
         if value_map:
@@ -994,12 +1007,104 @@ def convert_from_unified(unified, source_game):
     return unified_to_h3m(unified)
 
 
+def _fh2m_metadata_to_unified(kind, metadata):
+    """
+    Normalize one fh2m object metadata entry into the unified schema.
+
+    The normalized fields carry readable names (monsters, artifacts,
+    spells, secondary skills, join conditions) resolved through the
+    correspondence tables. The raw fh2m identifiers and every
+    source-only field are kept in the returned entry so that
+    _unified_metadata_to_fh2m can rebuild the exact original
+    structure and the binary round-trip stays byte-perfect.
+    """
+    entry = OrderedDict(metadata)
+
+    if kind == "castleMetadata":
+        entry["defenders"] = [
+            OrderedDict([
+                ("monster", fh2m_monster_name(monster_type)),
+                ("sourceMonsterId", monster_type),
+                ("count", count),
+            ])
+            for monster_type, count in zip(metadata.get("defenderMonsterType", []),
+                                           metadata.get("defenderMonsterCount", []))
+        ]
+        built = [fh2m_building_name(building) for building in metadata.get("builtBuildings", [])]
+        banned = [fh2m_building_name(building) for building in metadata.get("bannedBuildings", [])]
+        entry["builtBuildingNames"] = built
+        entry["bannedBuildingNames"] = banned
+        entry["mustHaveSpellNames"] = OrderedDict(
+            (position, fh2m_spell_name(spell))
+            for position, spell in metadata.get("mustHaveSpells", {}).items()
+        )
+        entry["bannedSpellNames"] = [fh2m_spell_name(spell) for spell in metadata.get("bannedSpells", [])]
+    elif kind == "heroMetadata":
+        entry["army"] = [
+            OrderedDict([
+                ("monster", fh2m_monster_name(monster_type)),
+                ("sourceMonsterId", monster_type),
+                ("count", count),
+            ])
+            for monster_type, count in zip(metadata.get("armyMonsterType", []),
+                                           metadata.get("armyMonsterCount", []))
+        ]
+        entry["artifactNames"] = [fh2m_artifact_name(artifact) for artifact in metadata.get("artifacts", [])]
+        entry["availableSpellNames"] = [fh2m_spell_name(spell) for spell in metadata.get("availableSpells", [])]
+        entry["secondarySkills"] = [
+            OrderedDict([
+                ("skill", fh2m_secondary_skill_name(skill)),
+                ("sourceSkillId", skill),
+                ("level", fh2m_skill_level_name(level)),
+                ("sourceLevelId", level),
+            ])
+            for skill, level in zip(metadata.get("secondarySkill", []),
+                                     metadata.get("secondarySkillLevel", []))
+        ]
+    elif kind == "sphinxMetadata":
+        entry["artifactName"] = fh2m_artifact_name(metadata.get("artifact", 0))
+    elif kind == "adventureMapEventMetadata":
+        entry["artifactName"] = fh2m_artifact_name(metadata.get("artifact", 0))
+        entry["secondarySkillName"] = fh2m_secondary_skill_name(metadata.get("secondarySkill", 0))
+        entry["secondarySkillLevelName"] = fh2m_skill_level_name(metadata.get("secondarySkillLevel", 0))
+        entry["monsterName"] = fh2m_monster_name(metadata.get("monsterType", 0))
+    elif kind == "monsterMetadata":
+        entry["joinConditionName"] = fh2m_join_condition_name(metadata.get("joinCondition", 0))
+    return entry
+
+
+def _unified_metadata_to_fh2m(kind, entry):
+    """
+    Rebuild one fh2m object metadata entry from its unified form, as
+    expected by write_fh2m. The raw fh2m identifiers kept by
+    _fh2m_metadata_to_unified are used, so the rebuilt structure is
+    identical to the original one.
+    """
+    metadata = OrderedDict(entry)
+    metadata.pop("defenders", None)
+    metadata.pop("builtBuildingNames", None)
+    metadata.pop("bannedBuildingNames", None)
+    metadata.pop("mustHaveSpellNames", None)
+    metadata.pop("bannedSpellNames", None)
+    metadata.pop("army", None)
+    metadata.pop("artifactNames", None)
+    metadata.pop("availableSpellNames", None)
+    metadata.pop("secondarySkills", None)
+    metadata.pop("artifactName", None)
+    metadata.pop("secondarySkillName", None)
+    metadata.pop("secondarySkillLevelName", None)
+    metadata.pop("monsterName", None)
+    metadata.pop("joinConditionName", None)
+    return metadata
+
+
 def _fh2m_objects_to_unified(map_data):
     """
     Convert the fh2m object instances into the unified objects section.
     The fh2m storage is already the unified one: objects per tile with
-    metadata maps keyed by object id; the metadata maps are passed
-    through with their original keys.
+    metadata maps keyed by object id. The metadata maps are normalized
+    through _fh2m_metadata_to_unified; the raw fh2m fields are kept so
+    that the round-trip remains byte-perfect.
     """
     tiles = OrderedDict()
     width = map_data.get("width", 0)
@@ -1021,7 +1126,9 @@ def _fh2m_objects_to_unified(map_data):
 
     result = OrderedDict([("tiles", tiles)])
 
-    # Metadata maps keyed by object id
+    # Metadata maps keyed by object id, normalized into the unified
+    # schema; the raw fh2m fields are kept for the byte-perfect
+    # round-trip.
     for key in ("castleMetadata", "heroMetadata", "sphinxMetadata",
                 "signMetadata", "adventureMapEventMetadata",
                 "selectionObjectMetadata", "capturableObjectsMetadata",
@@ -1029,7 +1136,10 @@ def _fh2m_objects_to_unified(map_data):
                 "standardObjectMetadata"):
         value_map = map_data.get(key)
         if value_map:
-            result[key] = value_map
+            result[key] = OrderedDict(
+                (obj_id, _fh2m_metadata_to_unified(key, metadata))
+                for obj_id, metadata in value_map.items()
+            )
 
     return result
 

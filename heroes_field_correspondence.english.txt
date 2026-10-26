@@ -287,21 +287,28 @@ Values used in the unified JSON format and their equivalents in .fh2m and .h3m
 List for FH2M (no unified equivalent yet):
 - isCampaign (campaign maps have a different structure)
 - additionalInfo (campaign maps only)
-- tiles[].objects joinCondition / isWeeklyGrowthDisabled / selected
-  (the object placement itself is converted)
-- castleMetadata garrison, buildings, spells, hiring (owner, name and
-  type are converted)
-- heroMetadata portraits, armies, artifacts, spells, patrol, skills,
-  experience, primary skills, mana (owner and type are converted)
-- sphinxMetadata riddles, answers, rewards (placement is converted)
-- adventureMapEventMetadata rewards, skills, monsters (message is
-  converted)
-- selectionObjectMetadata selected items (placement is converted)
-- capturableObjectsMetadata details beyond the owner color
-- monsterMetadata joinCondition, isWeeklyGrowthDisabled, selected
-- artifactMetadata radius, captureCondition, selected
+- standardObjectMetadata (deprecated, map versions below 10 only)
 - translations (translated name/description/creatorNotes)
 - translationInfo (all translated texts)
+
+The fh2m metadata maps are fully carried into the unified format:
+every entry keeps its raw fh2m fields (for the byte-perfect fh2m
+round-trip) and gains normalized fields with readable names resolved
+from the identifier tables in correspondence.py:
+- castleMetadata defenders[] (monster, sourceMonsterId, count),
+  builtBuildingNames / bannedBuildingNames (building bit flags),
+  mustHaveSpellNames / bannedSpellNames (spells)
+- heroMetadata army[] (monster, sourceMonsterId, count),
+  artifactNames, availableSpellNames, secondarySkills[] (skill,
+  sourceSkillId, level, sourceLevelId)
+- sphinxMetadata artifactName
+- adventureMapEventMetadata artifactName, secondarySkillName,
+  secondarySkillLevelName, monsterName
+- monsterMetadata joinConditionName
+The remaining raw fh2m fields have no readable-name equivalent yet
+(hero portraits, patrol, experience, primary skills, mana, event
+rewards beyond the named ones, capturable owner beyond the color,
+artifact radius/captureCondition/selected).
 
 List for H3M (no unified equivalent yet):
 - Basic Parameters > Heroes Mastery Level Cap
