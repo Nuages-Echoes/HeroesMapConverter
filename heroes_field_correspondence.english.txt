@@ -342,3 +342,258 @@ List for H3M (no unified equivalent yet):
    random artifacts...) have no fh2m equivalent and are dropped. fh2m
    object groups that are pure landscape (ROADS, STREAMS, LANDSCAPE_*)
    exist only on the fh2m side.
+
+
+
+
+████████████████████████████████████████████████████████████████████████
+██                            Creatures                             ██
+████████████████████████████████████████████████████████████████████████
+
+   The creature identifiers come from the h3m files (CRTRAITS.TXT
+   order, starting at 0 with Pikeman) and from the fh2m files
+   (fheroes2 MonsterType enumeration, starting at 1 with Peasant; the
+   MONSTERS object group index is the monster id minus 1).
+
+| H3M id | H3M creature        | FH2M id | FH2M creature   |
+|--------|----------------------|---------|-----------------|
+| 0      | Pikeman              | 4       | Pikeman         |
+| 2      | Archer               | 2       | Archer          |
+| 3      | Marksman             | 3       | Ranger          |
+| 4      | Griffin              | 32      | Griffin         |
+| 6      | Swordsman            | 6       | Swordsman       |
+| 10     | Cavalier             | 8       | Cavalry         |
+| 11     | Champion             | 9       | Champion        |
+| 14     | Centaur              | 30      | Centaur         |
+| 16     | Dwarf                | 22      | Dwarf           |
+| 17     | Battle Dwarf         | 23      | Battle Dwarf    |
+| 18     | Wood Elf             | 24      | Elf             |
+| 19     | Grand Elf            | 25      | Grand Elf       |
+| 24     | Unicorn              | 28      | Unicorn         |
+| 26     | Green Dragon         | 36      | Green Dragon    |
+| 30     | Stone Gargoyle       | 31      | Gargoyle        |
+| 32     | Iron Golem           | 41      | Iron Golem     |
+| 33     | Stone Golem          | 42      | Steel Golem    |
+| 34     | Mage                 | 44      | Mage            |
+| 35     | Archmage             | 45      | Archmage        |
+| 36     | Genie                | 61      | Genie           |
+| 40     | Giant                | 46      | Giant           |
+| 41     | Titan                | 47      | Titan           |
+| 56     | Skeleton             | 48      | Skeleton        |
+| 58     | Walking Dead         | 49      | Zombie          |
+| 59     | Zombie Lord          | 50      | Mutant Zombie   |
+| 62     | Vampire              | 53      | Vampire        |
+| 63     | Vampire Lord         | 54      | Vampire Lord   |
+| 64     | Lich                 | 55      | Lich            |
+| 65     | Power Lich           | 56      | Power Lich     |
+| 68     | Bone Dragon          | 57      | Bone Dragon     |
+| 76     | Medusa               | 62      | Medusa          |
+| 78     | Minotaur             | 33      | Minotaur        |
+| 79     | Minotaur King        | 34      | Minotaur King  |
+| 82     | Red Dragon           | 37      | Red Dragon      |
+| 83     | Black Dragon         | 38      | Black Dragon   |
+| 84     | Goblin               | 12      | Goblin          |
+| 86     | Goblin Wolf Rider    | 15      | Wolf            |
+| 88     | Orc                  | 13      | Orc             |
+| 89     | Orc Chieftain        | 14      | Orc Chief       |
+| 90     | Ogre                 | 16      | Ogre            |
+| 91     | Ogre Mage            | 17      | Ogre Lord      |
+| 92     | Roc                  | 43      | Roc             |
+| 94     | Cyclops              | 20      | Cyclops         |
+| 110    | Hydra                | 35      | Hydra           |
+| 112    | Sprite               | 21      | Sprite          |
+| 114    | Air Elemental        | 64      | Air Element     |
+| 115    | Earth Elemental      | 63      | Earth Element   |
+| 116    | Fire Elemental       | 65      | Fire Element    |
+| 117    | Water Elemental      | 66      | Water Element   |
+| 130    | Phoenix              | 29      | Phoenix         |
+| 137    | Halfling             | 39      | Halfling        |
+| 138    | Peasant              | 1       | Peasant         |
+| 139    | Boar                 | 40      | Boar            |
+| 140    | Mummy                | 51      | Mummy           |
+| 141    | Nomad                | 59      | Nomad           |
+| 142    | Rogue                | 58      | Rogue           |
+| 143    | Troll                | 18      | Troll           |
+
+   H3M creatures with no Heroes II equivalent (UNDEFINE, dropped by
+   the cross-format translation): Halberdier, Royal Griffin,
+   Crusader, Monk, Zealot, Angel, Archangel, Centaur Captain, Pegasus,
+   Silver Pegasus, Dendroid Guard, Dendroid Soldier, War Unicorn,
+   Gold Dragon, Gremlin, Master Gremlin, Obsidian Gargoyle, Master
+   Genie, Naga, Naga Queen, Imp, Familiar, Gog, Magog, Hell Hound,
+   Cerberus, Demon, Horned Demon, Pit Fiend, Pit Lord, Efreet, Efreet
+   Sultan, Devil, Arch Devil, Skeleton Warrior, Wight, Wraith, Black
+   Knight, Dread Knight, Ghost Dragon, Troglodyte, Infernal
+   Troglodyte, Harpy, Harpy Hag, Beholder, Evil Eye, Medusa Queen,
+   Manticore, Scorpicore, Hobgoblin, Hobgoblin Wolf Rider, Thunderbird,
+   Cyclops King, Behemoth, Ancient Behemoth, Gnoll, Gnoll Marauder,
+   Lizardman, Lizard Warrior, Gorgon, Mighty Gorgon, Serpent Fly, Fire
+   Dragon Fly, Basilisk, Greater Basilisk, Wyvern, Wyvern Monarch,
+   Chaos Hydra, Pixie, Gold Golem, Diamond Golem, Psychic Elemental,
+   Magic Elemental, Ice Elemental, Magma Elemental, Storm Elemental,
+   Energy Elemental, Firebird, Azure Dragon, Crystal Dragon, Fairie
+   Dragon, Rust Dragon, Enchanter, Sharpshooter.
+
+   FH2M monsters with no h3m creature equivalent: Ghost (their
+   effect exists in Heroes III as a monster ability, not as a placeable
+   creature).
+
+
+████████████████████████████████████████████████████████████████████████
+██                            Artifacts                             ██
+████████████████████████████████████████████████████████████████████████
+
+   The artifact identifiers come from the h3m files (ARTIFACT.TXT
+   order, starting at 0 with Spell Book) and from the fh2m files
+   (fheroes2 Artifact enumeration, starting at 1 with Ultimate Book;
+   the ADVENTURE_ARTIFACTS object group starts at Arcane Necklace,
+   id 9).
+
+| H3M id | H3M artifact                  | FH2M id | FH2M artifact          |
+|--------|-------------------------------|---------|-------------------------|
+| 0      | Spell Book                    | 82      | Magic Book              |
+| 1      | Spell Scroll                  | 87      | Spell Scroll            |
+| 4      | Ballista                      | 22      | Ballista                |
+| 5      | Ammo Cart                     | 69      | Ammo Cart               |
+| 91     | Golden Bow                    | 64      | Golden Bow              |
+| 97     | Necklace of Swiftness         | 35      | Traveler's Boots        |
+| 98     | Boots of Speed                | 40      | True Compass            |
+| 105    | Pendant of Free Will          | 57      | Pendant of Free Will    |
+| 109    | Everflowing Crystal Cloak     | 77      | Endless Pouch of Crystal|
+| 110    | Ring of Infinite Gems         | 74      | Endless Pouch of Gems   |
+| 111    | Everpouring Vial of Mercury   | 73      | Endless Vial of Mercury |
+| 112    | Inexhaustible Cart of Ore     | 76      | Endless Cart of Ore     |
+| 113    | Eversmoking Ring of Sulfur     | 72      | Endless Pouch of Sulfur |
+| 114    | Inexhaustible Cart of Lumber   | 75      | Endless Cord of Wood    |
+| 115    | Endless Sack of Gold           | 31      | Endless Sack of Gold    |
+| 116    | Endless Bag of Gold           | 32      | Endless Bag of Gold     |
+| 117    | Endless Purse of Gold         | 33      | Endless Purse of Gold   |
+
+   H3M artifacts with no Heroes II equivalent (UNDEFINE, dropped by
+   the cross-format translation): all the remaining ones, notably the
+   Ultimate artifacts have different names and effects, the
+   faction-specific weapons/armor (Centaur Axe, Shield of the Dwarven
+   Lords...), the Legion set pieces, the tomes of magic,
+   the Angel Wings, the Shackles of War, the Armageddon's Blade and
+   the other campaign artifacts.
+
+   FH2M artifacts with no h3m artifact equivalent: the Succession
+   Wars Ultimate artifacts (Ultimate Book, Ultimate Sword, Ultimate
+   Cloak, Ultimate Wand, Ultimate Shield, Ultimate Staff, Ultimate
+   Crown), Golden Goose, the medals (Valor, Courage, Honor,
+   Distinction), Fizbin of Misfortune, Thunder Mace, Armored
+   Gauntlets, Defender Helm, Giant Flail, Stealth Shield, Dragon
+   Sword, Power Axe, Divine Breastplate, the scrolls (Minor, Major,
+   Superior, Foremost), Nomad Boots, Rabbit's Foot, Golden Horseshoe,
+   Gambler's Lucky Coin, Four-Leaf Clover, Sailor's Astrolabe, Evil
+   Eye, Enchanted Hourglass, Gold Watch, Skullcap, Ice Cloak, Fire
+   Cloak, Lightning Helm, Evercold Icicle, Everhot Lava Rock,
+   Lightning Rod, Snake Ring, Ankh, Book of Elements, Elemental Ring,
+   Holy Pendant, Pendant of Life, Serenity Pendant, Seeing-Eye
+   Pendant, Kinetic Pendant, Pendant of Death, Wand of Negation,
+   Telescope, Statesman's Quill, Wizard's Hat, Power Ring, Tax Lien,
+   Hideous Mask, Spiked Helm, Spiked Shield, White Pearl, Black Pearl
+   and the Price of Loyalty artifacts (Arm of the Martyr, Breastplate
+   of Anduran, Broach of Shielding, Battle Garb, Crystal Ball, Heart
+   of Fire, Heart of Ice, Helmet of Anduran, Holy Hammer, Legendary
+   Scepter, Masthead, Sphere of Negation, Staff of Wizardry, Sword
+   Breaker, Sword of Anduran, Spade of Necromancy).
+
+
+████████████████████████████████████████████████████████████████████████
+██                              Spells                              ██
+████████████████████████████████████████████████████████████████████████
+
+   The spell identifiers come from the h3m files (SPELLS.TXT order,
+   starting at 0 with Summon Boat) and from the fh2m files (fheroes2
+   Spell enumeration, starting at 1 with Fireball).
+
+| H3M id | H3M spell           | FH2M id | FH2M spell           |
+|--------|----------------------|---------|------------------------|
+| 0      | Summon Boat         | 56      | Summon Boat          |
+| 2      | Visions             | 60      | Visions               |
+| 3      | View Earth          | 49      | View Mines           |
+| 5      | View Air            | 53      | View Heroes          |
+| 8      | Dimension Door      | 57      | Dimension Door        |
+| 9      | Town Portal         | 59      | Town Portal           |
+| 14     | Earthquake          | 48      | Earthquake            |
+| 15     | Magic Arrow         | 26      | Magic Arrow           |
+| 17     | Lightning Bolt      | 3       | Lightning Bolt        |
+| 19     | Chain Lightning     | 4       | Chain Lightning       |
+| 21     | Fireball            | 1       | Fireball              |
+| 23     | Meteor Shower       | 30      | Meteor Shower         |
+| 24     | Death Ripple        | 36      | Death Ripple          |
+| 26     | Armageddon          | 28      | Armageddon            |
+| 27     | Shield              | 42      | Shield                |
+| 34     | Anti Magic          | 23      | Anti Magic            |
+| 35     | Dispel              | 24      | Dispel                |
+| 37     | Cure                | 6       | Cure                  |
+| 39     | Animate Dead        | 40      | Animate Dead          |
+| 41     | Bless               | 15      | Bless                 |
+| 42     | Curse               | 19      | Curse                 |
+| 43     | Bloodlust           | 39      | Bloodlust              |
+| 46     | Stone Skin          | 17      | Stoneskin             |
+| 47     | Disrupting Ray      | 35      | Disrupting Ray         |
+| 53     | Haste               | 10      | Haste                 |
+| 54     | Slow                | 12      | Slow                  |
+| 60     | Hypnotize           | 32      | Hypnotize             |
+| 62     | Blind               | 14      | Blind                 |
+| 63     | Teleport            | 5       | Teleport              |
+
+   H3M spells with no Heroes II equivalent (UNDEFINE): Scuttle
+   Boat, Disguise, Fly, Water Walk, Quicksand, Land Mine, Force
+   Field, Fire Wall, Ice Bolt, Implosion, Frost Ring, Inferno, Destroy
+   Undead, Air Shield, Fire Shield, the protection spells (Air, Fire,
+   Water, Earth), Magic Mirror, Resurrection, Sacrifice, Precision,
+   Weakness, Prayer, Mirth, Sorrow, Fortune, Misfortune, Slayer,
+   Frenzy, Titan Bolt, Counterstrike, Berserk, Forgetfulness, Remove
+   Obstacle, Clone and the four summon Elemental spells.
+
+   FH2M spells with no h3m spell equivalent: Fireblast, Resurrect,
+   True Resurrect, Mass versions of Haste, Slow, Cure, Bless, Curse,
+   Dispel and Shield, Holy Word, Holy Shout, Cold Ray, Cold Ring,
+   Dragonslayer, Paralyze, Elemental Storm, the four Summon Elemental
+   and four Set Guardian spells, View Resources, View Artifacts, View
+   Towns, View All, Identify Hero, Haunt and Petrify.
+
+   Note: some near-equivalents exist but are deliberately not mapped
+   (Fireblast/Fireball areas differ, Cold Ray/Ice Bolt and Cold
+   Ring/Frost Ring have different effects, Resurrect only works in
+   combat in Heroes II).
+
+
+████████████████████████████████████████████████████████████████████████
+██                        Secondary skills                          ██
+████████████████████████████████████████████████████████████████████████
+
+   The secondary skill identifiers come from the h3m files
+   (SECSKILL.TXT order, starting at 0 with Pathfinding) and from the
+   fh2m files (fheroes2 Skill::Secondary enumeration, starting at 1
+   with Pathfinding). Levels are identical in both games (1 Basic,
+   2 Advanced, 3 Expert).
+
+| H3M id | H3M skill     | FH2M id | FH2M skill   |
+|--------|---------------|---------|---------------|
+| 0      | Pathfinding   | 1       | Pathfinding   |
+| 1      | Archery       | 2       | Archery       |
+| 2      | Logistics     | 3       | Logistics     |
+| 3      | Scouting      | 4       | Scouting      |
+| 4      | Diplomacy     | 5       | Diplomacy     |
+| 6      | Leadership    | 7       | Leadership    |
+| 7      | Wisdom        | 8       | Wisdom        |
+| 8      | Mysticism     | 9       | Mysticism     |
+| 9      | Luck          | 10      | Luck          |
+| 10     | Ballistics    | 11      | Ballistics    |
+| 11     | Eagle Eye     | 12      | Eagle Eye     |
+| 12     | Necromancy    | 13      | Necromancy    |
+| 13     | Estates       | 14      | Estates      |
+
+   H3M secondary skills with no Heroes II equivalent: Navigation
+   (H3M id 5, UNDEFINE in fh2m; its effect exists in Heroes II as a
+   native terrain bonus, not a skill), Fire Magic, Air Magic, Water
+   Magic, Earth Magic, Scholar, Tactics, Artillery, Learning,
+   Offence, Armorer, Intelligence, Sorcery, Resistance and First Aid.
+
+   FH2M secondary skills with no h3m equivalent: none besides
+   Navigation described above; all the other Heroes II skills exist in
+   Heroes III.
