@@ -251,12 +251,14 @@ Description of the unified JSON format produced from .h3m and .fh2m maps
      "Allowed Abilities", "Reserved Bytes", "Hero Settings", "Objects"
      (the objects and their events are not decoded by h3decoder.py)
    - fh2m: "tiles" object lists, "translations", "translationInfo",
-     "additionalInfo", and all metadata maps (castleMetadata,
-     heroMetadata, sphinxMetadata, signMetadata,
-     adventureMapEventMetadata, selectionObjectMetadata,
-     capturableObjectsMetadata, monsterMetadata, artifactMetadata,
-     resourceMetadata, standardObjectMetadata)
+     "additionalInfo", and the deprecated standardObjectMetadata
+     (fh2m map versions below 10)
 
-   These may be added to the unified format later, once a common
-   representation is defined for them (heroes, castles, objects and
-   events exist in both games but with very different structures).
+   The fh2m metadata maps (castleMetadata, heroMetadata, sphinxMetadata,
+   signMetadata, adventureMapEventMetadata, selectionObjectMetadata,
+   capturableObjectsMetadata, monsterMetadata, artifactMetadata,
+   resourceMetadata) are part of the unified format: each entry keeps
+   its raw fh2m fields (byte-perfect round-trip) plus normalized fields
+   with readable names resolved from the identifier tables in
+   correspondence.py. See the Objects section of
+   heroes_field_correspondence.english.txt for the field mapping.
