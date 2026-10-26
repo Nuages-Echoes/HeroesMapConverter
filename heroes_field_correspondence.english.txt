@@ -476,10 +476,10 @@ List for H3M (no unified equivalent yet):
 |------|---------------------------|-----------------------------|
 | T1   | Rogue                     | Rogue ; Halfling ; Peasant  |
 | T2   | Nomad                     | Nomad ; Boar ; Mummy        |
-| T3   | Ghost ; Medusa            | Troll ; Air Elemental ; Earth Elemental ; Fire Elemental ; Water Elemental |
+| T3   | Ghost ; Medusa            | Troll                      |
 | T4   | Genie                     | Gold Golem ; Diamond Golem (UNDEFINE) |
-| T5   |                           | Psychic Elemental ; Magic Elemental ; Ice Elemental ; Magma Elemental ; Storm Elemental ; Energy Elemental (UNDEFINE) |
-| T6   |                           | Firebird ; Phoenix          |
+| T5   |                           | UNDEFINE                   |
+| T6   |                           | UNDEFINE                   |
 | T7   |                           | Azure Dragon ; Crystal Dragon ; Fairie Dragon ; Rust Dragon ; Enchanter ; Sharpshooter (UNDEFINE) |
 
    Random monsters (h3m object class -> fh2m id):
