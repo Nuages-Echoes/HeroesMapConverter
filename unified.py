@@ -794,7 +794,9 @@ def _translate_h3m_tile_objects(obj_list, objects_section, translated_metadata,
 
     Returns the list of translated objects for the tile.
     """
-    from correspondence import H3M_TO_FH2M_ARTIFACTS, H3M_TO_FH2M_MONSTERS
+    from correspondence import (H3M_RANDOM_MONSTER_CLASSES,
+                                  H3M_TO_FH2M_ARTIFACTS,
+                                  H3M_TO_FH2M_MONSTERS)
 
     translated = []
     for obj in obj_list:
@@ -804,12 +806,18 @@ def _translate_h3m_tile_objects(obj_list, objects_section, translated_metadata,
             monster_meta = (objects_section.get("monsterMetadata") or {}).get(str(obj_id)) or {}
             creature = monster_meta.get("creature")
             if creature is None:
-                dropped_ids.append(obj_id)
-                continue
-            fh2m_monster = H3M_TO_FH2M_MONSTERS.get(creature, -1)
-            if fh2m_monster < 1:
-                dropped_ids.append(obj_id)
-                continue
+                # Random monster: the object class gives the random
+                # level (RANDOM_MONSTER, RANDOM_MONSTER_L1 to L4).
+                monster_class = monster_meta.get("monsterClass")
+                fh2m_monster = H3M_RANDOM_MONSTER_CLASSES.get(monster_class, -1)
+                if fh2m_monster < 1:
+                    dropped_ids.append(obj_id)
+                    continue
+            else:
+                fh2m_monster = H3M_TO_FH2M_MONSTERS.get(creature, -1)
+                if fh2m_monster < 1:
+                    dropped_ids.append(obj_id)
+                    continue
             translated.append(OrderedDict([
                 ("id", obj_id),
                 ("group", "MONSTERS"),

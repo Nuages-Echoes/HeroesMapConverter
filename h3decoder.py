@@ -954,7 +954,8 @@ def parse_h3m_objects(raw_objects, level_ab, level_sod, artifact_id_bytes,
             count, _disposition = struct.unpack('<HB', count2)
             monster_metadata[str(object_id)] = OrderedDict([
                 ('count', count if count else None),
-                ('creature', None if obj_class == 71 else obj_subclass),
+                ('creature', None if obj_class in (71, 72, 73, 74, 75) else obj_subclass),
+                ('monsterClass', obj_class),
             ])
             has_treasure = safe_read(buffer, 1)[0]
             if has_treasure:
