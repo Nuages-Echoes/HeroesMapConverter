@@ -417,6 +417,156 @@ def fh2m_artifact_name(artifact_id):
         return FH2M_ARTIFACT_NAMES[artifact_id]
     return None
 
+# fh2m monster id -> h3m creature id, the inverse of
+# H3M_TO_FH2M_MONSTERS: when several h3m creatures map to the
+# same fh2m monster, the preimage is chosen by tier of the
+# Heroes II primary faction (see the faction tables in
+# heroes_field_correspondence.english.txt), with the validated
+# arbitrages: Cavalry/Champion <- Cavalier/Champion,
+# Minotaur/Minotaur King <- Minotaur/Minotaur King,
+# Lich/Power Lich <- Lich/Power Lich, Mage/Archmage <-
+# Mage/Archmage, Giant/Titan <- Giant/Titan, and the dragon
+# chain Green <- Red, Red <- Black, Black <- Black.
+FH2M_TO_H3M_MONSTERS = {
+    1: 139,   # Peasant <- Peasant
+    2: 2,   # Archer <- Archer
+    3: 3,   # Ranger <- Marksman
+    4: 0,   # Pikeman <- Pikeman
+    5: 1,   # Veteran Pikeman <- Halberdier
+    6: 6,   # Swordsman <- Swordsman
+    7: 7,   # Master Swordsman <- Crusader
+    8: 10,   # Cavalry <- Cavalier
+    9: 11,   # Champion <- Champion
+    10: 12,   # Paladin <- Angel
+    11: 13,   # Crusader <- Archangel
+    12: 84,   # Goblin <- Goblin
+    13: 86,   # Orc <- Goblin Wolf Rider
+    14: 87,   # Orc Chief <- Hobgoblin Wolf Rider
+    15: 88,   # Wolf <- Orc
+    16: 90,   # Ogre <- Ogre
+    17: 91,   # Ogre Lord <- Ogre Mage
+    18: 144,   # Troll <- Troll
+    19: 93,   # War Troll <- Thunderbird
+    20: 94,   # Cyclops <- Cyclops
+    21: 14,   # Sprite <- Centaur
+    22: 16,   # Dwarf <- Dwarf
+    23: 17,   # Battle Dwarf <- Battle Dwarf
+    24: 18,   # Elf <- Wood Elf
+    25: 19,   # Grand Elf <- Grand Elf
+    26: 20,   # Druid <- Pegasus
+    27: 21,   # Greater Druid <- Silver Pegasus
+    28: 24,   # Unicorn <- Unicorn
+    29: 26,   # Phoenix <- Green Dragon
+    30: 70,   # Centaur <- Troglodyte
+    31: 72,   # Gargoyle <- Harpy
+    32: 74,   # Griffin <- Beholder
+    33: 78,   # Minotaur <- Minotaur
+    34: 79,   # Minotaur King <- Minotaur King
+    35: 80,   # Hydra <- Manticore
+    36: 82,   # Green Dragon <- Red Dragon
+    37: 83,   # Red Dragon <- Black Dragon
+    38: 83,   # Black Dragon <- Black Dragon
+    39: 28,   # Halfling <- Gremlin
+    40: 30,   # Boar <- Stone Gargoyle
+    41: 32,   # Iron Golem <- Iron Golem
+    42: 33,   # Steel Golem <- Stone Golem
+    44: 34,   # Mage <- Mage
+    45: 35,   # Archmage <- Archmage
+    46: 40,   # Giant <- Giant
+    47: 41,   # Titan <- Titan
+    48: 56,   # Skeleton <- Skeleton
+    49: 58,   # Zombie <- Walking Dead
+    50: 59,   # Mutant Zombie <- Zombie Lord
+    51: 60,   # Mummy <- Wight
+    52: 61,   # Royal Mummy <- Wraith
+    53: 62,   # Vampire <- Vampire
+    54: 63,   # Vampire Lord <- Vampire Lord
+    55: 64,   # Lich <- Lich
+    56: 65,   # Power Lich <- Power Lich
+    57: 68,   # Bone Dragon <- Bone Dragon
+    58: 143,   # Rogue <- Rogue
+    59: 142,   # Nomad <- Nomad
+    63: 113,   # Earth Element <- Earth Elemental
+    64: 112,   # Air Element <- Air Elemental
+    65: 114,   # Fire Element <- Fire Elemental
+    66: 115,   # Water Element <- Water Elemental
+}
+
+# fh2m monsters with no h3m creature equivalent: converted to
+# an h3m random monster of level 4 (object class 75).
+FH2M_MONSTERS_TO_H3M_RANDOM_CLASS = {
+    43: 75,  # Roc (its preimages Mage/Archmage map to Mage/Archmage)
+    60: 75,  # Ghost (no ghost creature in Heroes III)
+    61: 75,  # Genie
+    62: 75,  # Medusa
+}
+
+# fh2m random monster ids -> h3m random monster object classes
+# (inverse of H3M_RANDOM_MONSTER_CLASSES).
+FH2M_RANDOM_TO_H3M_CLASS = {
+    67: 71,  # Random Monster <- any level
+    68: 72,  # Random Monster 1 <- level 1
+    69: 73,  # Random Monster 2 <- level 2
+    70: 74,  # Random Monster 3 <- level 3
+    71: 75,  # Random Monster 4 <- level 4
+}
+
+# fh2m artifact id -> h3m artifact id (inverse of
+# H3M_TO_FH2M_ARTIFACTS; the forward table is injective).
+FH2M_TO_H3M_ARTIFACTS = {
+    82: 0,   # Magic Book <- Spell Book
+    87: 1,   # Spell Scroll <- Spell Scroll
+    22: 4,   # Ballista <- Ballista
+    69: 5,   # Ammo Cart <- Ammo Cart
+    64: 91,   # Golden Bow <- Golden Bow
+    35: 97,   # Traveler's Boots <- Necklace of Swiftness
+    40: 98,   # True Compass <- Boots of Speed
+    57: 105,   # Pendant of Free Will <- Pendant of Free Will
+    77: 109,   # Endless Pouch of Crystal <- Everflowing Crystal Cloak
+    74: 110,   # Endless Pouch of Gems <- Ring of Infinite Gems
+    73: 111,   # Endless Vial of Mercury <- Everpouring Vial of Mercury
+    76: 112,   # Endless Cart of Ore <- Inexhaustible Cart of Ore
+    72: 113,   # Endless Pouch of Sulfur <- Eversmoking Ring of Sulfur
+    75: 114,   # Endless Cord of Wood <- Inexhaustible Cart of Lumber
+    31: 115,   # Endless Sack of Gold <- Endless Sack of Gold
+    32: 116,   # Endless Bag of Gold <- Endless Bag of Gold
+    33: 117,   # Endless Purse of Gold <- Endless Purse of Gold
+}
+
+# fh2m spell id -> h3m spell id (inverse of
+# H3M_TO_FH2M_SPELLS; the forward table is injective).
+FH2M_TO_H3M_SPELLS = {
+    56: 0,   # Summon Boat <- Summon Boat
+    60: 2,   # Visions <- Visions
+    49: 3,   # View Mines <- View Earth
+    53: 5,   # View Heroes <- View Air
+    57: 8,   # Dimension Door <- Dimension Door
+    59: 9,   # Town Portal <- Town Portal
+    48: 14,   # Earthquake <- Earthquake
+    26: 15,   # Magic Arrow <- Magic Arrow
+    3: 17,   # Lightning Bolt <- Lightning Bolt
+    4: 19,   # Chain Lightning <- Chain Lightning
+    1: 21,   # Fireball <- Fireball
+    30: 23,   # Meteor Shower <- Meteor Shower
+    36: 24,   # Death Ripple <- Death Ripple
+    28: 26,   # Armageddon <- Armageddon
+    42: 27,   # Shield <- Shield
+    23: 34,   # Anti Magic <- Anti Magic
+    24: 35,   # Dispel <- Dispel
+    6: 37,   # Cure <- Cure
+    40: 39,   # Animate Dead <- Animate Dead
+    15: 41,   # Bless <- Bless
+    19: 42,   # Curse <- Curse
+    39: 43,   # Bloodlust <- Bloodlust
+    17: 46,   # Stoneskin <- Stone Skin
+    35: 47,   # Disrupting Ray <- Disrupting Ray
+    10: 53,   # Haste <- Haste
+    12: 54,   # Slow <- Slow
+    32: 60,   # Hypnotize <- Hypnotize
+    14: 62,   # Blind <- Blind
+    5: 63,   # Teleport <- Teleport
+}
+
 # Heroes III artifact identifiers, in the ARTIFACT.TXT order used by the
 # h3m files.
 H3M_ARTIFACT_NAMES = [
