@@ -34,9 +34,23 @@ FH2M_MONSTER_NAMES = [
     "Power Lich", "Bone Dragon",
     "Rogue", "Nomad", "Ghost", "Genie", "Medusa", "Earth Element",
     "Air Element", "Fire Element", "Water Element",
-    "Random Monster", "Random Monster Level 1", "Random Monster Level 2",
-    "Random Monster Level 3", "Random Monster Level 4",
+    "Random Monster", "Random Monster 1", "Random Monster 2",
+    "Random Monster 3", "Random Monster 4",
 ]
+
+# h3m random monster object classes (RANDOM_MONSTER and
+# RANDOM_MONSTER_L1 to L4) -> fh2m random monster ids (fheroes2
+# MonsterType: RANDOM_MONSTER and RANDOM_MONSTER_LEVEL_1 to 4). Used
+# when the h3m monsterMetadata carries no creature id (creature is
+# None): the object class gives the random level.
+H3M_RANDOM_MONSTER_CLASSES = {
+    71: 67,  # RANDOM_MONSTER
+    72: 68,  # RANDOM_MONSTER_L1
+    73: 69,  # RANDOM_MONSTER_L2
+    74: 70,  # RANDOM_MONSTER_L3
+    75: 71,  # RANDOM_MONSTER_L4
+}
+
 
 # fheroes2 Spell enumeration; index 0 (NONE) is not a real spell.
 FH2M_SPELL_NAMES = [
@@ -208,59 +222,98 @@ H3M_CREATURE_NAMES = [
     "Rogue", "Troll",
 ]
 
-# h3m creature id -> fh2m monster id (fheroes2 MonsterType); -1 when
-# the creature has no Heroes II equivalent. The Heroes II equivalents
-# follow the classic creature pairing between both games.
-
 # h3m creature id -> fh2m monster id (fheroes2 MonsterType); -1
-# when the creature has no Heroes II equivalent. The pairs follow the
-# classic creature pairing between Heroes II and Heroes III.
+# when the creature has no Heroes II equivalent. Within each
+# faction the creatures are matched by tier: h3m tier N maps
+# to the fh2m tier N creature (see the faction tables in
+# heroes_field_correspondence.english.txt).
 H3M_TO_FH2M_MONSTERS = {
     0: 4,   # Pikeman -> Pikeman
+    1: 5,   # Halberdier -> Veteran Pikeman
     2: 2,   # Archer -> Archer
     3: 3,   # Marksman -> Ranger
-    4: 32,   # Griffin -> Griffin
+    4: 4,   # Griffin -> Pikeman
+    5: 5,   # Royal Griffin -> Veteran Pikeman
     6: 6,   # Swordsman -> Swordsman
+    7: 7,   # Crusader -> Master Swordsman
+    8: 8,   # Monk -> Cavalry
+    9: 9,   # Zealot -> Champion
     10: 8,   # Cavalier -> Cavalry
     11: 9,   # Champion -> Champion
-    14: 30,   # Centaur -> Centaur
+    12: 10,   # Angel -> Paladin
+    13: 11,   # Archangel -> Crusader
+    14: 21,   # Centaur -> Sprite
+    15: 21,   # Centaur Captain -> Sprite
     16: 22,   # Dwarf -> Dwarf
     17: 23,   # Battle Dwarf -> Battle Dwarf
     18: 24,   # Wood Elf -> Elf
     19: 25,   # Grand Elf -> Grand Elf
+    20: 26,   # Pegasus -> Druid
+    21: 27,   # Silver Pegasus -> Greater Druid
+    22: 26,   # Dendroid Guard -> Druid
+    23: 27,   # Dendroid Soldier -> Greater Druid
     24: 28,   # Unicorn -> Unicorn
-    26: 36,   # Green Dragon -> Green Dragon
-    30: 31,   # Stone Gargoyle -> Gargoyle
+    25: 28,   # War Unicorn -> Unicorn
+    26: 29,   # Green Dragon -> Phoenix
+    27: 29,   # Gold Dragon -> Phoenix
+    28: 39,   # Gremlin -> Halfling
+    29: 39,   # Master Gremlin -> Halfling
+    30: 40,   # Stone Gargoyle -> Boar
+    31: 40,   # Obsidian Gargoyle -> Boar
     32: 41,   # Iron Golem -> Iron Golem
     33: 42,   # Stone Golem -> Steel Golem
-    34: 44,   # Mage -> Mage
-    35: 45,   # Archmage -> Archmage
-    36: 61,   # Genie -> Genie
+    34: 43,   # Mage -> Roc
+    35: 43,   # Archmage -> Roc
+    36: 44,   # Genie -> Mage
+    37: 45,   # Master Genie -> Archmage
+    38: 46,   # Naga -> Giant
+    39: 46,   # Naga Queen -> Giant
     40: 46,   # Giant -> Giant
     41: 47,   # Titan -> Titan
     56: 48,   # Skeleton -> Skeleton
+    57: 48,   # Skeleton Warrior -> Skeleton
     58: 49,   # Walking Dead -> Zombie
     59: 50,   # Zombie Lord -> Mutant Zombie
+    60: 51,   # Wight -> Mummy
+    61: 52,   # Wraith -> Royal Mummy
     62: 53,   # Vampire -> Vampire
     63: 54,   # Vampire Lord -> Vampire Lord
     64: 55,   # Lich -> Lich
     65: 56,   # Power Lich -> Power Lich
+    66: 55,   # Black Knight -> Lich
+    67: 56,   # Dread Knight -> Power Lich
     68: 57,   # Bone Dragon -> Bone Dragon
-    76: 62,   # Medusa -> Medusa
+    69: 57,   # Ghost Dragon -> Bone Dragon
+    70: 30,   # Troglodyte -> Centaur
+    71: 30,   # Infernal Troglodyte -> Centaur
+    72: 31,   # Harpy -> Gargoyle
+    73: 31,   # Harpy Hag -> Gargoyle
+    74: 32,   # Beholder -> Griffin
+    75: 32,   # Evil Eye -> Griffin
+    76: 33,   # Medusa -> Minotaur
+    77: 34,   # Medusa Queen -> Minotaur King
     78: 33,   # Minotaur -> Minotaur
     79: 34,   # Minotaur King -> Minotaur King
-    82: 37,   # Red Dragon -> Red Dragon
+    80: 35,   # Manticore -> Hydra
+    81: 35,   # Scorpicore -> Hydra
+    82: 36,   # Red Dragon -> Green Dragon
     83: 38,   # Black Dragon -> Black Dragon
     84: 12,   # Goblin -> Goblin
-    86: 15,   # Goblin Wolf Rider -> Wolf
-    88: 13,   # Orc -> Orc
-    89: 14,   # Orc Chieftain -> Orc Chief
+    85: 12,   # Hobgoblin -> Goblin
+    86: 13,   # Goblin Wolf Rider -> Orc
+    87: 14,   # Hobgoblin Wolf Rider -> Orc Chief
+    88: 15,   # Orc -> Wolf
+    89: 15,   # Orc Chieftain -> Wolf
     90: 16,   # Ogre -> Ogre
     91: 17,   # Ogre Mage -> Ogre Lord
-    92: 43,   # Roc -> Roc
+    92: 18,   # Roc -> Troll
+    93: 19,   # Thunderbird -> War Troll
     94: 20,   # Cyclops -> Cyclops
-    110: 35,   # Hydra -> Hydra
+    95: 20,   # Cyclops King -> Cyclops
+    96: 20,   # Behemoth -> Cyclops
+    97: 20,   # Ancient Behemoth -> Cyclops
     112: 21,   # Sprite -> Sprite
+    113: 21,   # Pixie -> Sprite
     114: 64,   # Air Elemental -> Air Element
     115: 63,   # Earth Elemental -> Earth Element
     116: 65,   # Fire Elemental -> Fire Element

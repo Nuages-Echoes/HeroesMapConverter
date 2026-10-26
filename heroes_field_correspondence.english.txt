@@ -352,92 +352,201 @@ List for H3M (no unified equivalent yet):
 
    The creature identifiers come from the h3m files (CRTRAITS.TXT
    order, starting at 0 with Pikeman) and from the fh2m files
-   (fheroes2 MonsterType enumeration, starting at 1 with Peasant; the
-   MONSTERS object group index is the monster id minus 1).
+   (fheroes2 MonsterType enumeration, starting at 1 with Peasant;
+   the MONSTERS object group index is the monster id minus 1).
+
+   Within each faction the creatures are matched by tier: an h3m
+   tier N creature maps to the Heroes II tier N creature of the
+   corresponding faction. The h3m random monsters are converted
+   through their object class: Random Monster (any level),
+   Random Monster 1 to Random Monster 4 (h3m classes 71 to 75 ->
+   fh2m ids 67 to 71).
 
 | H3M id | H3M creature        | FH2M id | FH2M creature   |
 |--------|----------------------|---------|-----------------|
-| 0      | Pikeman              | 4       | Pikeman         |
-| 2      | Archer               | 2       | Archer          |
-| 3      | Marksman             | 3       | Ranger          |
-| 4      | Griffin              | 32      | Griffin         |
-| 6      | Swordsman            | 6       | Swordsman       |
-| 10     | Cavalier             | 8       | Cavalry         |
-| 11     | Champion             | 9       | Champion        |
-| 14     | Centaur              | 30      | Centaur         |
-| 16     | Dwarf                | 22      | Dwarf           |
-| 17     | Battle Dwarf         | 23      | Battle Dwarf    |
-| 18     | Wood Elf             | 24      | Elf             |
-| 19     | Grand Elf            | 25      | Grand Elf       |
-| 24     | Unicorn              | 28      | Unicorn         |
-| 26     | Green Dragon         | 36      | Green Dragon    |
-| 30     | Stone Gargoyle       | 31      | Gargoyle        |
-| 32     | Iron Golem           | 41      | Iron Golem     |
-| 33     | Stone Golem          | 42      | Steel Golem    |
-| 34     | Mage                 | 44      | Mage            |
-| 35     | Archmage             | 45      | Archmage        |
-| 36     | Genie                | 61      | Genie           |
-| 40     | Giant                | 46      | Giant           |
-| 41     | Titan                | 47      | Titan           |
-| 56     | Skeleton             | 48      | Skeleton        |
-| 58     | Walking Dead         | 49      | Zombie          |
-| 59     | Zombie Lord          | 50      | Mutant Zombie   |
-| 62     | Vampire              | 53      | Vampire        |
-| 63     | Vampire Lord         | 54      | Vampire Lord   |
-| 64     | Lich                 | 55      | Lich            |
-| 65     | Power Lich           | 56      | Power Lich     |
-| 68     | Bone Dragon          | 57      | Bone Dragon     |
-| 76     | Medusa               | 62      | Medusa          |
-| 78     | Minotaur             | 33      | Minotaur        |
-| 79     | Minotaur King        | 34      | Minotaur King  |
-| 82     | Red Dragon           | 37      | Red Dragon      |
-| 83     | Black Dragon         | 38      | Black Dragon   |
-| 84     | Goblin               | 12      | Goblin          |
-| 86     | Goblin Wolf Rider    | 15      | Wolf            |
-| 88     | Orc                  | 13      | Orc             |
-| 89     | Orc Chieftain        | 14      | Orc Chief       |
-| 90     | Ogre                 | 16      | Ogre            |
-| 91     | Ogre Mage            | 17      | Ogre Lord      |
-| 92     | Roc                  | 43      | Roc             |
-| 94     | Cyclops              | 20      | Cyclops         |
-| 110    | Hydra                | 35      | Hydra           |
-| 112    | Sprite               | 21      | Sprite          |
-| 114    | Air Elemental        | 64      | Air Element     |
-| 115    | Earth Elemental      | 63      | Earth Element   |
-| 116    | Fire Elemental       | 65      | Fire Element    |
-| 117    | Water Elemental      | 66      | Water Element   |
-| 130    | Phoenix              | 29      | Phoenix         |
-| 137    | Halfling             | 39      | Halfling        |
-| 138    | Peasant              | 1       | Peasant         |
-| 139    | Boar                 | 40      | Boar            |
-| 140    | Mummy                | 51      | Mummy           |
-| 141    | Nomad                | 59      | Nomad           |
-| 142    | Rogue                | 58      | Rogue           |
-| 143    | Troll                | 18      | Troll           |
 
-   H3M creatures with no Heroes II equivalent (UNDEFINE, dropped by
-   the cross-format translation): Halberdier, Royal Griffin,
-   Crusader, Monk, Zealot, Angel, Archangel, Centaur Captain, Pegasus,
-   Silver Pegasus, Dendroid Guard, Dendroid Soldier, War Unicorn,
-   Gold Dragon, Gremlin, Master Gremlin, Obsidian Gargoyle, Master
-   Genie, Naga, Naga Queen, Imp, Familiar, Gog, Magog, Hell Hound,
-   Cerberus, Demon, Horned Demon, Pit Fiend, Pit Lord, Efreet, Efreet
-   Sultan, Devil, Arch Devil, Skeleton Warrior, Wight, Wraith, Black
-   Knight, Dread Knight, Ghost Dragon, Troglodyte, Infernal
-   Troglodyte, Harpy, Harpy Hag, Beholder, Evil Eye, Medusa Queen,
-   Manticore, Scorpicore, Hobgoblin, Hobgoblin Wolf Rider, Thunderbird,
-   Cyclops King, Behemoth, Ancient Behemoth, Gnoll, Gnoll Marauder,
-   Lizardman, Lizard Warrior, Gorgon, Mighty Gorgon, Serpent Fly, Fire
-   Dragon Fly, Basilisk, Greater Basilisk, Wyvern, Wyvern Monarch,
-   Chaos Hydra, Pixie, Gold Golem, Diamond Golem, Psychic Elemental,
-   Magic Elemental, Ice Elemental, Magma Elemental, Storm Elemental,
-   Energy Elemental, Firebird, Azure Dragon, Crystal Dragon, Fairie
-   Dragon, Rust Dragon, Enchanter, Sharpshooter.
+   Castle (H3) <-> Knight (H2):
+| 0       | Pikeman              | 4       | Pikeman         |
+| 1       | Halberdier           | 5       | Veteran Pikeman |
+| 2       | Archer               | 2       | Archer          |
+| 3       | Marksman             | 3       | Ranger          |
+| 4       | Griffin              | 4       | Pikeman         |
+| 5       | Royal Griffin        | 5       | Veteran Pikeman |
+| 6       | Swordsman            | 6       | Swordsman       |
+| 7       | Crusader             | 7       | Master Swordsman |
+| 8       | Monk                 | 8       | Cavalry         |
+| 9       | Zealot               | 9       | Champion        |
+| 10      | Cavalier             | 8       | Cavalry         |
+| 11      | Champion             | 9       | Champion        |
+| 12      | Angel                | 10      | Paladin         |
+| 13      | Archangel            | 11      | Crusader        |
 
-   FH2M monsters with no h3m creature equivalent: Ghost (their
-   effect exists in Heroes III as a monster ability, not as a placeable
-   creature).
+   Rampart (H3) <-> Sorceress (H2):
+| 14      | Centaur              | 21      | Sprite          |
+| 15      | Centaur Captain      | 21      | Sprite          |
+| 16      | Dwarf                | 22      | Dwarf           |
+| 17      | Battle Dwarf         | 23      | Battle Dwarf    |
+| 18      | Wood Elf             | 24      | Elf             |
+| 19      | Grand Elf            | 25      | Grand Elf       |
+| 20      | Pegasus              | 26      | Druid           |
+| 21      | Silver Pegasus       | 27      | Greater Druid   |
+| 22      | Dendroid Guard       | 26      | Druid           |
+| 23      | Dendroid Soldier     | 27      | Greater Druid   |
+| 24      | Unicorn              | 28      | Unicorn         |
+| 25      | War Unicorn          | 28      | Unicorn         |
+| 26      | Green Dragon         | 29      | Phoenix         |
+| 27      | Gold Dragon          | 29      | Phoenix         |
 
+   Tower (H3) <-> Wizard (H2):
+| 28      | Gremlin              | 39      | Halfling        |
+| 29      | Master Gremlin       | 39      | Halfling        |
+| 30      | Stone Gargoyle       | 40      | Boar            |
+| 31      | Obsidian Gargoyle    | 40      | Boar            |
+| 32      | Iron Golem           | 41      | Iron Golem      |
+| 33      | Stone Golem          | 42      | Steel Golem     |
+| 34      | Mage                 | 43      | Roc             |
+| 35      | Archmage             | 43      | Roc             |
+| 36      | Genie                | 44      | Mage            |
+| 37      | Master Genie         | 45      | Archmage        |
+| 38      | Naga                 | 46      | Giant           |
+| 39      | Naga Queen           | 46      | Giant           |
+| 40      | Giant                | 46      | Giant           |
+| 41      | Titan                | 47      | Titan           |
+
+   Inferno (H3, no Heroes II faction):
+| 42      | Imp                  | UNDEFINE|                 |
+| 43      | Familiar             | UNDEFINE|                 |
+| 44      | Gog                  | UNDEFINE|                 |
+| 45      | Magog                | UNDEFINE|                 |
+| 46      | Hell Hound           | UNDEFINE|                 |
+| 47      | Cerberus             | UNDEFINE|                 |
+| 48      | Demon                | UNDEFINE|                 |
+| 49      | Horned Demon         | UNDEFINE|                 |
+| 50      | Pit Fiend            | UNDEFINE|                 |
+| 51      | Pit Lord             | UNDEFINE|                 |
+| 52      | Efreet               | UNDEFINE|                 |
+| 53      | Efreet Sultan        | UNDEFINE|                 |
+| 54      | Devil                | UNDEFINE|                 |
+| 55      | Arch Devil           | UNDEFINE|                 |
+
+   Necropolis (H3) <-> Necromancer (H2):
+| 56      | Skeleton             | 48      | Skeleton        |
+| 57      | Skeleton Warrior     | 48      | Skeleton        |
+| 58      | Walking Dead         | 49      | Zombie          |
+| 59      | Zombie Lord          | 50      | Mutant Zombie   |
+| 60      | Wight                | 51      | Mummy           |
+| 61      | Wraith               | 52      | Royal Mummy     |
+| 62      | Vampire              | 53      | Vampire         |
+| 63      | Vampire Lord         | 54      | Vampire Lord    |
+| 64      | Lich                 | 55      | Lich            |
+| 65      | Power Lich           | 56      | Power Lich      |
+| 66      | Black Knight         | 55      | Lich            |
+| 67      | Dread Knight         | 56      | Power Lich      |
+| 68      | Bone Dragon          | 57      | Bone Dragon     |
+| 69      | Ghost Dragon         | 57      | Bone Dragon     |
+
+   Dungeon (H3) <-> Warlock (H2):
+| 70      | Troglodyte           | 30      | Centaur         |
+| 71      | Infernal Troglodyte  | 30      | Centaur         |
+| 72      | Harpy                | 31      | Gargoyle        |
+| 73      | Harpy Hag            | 31      | Gargoyle        |
+| 74      | Beholder             | 32      | Griffin         |
+| 75      | Evil Eye             | 32      | Griffin         |
+| 76      | Medusa               | 33      | Minotaur        |
+| 77      | Medusa Queen         | 34      | Minotaur King   |
+| 78      | Minotaur             | 33      | Minotaur        |
+| 79      | Minotaur King        | 34      | Minotaur King   |
+| 80      | Manticore            | 35      | Hydra           |
+| 81      | Scorpicore           | 35      | Hydra           |
+| 82      | Red Dragon           | 36      | Green Dragon    |
+| 83      | Black Dragon         | 38      | Black Dragon    |
+
+   Stronghold (H3) <-> Barbarian (H2):
+| 84      | Goblin               | 12      | Goblin          |
+| 85      | Hobgoblin            | 12      | Goblin          |
+| 86      | Goblin Wolf Rider    | 13      | Orc             |
+| 87      | Hobgoblin Wolf Rider | 14      | Orc Chief       |
+| 88      | Orc                  | 15      | Wolf            |
+| 89      | Orc Chieftain        | 15      | Wolf            |
+| 90      | Ogre                 | 16      | Ogre            |
+| 91      | Ogre Mage            | 17      | Ogre Lord       |
+| 92      | Roc                  | 18      | Troll           |
+| 93      | Thunderbird          | 19      | War Troll       |
+| 94      | Cyclops              | 20      | Cyclops         |
+| 95      | Cyclops King         | 20      | Cyclops         |
+| 96      | Behemoth             | 20      | Cyclops         |
+| 97      | Ancient Behemoth     | 20      | Cyclops         |
+
+   Fortress (H3, no Heroes II faction):
+| 98      | Gnoll                | UNDEFINE|                 |
+| 99      | Gnoll Marauder       | UNDEFINE|                 |
+| 100     | Lizardman            | UNDEFINE|                 |
+| 101     | Lizard Warrior       | UNDEFINE|                 |
+| 102     | Gorgon               | UNDEFINE|                 |
+| 103     | Mighty Gorgon        | UNDEFINE|                 |
+| 104     | Serpent Fly          | UNDEFINE|                 |
+| 105     | Fire Dragon Fly      | UNDEFINE|                 |
+| 106     | Basilisk             | UNDEFINE|                 |
+| 107     | Greater Basilisk     | UNDEFINE|                 |
+| 108     | Wyvern               | UNDEFINE|                 |
+| 109     | Wyvern Monarch       | UNDEFINE|                 |
+| 110     | Hydra                | UNDEFINE|                 |
+| 111     | Chaos Hydra          | UNDEFINE|                 |
+
+   Conflux (H3, no Heroes II faction):
+| 112     | Sprite               | 21      | Sprite          |
+| 113     | Pixie                | 21      | Sprite          |
+| 114     | Air Elemental        | 64      | Air Element     |
+| 115     | Earth Elemental      | 63      | Earth Element   |
+| 116     | Fire Elemental       | 65      | Fire Element    |
+| 117     | Water Elemental      | 66      | Water Element   |
+
+   Neutral creatures:
+| 118     | Gold Golem           | UNDEFINE|                 |
+| 119     | Diamond Golem        | UNDEFINE|                 |
+| 120     | Psychic Elemental    | UNDEFINE|                 |
+| 121     | Magic Elemental      | UNDEFINE|                 |
+| 123     | Ice Elemental        | UNDEFINE|                 |
+| 125     | Magma Elemental      | UNDEFINE|                 |
+| 127     | Storm Elemental      | UNDEFINE|                 |
+| 128     | Energy Elemental     | UNDEFINE|                 |
+| 129     | Firebird             | UNDEFINE|                 |
+| 130     | Phoenix              | 29      | Phoenix         |
+| 131     | Azure Dragon         | UNDEFINE|                 |
+| 132     | Crystal Dragon       | UNDEFINE|                 |
+| 133     | Fairie Dragon        | UNDEFINE|                 |
+| 134     | Rust Dragon          | UNDEFINE|                 |
+| 135     | Enchanter            | UNDEFINE|                 |
+| 136     | Sharpshooter         | UNDEFINE|                 |
+| 137     | Halfling             | 39      | Halfling        |
+| 138     | Peasant              | 1       | Peasant         |
+| 139     | Boar                 | 40      | Boar            |
+| 140     | Mummy                | 51      | Mummy           |
+| 141     | Nomad                | 59      | Nomad           |
+| 142     | Rogue                | 58      | Rogue           |
+| 143     | Troll                | 18      | Troll           |
+
+   Random monsters (h3m object class -> fh2m id):
+
+| H3M class | H3M meaning          | FH2M id | FH2M name          |
+|-----------|----------------------|---------|---------------------|
+| 71        | any level            | 67      | Random Monster     |
+| 72        | level 1              | 68      | Random Monster 1   |
+| 73        | level 2              | 69      | Random Monster 2   |
+| 74        | level 3              | 70      | Random Monster 3   |
+| 75        | level 4              | 71      | Random Monster 4   |
+
+   H3M creatures with no Heroes II equivalent (UNDEFINE, dropped
+   by the cross-format translation): the Inferno, Fortress and
+   Conflux creatures (except the ones mapped as neutral creatures
+   above: Sprite and the four Elementals) and the remaining
+   neutral creatures (Gold Golem, Diamond Golem, Psychic/Magic/
+   Ice/Magma/Storm/Energy Elemental, Azure/Crystal/Fairie/Rust
+   Dragon, Enchanter, Sharpshooter).
+
+   FH2M monsters with no h3m creature equivalent: Ghost (the
+   effect exists in Heroes III as a monster ability, not as a
+   placeable creature).
 
 ████████████████████████████████████████████████████████████████████████
 ██                            Artifacts                             ██
