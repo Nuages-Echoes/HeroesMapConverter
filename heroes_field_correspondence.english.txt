@@ -553,6 +553,81 @@ List for H3M (no unified equivalent yet):
    effect exists in Heroes III as a monster ability, not as a
    placeable creature).
 
+   Inverse direction (fh2m -> h3m), used to convert Heroes II maps to
+   Heroes III: the preimage of each fh2m monster is chosen by tier of
+   its Heroes II primary faction, with the validated arbitrages:
+
+| FH2M id | FH2M monster     | H3M id | H3M creature      |
+|---------|------------------|--------|-------------------|
+| 1       | Peasant          | 139    | Peasant            |
+| 2       | Archer           | 2      | Archer             |
+| 3       | Ranger           | 3      | Marksman           |
+| 4       | Pikeman          | 0      | Pikeman            |
+| 5       | Veteran Pikeman  | 1      | Halberdier         |
+| 6       | Swordsman        | 6      | Swordsman          |
+| 7       | Master Swordsman | 7      | Crusader           |
+| 8       | Cavalry          | 10     | Cavalier           |
+| 9       | Champion         | 11     | Champion           |
+| 10      | Paladin          | 12     | Angel              |
+| 11      | Crusader         | 13     | Archangel          |
+| 12      | Goblin           | 84     | Goblin             |
+| 13      | Orc              | 86     | Goblin Wolf Rider  |
+| 14      | Orc Chief        | 87     | Hobgoblin Wolf Rider |
+| 15      | Wolf             | 88     | Orc                |
+| 16      | Ogre             | 90     | Ogre               |
+| 17      | Ogre Lord        | 91     | Ogre Mage          |
+| 18      | Troll            | 144    | Troll              |
+| 19      | War Troll        | 93     | Thunderbird        |
+| 20      | Cyclops          | 94     | Cyclops            |
+| 21      | Sprite           | 14     | Centaur            |
+| 22      | Dwarf            | 16     | Dwarf              |
+| 23      | Battle Dwarf     | 17     | Battle Dwarf       |
+| 24      | Elf              | 18     | Wood Elf           |
+| 25      | Grand Elf        | 19     | Grand Elf          |
+| 26      | Druid            | 20     | Pegasus            |
+| 27      | Greater Druid    | 21     | Silver Pegasus     |
+| 28      | Unicorn          | 24     | Unicorn            |
+| 29      | Phoenix          | 26     | Green Dragon       |
+| 30      | Centaur          | 70     | Troglodyte         |
+| 31      | Gargoyle         | 72     | Harpy              |
+| 32      | Griffin          | 74     | Beholder           |
+| 33      | Minotaur         | 78     | Minotaur           |
+| 34      | Minotaur King    | 79     | Minotaur King      |
+| 35      | Hydra            | 80     | Manticore          |
+| 36      | Green Dragon     | 82     | Red Dragon         |
+| 37      | Red Dragon       | 83     | Black Dragon       |
+| 38      | Black Dragon     | 83     | Black Dragon       |
+| 39      | Halfling         | 28     | Gremlin            |
+| 40      | Boar             | 30     | Stone Gargoyle     |
+| 41      | Iron Golem       | 32     | Iron Golem         |
+| 42      | Steel Golem      | 33     | Stone Golem        |
+| 44      | Mage             | 34     | Mage               |
+| 45      | Archmage         | 35     | Archmage           |
+| 46      | Giant            | 40     | Giant              |
+| 47      | Titan            | 41     | Titan              |
+| 48      | Skeleton         | 56     | Skeleton           |
+| 49      | Zombie           | 58     | Walking Dead       |
+| 50      | Mutant Zombie    | 59     | Zombie Lord        |
+| 51      | Mummy            | 60     | Wight              |
+| 52      | Royal Mummy      | 61     | Wraith             |
+| 53      | Vampire          | 62     | Vampire            |
+| 54      | Vampire Lord     | 63     | Vampire Lord       |
+| 55      | Lich             | 64     | Lich               |
+| 56      | Power Lich       | 65     | Power Lich         |
+| 57      | Bone Dragon      | 68     | Bone Dragon        |
+| 58      | Rogue            | 143    | Rogue              |
+| 59      | Nomad            | 142    | Nomad              |
+| 63      | Earth Element    | 113    | Earth Elemental    |
+| 64      | Air Element      | 112    | Air Elemental      |
+| 65      | Fire Element     | 114    | Fire Elemental     |
+| 66      | Water Element    | 115    | Water Elemental    |
+
+   fh2m monsters with no h3m creature equivalent (Roc, Ghost, Genie,
+   Medusa) are converted to an h3m random monster of level 4 (object
+   class 75). The fh2m random monsters convert back to the matching
+   h3m classes (Random Monster <- any level, Random Monster 1 to 4 <-
+   levels 1 to 4).
+
 ████████████████████████████████████████████████████████████████████████
 ██                            Artifacts                             ██
 ████████████████████████████████████████████████████████████████████████
