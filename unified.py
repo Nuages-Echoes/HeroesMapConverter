@@ -16,6 +16,8 @@ import struct
 from collections import OrderedDict
 
 from correspondence import (
+    FH2M_ARTIFACT_NAMES,
+    FH2M_RESOURCE_ORDER,
     fh2m_artifact_name,
     fh2m_building_name,
     fh2m_join_condition_name,
@@ -779,6 +781,136 @@ def unified_to_h3m(unified):
     return data
 
 
+def _translate_h3m_tile_objects(obj_list, objects_section, translated_metadata,
+                               dropped_ids):
+    """
+    Translate h3m objects placed on one tile into fh2m objects.
+
+    Objects with an fh2m equivalent are translated (group, index and
+    metadata); the others are dropped and their ids appended to
+    dropped_ids. The translated metadata entries are stored into
+    translated_metadata under their fh2m map name (monsterMetadata,
+    resourceMetadata, ...), keyed by object id.
+
+    Returns the list of translated objects for the tile.
+    """
+    from correspondence import H3M_TO_FH2M_ARTIFACTS, H3M_TO_FH2M_MONSTERS
+
+    translated = []
+    for obj in obj_list:
+        group = obj.get("group")
+        obj_id = obj.get("id")
+        if group == "MONSTERS":
+            monster_meta = (objects_section.get("monsterMetadata") or {}).get(str(obj_id)) or {}
+            creature = monster_meta.get("creature")
+            if creature is None:
+                dropped_ids.append(obj_id)
+                continue
+            fh2m_monster = H3M_TO_FH2M_MONSTERS.get(creature, -1)
+            if fh2m_monster < 1:
+                dropped_ids.append(obj_id)
+                continue
+            translated.append(OrderedDict([
+                ("id", obj_id),
+                ("group", "MONSTERS"),
+                ("index", fh2m_monster - 1),
+            ]))
+            translated_metadata.setdefault("monsterMetadata", OrderedDict())[str(obj_id)] = OrderedDict([
+                ("count", monster_meta.get("count") or 0),
+                ("joinCondition", 0),
+                ("isWeeklyGrowthDisabled", False),
+                ("selected", []),
+            ])
+        elif group == "ADVENTURE_TREASURES":
+            resource_meta = (objects_section.get("resourceMetadata") or {}).get(str(obj_id)) or {}
+            resource = resource_meta.get("resource")
+            if resource is None or resource < 0 or resource >= len(FH2M_RESOURCE_ORDER):
+                dropped_ids.append(obj_id)
+                continue
+            translated.append(OrderedDict([
+                ("id", obj_id),
+                ("group", "ADVENTURE_TREASURES"),
+                ("index", resource),
+            ]))
+            translated_metadata.setdefault("resourceMetadata", OrderedDict())[str(obj_id)] = OrderedDict([
+                ("count", resource_meta.get("count") or 0),
+            ])
+        elif group == "ADVENTURE_ARTIFACTS":
+            artifact_meta = (objects_section.get("artifactMetadata") or {}).get(str(obj_id)) or {}
+            artifact = artifact_meta.get("artifact")
+            if artifact is None:
+                dropped_ids.append(obj_id)
+                continue
+            fh2m_artifact = H3M_TO_FH2M_ARTIFACTS.get(artifact, -1)
+            if fh2m_artifact < 1:
+                dropped_ids.append(obj_id)
+                continue
+            # The fh2m ADVENTURE_ARTIFACTS group lists the artifacts
+            # from the Arcane Necklace (fheroes2 id 9) up to Magic Book,
+            # then the Price of Loyalty artifacts starting at Spell
+            # Scroll (fheroes2 id 88). The map object index follows this
+            # order (see map_object_info.cpp, populateAdventureArtifacts).
+            if fh2m_artifact <= 81:
+                fh2m_index = fh2m_artifact - 9
+            else:
+                fh2m_index = 73 + (fh2m_artifact - 88)
+            if fh2m_index < 0:
+                dropped_ids.append(obj_id)
+                continue
+            translated.append(OrderedDict([
+                ("id", obj_id),
+                ("group", "ADVENTURE_ARTIFACTS"),
+                ("index", fh2m_index),
+            ]))
+            translated_metadata.setdefault("artifactMetadata", OrderedDict())[str(obj_id)] = OrderedDict([
+                ("radius", 0),
+                ("captureCondition", 0),
+                ("selected", []),
+            ])
+        elif group == "KINGDOM_TOWNS":
+            town_meta = (objects_section.get("townMetadata") or {}).get(str(obj_id)) or {}
+            # fh2m KINGDOM_TOWNS: index = race * 6 + color, with an
+            # offset for town/castle variants; use the race from the
+            # town type and neutral color for now.
+            translated.append(OrderedDict([
+                ("id", obj_id),
+                ("group", "KINGDOM_TOWNS"),
+                ("index", 0),
+            ]))
+            translated_metadata.setdefault("castleMetadata", OrderedDict())[str(obj_id)] = _h3m_town_to_fh2m_castle(town_meta)
+        elif group == "ADVENTURE_MISCELLANEOUS":
+            sign_meta = (objects_section.get("signMetadata") or {}).get(str(obj_id))
+            if sign_meta:
+                translated.append(OrderedDict([
+                    ("id", obj_id),
+                    ("group", "ADVENTURE_MISCELLANEOUS"),
+                    ("index", 0),
+                ]))
+                translated_metadata.setdefault("signMetadata", OrderedDict())[str(obj_id)] = OrderedDict([
+                    ("message", sign_meta.get("message", "")),
+                ])
+            else:
+                dropped_ids.append(obj_id)
+        else:
+            dropped_ids.append(obj_id)
+    return translated
+
+
+def _h3m_town_to_fh2m_castle(town_meta):
+    """Build an fh2m castleMetadata entry from an h3m townMetadata."""
+    return OrderedDict([
+        ("customName", town_meta.get("customName") or ""),
+        ("defenderMonsterType", [0, 0, 0, 0, 0]),
+        ("defenderMonsterCount", [0, 0, 0, 0, 0]),
+        ("customBuildings", False),
+        ("builtBuildings", []),
+        ("bannedBuildings", []),
+        ("mustHaveSpells", OrderedDict()),
+        ("bannedSpells", []),
+        ("availableToHireMonsterCount", [-1, 0, 0, 0, 0, 0]),
+    ])
+
+
 def unified_to_fh2m(unified):
     """
     Convert a map in the unified format back into the fh2m JSON structure
@@ -869,6 +1001,9 @@ def unified_to_fh2m(unified):
     # Objects placed on tiles, from the unified objects section.
     objects_by_tile = {}
     objects_section = unified.get("objects") or {}
+    is_h3m_source = unified.get("sourceGame") == "h3m"
+    translated_metadata = {}
+    dropped_ids = []
     for tile_key, obj_list in objects_section.get("tiles", {}).items():
         parts = tile_key.split("_")
         if len(parts) != 3:
@@ -876,7 +1011,17 @@ def unified_to_fh2m(unified):
         x, y, z = int(parts[0]), int(parts[1]), int(parts[2])
         if z != 0:
             continue
-        objects_by_tile[(x, y)] = [OrderedDict(obj) for obj in obj_list]
+        if not is_h3m_source:
+            objects_by_tile[(x, y)] = [OrderedDict(obj) for obj in obj_list]
+            continue
+        translated = _translate_h3m_tile_objects(obj_list, objects_section,
+                                                  translated_metadata,
+                                                  dropped_ids)
+        if translated:
+            objects_by_tile[(x, y)] = translated
+    if dropped_ids:
+        objects_section = OrderedDict(objects_section)
+        objects_section["dropped"] = dropped_ids
 
     default_terrain = (UNIFIED_TO_FH2M_TERRAIN_INDEX.get("Grass", 30), 0)
     tiles = []
@@ -976,6 +1121,16 @@ def unified_to_fh2m(unified):
                 "signMetadata", "adventureMapEventMetadata",
                 "selectionObjectMetadata", "capturableObjectsMetadata",
                 "monsterMetadata", "artifactMetadata", "resourceMetadata"):
+        translated_map = translated_metadata.get(key)
+        if translated_map:
+            # Objects translated from an h3m source: use the metadata
+            # built by the translation.
+            data[key] = OrderedDict(translated_map)
+            continue
+        if is_h3m_source:
+            # Raw h3m metadata has a different structure; do not feed
+            # it to the fh2m writer.
+            continue
         value_map = objects_section.get(key)
         if value_map:
             data[key] = OrderedDict(
