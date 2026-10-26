@@ -12,6 +12,11 @@ The fh2m identifier spaces follow the fheroes2 engine enumerations
 heroes/skill.h).
 """
 
+# fh2m resource order: the ADVENTURE_TREASURES group lists the seven
+# resources in this order (map_object_info.cpp, populateAdventure
+# Treasures), so the object index of a resource is its position here.
+FH2M_RESOURCE_ORDER = ["wood", "mercury", "ore", "sulfur", "crystal", "gems", "gold"]
+
 # fheroes2 MonsterType enumeration; index 0 (UNKNOWN) is not a real
 # monster. Values above 66 are the random monster placeholders.
 FH2M_MONSTER_NAMES = [
@@ -156,6 +161,122 @@ FH2M_BUILDING_NAMES = {
 }
 
 
+# Heroes III creature identifiers, in the CRTRAITS.TXT order used by
+# the h3m files (Angel... no: the list starts with the Castle faction,
+# pikeman first). Indices 122, 124, 126 and 128 do not exist (unused
+# slots in the AB creature set); 145-149 are war machines.
+H3M_CREATURE_NAMES = [
+    "Pikeman", "Halberdier", "Archer", "Marksman", "Griffin",
+    "Royal Griffin", "Swordsman", "Crusader", "Monk", "Zealot",
+    "Cavalier", "Champion", "Angel", "Archangel",
+    "Centaur", "Centaur Captain", "Dwarf", "Battle Dwarf", "Wood Elf",
+    "Grand Elf", "Pegasus", "Silver Pegasus", "Dendroid Guard",
+    "Dendroid Soldier", "Unicorn", "War Unicorn", "Green Dragon",
+    "Gold Dragon",
+    "Gremlin", "Master Gremlin", "Stone Gargoyle", "Obsidian Gargoyle",
+    "Iron Golem", "Stone Golem", "Mage", "Archmage", "Genie",
+    "Master Genie", "Naga", "Naga Queen", "Giant", "Titan",
+    "Imp", "Familiar", "Gog", "Magog", "Hell Hound", "Cerberus",
+    "Demon", "Horned Demon", "Pit Fiend", "Pit Lord", "Efreet",
+    "Efreet Sultan", "Devil", "Arch Devil",
+    "Skeleton", "Skeleton Warrior", "Walking Dead", "Zombie Lord",
+    "Wight", "Wraith", "Vampire", "Vampire Lord", "Lich", "Power Lich",
+    "Black Knight", "Dread Knight", "Bone Dragon", "Ghost Dragon",
+    "Troglodyte", "Infernal Troglodyte", "Harpy", "Harpy Hag",
+    "Beholder", "Evil Eye", "Medusa", "Medusa Queen", "Minotaur",
+    "Minotaur King", "Manticore", "Scorpicore", "Red Dragon",
+    "Black Dragon",
+    "Goblin", "Hobgoblin", "Goblin Wolf Rider", "Hobgoblin Wolf Rider",
+    "Orc", "Orc Chieftain", "Ogre", "Ogre Mage", "Roc", "Thunderbird",
+    "Cyclops", "Cyclops King", "Behemoth", "Ancient Behemoth",
+    "Gnoll", "Gnoll Marauder", "Lizardman", "Lizard Warrior", "Gorgon",
+    "Mighty Gorgon", "Serpent Fly", "Fire Dragon Fly", "Basilisk",
+    "Greater Basilisk", "Wyvern", "Wyvern Monarch", "Hydra",
+    "Chaos Hydra",
+    "Sprite", "Pixie", "Air Elemental", "Earth Elemental",
+    "Fire Elemental", "Water Elemental", "Gold Golem", "Diamond Golem",
+    "Psychic Elemental", "Magic Elemental",
+    None,  # 122: unused
+    "Ice Elemental",
+    None,  # 124: unused
+    "Magma Elemental",
+    None,  # 126: unused
+    "Storm Elemental",
+    "Energy Elemental", "Firebird", "Phoenix", "Azure Dragon",
+    "Crystal Dragon", "Fairie Dragon", "Rust Dragon", "Enchanter",
+    "Sharpshooter", "Halfling", "Peasant", "Boar", "Mummy", "Nomad",
+    "Rogue", "Troll",
+]
+
+# h3m creature id -> fh2m monster id (fheroes2 MonsterType); -1 when
+# the creature has no Heroes II equivalent. The Heroes II equivalents
+# follow the classic creature pairing between both games.
+
+# h3m creature id -> fh2m monster id (fheroes2 MonsterType); -1
+# when the creature has no Heroes II equivalent. The pairs follow the
+# classic creature pairing between Heroes II and Heroes III.
+H3M_TO_FH2M_MONSTERS = {
+    0: 4,   # Pikeman -> Pikeman
+    2: 2,   # Archer -> Archer
+    3: 3,   # Marksman -> Ranger
+    4: 32,   # Griffin -> Griffin
+    6: 6,   # Swordsman -> Swordsman
+    10: 8,   # Cavalier -> Cavalry
+    11: 9,   # Champion -> Champion
+    14: 30,   # Centaur -> Centaur
+    16: 22,   # Dwarf -> Dwarf
+    17: 23,   # Battle Dwarf -> Battle Dwarf
+    18: 24,   # Wood Elf -> Elf
+    19: 25,   # Grand Elf -> Grand Elf
+    24: 28,   # Unicorn -> Unicorn
+    26: 36,   # Green Dragon -> Green Dragon
+    30: 31,   # Stone Gargoyle -> Gargoyle
+    32: 41,   # Iron Golem -> Iron Golem
+    33: 42,   # Stone Golem -> Steel Golem
+    34: 44,   # Mage -> Mage
+    35: 45,   # Archmage -> Archmage
+    36: 61,   # Genie -> Genie
+    40: 46,   # Giant -> Giant
+    41: 47,   # Titan -> Titan
+    56: 48,   # Skeleton -> Skeleton
+    58: 49,   # Walking Dead -> Zombie
+    59: 50,   # Zombie Lord -> Mutant Zombie
+    62: 53,   # Vampire -> Vampire
+    63: 54,   # Vampire Lord -> Vampire Lord
+    64: 55,   # Lich -> Lich
+    65: 56,   # Power Lich -> Power Lich
+    68: 57,   # Bone Dragon -> Bone Dragon
+    76: 62,   # Medusa -> Medusa
+    78: 33,   # Minotaur -> Minotaur
+    79: 34,   # Minotaur King -> Minotaur King
+    82: 37,   # Red Dragon -> Red Dragon
+    83: 38,   # Black Dragon -> Black Dragon
+    84: 12,   # Goblin -> Goblin
+    86: 15,   # Goblin Wolf Rider -> Wolf
+    88: 13,   # Orc -> Orc
+    89: 14,   # Orc Chieftain -> Orc Chief
+    90: 16,   # Ogre -> Ogre
+    91: 17,   # Ogre Mage -> Ogre Lord
+    92: 43,   # Roc -> Roc
+    94: 20,   # Cyclops -> Cyclops
+    110: 35,   # Hydra -> Hydra
+    112: 21,   # Sprite -> Sprite
+    114: 64,   # Air Elemental -> Air Element
+    115: 63,   # Earth Elemental -> Earth Element
+    116: 65,   # Fire Elemental -> Fire Element
+    117: 66,   # Water Elemental -> Water Element
+    130: 29,   # Phoenix -> Phoenix
+    137: 39,   # Halfling -> Halfling
+    138: 1,   # Peasant -> Peasant
+    139: 40,   # Boar -> Boar
+    140: 51,   # Mummy -> Mummy
+    141: 59,   # Nomad -> Nomad
+    142: 58,   # Rogue -> Rogue
+    143: 18,   # Troll -> Troll
+}
+
+
+
 def fh2m_building_name(building_id):
     """Name of a fh2m building bit flag, or None when unknown."""
     return FH2M_BUILDING_NAMES.get(building_id)
@@ -198,4 +319,169 @@ def fh2m_artifact_name(artifact_id):
     """Name of a fh2m artifact id, or None when out of range."""
     if 0 <= artifact_id < len(FH2M_ARTIFACT_NAMES):
         return FH2M_ARTIFACT_NAMES[artifact_id]
+    return None
+
+# Heroes III artifact identifiers, in the ARTIFACT.TXT order used by the
+# h3m files.
+H3M_ARTIFACT_NAMES = [
+    "Spell Book", "Spell Scroll", "Grail", "Catapult", "Ballista",
+    "Ammo Cart", "First Aid Tent", "Centaur Axe",
+    "Blackshard of the Dead Knight", "Greater Gnoll's Flail",
+    "Ogre's Club of Havoc", "Sword of Hellfire", "Titan's Gladius",
+    "Shield of the Dwarven Lords", "Shield of the Yawning Dead",
+    "Buckler of the Gnoll King", "Targ of the Rampaging Ogre",
+    "Shield of the Damned", "Sentinel's Shield",
+    "Helm of the Alabaster Unicorn", "Skull Helmet", "Helm of Chaos",
+    "Crown of the Supreme Magi", "Hellstorm Helmet", "Thunder Helmet",
+    "Breastplate of Petrified Wood", "Rib Cage",
+    "Scales of the Greater Basilisk", "Tunic of the Cyclops King",
+    "Breastplate of Brimstone", "Titan's Cuirass", "Armor of Wonder",
+    "Sandals of the Saint", "Celestial Necklace of Bliss",
+    "Lion's Shield of Courage", "Sword of Judgement",
+    "Helm of Heavenly Enlightenment", "Quiet Eye of the Dragon",
+    "Red Dragon Flame Tongue", "Dragon Scale Shield", "Dragon Scale Armor",
+    "Dragonbone Greaves", "Dragon Wing Tabard", "Necklace of Dragonteeth",
+    "Crown of Dragontooth", "Still Eye of the Dragon",
+    "Clover of Fortune", "Cards of Prophecy", "Ladybird of Luck",
+    "Badge of Courage", "Crest of Valor", "Glyph of Gallantry",
+    "Speculum", "Spyglass", "Amulet of the Undertaker", "Vampire's Cowl",
+    "Dead Man's Boots", "Garniture of Interference",
+    "Surcoat of Counterpoise", "Boots of Polarity",
+    "Bow of Elven Cherrywood", "Bowstring of the Unicorn's Mane",
+    "Angel Feather Arrows", "Bird of Perception", "Stoic Watchman",
+    "Emblem of Cognizance", "Statesman's Medal", "Diplomat's Ring",
+    "Ambassador's Sash", "Ring of the Wayfarer", "Equestrian's Gloves",
+    "Necklace of Ocean Guidance", "Angel Wings", "Charm of Mana",
+    "Talisman of Mana", "Mystic Orb of Mana", "Collar of Conjuring",
+    "Ring of Conjuring", "Cape of Conjuring", "Orb of the Firmament",
+    "Orb of Silt", "Orb of Tempestuous Fire", "Orb of Driving Rain",
+    "Recanter's Cloak", "Spirit of Oppression",
+    "Hourglass of the Evil Hour", "Tome of Fire Magic",
+    "Tome of Air Magic", "Tome of Water Magic", "Tome of Earth Magic",
+    "Boots of Levitation", "Golden Bow", "Sphere of Permanence",
+    "Orb of Vulnerability", "Ring of Vitality", "Ring of Life",
+    "Vial of Lifeblood", "Necklace of Swiftness", "Boots of Speed",
+    "Cape of Velocity", "Pendant of Dispassion",
+    "Pendant of Second Sight", "Pendant of Holiness", "Pendant of Life",
+    "Pendant of Death", "Pendant of Free Will", "Pendant of Negativity",
+    "Pendant of Total Recall", "Pendant of Courage",
+    "Everflowing Crystal Cloak", "Ring of Infinite Gems",
+    "Everpouring Vial of Mercury", "Inexhaustible Cart of Ore",
+    "Eversmoking Ring of Sulfur", "Inexhaustible Cart of Lumber",
+    "Endless Sack of Gold", "Endless Bag of Gold", "Endless Purse of Gold",
+    "Legs of Legion", "Loins of Legion", "Torso of Legion",
+    "Arms of Legion", "Head of Legion", "Sea Captain's Hat",
+    "Spellbinder's Hat", "Shackles of War", "Orb of Inhibition",
+    "Vial of Dragon Blood", "Armageddon's Blade", "Angelic Alliance",
+    "Cloak of the Undead King", "Elixir of Life", "Armor of the Damned",
+    "Statue of Legion", "Power of the Dragon Father", "Titan's Thunder",
+    "Admiral's Hat", "Bow of the Sharpshooter", "Wizard's Well",
+    "Ring of the Magi", "Cornucopia",
+    "Unused 1", "Unused 2", "Unused 3",
+]
+
+# h3m artifact id -> fh2m artifact id (fheroes2 Artifact enum); -1
+# when the artifact has no Heroes II equivalent. Only artifacts with a
+# clear Heroes II counterpart (same role and name) are mapped.
+# h3m artifact id -> fh2m artifact id (fheroes2 Artifact enum); -1
+# when the artifact has no Heroes II equivalent. Only artifacts with a
+# clear Heroes II counterpart (same role and name) are mapped.
+H3M_TO_FH2M_ARTIFACTS = {
+    0: 82,   # Spell Book
+    1: 87,   # Spell Scroll
+    4: 22,   # Ballista
+    5: 69,   # Ammo Cart
+    91: 64,   # Golden Bow
+    97: 35,   # Necklace of Swiftness
+    98: 40,   # Boots of Speed
+    105: 57,   # Pendant of Free Will
+    109: 77,   # Everflowing Crystal Cloak
+    110: 74,   # Ring of Infinite Gems
+    111: 73,   # Everpouring Vial of Mercury
+    112: 76,   # Inexhaustible Cart of Ore
+    113: 72,   # Eversmoking Ring of Sulfur
+    114: 75,   # Inexhaustible Cart of Lumber
+    115: 31,   # Endless Sack of Gold
+    116: 32,   # Endless Bag of Gold
+    117: 33,   # Endless Purse of Gold
+}
+
+# Heroes III spell identifiers, in the SPELLS.TXT order used by the
+# h3m files.
+H3M_SPELL_NAMES = [
+    "Summon Boat", "Scuttle Boat", "Visions", "View Earth", "Disguise",
+    "View Air", "Fly", "Water Walk", "Dimension Door", "Town Portal",
+    "Quicksand", "Land Mine", "Force Field", "Fire Wall", "Earthquake",
+    "Magic Arrow", "Ice Bolt", "Lightning Bolt", "Implosion",
+    "Chain Lightning", "Frost Ring", "Fireball", "Inferno",
+    "Meteor Shower", "Death Ripple", "Destroy Undead", "Armageddon",
+    "Shield", "Air Shield", "Fire Shield", "Protect Air", "Protect Fire",
+    "Protect Water", "Protect Earth", "Anti Magic", "Dispel",
+    "Magic Mirror", "Cure", "Resurrection", "Animate Dead", "Sacrifice",
+    "Bless", "Curse", "Bloodlust", "Precision", "Weakness",
+    "Stone Skin", "Disrupting Ray", "Prayer", "Mirth", "Sorrow",
+    "Fortune", "Misfortune", "Haste", "Slow", "Slayer", "Frenzy",
+    "Titan Bolt", "Counterstrike", "Berserk", "Hypnotize",
+    "Forgetfulness", "Blind", "Teleport", "Remove Obstacle", "Clone",
+    "Fire Elemental", "Earth Elemental", "Water Elemental",
+    "Air Elemental",
+]
+
+# h3m spell id -> fh2m spell id (fheroes2 Spell enum); -1 when the
+# spell has no Heroes II equivalent. Only spells keeping the same
+# effect in both games are mapped.
+# h3m spell id -> fh2m spell id (fheroes2 Spell enum); -1 when the
+# spell has no Heroes II equivalent. Only spells keeping the same
+# effect in both games are mapped.
+H3M_TO_FH2M_SPELLS = {
+    0: 56,   # Summon Boat
+    2: 60,   # Visions
+    3: 49,   # View Earth
+    5: 53,   # View Air
+    8: 57,   # Dimension Door
+    9: 59,   # Town Portal
+    14: 48,   # Earthquake
+    15: 26,   # Magic Arrow
+    17: 3,   # Lightning Bolt
+    19: 4,   # Chain Lightning
+    21: 1,   # Fireball
+    23: 30,   # Meteor Shower
+    24: 36,   # Death Ripple
+    26: 28,   # Armageddon
+    27: 42,   # Shield
+    34: 23,   # Anti Magic
+    35: 24,   # Dispel
+    37: 6,   # Cure
+    39: 40,   # Animate Dead
+    41: 15,   # Bless
+    42: 19,   # Curse
+    43: 39,   # Bloodlust
+    46: 17,   # Stone Skin
+    47: 35,   # Disrupting Ray
+    53: 10,   # Haste
+    54: 12,   # Slow
+    60: 32,   # Hypnotize
+    62: 14,   # Blind
+    63: 5,   # Teleport
+}
+
+
+def h3m_creature_name(creature_id):
+    """Name of an h3m creature id, or None when out of range."""
+    if 0 <= creature_id < len(H3M_CREATURE_NAMES):
+        return H3M_CREATURE_NAMES[creature_id]
+    return None
+
+
+def h3m_artifact_name(artifact_id):
+    """Name of an h3m artifact id, or None when out of range."""
+    if 0 <= artifact_id < len(H3M_ARTIFACT_NAMES):
+        return H3M_ARTIFACT_NAMES[artifact_id]
+    return None
+
+
+def h3m_spell_name(spell_id):
+    """Name of an h3m spell id, or None when out of range."""
+    if 0 <= spell_id < len(H3M_SPELL_NAMES):
+        return H3M_SPELL_NAMES[spell_id]
     return None

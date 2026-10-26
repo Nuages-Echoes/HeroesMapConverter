@@ -1,3 +1,4 @@
+import argparse
 import json
 import os
 
@@ -14,6 +15,13 @@ SKIP_DISPLAY_KEYS = {"Surface Map", "Underground Map", "Objects"}
 
 
 def main():
+    parser = argparse.ArgumentParser(
+        description="Convertit les cartes Heroes vers le format unifié puis vers un format cible.")
+    parser.add_argument("--target", choices=["h3m", "fh2m"], default=None,
+                        help="Format cible de la conversion. Par défaut, "
+                             "le format d'origine (aller-retour).")
+    args = parser.parse_args()
+
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     os.makedirs(OUTPUT_JSON_DIR, exist_ok=True)
     os.makedirs(OUTPUT_UNIFIED_DIR, exist_ok=True)
@@ -53,9 +61,10 @@ def main():
             with open(unified_file_path, "r", encoding="utf-8") as json_file:
                 unified_data = json.load(json_file)
 
-            map_data = convert_from_unified(unified_data, source_game)
+            target_game = args.target or source_game
+            map_data = convert_from_unified(unified_data, target_game)
 
-            if file_name.lower().endswith(".fh2m"):
+            if target_game == "fh2m":
                 fh2m_output_path = os.path.join(OUTPUT_DIR, f"{base_name}.fh2m")
                 write_fh2m(map_data, fh2m_output_path)
                 print(f"FH2M file written to {fh2m_output_path}")
