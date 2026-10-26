@@ -38,17 +38,23 @@ FH2M_MONSTER_NAMES = [
     "Random Monster 3", "Random Monster 4",
 ]
 
-# h3m random monster object classes (RANDOM_MONSTER and
-# RANDOM_MONSTER_L1 to L4) -> fh2m random monster ids (fheroes2
-# MonsterType: RANDOM_MONSTER and RANDOM_MONSTER_LEVEL_1 to 4). Used
-# when the h3m monsterMetadata carries no creature id (creature is
-# None): the object class gives the random level.
+# h3m random monster object classes (RANDOM_MONSTER, RANDOM_MONSTER_L1
+# to L4 and the Shadow of Death RANDOM_MONSTER_L5 to L7) -> fh2m random
+# monster ids (fheroes2 MonsterType: RANDOM_MONSTER and
+# RANDOM_MONSTER_LEVEL_1 to 4). Used when the h3m monsterMetadata
+# carries no creature id (creature is None): the object class gives
+# the random level. Heroes II random monsters stop at level 4, so the
+# h3m levels 5 to 7 are converted to the highest Heroes II level
+# (T7 H3 -> T6+ H2 -> Random Monster 4).
 H3M_RANDOM_MONSTER_CLASSES = {
     71: 67,  # RANDOM_MONSTER
     72: 68,  # RANDOM_MONSTER_L1
     73: 69,  # RANDOM_MONSTER_L2
     74: 70,  # RANDOM_MONSTER_L3
     75: 71,  # RANDOM_MONSTER_L4
+    162: 71,  # RANDOM_MONSTER_L5
+    163: 71,  # RANDOM_MONSTER_L6
+    164: 71,  # RANDOM_MONSTER_L7
 }
 
 
