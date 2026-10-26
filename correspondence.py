@@ -207,15 +207,16 @@ H3M_CREATURE_NAMES = [
     "Mighty Gorgon", "Serpent Fly", "Fire Dragon Fly", "Basilisk",
     "Greater Basilisk", "Wyvern", "Wyvern Monarch", "Hydra",
     "Chaos Hydra",
-    "Sprite", "Pixie", "Air Elemental", "Earth Elemental",
+    "Air Elemental", "Earth Elemental",
     "Fire Elemental", "Water Elemental", "Gold Golem", "Diamond Golem",
-    "Psychic Elemental", "Magic Elemental",
+    "Pixie", "Sprite", "Psychic Elemental", "Magic Elemental",
     None,  # 122: unused
     "Ice Elemental",
     None,  # 124: unused
     "Magma Elemental",
     None,  # 126: unused
     "Storm Elemental",
+    None,  # 128: unused
     "Energy Elemental", "Firebird", "Phoenix", "Azure Dragon",
     "Crystal Dragon", "Fairie Dragon", "Rust Dragon", "Enchanter",
     "Sharpshooter", "Halfling", "Peasant", "Boar", "Mummy", "Nomad",
@@ -312,20 +313,56 @@ H3M_TO_FH2M_MONSTERS = {
     95: 20,   # Cyclops King -> Cyclops
     96: 20,   # Behemoth -> Cyclops
     97: 20,   # Ancient Behemoth -> Cyclops
-    112: 21,   # Sprite -> Sprite
-    113: 21,   # Pixie -> Sprite
-    114: 64,   # Air Elemental -> Air Element
-    115: 63,   # Earth Elemental -> Earth Element
-    116: 65,   # Fire Elemental -> Fire Element
-    117: 66,   # Water Elemental -> Water Element
-    130: 29,   # Phoenix -> Phoenix
-    137: 39,   # Halfling -> Halfling
-    138: 1,   # Peasant -> Peasant
-    139: 40,   # Boar -> Boar
-    140: 51,   # Mummy -> Mummy
-    141: 59,   # Nomad -> Nomad
-    142: 58,   # Rogue -> Rogue
-    143: 18,   # Troll -> Troll
+    119: 21,   # Sprite -> Sprite
+    118: 21,   # Pixie -> Sprite
+    112: 64,   # Air Elemental -> Air Element
+    113: 63,   # Earth Elemental -> Earth Element
+    114: 65,   # Fire Elemental -> Fire Element
+    115: 66,   # Water Elemental -> Water Element
+    131: 29,   # Phoenix -> Phoenix
+    138: 39,   # Halfling -> Halfling
+    139: 1,   # Peasant -> Peasant
+    140: 40,   # Boar -> Boar
+    141: 51,   # Mummy -> Mummy
+    142: 59,   # Nomad -> Nomad
+    143: 58,   # Rogue -> Rogue
+    144: 18,   # Troll -> Troll
+    42: 30,   # Imp -> Centaur
+    43: 30,   # Familiar -> Centaur
+    44: 31,   # Gog -> Gargoyle
+    45: 31,   # Magog -> Gargoyle
+    46: 32,   # Hell Hound -> Griffin
+    47: 32,   # Cerberus -> Griffin
+    48: 33,   # Demon -> Minotaur
+    49: 34,   # Horned Demon -> Minotaur King
+    50: 33,   # Pit Fiend -> Minotaur
+    51: 34,   # Pit Lord -> Minotaur King
+    52: 35,   # Efreet -> Hydra
+    53: 35,   # Efreet Sultan -> Hydra
+    54: 36,   # Devil -> Green Dragon
+    55: 37,   # Arch Devil -> Red Dragon
+    98: 12,   # Gnoll -> Goblin
+    99: 12,   # Gnoll Marauder -> Goblin
+    100: 13,   # Lizardman -> Orc
+    101: 14,   # Lizard Warrior -> Orc Chief
+    102: 18,   # Gorgon -> Troll
+    103: 19,   # Mighty Gorgon -> War Troll
+    104: 15,   # Serpent Fly -> Wolf
+    105: 15,   # Fire Dragon Fly -> Wolf
+    106: 16,   # Basilisk -> Ogre
+    107: 17,   # Greater Basilisk -> Ogre Lord
+    108: 20,   # Wyvern -> Cyclops
+    109: 20,   # Wyvern Monarch -> Cyclops
+    110: 20,   # Hydra -> Cyclops
+    111: 20,   # Chaos Hydra -> Cyclops
+    118: 21,   # Pixie -> Sprite
+    120: 28,   # Psychic Elemental -> Unicorn
+    121: 28,   # Magic Elemental -> Unicorn
+    123: 25,   # Ice Elemental -> Grand Elf
+    125: 27,   # Magma Elemental -> Greater Druid
+    127: 23,   # Storm Elemental -> Battle Dwarf
+    129: 26,   # Energy Elemental -> Druid
+    130: 29,   # Firebird -> Phoenix
 }
 
 

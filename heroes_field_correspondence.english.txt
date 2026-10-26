@@ -357,10 +357,11 @@ List for H3M (no unified equivalent yet):
 
    Within each faction the creatures are matched by tier: an h3m
    tier N creature maps to the Heroes II tier N creature of the
-   corresponding faction. The h3m random monsters are converted
-   through their object class: Random Monster (any level),
-   Random Monster 1 to Random Monster 4 (h3m classes 71 to 75 ->
-   fh2m ids 67 to 71).
+   corresponding faction (Inferno <-> Warlock, Fortress <->
+   Barbarian and Conflux <-> Sorceress). The h3m random monsters
+   are converted through their object class: Random Monster (any
+   level), Random Monster 1 to Random Monster 4 (h3m classes 71
+   to 75 -> fh2m ids 67 to 71).
 
 | H3M id | H3M creature        | FH2M id | FH2M creature   |
 |--------|----------------------|---------|-----------------|
@@ -413,21 +414,21 @@ List for H3M (no unified equivalent yet):
 | 40      | Giant                | 46      | Giant           |
 | 41      | Titan                | 47      | Titan           |
 
-   Inferno (H3, no Heroes II faction):
-| 42      | Imp                  | UNDEFINE|                 |
-| 43      | Familiar             | UNDEFINE|                 |
-| 44      | Gog                  | UNDEFINE|                 |
-| 45      | Magog                | UNDEFINE|                 |
-| 46      | Hell Hound           | UNDEFINE|                 |
-| 47      | Cerberus             | UNDEFINE|                 |
-| 48      | Demon                | UNDEFINE|                 |
-| 49      | Horned Demon         | UNDEFINE|                 |
-| 50      | Pit Fiend            | UNDEFINE|                 |
-| 51      | Pit Lord             | UNDEFINE|                 |
-| 52      | Efreet               | UNDEFINE|                 |
-| 53      | Efreet Sultan        | UNDEFINE|                 |
-| 54      | Devil                | UNDEFINE|                 |
-| 55      | Arch Devil           | UNDEFINE|                 |
+   Inferno (H3) <-> Warlock (H2):
+| 42      | Imp                  | 30      | Centaur         |
+| 43      | Familiar             | 30      | Centaur         |
+| 44      | Gog                  | 31      | Gargoyle        |
+| 45      | Magog                | 31      | Gargoyle        |
+| 46      | Hell Hound           | 32      | Griffin         |
+| 47      | Cerberus             | 32      | Griffin         |
+| 48      | Demon                | 33      | Minotaur        |
+| 49      | Horned Demon         | 34      | Minotaur King   |
+| 50      | Pit Fiend            | 33      | Minotaur        |
+| 51      | Pit Lord             | 34      | Minotaur King   |
+| 52      | Efreet               | 35      | Hydra           |
+| 53      | Efreet Sultan        | 35      | Hydra           |
+| 54      | Devil                | 36      | Green Dragon    |
+| 55      | Arch Devil           | 37      | Red Dragon      |
 
    Necropolis (H3) <-> Necromancer (H2):
 | 56      | Skeleton             | 48      | Skeleton        |
@@ -477,54 +478,54 @@ List for H3M (no unified equivalent yet):
 | 96      | Behemoth             | 20      | Cyclops         |
 | 97      | Ancient Behemoth     | 20      | Cyclops         |
 
-   Fortress (H3, no Heroes II faction):
-| 98      | Gnoll                | UNDEFINE|                 |
-| 99      | Gnoll Marauder       | UNDEFINE|                 |
-| 100     | Lizardman            | UNDEFINE|                 |
-| 101     | Lizard Warrior       | UNDEFINE|                 |
-| 102     | Gorgon               | UNDEFINE|                 |
-| 103     | Mighty Gorgon        | UNDEFINE|                 |
-| 104     | Serpent Fly          | UNDEFINE|                 |
-| 105     | Fire Dragon Fly      | UNDEFINE|                 |
-| 106     | Basilisk             | UNDEFINE|                 |
-| 107     | Greater Basilisk     | UNDEFINE|                 |
-| 108     | Wyvern               | UNDEFINE|                 |
-| 109     | Wyvern Monarch       | UNDEFINE|                 |
-| 110     | Hydra                | UNDEFINE|                 |
-| 111     | Chaos Hydra          | UNDEFINE|                 |
+   Fortress (H3) <-> Barbarian (H2):
+| 98      | Gnoll                | 12      | Goblin          |
+| 99      | Gnoll Marauder       | 12      | Goblin          |
+| 100     | Lizardman            | 13      | Orc             |
+| 101     | Lizard Warrior       | 14      | Orc Chief       |
+| 102     | Gorgon               | 18      | Troll           |
+| 103     | Mighty Gorgon        | 19      | War Troll       |
+| 104     | Serpent Fly          | 15      | Wolf            |
+| 105     | Fire Dragon Fly      | 15      | Wolf            |
+| 106     | Basilisk             | 16      | Ogre            |
+| 107     | Greater Basilisk     | 17      | Ogre Lord       |
+| 108     | Wyvern               | 20      | Cyclops         |
+| 109     | Wyvern Monarch       | 20      | Cyclops         |
+| 110     | Hydra                | 20      | Cyclops         |
+| 111     | Chaos Hydra          | 20      | Cyclops         |
 
-   Conflux (H3, no Heroes II faction):
-| 112     | Sprite               | 21      | Sprite          |
-| 113     | Pixie                | 21      | Sprite          |
-| 114     | Air Elemental        | 64      | Air Element     |
-| 115     | Earth Elemental      | 63      | Earth Element   |
-| 116     | Fire Elemental       | 65      | Fire Element    |
-| 117     | Water Elemental      | 66      | Water Element   |
+   Conflux (H3) <-> Sorceress (H2):
+| 112     | Air Elemental        | 64      | Air Element     |
+| 113     | Earth Elemental      | 63      | Earth Element   |
+| 114     | Fire Elemental       | 65      | Fire Element    |
+| 115     | Water Elemental      | 66      | Water Element   |
+| 116     | Gold Golem           | UNDEFINE|                 |
+| 117     | Diamond Golem        | UNDEFINE|                 |
+| 118     | Pixie                | 21      | Sprite          |
+| 119     | Sprite               | 21      | Sprite          |
+| 120     | Psychic Elemental    | 28      | Unicorn         |
+| 121     | Magic Elemental      | 28      | Unicorn         |
+| 123     | Ice Elemental        | 25      | Grand Elf       |
+| 125     | Magma Elemental      | 27      | Greater Druid   |
+| 127     | Storm Elemental      | 23      | Battle Dwarf    |
 
    Neutral creatures:
-| 118     | Gold Golem           | UNDEFINE|                 |
-| 119     | Diamond Golem        | UNDEFINE|                 |
-| 120     | Psychic Elemental    | UNDEFINE|                 |
-| 121     | Magic Elemental      | UNDEFINE|                 |
-| 123     | Ice Elemental        | UNDEFINE|                 |
-| 125     | Magma Elemental      | UNDEFINE|                 |
-| 127     | Storm Elemental      | UNDEFINE|                 |
-| 128     | Energy Elemental     | UNDEFINE|                 |
-| 129     | Firebird             | UNDEFINE|                 |
-| 130     | Phoenix              | 29      | Phoenix         |
-| 131     | Azure Dragon         | UNDEFINE|                 |
-| 132     | Crystal Dragon       | UNDEFINE|                 |
-| 133     | Fairie Dragon        | UNDEFINE|                 |
-| 134     | Rust Dragon          | UNDEFINE|                 |
-| 135     | Enchanter            | UNDEFINE|                 |
-| 136     | Sharpshooter         | UNDEFINE|                 |
-| 137     | Halfling             | 39      | Halfling        |
-| 138     | Peasant              | 1       | Peasant         |
-| 139     | Boar                 | 40      | Boar            |
-| 140     | Mummy                | 51      | Mummy           |
-| 141     | Nomad                | 59      | Nomad           |
-| 142     | Rogue                | 58      | Rogue           |
-| 143     | Troll                | 18      | Troll           |
+| 129     | Energy Elemental     | 26      | Druid           |
+| 130     | Firebird             | 29      | Phoenix         |
+| 131     | Phoenix              | 29      | Phoenix         |
+| 132     | Azure Dragon         | UNDEFINE|                 |
+| 133     | Crystal Dragon       | UNDEFINE|                 |
+| 134     | Fairie Dragon        | UNDEFINE|                 |
+| 135     | Rust Dragon          | UNDEFINE|                 |
+| 136     | Enchanter            | UNDEFINE|                 |
+| 137     | Sharpshooter         | UNDEFINE|                 |
+| 138     | Halfling             | 39      | Halfling        |
+| 139     | Peasant              | 1       | Peasant         |
+| 140     | Boar                 | 40      | Boar            |
+| 141     | Mummy                | 51      | Mummy           |
+| 142     | Nomad                | 59      | Nomad           |
+| 143     | Rogue                | 58      | Rogue           |
+| 144     | Troll                | 18      | Troll           |
 
    Random monsters (h3m object class -> fh2m id):
 
@@ -537,12 +538,9 @@ List for H3M (no unified equivalent yet):
 | 75        | level 4              | 71      | Random Monster 4   |
 
    H3M creatures with no Heroes II equivalent (UNDEFINE, dropped
-   by the cross-format translation): the Inferno, Fortress and
-   Conflux creatures (except the ones mapped as neutral creatures
-   above: Sprite and the four Elementals) and the remaining
-   neutral creatures (Gold Golem, Diamond Golem, Psychic/Magic/
-   Ice/Magma/Storm/Energy Elemental, Azure/Crystal/Fairie/Rust
-   Dragon, Enchanter, Sharpshooter).
+   by the cross-format translation): the neutral Gold Golem,
+   Diamond Golem and the neutral expansion dragons and creatures
+   (Azure/Crystal/Fairie/Rust Dragon, Enchanter, Sharpshooter).
 
    FH2M monsters with no h3m creature equivalent: Ghost (the
    effect exists in Heroes III as a monster ability, not as a
