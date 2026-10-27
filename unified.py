@@ -903,6 +903,7 @@ def _translate_h3m_tile_objects(obj_list, objects_section, translated_metadata,
                                   H3M_TO_FH2M_ARTIFACTS,
                                   H3M_TO_FH2M_HEROES,
                                   H3M_TO_FH2M_MONSTERS,
+                                  H3M_TO_FH2M_SECONDARY_SKILLS,
                                   H3M_TO_FH2M_SHRINES,
                                   H3M_TO_FH2M_SPELLS)
 
@@ -1046,27 +1047,7 @@ def _translate_h3m_tile_objects(obj_list, objects_section, translated_metadata,
                 ("group", "KINGDOM_HEROES"),
                 ("index", color_id * 7 + fh2m_race_id),
             ]))
-            hero_entry = OrderedDict([
-                ("customName", H3M_HERO_NAMES[hero_type] if hero_type < len(H3M_HERO_NAMES) else ""),
-                ("customPortrait", 0),
-                ("armyMonsterType", [0, 0, 0, 0, 0]),
-                ("armyMonsterCount", [0, 0, 0, 0, 0]),
-                ("artifacts", [0] * 14),
-                ("artifactMetadata", [0] * 14),
-                ("availableSpells", []),
-                ("isOnPatrol", False),
-                ("patrolRadius", 0),
-                ("secondarySkill", [0] * 8),
-                ("secondarySkillLevel", [0] * 8),
-                ("customLevel", -1),
-                ("customExperience", -1),
-                ("customAttack", -1),
-                ("customDefense", -1),
-                ("customKnowledge", -1),
-                ("customSpellPower", -1),
-                ("magicPoints", -1),
-                ("raceId", 0x01 << (fh2m_race_id - 1) if 1 <= fh2m_race_id <= 6 else 0),
-            ])
+            hero_entry = _h3m_hero_to_fh2m_hero(hero_meta, hero_type, fh2m_race_id)
             translated_metadata.setdefault("heroMetadata", OrderedDict())[str(obj_id)] = hero_entry
         elif group in ("ADVENTURE_MINES", "ADVENTURE_DWELLINGS"):
             ownable_meta = (objects_section.get("ownableMetadata") or {}).get(str(obj_id)) or {}
@@ -1143,13 +1124,128 @@ def _fh2m_hero_race_id(fh2m_hero_id):
     return None
 
 
+def _h3m_hero_to_fh2m_hero(hero_meta, hero_type, fh2m_race_id):
+    """
+    Build a complete fh2m heroMetadata entry from an h3m hero
+    object: name, experience, primary skills, secondary skills, army,
+    artifacts and patrol state are converted; the h3m fields with no
+    Heroes II equivalent (biography, face, gender, spells bitfield)
+    are dropped.
+    """
+    from correspondence import (H3M_HERO_NAMES, H3M_TO_FH2M_ARTIFACTS,
+                                  H3M_TO_FH2M_MONSTERS,
+                                  H3M_TO_FH2M_SECONDARY_SKILLS,
+                                  H3M_TO_FH2M_SPELLS)
+
+    # Secondary skills: up to 8, converted ids and levels.
+    skills = [0] * 8
+    skill_levels = [0] * 8
+    slot = 0
+    for sk in (hero_meta.get("skills") or []):
+        if slot >= 8:
+            break
+        fh2m_skill = H3M_TO_FH2M_SECONDARY_SKILLS.get(sk.get("id"))
+        if fh2m_skill is None:
+            continue
+        skills[slot] = fh2m_skill
+        skill_levels[slot] = sk.get("level", 0)
+        slot += 1
+
+    # Army: up to 5 slots from the 7 h3m creature slots.
+    army_types = [0, 0, 0, 0, 0]
+    army_counts = [0, 0, 0, 0, 0]
+    slot = 0
+    for creature_slot in (hero_meta.get("creatures") or []):
+        creature = creature_slot.get("creature")
+        count = creature_slot.get("count") or 0
+        if creature is None or count <= 0 or slot >= 5:
+            continue
+        fh2m_monster = H3M_TO_FH2M_MONSTERS.get(creature, -1)
+        if fh2m_monster < 1:
+            continue
+        army_types[slot] = fh2m_monster
+        army_counts[slot] = count
+        slot += 1
+
+    # Artifacts: the 18/19 h3m slots map to the 14 fh2m slots. The
+    # first 16 h3m slots (worn + war machines) map one-to-one to the
+    # fh2m worn slots; the backpack items follow.
+    artifacts = [0] * 14
+    artifact_meta = [0] * 14
+    h3m_artifacts = hero_meta.get("artifacts") or []
+    worn_count = min(len(h3m_artifacts), 16, 14)
+    for slot in range(worn_count):
+        artifact = h3m_artifacts[slot]
+        if artifact in (0xFF, 0xFFFF):
+            continue
+        fh2m_artifact = H3M_TO_FH2M_ARTIFACTS.get(artifact, -1)
+        if fh2m_artifact and fh2m_artifact > 0:
+            artifacts[slot] = fh2m_artifact
+    bag = hero_meta.get("artifactBag") or []
+    bag_slot = worn_count
+    for artifact in bag:
+        if bag_slot >= 14:
+            break
+        fh2m_artifact = H3M_TO_FH2M_ARTIFACTS.get(artifact, -1)
+        if fh2m_artifact and fh2m_artifact > 0:
+            artifacts[bag_slot] = fh2m_artifact
+            bag_slot += 1
+
+    # Spells: the h3m spells bitfield converts to the fh2m spell ids.
+    available_spells = []
+    spells_hex = hero_meta.get("spells")
+    if isinstance(spells_hex, str) and spells_hex:
+        spell_bytes = bytes.fromhex(spells_hex)
+        for byte_index, spell_byte in enumerate(spell_bytes):
+            for bit in range(8):
+                if spell_byte & (1 << bit):
+                    h3m_spell = byte_index * 8 + bit
+                    fh2m_spell = H3M_TO_FH2M_SPELLS.get(h3m_spell)
+                    if fh2m_spell and fh2m_spell > 0:
+                        available_spells.append(fh2m_spell)
+    elif isinstance(spells_hex, int) and 0 <= spells_hex < 70:
+        fh2m_spell = H3M_TO_FH2M_SPELLS.get(spells_hex)
+        if fh2m_spell and fh2m_spell > 0:
+            available_spells.append(fh2m_spell)
+
+    patrol_radius = hero_meta.get("patrolRadius")
+    experience = hero_meta.get("experience")
+    primaries = hero_meta.get("primarySkills") or {}
+
+    return OrderedDict([
+        ("customName", hero_meta.get("name") or (H3M_HERO_NAMES[hero_type]
+                                                 if hero_type is not None and hero_type < len(H3M_HERO_NAMES) else "")),
+        ("customPortrait", 0),
+        ("armyMonsterType", army_types),
+        ("armyMonsterCount", army_counts),
+        ("artifacts", artifacts),
+        ("artifactMetadata", artifact_meta),
+        ("availableSpells", available_spells),
+        ("isOnPatrol", patrol_radius is not None and patrol_radius != 0xFF),
+        ("patrolRadius", patrol_radius if patrol_radius is not None and patrol_radius != 0xFF else 0),
+        ("secondarySkill", skills),
+        ("secondarySkillLevel", skill_levels),
+        ("customLevel", -1),
+        ("customExperience", experience if experience is not None else -1),
+        ("customAttack", primaries.get("attack", -1) if primaries else -1),
+        ("customDefense", primaries.get("defense", -1) if primaries else -1),
+        ("customKnowledge", primaries.get("knowledge", -1) if primaries else -1),
+        ("customSpellPower", primaries.get("spellPower", -1) if primaries else -1),
+        ("magicPoints", -1),
+        ("raceId", 0x01 << (fh2m_race_id - 1) if 1 <= fh2m_race_id <= 6 else 0),
+    ])
+
+
 def _h3m_town_to_fh2m_castle(town_meta):
     """
     Build an fh2m castleMetadata entry from an h3m townMetadata. The
     garrison creatures become the castle defenders (the first five
-    non-empty slots); the race is derived from the h3m town type
-    through the faction pairings.
+    non-empty slots); the built and disabled h3m building bitfields
+    convert to the fh2m building flags for the buildings with a
+    Heroes II equivalent.
     """
+    from correspondence import H3M_DWELLING_BITS, H3M_TOWN_BUILDING_BITS
+
     defender_types = [0, 0, 0, 0, 0]
     defender_counts = [0, 0, 0, 0, 0]
     garrison = town_meta.get("garrison") or []
@@ -1166,13 +1262,31 @@ def _h3m_town_to_fh2m_castle(town_meta):
         defender_counts[slot] = count
         slot += 1
 
+    def bitfield_to_flags(hex_value):
+        flags = []
+        if not hex_value:
+            return flags
+        raw = bytes.fromhex(hex_value)
+        for byte_index in range(min(len(raw), 6)):
+            for bit in range(8):
+                if raw[byte_index] & (1 << bit):
+                    flag = H3M_TOWN_BUILDING_BITS.get((byte_index, bit))
+                    if flag is None:
+                        flag = H3M_DWELLING_BITS.get((byte_index, bit))
+                    if flag:
+                        flags.append(flag)
+        return flags
+
+    built_flags = bitfield_to_flags(town_meta.get("builtBuildings"))
+    banned_flags = bitfield_to_flags(town_meta.get("disabledBuildings"))
+
     return OrderedDict([
         ("customName", town_meta.get("customName") or ""),
         ("defenderMonsterType", defender_types),
         ("defenderMonsterCount", defender_counts),
-        ("customBuildings", False),
-        ("builtBuildings", []),
-        ("bannedBuildings", []),
+        ("customBuildings", bool(built_flags or banned_flags)),
+        ("builtBuildings", built_flags),
+        ("bannedBuildings", banned_flags),
         ("mustHaveSpells", OrderedDict()),
         ("bannedSpells", []),
         ("availableToHireMonsterCount", [-1, 0, 0, 0, 0, 0]),
