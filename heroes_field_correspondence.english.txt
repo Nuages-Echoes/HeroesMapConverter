@@ -426,7 +426,7 @@ List for H3M (no unified equivalent yet):
 | T3   | Iron Golem -> Steel Golem | Iron Golem -> Stone Golem   |
 | T4   | Roc                       | Mage -> Archmage            |
 | T5   | Mage -> Archmage          | Genie -> Master Genie       |
-| T6   |                           | Naga -> Naga Queen          |
+| T6   | Giant                     | Naga -> Naga Queen          |
 | T7   | Giant -> Titan            | Giant -> Titan              |
 
    Faction 5 (Warlock <-> Dungeon):
@@ -439,7 +439,7 @@ List for H3M (no unified equivalent yet):
 | T4   | Minotaur -> Minotaur King | Medusa -> Medusa Queen      |
 | T5   | Minotaur -> Minotaur King | Minotaur -> Minotaur King   |
 | T6   | Hydra                     | Manticore -> Scorpicore     |
-| T7   | Green Dragon -> Red Dragon -> Black Dragon | Red Dragon -> Black Dragon  |
+| T7   | Red Dragon -> Black Dragon | Red Dragon -> Black Dragon  |
 
    Faction 6 (Necromancer <-> Necropolis):
 
@@ -463,7 +463,7 @@ List for H3M (no unified equivalent yet):
 | T4   | Minotaur -> Minotaur King | Demon -> Horned Demon       |
 | T5   | Minotaur -> Minotaur King | Pit Fiend -> Pit Lord       |
 | T6   | Hydra                     | Efreet -> Efreet Sultan     |
-| T7   | Green Dragon -> Red Dragon -> Black Dragon | Devil -> Arch Devil         |
+| T7   | Green Dragon -> Red Dragon | Devil -> Arch Devil         |
 
    Faction 8 (Barbarian <-> Fortress):
 
@@ -482,21 +482,29 @@ List for H3M (no unified equivalent yet):
 | Tier | H2                        | H3                          |
 |------|---------------------------|-----------------------------|
 | T1   | Sprite                    | Pixie -> Sprite             |
-| T2   | Dwarf -> Battle Dwarf     | Air Elemental -> Storm Elemental |
-| T3   | Elf -> Grand Elf          | Water Elemental -> Ice Elemental |
-| T4   | Druid -> Greater Druid    | Fire Elemental -> Energy Elemental |
-| T5   | Druid -> Greater Druid    | Earth Elemental -> Magma Elemental |
+| T2   | Air Element               | Air Elemental -> Storm Elemental |
+| T3   | Water Element             | Water Elemental -> Ice Elemental |
+| T4   | Fire Element              | Fire Elemental -> Energy Elemental |
+| T5   | Earth Element             | Earth Elemental -> Magma Elemental |
 | T6   | Unicorn                   | Psychic Elemental -> Magic Elemental |
 | T7   | Phoenix                   | Firebird -> Phoenix         |
 
-   Neutral creatures:
+   The Conflux elementals belong to this faction in Heroes III; all
+   of them (basic and extension) convert to the matching Heroes II
+   elemental by name: Air/Storm Elemental -> Air Element, Water/Ice
+   Elemental -> Water Element, Fire/Energy Elemental -> Fire
+   Element, Earth/Magma Elemental -> Earth Element. The other Conflux
+   creatures convert by tier.
+
+   Neutral creatures (matched by tier):
 
 | Tier | H2                        | H3                          |
 |------|---------------------------|-----------------------------|
 | T1   | Rogue                     | Rogue ; Halfling ; Peasant  |
 | T2   | Nomad                     | Nomad ; Boar ; Mummy        |
-| T3   | Ghost ; Medusa            | Troll                      |
-| T4   | Genie                     | Gold Golem ; Diamond Golem (UNDEFINE) |
+| T3   | Medusa                    | Troll                       |
+| T3   | Ghost                     | UNDEFINE                    |
+| T4   | Genie                     | UNDEFINE                    |
 | T5   |                           | UNDEFINE                   |
 | T6   |                           | UNDEFINE                   |
 | T7   |                           | Azure Dragon ; Crystal Dragon ; Fairie Dragon ; Rust Dragon ; Enchanter ; Sharpshooter (UNDEFINE) |
