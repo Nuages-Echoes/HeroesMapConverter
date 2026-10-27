@@ -357,6 +357,29 @@ The remaining h3m fields stay raw (building and spell bitfields,
 quest messages, garrison canTake, event players flags).
 
 
+   Town/race conversion (h3m -> fh2m): the h3m town types map to
+   the Heroes II races through the faction pairings, and the fh2m
+   KINGDOM_TOWNS object index is race * 2 (castle) or race * 2 + 1
+   (town), the fheroes2 race order being Knight, Barbarian,
+   Sorceress, Warlock, Wizard, Necromancer:
+
+| H3M type | H3M faction | FH2M race | FH2M index (castle) |
+|----------|-------------|-----------|---------------------|
+| 0        | Castle      | Knight    | 0                   |
+| 1        | Rampart     | Sorceress | 4                  |
+| 2        | Tower       | Wizard    | 8                   |
+| 3        | Inferno     | Warlock   | 6                   |
+| 4        | Necropolis  | Necromancer | 10              |
+| 5        | Dungeon     | Warlock   | 6                   |
+| 6        | Stronghold  | Barbarian | 2                   |
+| 7        | Fortress    | Barbarian | 2                   |
+| 8        | Conflux     | Sorceress | 4                   |
+| random   | -           | Knight (default) | 0         |
+
+   The garrison creatures of an h3m town become the fh2m castle
+   defenders (the first five non-empty slots, converted through the
+   creature table).
+
    Cross-format object translation (h3m -> fh2m, main.py --target fh2m):
    placed objects are translated group by group when an fh2m
    equivalent exists; the others are dropped and their ids are listed
@@ -377,8 +400,10 @@ quest messages, garrison canTake, event players flags).
    - ADVENTURE_MINES / ADVENTURE_DWELLINGS: translated with a
      capturableObjectsMetadata carrying the owner color (when the
      owner is a Heroes II color)
-   - KINGDOM_TOWNS: translated with an empty fh2m castleMetadata
-     (custom name only)
+   - KINGDOM_TOWNS: translated with the fh2m race from the h3m town
+     type (see the town/race table above) and a castleMetadata
+     carrying the custom name and the garrison creatures as
+     defenders
    - ADVENTURE_MISCELLANEOUS: signs are translated with their message
    The remaining h3m groups (pandora boxes, shrines, seer huts, garrisons...)
    have no fh2m equivalent and are dropped. fh2m object groups that are

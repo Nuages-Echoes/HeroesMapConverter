@@ -24,6 +24,9 @@ from correspondence import (
     H3M_PLAYER_COLOR_NAMES,
     H3M_SECONDARY_SKILL_NAMES,
     H3M_SPELL_NAMES,
+    H3M_TO_FH2M_MONSTERS,
+    FH2M_TOWN_RACE_ORDER,
+    H3M_TOWN_TYPE_TO_FH2M_RACE,
     FH2M_RESOURCE_ORDER,
     FH2M_SPELL_SCROLL_ID,
     fh2m_portrait_name,
@@ -996,13 +999,21 @@ def _translate_h3m_tile_objects(obj_list, objects_section, translated_metadata,
             ])
         elif group == "KINGDOM_TOWNS":
             town_meta = (objects_section.get("townMetadata") or {}).get(str(obj_id)) or {}
-            # fh2m KINGDOM_TOWNS: index = race * 6 + color, with an
-            # offset for town/castle variants; use the race from the
-            # town type and neutral color for now.
+            # fh2m KINGDOM_TOWNS index: race * 2 (castle) or race * 2
+            # + 1 (town), the race order being Knight, Barbarian,
+            # Sorceress, Warlock, Wizard, Necromancer. The h3m town
+            # type maps to the fh2m race through the faction pairings.
+            town_type = town_meta.get("type")
+            race_name = H3M_TOWN_TYPE_TO_FH2M_RACE.get(town_type)
+            if race_name is None:
+                # Random town or unknown type: Knight castle.
+                race_id = 0
+            else:
+                race_id = FH2M_TOWN_RACE_ORDER.index(race_name)
             translated.append(OrderedDict([
                 ("id", obj_id),
                 ("group", "KINGDOM_TOWNS"),
-                ("index", 0),
+                ("index", race_id * 2),
             ]))
             translated_metadata.setdefault("castleMetadata", OrderedDict())[str(obj_id)] = _h3m_town_to_fh2m_castle(town_meta)
         elif group == "KINGDOM_HEROES":
@@ -1112,11 +1123,32 @@ def _fh2m_hero_race_id(fh2m_hero_id):
 
 
 def _h3m_town_to_fh2m_castle(town_meta):
-    """Build an fh2m castleMetadata entry from an h3m townMetadata."""
+    """
+    Build an fh2m castleMetadata entry from an h3m townMetadata. The
+    garrison creatures become the castle defenders (the first five
+    non-empty slots); the race is derived from the h3m town type
+    through the faction pairings.
+    """
+    defender_types = [0, 0, 0, 0, 0]
+    defender_counts = [0, 0, 0, 0, 0]
+    garrison = town_meta.get("garrison") or []
+    slot = 0
+    for creature_slot in garrison:
+        creature = creature_slot.get("creature")
+        count = creature_slot.get("count") or 0
+        if creature is None or count <= 0 or slot >= 5:
+            continue
+        fh2m_monster = H3M_TO_FH2M_MONSTERS.get(creature, -1)
+        if fh2m_monster < 1:
+            continue
+        defender_types[slot] = fh2m_monster
+        defender_counts[slot] = count
+        slot += 1
+
     return OrderedDict([
         ("customName", town_meta.get("customName") or ""),
-        ("defenderMonsterType", [0, 0, 0, 0, 0]),
-        ("defenderMonsterCount", [0, 0, 0, 0, 0]),
+        ("defenderMonsterType", defender_types),
+        ("defenderMonsterCount", defender_counts),
         ("customBuildings", False),
         ("builtBuildings", []),
         ("bannedBuildings", []),
