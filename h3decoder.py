@@ -1006,6 +1006,10 @@ def parse_h3m_objects(raw_objects, level_ab, level_sod, artifact_id_bytes,
     town_metadata = OrderedDict()
     event_metadata = OrderedDict()
     shrine_metadata = OrderedDict()
+    garrison_metadata = OrderedDict()
+    witchhut_metadata = OrderedDict()
+    scholar_metadata = OrderedDict()
+    pandora_metadata = OrderedDict()
 
     for object_id in range(object_count):
         header = safe_read(buffer, 7)
@@ -1060,7 +1064,13 @@ def parse_h3m_objects(raw_objects, level_ab, level_sod, artifact_id_bytes,
                 artifact = struct.unpack('<H' if artifact_id_bytes == 2 else '<B', artifact_data)[0]
                 monster_metadata[str(object_id)]['artifact'] = (
                     None if artifact in (0xFFFF, 0xFF) else artifact)
-            safe_read(buffer, 4)  # canFlee/canGrow + 2 unknown
+            if x == 0 and y == 0 and z == 0 and obj_class in (71, 72, 73, 74, 75, 162, 163, 164):
+                # Editor ghost objects ("two objects that don't ever appear
+                # on the map", placed at 0,0,0) carry no canFlee/canGrow
+                # tail: they end right after the hasTreasure byte.
+                pass
+            else:
+                safe_read(buffer, 4)  # canFlee/canGrow + 2 unknown
         elif kind_name == 'resource':
             # Guarded object: an optional guard comes first.
             is_guarded = safe_read(buffer, 1)[0]
@@ -1156,61 +1166,204 @@ def parse_h3m_objects(raw_objects, level_ab, level_sod, artifact_id_bytes,
             # guard (optional), then bonuses: experience, spell points,
             # morale, luck, resources, skills, artifacts, spells, creatures.
             is_guarded = safe_read(buffer, 1)[0]
+            guard = None
             if is_guarded:
                 guard_msg_len = struct.unpack('<i', safe_read(buffer, 4))[0]
-                safe_read(buffer, guard_msg_len)
+                guard_message = read_string(buffer, guard_msg_len)
+                has_creatures = safe_read(buffer, 1)[0]
+                guard_creatures = []
+                if has_creatures:
+                    for _slot in range(7):
+                        slot_data = safe_read(buffer, creature_id_bytes + 2)
+                        if len(slot_data) < creature_id_bytes + 2:
+                            break
+                        creature = struct.unpack('<H' if creature_id_bytes == 2 else '<B',
+                                                 slot_data[:creature_id_bytes])[0]
+                        count = struct.unpack('<H', slot_data[creature_id_bytes:creature_id_bytes + 2])[0]
+                        guard_creatures.append(OrderedDict([
+                            ('creature', creature if creature not in (0xFFFF, 0xFF) else None),
+                            ('count', count),
+                        ]))
+                safe_read(buffer, 4)
+                guard = OrderedDict([
+                    ('message', guard_message),
+                    ('creatures', guard_creatures),
+                ])
+            exp_data = struct.unpack('<I', safe_read(buffer, 4))[0]
+            mana_data = struct.unpack('<H', safe_read(buffer, 2))[0]
+            morale_data = struct.unpack('<b', safe_read(buffer, 1))[0]
+            luck_data = struct.unpack('<b', safe_read(buffer, 1))[0]
+            resources = struct.unpack('<7h', safe_read(buffer, 2 * 7))
+            primaries = struct.unpack('<4B', safe_read(buffer, 4))
+            skill_count = safe_read(buffer, 1)[0]
+            skills = []
+            for _sk in range(min(skill_count, 8)):
+                skill_id = safe_read(buffer, 1)[0]
+                skill_level = safe_read(buffer, 1)[0]
+                skills.append(OrderedDict([('id', skill_id), ('level', skill_level)]))
+            if skill_count > 8:
+                safe_read(buffer, (skill_count - 8) * 2)
+            artifact_count = safe_read(buffer, 1)[0]
+            artifacts = []
+            for _art in range(min(artifact_count, 16)):
+                art_data = safe_read(buffer, artifact_id_bytes)
+                artifacts.append(struct.unpack('<H' if artifact_id_bytes == 2 else '<B', art_data)[0])
+            if artifact_count > 16:
+                safe_read(buffer, (artifact_count - 16) * artifact_id_bytes)
+            spell_count = safe_read(buffer, 1)[0]
+            spells = list(safe_read(buffer, min(spell_count, 9)))
+            if spell_count > 9:
+                safe_read(buffer, spell_count - 9)
+            creature_count = safe_read(buffer, 1)[0]
+            creatures = []
+            for _cr in range(min(creature_count, 7)):
+                slot_data = safe_read(buffer, creature_id_bytes + 2)
+                if len(slot_data) < creature_id_bytes + 2:
+                    break
+                creature = struct.unpack('<H' if creature_id_bytes == 2 else '<B',
+                                         slot_data[:creature_id_bytes])[0]
+                count = struct.unpack('<H', slot_data[creature_id_bytes:creature_id_bytes + 2])[0]
+                creatures.append(OrderedDict([
+                    ('creature', creature if creature not in (0xFFFF, 0xFF) else None),
+                    ('count', count),
+                ]))
+            if creature_count > 7:
+                safe_read(buffer, (creature_count - 7) * (creature_id_bytes + 2))
+            safe_read(buffer, 8)  # unknown
+            pandora_metadata[str(object_id)] = OrderedDict([
+                ('guard', guard),
+                ('experience', exp_data),
+                ('mana', mana_data),
+                ('morale', morale_data),
+                ('luck', luck_data),
+                ('resources', OrderedDict([
+                    ('wood', resources[0]), ('mercury', resources[1]),
+                    ('ore', resources[2]), ('sulfur', resources[3]),
+                    ('crystal', resources[4]), ('gems', resources[5]),
+                    ('gold', resources[6]),
+                ])),
+                ('primarySkills', OrderedDict([
+                    ('attack', primaries[0]), ('defense', primaries[1]),
+                    ('spellPower', primaries[2]), ('knowledge', primaries[3]),
+                ])),
+                ('secondarySkills', skills),
+                ('artifacts', artifacts),
+                ('spells', spells),
+                ('creatures', creatures),
+            ])
+        elif kind_name == 'event':
+            # Ground event: the pandora box layout (isGuarded byte,
+            # guard with the event message, then the bonuses), then
+            # players, applyToComputer, removeAfterVisit. The event
+            # message is carried by the Guarded structure.
+            evt = OrderedDict()
+            is_guarded = safe_read(buffer, 1)[0]
+            if is_guarded:
+                guard_msg_len = struct.unpack('<i', safe_read(buffer, 4))[0]
+                evt['message'] = read_string(buffer, guard_msg_len)
                 has_creatures = safe_read(buffer, 1)[0]
                 if has_creatures:
                     for _slot in range(7):
                         safe_read(buffer, creature_id_bytes + 2)
                 safe_read(buffer, 4)
-            safe_read(buffer, 4 + 2 + 1 + 1)  # experience, spellPoints, morale, luck
-            safe_read(buffer, 2 * 7)  # resources
-            safe_read(buffer, 4)  # attack, defense, spellPower, knowledge
-            skill_count = safe_read(buffer, 1)[0]
-            safe_read(buffer, skill_count * 2)
-            artifact_count = safe_read(buffer, 1)[0]
-            safe_read(buffer, artifact_count * artifact_id_bytes)
-            spell_count = safe_read(buffer, 1)[0]
-            safe_read(buffer, spell_count)
-            creature_count = safe_read(buffer, 1)[0]
-            for _cr in range(creature_count):
-                safe_read(buffer, creature_id_bytes + 2)
-            safe_read(buffer, 8)  # unknown
-        elif kind_name == 'event':
-            # Ground event: message, then bonuses (as pandora box), then
-            # players, applyToComputer, removeAfterVisit, unknown.
-            evt = OrderedDict()
-            msg_len_data = safe_read(buffer, 4)
+            experience = struct.unpack('<I', safe_read(buffer, 4))[0]
+            evt['experience'] = experience or None
+            evt['mana'] = struct.unpack('<H', safe_read(buffer, 2))[0]
+            evt['morale'] = struct.unpack('<b', safe_read(buffer, 1))[0]
+            evt['luck'] = struct.unpack('<b', safe_read(buffer, 1))[0]
             if len(msg_len_data) < 4:
                 break
             msg_len = struct.unpack('<i', msg_len_data)[0]
-            evt['message'] = read_string(buffer, msg_len)
-            safe_read(buffer, 2 * 7)  # resources
+
+            resources = struct.unpack('<7h', safe_read(buffer, 2 * 7))
+            evt['resources'] = OrderedDict([
+                ('wood', resources[0]), ('mercury', resources[1]),
+                ('ore', resources[2]), ('sulfur', resources[3]),
+                ('crystal', resources[4]), ('gems', resources[5]),
+                ('gold', resources[6]),
+            ])
+            primaries = struct.unpack('<4B', safe_read(buffer, 4))
+            evt['primarySkills'] = OrderedDict([
+                ('attack', primaries[0]), ('defense', primaries[1]),
+                ('spellPower', primaries[2]), ('knowledge', primaries[3]),
+            ])
             skill_count = safe_read(buffer, 1)[0]
-            safe_read(buffer, skill_count * 2)
+            skills = []
+            for _sk in range(min(skill_count, 8)):
+                skill_id = safe_read(buffer, 1)[0]
+                skill_level = safe_read(buffer, 1)[0]
+                skills.append(OrderedDict([('id', skill_id), ('level', skill_level)]))
+            if skill_count > 8:
+                safe_read(buffer, (skill_count - 8) * 2)
+            evt['secondarySkills'] = skills
             artifact_count = safe_read(buffer, 1)[0]
-            safe_read(buffer, artifact_count * artifact_id_bytes)
+            artifacts = []
+            for _art in range(min(artifact_count, 16)):
+                art_data = safe_read(buffer, artifact_id_bytes)
+                artifacts.append(struct.unpack('<H' if artifact_id_bytes == 2 else '<B', art_data)[0])
+            if artifact_count > 16:
+                safe_read(buffer, (artifact_count - 16) * artifact_id_bytes)
+            evt['artifacts'] = artifacts
             spell_count = safe_read(buffer, 1)[0]
-            safe_read(buffer, spell_count)
+            evt['spells'] = list(safe_read(buffer, min(spell_count, 9)))
+            if spell_count > 9:
+                safe_read(buffer, spell_count - 9)
             creature_count = safe_read(buffer, 1)[0]
-            for _cr in range(creature_count):
-                safe_read(buffer, creature_id_bytes + 2)
-            safe_read(buffer, 1 + 1 + 1)  # players, applyToComputer, removeAfterVisit
-            safe_read(buffer, 4)  # unknown
+            creatures = []
+            for _cr in range(min(creature_count, 7)):
+                slot_data = safe_read(buffer, creature_id_bytes + 2)
+                if len(slot_data) < creature_id_bytes + 2:
+                    break
+                creature = struct.unpack('<H' if creature_id_bytes == 2 else '<B',
+                                         slot_data[:creature_id_bytes])[0]
+                count = struct.unpack('<H', slot_data[creature_id_bytes:creature_id_bytes + 2])[0]
+                creatures.append(OrderedDict([
+                    ('creature', creature if creature not in (0xFFFF, 0xFF) else None),
+                    ('count', count),
+                ]))
+            if creature_count > 7:
+                safe_read(buffer, (creature_count - 7) * (creature_id_bytes + 2))
+            evt['creatures'] = creatures
+            safe_read(buffer, 8)  # unknown tail of the pandora layout
+            evt['players'] = safe_read(buffer, 1)[0]
+            evt['applyToComputer'] = bool(safe_read(buffer, 1)[0])
+            evt['removeAfterVisit'] = bool(safe_read(buffer, 1)[0])
+            safe_read(buffer, 4)
             event_metadata[str(object_id)] = evt
         elif kind_name == 'garrison':
             owner_data = safe_read(buffer, 4)
             if len(owner_data) < 4:
                 break
+            creatures = []
             for _slot in range(7):
-                safe_read(buffer, creature_id_bytes + 2)
+                slot_data = safe_read(buffer, creature_id_bytes + 2)
+                if len(slot_data) < creature_id_bytes + 2:
+                    break
+                creature = struct.unpack('<H' if creature_id_bytes == 2 else '<B',
+                                         slot_data[:creature_id_bytes])[0]
+                count = struct.unpack('<H', slot_data[creature_id_bytes:creature_id_bytes + 2])[0]
+                creatures.append(OrderedDict([
+                    ('creature', creature if creature not in (0xFFFF, 0xFF) else None),
+                    ('count', count),
+                ]))
+            can_take = None
             if level_ab:
-                safe_read(buffer, 1)  # canTake
+                can_take = safe_read(buffer, 1)[0]
             safe_read(buffer, 8)
+            garrison_metadata[str(object_id)] = OrderedDict([
+                ('owner', struct.unpack('<I', owner_data)[0]),
+                ('creatures', creatures),
+                ('canTake', can_take if can_take is None else bool(can_take)),
+            ])
         elif kind_name == 'witchHut':
             if level_ab:
-                safe_read(buffer, 4)  # potentialSkills
+                skill_data = safe_read(buffer, 4)
+                if len(skill_data) < 4:
+                    break
+                witchhut_metadata[str(object_id)] = OrderedDict([
+                    ('skill', None if struct.unpack('<I', skill_data)[0] == 0xFFFFFFFF
+                     else struct.unpack('<I', skill_data)[0]),
+                ])
         elif kind_name == 'shrine':
             spell_data = safe_read(buffer, 4)
             if len(spell_data) < 4:
@@ -1274,11 +1427,16 @@ def parse_h3m_objects(raw_objects, level_ab, level_sod, artifact_id_bytes,
             reward_type_data = safe_read(buffer, 1)
             if len(reward_type_data) < 1:
                 break
+            reward_value = None
             if reward_type_data[0] == 0xFF:
-                safe_read(buffer, 1)
+                reward_value = safe_read(buffer, 1)[0]
             elif reward_type_data[0] in (0, 1, 2):
-                safe_read(buffer, 1)
+                reward_value = safe_read(buffer, 1)[0]
             safe_read(buffer, 6)
+            scholar_metadata[str(object_id)] = OrderedDict([
+                ('rewardType', reward_type_data[0]),
+                ('rewardValue', reward_value),
+            ])
         elif kind_name == 'bank':
             # Banks have no per-object data outside of HotA.
             pass
@@ -1312,6 +1470,14 @@ def parse_h3m_objects(raw_objects, level_ab, level_sod, artifact_id_bytes,
         result['eventMetadata'] = event_metadata
     if shrine_metadata:
         result['shrineMetadata'] = shrine_metadata
+    if garrison_metadata:
+        result['garrisonMetadata'] = garrison_metadata
+    if witchhut_metadata:
+        result['witchhutMetadata'] = witchhut_metadata
+    if scholar_metadata:
+        result['scholarMetadata'] = scholar_metadata
+    if pandora_metadata:
+        result['pandoraMetadata'] = pandora_metadata
     return result
 
 
@@ -1335,24 +1501,102 @@ def _parse_h3m_guarded(buffer, creature_id_bytes):
 
 def _parse_h3m_hero_object(buffer, level_ab, artifact_id_bytes,
                            creature_id_bytes, artifact_slots):
-    """Parse the data of a hero object instance."""
+    """
+    Parse the data of a hero object instance (Hero, Random hero and
+    Prison objects): owner, type, then the customization flags (name,
+    experience, face, skills, creatures, formation, artifacts, patrol
+    radius and the AB+ fields).
+    """
+    level_sod = artifact_slots >= 19
     meta = OrderedDict()
     owner_data = safe_read(buffer, 1)
     if len(owner_data) < 1:
         return None
     meta['owner'] = owner_data[0]
 
-    # Hero type (RoE: 1 byte, AB+: variable - 0xFF means random).
-    if not level_ab:
-        type_data = safe_read(buffer, 1)
-        if len(type_data) < 1:
-            return None
-        meta['type'] = None if type_data[0] == 0xFF else type_data[0]
+    type_data = safe_read(buffer, 1)
+    if len(type_data) < 1:
+        return None
+    meta['type'] = None if type_data[0] == 0xFF else type_data[0]
+
+    if safe_read(buffer, 1)[0]:
+        name_len = struct.unpack('<i', safe_read(buffer, 4))[0]
+        meta['name'] = read_string(buffer, name_len)
+
+    if level_sod:
+        if safe_read(buffer, 1)[0]:
+            meta['experience'] = struct.unpack('<I', safe_read(buffer, 4))[0]
     else:
-        type_data = safe_read(buffer, 1)
-        if len(type_data) < 1:
-            return None
-        meta['type'] = None if type_data[0] == 0xFF else type_data[0]
+        # Before SoD the experience is always present, no flag byte.
+        meta['experience'] = struct.unpack('<I', safe_read(buffer, 4))[0]
+
+    if safe_read(buffer, 1)[0]:
+        meta['face'] = safe_read(buffer, 1)[0]
+
+    if safe_read(buffer, 1)[0]:
+        skill_count = struct.unpack('<I', safe_read(buffer, 4))[0]
+        skills = []
+        for _sk in range(min(skill_count, 8)):
+            skill_id = safe_read(buffer, 1)[0]
+            skill_level = safe_read(buffer, 1)[0]
+            skills.append(OrderedDict([('id', skill_id), ('level', skill_level)]))
+        if skill_count > 8:
+            safe_read(buffer, (skill_count - 8) * 2)
+        meta['skills'] = skills
+
+    if safe_read(buffer, 1)[0]:
+        creatures = []
+        for _slot in range(7):
+            slot_data = safe_read(buffer, creature_id_bytes + 2)
+            if len(slot_data) < creature_id_bytes + 2:
+                break
+            creature = struct.unpack('<H' if creature_id_bytes == 2 else '<B',
+                                     slot_data[:creature_id_bytes])[0]
+            count = struct.unpack('<H', slot_data[creature_id_bytes:creature_id_bytes + 2])[0]
+            creatures.append(OrderedDict([
+                ('creature', creature if creature not in (0xFFFF, 0xFF) else None),
+                ('count', count),
+            ]))
+        meta['creatures'] = creatures
+
+    meta['formation'] = safe_read(buffer, 1)[0]
+
+    if safe_read(buffer, 1)[0]:
+        artifacts = []
+        for _slot in range(artifact_slots):
+            art_data = safe_read(buffer, artifact_id_bytes)
+            if len(art_data) < artifact_id_bytes:
+                break
+            artifacts.append(struct.unpack('<H' if artifact_id_bytes == 2 else '<B', art_data)[0])
+        bag_count = struct.unpack('<H', safe_read(buffer, 2))[0]
+        bag = []
+        for _art in range(min(bag_count, 64)):
+            art_data = safe_read(buffer, artifact_id_bytes)
+            if len(art_data) < artifact_id_bytes:
+                break
+            bag.append(struct.unpack('<H' if artifact_id_bytes == 2 else '<B', art_data)[0])
+        if bag_count > 64:
+            safe_read(buffer, (bag_count - 64) * artifact_id_bytes)
+        meta['artifacts'] = artifacts
+        meta['artifactBag'] = bag
+
+    meta['patrolRadius'] = safe_read(buffer, 1)[0]
+    # 16 trailing unknown bytes close the hero object (default 0s).
+    safe_read(buffer, 16)
+
+    if level_ab:
+        if safe_read(buffer, 1)[0]:
+            bio_len = struct.unpack('<i', safe_read(buffer, 4))[0]
+            meta['biography'] = read_string(buffer, bio_len)
+        gender = safe_read(buffer, 1)[0]
+        meta['gender'] = None if gender == 0xFF else gender
+        if level_sod:
+            if safe_read(buffer, 1)[0]:
+                meta['spells'] = safe_read(buffer, 9).hex()
+        else:
+            meta['spells'] = safe_read(buffer, 1)[0]
+        if safe_read(buffer, 1)[0]:
+            meta['primarySkills'] = list(struct.unpack('<4B', safe_read(buffer, 4)))
 
     return meta
 
