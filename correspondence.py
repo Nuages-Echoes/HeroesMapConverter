@@ -565,6 +565,30 @@ FH2M_MONSTERS_TO_H3M_RANDOM_CLASS = {
     62: 75,  # Medusa
 }
 
+# h3m secondary skill id -> fh2m secondary skill id (the SECSKILL
+# order maps to the fheroes2 Skill::Secondary order, offset by one
+# because the fh2m ids start at 1). Navigation (h3m id 5) has no
+# Heroes II equivalent; the h3m skills 14 to 27 (magic schools,
+# Scholar, Tactics, Artillery, Learning, Offence, Armorer,
+# Intelligence, Sorcery, Resistance, First Aid) have no Heroes II
+# equivalent either.
+H3M_TO_FH2M_SECONDARY_SKILLS = {
+    0: 1,   # Pathfinding
+    1: 2,   # Archery
+    2: 3,   # Logistics
+    3: 4,   # Scouting
+    4: 5,   # Diplomacy
+    6: 7,   # Leadership
+    7: 8,   # Wisdom
+    8: 9,   # Mysticism
+    9: 10,  # Luck
+    10: 11, # Ballistics
+    11: 12, # Eagle Eye
+    12: 13, # Necromancy
+    13: 14, # Estates
+}
+
+
 # fh2m random monster ids -> h3m random monster object classes
 # (inverse of H3M_RANDOM_MONSTER_CLASSES).
 FH2M_RANDOM_TO_H3M_CLASS = {
@@ -649,6 +673,66 @@ FH2M_TO_H3M_SHRINES = {
     14: 88,  # Shrine of the First Circle -> Shrine of Magic Incantation
     15: 89,  # Shrine of the Second Circle -> Shrine of Magic Gesture
     16: 90,  # Shrine of the Third Circle -> Shrine of Magic Thought
+}
+
+
+# h3m town buildings (bit position in the 6-byte bitfield) -> fh2m
+# building bit flags. Bytes 1 and 2 carry the common buildings
+# (fixed position); bytes 3 to 6 carry faction buildings where only
+# the generic dwellings (hordeN, dwellingN, dwellingNU) map to the
+# fh2m dwellings. The fh2m flags come from the fheroes2 BuildingType
+# enumeration (castle.h); a None value means no Heroes II equivalent.
+H3M_TOWN_BUILDING_BITS = {
+    # Byte 1 (bits 0-7)
+    (0, 0): None,   # townHall
+    (0, 1): None,   # cityHall
+    (0, 2): None,   # capitol
+    (0, 3): None,   # fort
+    (0, 4): None,   # citadel
+    (0, 5): 0x0800,  # castle -> BUILD_CASTLE
+    (0, 6): 0x0002,  # tavern -> BUILD_TAVERN
+    (0, 7): None,   # blacksmith
+    # Byte 2 (bits 8-15)
+    (1, 0): 0x0080,  # marketplace -> BUILD_MARKETPLACE
+    (1, 1): None,   # resourceSilo
+    (1, 2): None,   # artifactMerchants
+    (1, 3): 0x4000,  # mageGuild1 -> BUILD_MAGEGUILD1
+    (1, 4): 0x8000,  # mageGuild2 -> BUILD_MAGEGUILD2
+    (1, 5): 0x10000, # mageGuild3 -> BUILD_MAGEGUILD3
+    (1, 6): 0x20000, # mageGuild4 -> BUILD_MAGEGUILD4
+    (1, 7): 0x40000, # mageGuild5 -> BUILD_MAGEGUILD5
+    # Byte 3 (bits 16-23): shipyard (16), grail (17) and the
+    # faction buildings (18-23) have no generic Heroes II mapping.
+    (2, 0): 0x0004,  # shipyard -> BUILD_SHIPYARD
+    # Byte 4-6: the horde and dwelling bits depend on the faction
+    # layout; the generic dwellings map through
+    # H3M_TOWN_FACTION_BUILDING_BITS below.
+}
+
+# Generic dwelling bits per byte: bit positions of hordeN, dwellingN
+# and dwellingNU in bytes 4-6, the same for every faction (the lists
+# in the corpus show dwN at fixed positions per byte).
+# Byte 3: dwelling1 at bit 5, dwelling1U at bit 6.
+# Byte 4: horde1 bit 0, dwelling2 bit 1, dwelling2U bit 2, horde2
+# bit 3, dwelling3 bit 4, dwelling3U bit 5, horde3 bit 6, dwelling4
+# bit 7. Byte 5: dwelling4U bit 0, horde4 bit 1, dwelling5 bit 2,
+# dwelling5U bit 3, horde5 bit 4, dwelling6 bit 5, dwelling6U bit 6,
+# dwelling7 bit 7. Byte 6: dwelling7U bit 0.
+H3M_DWELLING_BITS = {
+    (2, 5): 0x100000,  # dwelling1 -> DWELLING_MONSTER1
+    (2, 6): 0x04000000, # dwelling1U -> DWELLING_UPGRADE2
+    (3, 1): 0x200000,  # dwelling2 -> DWELLING_MONSTER2
+    (3, 2): 0x8000000, # dwelling2U -> DWELLING_UPGRADE3
+    (3, 4): 0x400000,  # dwelling3 -> DWELLING_MONSTER3
+    (3, 5): 0x10000000, # dwelling3U -> DWELLING_UPGRADE4
+    (3, 7): 0x800000,  # dwelling4 -> DWELLING_MONSTER4
+    (4, 0): 0x20000000, # dwelling4U -> DWELLING_UPGRADE5
+    (4, 2): 0x1000000, # dwelling5 -> DWELLING_MONSTER5
+    (4, 3): 0x40000000, # dwelling5U -> DWELLING_UPGRADE6
+    (4, 5): 0x2000000,  # dwelling6 -> DWELLING_MONSTER6
+    (4, 6): 0x80000000, # dwelling6U -> DWELLING_UPGRADE7
+    (4, 7): None,   # dwelling7 (Heroes II has only 6 dwellings)
+    (5, 0): None,   # dwelling7U
 }
 
 

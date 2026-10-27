@@ -409,15 +409,23 @@ quest messages, garrison canTake, event players flags).
      artifacts become fh2m random artifacts; artifacts with no Heroes
      II equivalent are dropped
    - KINGDOM_HEROES: h3m hero -> fh2m hero object (index = color * 7 +
-     race from the hero pairing) with a heroMetadata carrying the
-     hero name and race; neutral heroes (owner 255) are dropped
+     race from the hero pairing) with a full heroMetadata: name,
+     experience, primary skills, secondary skills (converted through
+     the secondary skill table), army (the first five non-empty
+     creature slots), artifacts (worn slots and backpack through the
+     artifact table), available spells (bitfield through the spell
+     table) and patrol state; neutral heroes (owner 255) are dropped;
+     biography, face and gender have no Heroes II equivalent
    - ADVENTURE_MINES / ADVENTURE_DWELLINGS: translated with a
      capturableObjectsMetadata carrying the owner color (when the
      owner is a Heroes II color)
    - KINGDOM_TOWNS: translated with the fh2m race from the h3m town
      type (see the town/race table above) and a castleMetadata
-     carrying the custom name and the garrison creatures as
-     defenders
+     carrying the custom name, the garrison creatures as defenders
+     and the built/disabled buildings converted to the fh2m building
+     flags (castle, tavern, marketplace, shipyard, mage guild 1-5
+     and the generic dwellings with their upgrades; town halls, fort
+     and citadel have no Heroes II equivalent)
    - ADVENTURE_POWER_UPS: shrines are translated to the matching
      shrine circle (Incantation -> First Circle, Gesture -> Second
      Circle, Thought -> Third Circle); other power-up objects are
