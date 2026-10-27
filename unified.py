@@ -417,6 +417,16 @@ def convert_fh2m_to_unified(map_data):
     unified["mapSize"] = OrderedDict([("width", width), ("height", map_data.get("height", width))])
     unified["hasUnderground"] = False
     unified["mainLanguage"] = map_data.get("mainLanguage", 0)
+    translations = map_data.get("translations") or {}
+    if translations:
+        unified["translations"] = OrderedDict(
+            (language, OrderedDict([
+                ("name", entry.get("name", "")),
+                ("description", entry.get("description", "")),
+                ("creatorNotes", entry.get("creatorNotes", "")),
+            ]))
+            for language, entry in translations.items()
+        )
 
     # Players
     def to_names(mask):
@@ -996,7 +1006,14 @@ def unified_to_fh2m(unified):
     data["description"] = unified.get("description", "")
     data["creatorNotes"] = unified.get("creatorNotes", "")
     if version >= 11:
-        data["translations"] = OrderedDict()
+        data["translations"] = OrderedDict(
+            (language, OrderedDict([
+                ("name", entry.get("name", "")),
+                ("description", entry.get("description", "")),
+                ("creatorNotes", entry.get("creatorNotes", "")),
+            ]))
+            for language, entry in (unified.get("translations") or {}).items()
+        )
 
     data["additionalInfo"] = []
 
@@ -1126,7 +1143,11 @@ def unified_to_fh2m(unified):
         data["artifactMetadata"] = OrderedDict()
         data["resourceMetadata"] = OrderedDict()
     if version >= 11:
-        data["translationInfo"] = OrderedDict()
+        value_map = objects_section.get("translationInfo")
+        if value_map:
+            data["translationInfo"] = OrderedDict(value_map)
+        else:
+            data["translationInfo"] = OrderedDict()
 
     # Metadata maps keyed by object id, from the unified objects section,
     # overriding the empty defaults above.
@@ -1348,6 +1369,9 @@ def _fh2m_objects_to_unified(map_data):
         tiles[tile_key] = unified_objs
 
     result = OrderedDict([("tiles", tiles)])
+    translation_info = map_data.get("translationInfo") or {}
+    if translation_info:
+        result["translationInfo"] = OrderedDict(translation_info)
 
     # Metadata maps keyed by object id, normalized into the unified
     # schema; the raw fh2m fields are kept for the byte-perfect

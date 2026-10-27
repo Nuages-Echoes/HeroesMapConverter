@@ -288,8 +288,14 @@ List for FH2M (no unified equivalent yet):
 - isCampaign (campaign maps have a different structure)
 - additionalInfo (campaign maps only)
 - standardObjectMetadata (deprecated, map versions below 10 only)
-- translations (translated name/description/creatorNotes)
-- translationInfo (all translated texts)
+
+The fh2m translations are carried into the unified format:
+- translations: the translated base map texts (name, description,
+  creatorNotes) per language, at the unified root under
+  "translations" (map format versions 11+)
+- translationInfo: all the translated gameplay texts (daily events,
+  rumors, and the texts of the castle, hero, sphinx, sign and event
+  metadata), under objects.translationInfo (map format versions 11+)
 
 The fh2m metadata maps are fully carried into the unified format:
 every entry keeps its raw fh2m fields (for the byte-perfect fh2m
