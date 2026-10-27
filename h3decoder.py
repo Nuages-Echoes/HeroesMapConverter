@@ -921,9 +921,9 @@ H3M_CLASS_TO_GROUP = {
     220: 'ADVENTURE_MISCELLANEOUS',
     221: 'ADVENTURE_MISCELLANEOUS',
     113: 'ADVENTURE_MISCELLANEOUS',  # event
-    88: 'ADVENTURE_MISCELLANEOUS',   # shrine
-    89: 'ADVENTURE_MISCELLANEOUS',
-    90: 'ADVENTURE_MISCELLANEOUS',
+    88: 'ADVENTURE_POWER_UPS',   # shrine of magic incantation
+    89: 'ADVENTURE_POWER_UPS',   # shrine of magic gesture
+    90: 'ADVENTURE_POWER_UPS',   # shrine of magic thought
     36: 'ADVENTURE_MISCELLANEOUS',   # witch hut
     51: 'ADVENTURE_MISCELLANEOUS',
     83: 'ADVENTURE_MISCELLANEOUS',   # seer hut
@@ -1404,6 +1404,9 @@ def parse_h3m_objects(raw_objects, level_ab, level_sod, artifact_id_bytes,
                 break
             shrine_metadata[str(object_id)] = OrderedDict([
                 ('spell', None if struct.unpack('<I', spell_data)[0] == 0xFF else struct.unpack('<I', spell_data)[0]),
+                # 88 Incantation (level 1), 89 Gesture (level 2),
+                # 90 Thought (level 3).
+                ('shrineClass', obj_class),
             ])
         elif kind_name is None and obj_class in OBJECT_NONE_CLASSES:
             # No per-object data: nothing more to read.
