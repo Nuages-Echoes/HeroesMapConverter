@@ -537,68 +537,121 @@ List for H3M (no unified equivalent yet):
    (fheroes2 Heroes enumeration, 73 entries, index 0 being the
    uninitialized hero).
 
-   Heroes present in both games (matched by name):
+   The heroes sharing their name match by name (Gem, Halon, Solmyr,
+   Sandro, Alamar, Crag Hack, Luna, Roland); the others are paired
+   within their faction (Castle->Knight, Stronghold/Fortress->
+   Barbarian, Rampart/Conflux->Sorceress, Tower->Wizard, Dungeon/
+   Inferno->Warlock, Necropolis->Necromancer), round-robin in the
+   game order: each Heroes II hero receives the Heroes III heroes
+   of its faction in order (one column entry per Heroes II hero).
+   The campaign heroes without a same-name Heroes III counterpart
+   and the Debug Hero have no equivalent (UNDEFINE).
 
-| H3M id | H3M hero      | FH2M id | FH2M hero   |
-|--------|---------------|---------|-------------|
-| 27     | Gem           | 24      | Gem         |
-| 41     | Halon         | 40      | Halon       |
-| 45     | Solmyr        | 61      | Solmyr      |
-| 74     | Sandro        | 53      | Sandro      |
-| 88     | Alamar        | 29      | Alamar      |
-| 102    | Crag Hack     | 13      | Crag Hack   |
-| 136    | Luna          | 27      | Luna        |
-| 152    | Roland        | 55      | Roland      |
+   Knight heroes (H2) <-> Castle heroes (H3):
 
-   H3M heroes with no Heroes II equivalent (148): all the other
-   Heroes III heroes, listed by game order.
+| Tier | H2                        | H3                          |
+|------|---------------------------|-----------------------------|
+|      | Lord Kilburn              | Orrin ; Adela               |
+|      | Sir Gallant               | Valeska ; Cuthbert          |
+|      | Ector                     | Edric ; Adelaide            |
+|      | Gwenneth                  | Sylvia ; Ingham             |
+|      | Tyro                      | Lord Haart ; Sanya          |
+|      | Ambrose                   | Sorsha ; Loynis             |
+|      | Ruby                      | Christian ; Caitlin         |
+|      | Maximus                   | Tyris                       |
+|      | Dimitry                   | Rion                        |
 
-   Orrin ; Valeska ; Edric ; Sylvia ; Lord Haart
-   Sorsha ; Christian ; Tyris ; Rion ; Adela
-   Cuthbert ; Adelaide ; Ingham ; Sanya ; Loynis
-   Caitlin ; Mephala ; Ufretin ; Jenova ; Ryland
-   Thorgrim ; Ivor ; Clancy ; Kyrre ; Coronius
-   Uland ; Elleshar ; Malcom ; Melodia ; Alagar
-   Aeris ; Piquedram ; Thane ; Josephine ; Neela
-   Torosar ; Fafner ; Rissa ; Iona ; Astral
-   Serena ; Daremyth ; Theodorus ; Cyra ; Aine
-   Fiona ; Rashka ; Marius ; Ignatius ; Octavia
-   Calh ; Pyre ; Nymus ; Ayden ; Xyron
-   Axsis ; Olema ; Calid ; Ash ; Zydar
-   Xarfax ; Straker ; Vokial ; Moandor ; Charna
-   Tamika ; Isra ; Clavius ; Galthran ; Septienna
-   Aislinn ; Nimbus ; Thant ; Xsi ; Vidomina
-   Nagash ; Lorelei ; Arlach ; Dace ; Ajit
-   Damacon ; Gunnar ; Synca ; Shakti ; Jaegar
-   Malekith ; Jeddite ; Geon ; Deemer ; Sephinroth
-   Darkstorn ; Yog ; Gurnisson ; Jabarkas ; Shiva
-   Gretchin ; Krellion ; Tyraxor ; Gird ; Vey
-   Dessa ; Terek ; Zubin ; Gundula ; Oris
-   Saurug ; Bron ; Drakon ; Wystan ; Tazar
-   Alkin ; Korbac ; Gerwulf ; Broghild ; Mirlanda
-   Rosic ; Voy ; Verdish ; Merist ; Styg
-   Andra ; Tiva ; Pasis ; Thunar ; Ignissa
-   Lacus ; Monere ; Erdamon ; Fiur ; Kalt
-   Brissa ; Ciele ; Labetha ; Inteus ; Aenain
-   Gelare ; Grindan ; Sir Mullich ; Adrienne ; Catherine
-   Dracon ; Gelu ; Kilgor ; Undead Haart ; Mutare
-   Mutare Drake ; Boragus ; Xeron
+   Barbarian heroes (H2) <-> Stronghold/Fortress heroes (H3):
 
-   FH2M heroes with no Heroes III equivalent (64): the Heroes II
-   heroes below, in the fheroes2 enumeration order.
-   Lord Kilburn ; Sir Gallant ; Ector ; Gwenneth ; Tyro
-   Ambrose ; Ruby ; Maximus ; Dimitry ; Thundax
-   Fineous ; Jojosh ; Jezebel ; Jaclyn ; Ergon
-   Tsabu ; Atlas ; Astra ; Natasha ; Troyan
-   Vatawna ; Rebecca ; Ariel ; Carlawn ; Arie
-   Vesper ; Crodo ; Barok ; Kastore ; Agar
-   Falagar ; Wrathmont ; Myra ; Flint ; Dawn
-   Myrini ; Wilfrey ; Sarakin ; Kalindra ; Mandigal
-   Zom ; Darlana ; Zam ; Ranloo ; Charity
-   Rialdo ; Roxana ; Celia ; Lord Corlagon ; Sister Eliza
-   Archibald ; Lord Halton ; Brother Brax ; Dainwin ; Mog
-   Uncle Ivan ; Joseph ; Gallavant ; Elderian ; Ceallach
-   Drakonia ; Martine ; Jarkonas ; Debug Hero
+| Tier | H2                        | H3                          |
+|------|---------------------------|-----------------------------|
+|      | Thundax                   | Yog ; Vey ; Drakon ; Rosic  |
+|      | Fineous                   | Gurnisson ; Dessa ; Wystan ; Voy |
+|      | Jojosh                    | Jabarkas ; Terek ; Tazar ; Verdish |
+|      | Crag Hack                 | Crag Hack                   |
+|      | Jezebel                   | Shiva ; Zubin ; Alkin ; Merist |
+|      | Jaclyn                    | Gretchin ; Gundula ; Korbac ; Styg |
+|      | Ergon                     | Krellion ; Oris ; Gerwulf ; Andra |
+|      | Tsabu                     | Tyraxor ; Saurug ; Broghild ; Tiva |
+|      | Atlas                     | Gird ; Bron ; Mirlanda      |
+
+   Sorceress heroes (H2) <-> Rampart/Conflux heroes (H3):
+
+| Tier | H2                        | H3                          |
+|------|---------------------------|-----------------------------|
+|      | Astra                     | Mephala ; Kyrre ; Aeris ; Fiur ; Gelare |
+|      | Natasha                   | Ufretin ; Coronius ; Pasis ; Kalt ; Grindan |
+|      | Troyan                    | Jenova ; Uland ; Thunar ; Brissa |
+|      | Vatawna                   | Ryland ; Elleshar ; Ignissa ; Ciele |
+|      | Rebecca                   | Thorgrim ; Malcom ; Lacus ; Labetha |
+|      | Gem                       | Gem                         |
+|      | Ariel                     | Ivor ; Melodia ; Monere ; Inteus |
+|      | Carlawn                   | Clancy ; Alagar ; Erdamon ; Aenain |
+|      | Luna                      | Luna                        |
+
+   Warlock heroes (H2) <-> Dungeon/Inferno heroes (H3):
+
+| Tier | H2                        | H3                          |
+|------|---------------------------|-----------------------------|
+|      | Arie                      | Fiona ; Ayden ; Lorelei ; Jaegar |
+|      | Alamar                    | Alamar                      |
+|      | Vesper                    | Rashka ; Xyron ; Arlach ; Malekith |
+|      | Crodo                     | Marius ; Axsis ; Dace ; Jeddite |
+|      | Barok                     | Ignatius ; Olema ; Ajit ; Geon |
+|      | Kastore                   | Octavia ; Calid ; Damacon ; Deemer |
+|      | Agar                      | Calh ; Ash ; Gunnar ; Sephinroth |
+|      | Falagar                   | Pyre ; Zydar ; Synca ; Darkstorn |
+|      | Wrathmont                 | Nymus ; Xarfax ; Shakti     |
+
+   Wizard heroes (H2) <-> Tower heroes (H3):
+
+| Tier | H2                        | H3                          |
+|------|---------------------------|-----------------------------|
+|      | Myra                      | Piquedram ; Astral          |
+|      | Flint                     | Thane ; Serena              |
+|      | Dawn                      | Josephine ; Daremyth        |
+|      | Halon                     | Halon                       |
+|      | Myrini                    | Neela ; Theodorus           |
+|      | Wilfrey                   | Torosar ; Cyra              |
+|      | Sarakin                   | Fafner ; Aine               |
+|      | Kalindra                  | Rissa                       |
+|      | Mandigal                  | Iona                        |
+
+   Necromancer heroes (H2) <-> Necropolis heroes (H3):
+
+| Tier | H2                        | H3                          |
+|------|---------------------------|-----------------------------|
+|      | Zom                       | Straker ; Septienna         |
+|      | Darlana                   | Vokial ; Aislinn            |
+|      | Zam                       | Moandor ; Nimbus            |
+|      | Ranloo                    | Charna ; Thant              |
+|      | Charity                   | Tamika ; Xsi                |
+|      | Rialdo                    | Isra ; Vidomina             |
+|      | Roxana                    | Clavius ; Nagash            |
+|      | Sandro                    | Sandro                      |
+|      | Celia                     | Galthran                    |
+
+   Campaign and expansion heroes (H2) <-> Heroes III counterparts:
+
+| Tier | H2                        | H3                          |
+|------|---------------------------|-----------------------------|
+|      | Roland                    | Roland                      |
+|      | Lord Corlagon             | UNDEFINE                    |
+|      | Sister Eliza              | UNDEFINE                    |
+|      | Archibald                 | UNDEFINE                    |
+|      | Lord Halton               | UNDEFINE                    |
+|      | Brother Brax              | UNDEFINE                    |
+|      | Solmyr                    | Solmyr                      |
+|      | Dainwin                   | UNDEFINE                    |
+|      | Mog                       | UNDEFINE                    |
+|      | Uncle Ivan                | UNDEFINE                    |
+|      | Joseph                    | UNDEFINE                    |
+|      | Gallavant                 | UNDEFINE                    |
+|      | Elderian                  | UNDEFINE                    |
+|      | Ceallach                  | UNDEFINE                    |
+|      | Drakonia                  | UNDEFINE                    |
+|      | Martine                   | UNDEFINE                    |
+|      | Jarkonas                  | UNDEFINE                    |
 
 ████████████████████████████████████████████████████████████████████████
 ██                            Artifacts                             ██
