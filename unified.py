@@ -18,6 +18,12 @@ from collections import OrderedDict
 from correspondence import (
     FH2M_ARTIFACT_NAMES,
     FH2M_RACE_DWELLING_MONSTERS,
+    H3M_ARTIFACT_NAMES,
+    H3M_CREATURE_NAMES,
+    H3M_HERO_NAMES,
+    H3M_PLAYER_COLOR_NAMES,
+    H3M_SECONDARY_SKILL_NAMES,
+    H3M_SPELL_NAMES,
     FH2M_RESOURCE_ORDER,
     FH2M_SPELL_SCROLL_ID,
     fh2m_portrait_name,
@@ -336,6 +342,86 @@ def convert_h3m_to_unified(map_data):
     return unified
 
 
+def _h3m_h3m_metadata_to_unified(kind, metadata):
+    """
+    Normalize one h3m object metadata entry into the unified schema.
+    The h3m metadata fields keep their raw values (the h3m round-trip
+    goes through Objects > Raw Data) and gain normalized names
+    resolved through the correspondence tables: creatures, heroes,
+    artifacts, spells, secondary skills and rewards.
+    """
+    entry = OrderedDict(metadata)
+
+    def name_creatures(creatures):
+        named = []
+        for slot in creatures or []:
+            creature_id = slot.get("creature")
+            named.append(OrderedDict([
+                ("creature", H3M_CREATURE_NAMES[creature_id]
+                 if creature_id is not None and creature_id < len(H3M_CREATURE_NAMES) else None),
+                ("sourceCreatureId", creature_id),
+                ("count", slot.get("count")),
+            ]))
+        return named
+
+    if kind == "garrisonMetadata":
+        entry["ownerName"] = H3M_PLAYER_COLOR_NAMES.get(entry.get("owner"))
+        entry["creaturesNamed"] = name_creatures(entry.get("creatures"))
+    elif kind == "townMetadata":
+        entry["ownerName"] = H3M_PLAYER_COLOR_NAMES.get(entry.get("owner"))
+        if entry.get("garrison") is not None:
+            entry["garrisonNamed"] = name_creatures(entry.get("garrison"))
+    elif kind == "heroMetadata":
+        hero_type = entry.get("type")
+        entry["typeName"] = (H3M_HERO_NAMES[hero_type]
+                             if hero_type is not None and hero_type < len(H3M_HERO_NAMES) else None)
+        entry["ownerName"] = H3M_PLAYER_COLOR_NAMES.get(entry.get("owner"))
+        if entry.get("skills") is not None:
+            entry["skillsNamed"] = [
+                OrderedDict([
+                    ("skill", H3M_SECONDARY_SKILL_NAMES.get(sk.get("id"), str(sk.get("id")))),
+                    ("sourceSkillId", sk.get("id")),
+                    ("level", sk.get("level")),
+                ])
+                for sk in entry["skills"]
+            ]
+    elif kind == "shrineMetadata":
+        spell = entry.get("spell")
+        entry["spellName"] = (H3M_SPELL_NAMES[spell]
+                              if spell is not None and spell < len(H3M_SPELL_NAMES) else None)
+    elif kind == "witchhutMetadata":
+        entry["skillName"] = H3M_SECONDARY_SKILL_NAMES.get(entry.get("skill"), str(entry.get("skill")))
+    elif kind == "scholarMetadata":
+        reward_names = {0: "primary skill", 1: "secondary skill", 2: "spell", 255: "random"}
+        entry["rewardTypeName"] = reward_names.get(entry.get("rewardType"), str(entry.get("rewardType")))
+    elif kind == "seerMetadata":
+        quest_artifact = entry.get("questArtifact")
+        if quest_artifact is not None and quest_artifact < len(H3M_ARTIFACT_NAMES):
+            entry["questArtifactName"] = H3M_ARTIFACT_NAMES[quest_artifact]
+        quest = entry.get("quest")
+        if quest and quest.get("artifacts"):
+            quest["artifactNames"] = [
+                H3M_ARTIFACT_NAMES[a] if a < len(H3M_ARTIFACT_NAMES) else str(a)
+                for a in quest["artifacts"]
+            ]
+        reward = entry.get("reward")
+        if reward:
+            artifact = reward.get("artifact")
+            if artifact is not None and artifact < len(H3M_ARTIFACT_NAMES):
+                reward["artifactName"] = H3M_ARTIFACT_NAMES[artifact]
+            spell = reward.get("spell")
+            if spell is not None and spell < len(H3M_SPELL_NAMES):
+                reward["spellName"] = H3M_SPELL_NAMES[spell]
+            creature = reward.get("creature")
+            if creature is not None and creature < len(H3M_CREATURE_NAMES):
+                reward["creatureName"] = H3M_CREATURE_NAMES[creature]
+    elif kind == "eventMetadata":
+        artifact = entry.get("artifact")
+        if artifact is not None and artifact < len(H3M_ARTIFACT_NAMES):
+            entry["artifactName"] = H3M_ARTIFACT_NAMES[artifact]
+    return entry
+
+
 def _h3m_objects_to_unified(map_data):
     """
     Convert the decoded h3m object instances into the unified objects
@@ -378,7 +464,7 @@ def _h3m_objects_to_unified(map_data):
         cleaned = OrderedDict()
         for obj_id, value in value_map.items():
             if int(obj_id) not in dropped_set:
-                cleaned[obj_id] = value
+                cleaned[obj_id] = _h3m_h3m_metadata_to_unified(key, value)
         if cleaned:
             metadata[key] = cleaned
 

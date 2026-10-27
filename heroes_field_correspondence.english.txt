@@ -339,7 +339,22 @@ List for H3M (no unified equivalent yet):
 - Allowed Spells > Bitfield
 - Allowed Abilities > Bitfield
 - Reserved Bytes
-- Hero Settings (predefined hero settings, skipped by h3decoder.py)
+
+The h3m metadata maps are carried into the unified format with
+normalized names resolved from the correspondence tables (the raw
+values stay for the h3m round-trip, which goes through the raw
+object section bytes):
+- townMetadata ownerName, garrisonNamed[] (creature names)
+- garrisonMetadata ownerName, creaturesNamed[]
+- heroMetadata typeName, ownerName, skillsNamed[]
+- shrineMetadata spellName
+- witchhutMetadata skillName
+- scholarMetadata rewardTypeName
+- seerMetadata questArtifactName, quest artifactNames[],
+  reward artifactName / spellName / creatureName
+- eventMetadata artifactName
+The remaining h3m fields stay raw (building and spell bitfields,
+quest messages, garrison canTake, event players flags).
 
 
    Cross-format object translation (h3m -> fh2m, main.py --target fh2m):
