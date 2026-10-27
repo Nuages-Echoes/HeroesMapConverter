@@ -18,6 +18,8 @@ from collections import OrderedDict
 from correspondence import (
     FH2M_ARTIFACT_NAMES,
     FH2M_RESOURCE_ORDER,
+    FH2M_SPELL_SCROLL_ID,
+    fh2m_race_name,
     fh2m_artifact_name,
     fh2m_building_name,
     fh2m_join_condition_name,
@@ -1224,15 +1226,35 @@ def _fh2m_metadata_to_unified(kind, metadata):
             for skill, level in zip(metadata.get("secondarySkill", []),
                                      metadata.get("secondarySkillLevel", []))
         ]
+        entry["primarySkills"] = OrderedDict([
+            ("attack", metadata.get("customAttack")),
+            ("defense", metadata.get("customDefense")),
+            ("knowledge", metadata.get("customKnowledge")),
+            ("spellPower", metadata.get("customSpellPower")),
+        ])
+        entry["isOnPatrolName"] = bool(metadata.get("isOnPatrol"))
+        entry["raceName"] = fh2m_race_name(metadata.get("raceId", 0))
     elif kind == "sphinxMetadata":
         entry["artifactName"] = fh2m_artifact_name(metadata.get("artifact", 0))
+        if metadata.get("artifact") == FH2M_SPELL_SCROLL_ID:
+            entry["artifactMetadataName"] = fh2m_spell_name(metadata.get("artifactMetadata", 0))
     elif kind == "adventureMapEventMetadata":
         entry["artifactName"] = fh2m_artifact_name(metadata.get("artifact", 0))
+        if metadata.get("artifact") == FH2M_SPELL_SCROLL_ID:
+            entry["artifactMetadataName"] = fh2m_spell_name(metadata.get("artifactMetadata", 0))
         entry["secondarySkillName"] = fh2m_secondary_skill_name(metadata.get("secondarySkill", 0))
         entry["secondarySkillLevelName"] = fh2m_skill_level_name(metadata.get("secondarySkillLevel", 0))
         entry["monsterName"] = fh2m_monster_name(metadata.get("monsterType", 0))
+        entry["primarySkillBonus"] = OrderedDict([
+            ("attack", metadata.get("attack", 0)),
+            ("defense", metadata.get("defense", 0)),
+            ("knowledge", metadata.get("knowledge", 0)),
+            ("spellPower", metadata.get("spellPower", 0)),
+        ])
     elif kind == "monsterMetadata":
         entry["joinConditionName"] = fh2m_join_condition_name(metadata.get("joinCondition", 0))
+    elif kind == "artifactMetadata":
+        entry["selectedNames"] = [fh2m_artifact_name(item) for item in metadata.get("selected", [])]
     return entry
 
 
@@ -1254,9 +1276,15 @@ def _unified_metadata_to_fh2m(kind, entry):
     metadata.pop("availableSpellNames", None)
     metadata.pop("secondarySkills", None)
     metadata.pop("artifactName", None)
+    metadata.pop("artifactMetadataName", None)
     metadata.pop("secondarySkillName", None)
     metadata.pop("secondarySkillLevelName", None)
     metadata.pop("monsterName", None)
+    metadata.pop("primarySkillBonus", None)
+    metadata.pop("primarySkills", None)
+    metadata.pop("isOnPatrolName", None)
+    metadata.pop("raceName", None)
+    metadata.pop("selectedNames", None)
     metadata.pop("joinConditionName", None)
     return metadata
 

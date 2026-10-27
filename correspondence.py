@@ -378,6 +378,31 @@ def fh2m_building_name(building_id):
     return FH2M_BUILDING_NAMES.get(building_id)
 
 
+# fheroes2 Race bit flags (src/fheroes2/kingdom/race.h), used by the
+# fh2m heroMetadata race field.
+FH2M_RACE_FLAGS = {
+    0x00: "None",
+    0x01: "Knight",
+    0x02: "Barbarian",
+    0x04: "Sorceress",
+    0x08: "Warlock",
+    0x10: "Wizard",
+    0x20: "Necromancer",
+    0x40: "Multiple",
+    0x80: "Random",
+}
+
+
+# fheroes2 id of the Spell Scroll artifact: only this artifact carries
+# a spell in its metadata.
+FH2M_SPELL_SCROLL_ID = 88
+
+
+def fh2m_race_name(race_id):
+    """Name of an fh2m race bit flag value, or None when unknown."""
+    return FH2M_RACE_FLAGS.get(race_id)
+
+
 def fh2m_monster_name(monster_id):
     """Name of a fh2m monster id, or None when out of range."""
     if 0 <= monster_id < len(FH2M_MONSTER_NAMES):

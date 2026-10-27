@@ -300,15 +300,21 @@ from the identifier tables in correspondence.py:
   mustHaveSpellNames / bannedSpellNames (spells)
 - heroMetadata army[] (monster, sourceMonsterId, count),
   artifactNames, availableSpellNames, secondarySkills[] (skill,
-  sourceSkillId, level, sourceLevelId)
-- sphinxMetadata artifactName
-- adventureMapEventMetadata artifactName, secondarySkillName,
-  secondarySkillLevelName, monsterName
+  sourceSkillId, level, sourceLevelId), primarySkills (attack,
+  defense, knowledge, spellPower), raceName (race bit flags)
+- sphinxMetadata artifactName, artifactMetadataName (spell of the
+  Spell Scroll reward, when the artifact is a Spell Scroll)
+- adventureMapEventMetadata artifactName, artifactMetadataName (Spell
+  Scroll spell), secondarySkillName, secondarySkillLevelName,
+  monsterName, primarySkillBonus (attack, defense, knowledge,
+  spellPower)
 - monsterMetadata joinConditionName
+- artifactMetadata selectedNames (artifacts or spells of the random
+  artifact / Spell Scroll selections)
 The remaining raw fh2m fields have no readable-name equivalent yet
-(hero portraits, patrol, experience, primary skills, mana, event
-rewards beyond the named ones, capturable owner beyond the color,
-artifact radius/captureCondition/selected).
+(hero portraits, patrol radius, experience, level, mana, castle
+hiring counts, capturable owner beyond the color, artifact
+radius/captureCondition, selectionObjectMetadata selectedItems).
 
 List for H3M (no unified equivalent yet):
 - Basic Parameters > Heroes Mastery Level Cap
