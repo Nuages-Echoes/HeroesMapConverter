@@ -80,9 +80,9 @@ Values used in the unified JSON format and their equivalents in .fh2m and .h3m
 | "Warlock"    | "Warlock" (index 4, Race::WRLK 0x08)       | "Dungeon"    |
 | "Wizard"     | "Wizard" (index 5, Race::WZRD 0x10)        | "Tower"      |
 | "Necromancer"| "Necromancer" (index 6, Race::NECR 0x20)    | "Necropolis" |
-| "Inferno"     | UNDEFINE (no Heroes II race equivalent)   | "Inferno"    |
-| "Fortress"    | UNDEFINE (no Heroes II race equivalent)   | "Fortress"    |
-| "Conflux"    | UNDEFINE (no Heroes II race equivalent)   | "Conflux"    |
+| "Inferno"     | "Warlock" (index 4, Race::WRLK 0x08)       | "Inferno"    |
+| "Fortress"    | "Barbarian" (index 2, Race::BARB 0x02)     | "Fortress"    |
+| "Conflux"    | "Sorceress" (index 3, Race::SORC 0x04)     | "Conflux"    |
 
    H3M "Multiple" (several owned town types) and FH2M "Unknown"
    (undocumented race code) have no unified value: they only appear in
