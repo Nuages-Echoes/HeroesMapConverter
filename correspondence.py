@@ -631,6 +631,30 @@ FH2M_TO_H3M_SPELLS = {
     5: 63,   # Teleport <- Teleport
 }
 
+# h3m town type (subclass of the town object, 0-8; -1 for a random
+# town) -> fh2m town race, following the validated faction pairings:
+# Castle->Knight, Rampart/Conflux->Sorceress, Tower->Wizard,
+# Inferno/Dungeon->Warlock, Necropolis->Necromancer,
+# Stronghold/Fortress->Barbarian. The fh2m KINGDOM_TOWNS object index
+# is race * 2 (castle) or race * 2 + 1 (town), the fheroes2 race
+# order being Knight, Barbarian, Sorceress, Warlock, Wizard,
+# Necromancer (see map_object_info.cpp, populateKingdomTowns).
+H3M_TOWN_TYPE_TO_FH2M_RACE = {
+    0: "Knight",       # Castle
+    1: "Sorceress",    # Rampart
+    2: "Wizard",       # Tower
+    3: "Warlock",      # Inferno
+    4: "Necromancer",  # Necropolis
+    5: "Warlock",      # Dungeon
+    6: "Barbarian",    # Stronghold
+    7: "Barbarian",    # Fortress
+    8: "Sorceress",    # Conflux
+}
+
+FH2M_TOWN_RACE_ORDER = ["Knight", "Barbarian", "Sorceress", "Warlock",
+                        "Wizard", "Necromancer"]
+
+
 # Heroes III player colors, in the file order (owner byte of the
 # town, garrison and hero objects; 255 means neutral).
 H3M_PLAYER_COLOR_NAMES = {
