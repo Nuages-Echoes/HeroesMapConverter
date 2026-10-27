@@ -631,6 +631,25 @@ FH2M_TO_H3M_SPELLS = {
     5: 63,   # Teleport <- Teleport
 }
 
+# Heroes III player colors, in the file order (owner byte of the
+# town, garrison and hero objects; 255 means neutral).
+H3M_PLAYER_COLOR_NAMES = {
+    0: "Red", 1: "Blue", 2: "Tan", 3: "Green",
+    4: "Orange", 5: "Purple", 6: "Teal", 7: "Pink",
+    255: None,
+}
+
+# Heroes III secondary skills, in the SECSKILL.TXT order (h3m ids).
+H3M_SECONDARY_SKILL_NAMES = [
+    "Pathfinding", "Archery", "Logistics", "Scouting", "Diplomacy",
+    "Navigation", "Leadership", "Wisdom", "Mysticism", "Luck",
+    "Ballistics", "Eagle Eye", "Necromancy", "Estates", "Fire Magic",
+    "Air Magic", "Water Magic", "Earth Magic", "Scholar", "Tactics",
+    "Artillery", "Learning", "Offence", "Armorer", "Intelligence",
+    "Sorcery", "Resistance", "First Aid",
+]
+
+
 # Heroes III hero identifiers, in the game order used by the h3m
 # files (Hero Settings section: 156 entries, one per hero).
 H3M_HERO_NAMES = [
