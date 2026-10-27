@@ -809,8 +809,10 @@ def _translate_h3m_tile_objects(obj_list, objects_section, translated_metadata,
 
     Returns the list of translated objects for the tile.
     """
-    from correspondence import (H3M_RANDOM_MONSTER_CLASSES,
+    from correspondence import (H3M_HERO_NAMES,
+                                  H3M_RANDOM_MONSTER_CLASSES,
                                   H3M_TO_FH2M_ARTIFACTS,
+                                  H3M_TO_FH2M_HEROES,
                                   H3M_TO_FH2M_MONSTERS)
 
     translated = []
@@ -838,12 +840,17 @@ def _translate_h3m_tile_objects(obj_list, objects_section, translated_metadata,
                 ("group", "MONSTERS"),
                 ("index", fh2m_monster - 1),
             ]))
-            translated_metadata.setdefault("monsterMetadata", OrderedDict())[str(obj_id)] = OrderedDict([
+            fh2m_monster_entry = OrderedDict([
                 ("count", monster_meta.get("count") or 0),
                 ("joinCondition", 0),
                 ("isWeeklyGrowthDisabled", False),
                 ("selected", []),
             ])
+            if monster_meta.get("message"):
+                fh2m_monster_entry["message"] = monster_meta["message"]
+            if monster_meta.get("resources"):
+                fh2m_monster_entry["resources"] = OrderedDict(monster_meta["resources"])
+            translated_metadata.setdefault("monsterMetadata", OrderedDict())[str(obj_id)] = fh2m_monster_entry
         elif group == "ADVENTURE_TREASURES":
             resource_meta = (objects_section.get("resourceMetadata") or {}).get(str(obj_id)) or {}
             resource = resource_meta.get("resource")
@@ -862,7 +869,18 @@ def _translate_h3m_tile_objects(obj_list, objects_section, translated_metadata,
             artifact_meta = (objects_section.get("artifactMetadata") or {}).get(str(obj_id)) or {}
             artifact = artifact_meta.get("artifact")
             if artifact is None:
-                dropped_ids.append(obj_id)
+                # Random artifact: fh2m random artifacts follow the
+                # regular ones in the ADVENTURE_ARTIFACTS group.
+                translated.append(OrderedDict([
+                    ("id", obj_id),
+                    ("group", "ADVENTURE_ARTIFACTS"),
+                    ("index", 74),
+                ]))
+                translated_metadata.setdefault("artifactMetadata", OrderedDict())[str(obj_id)] = OrderedDict([
+                    ("radius", 0),
+                    ("captureCondition", 0),
+                    ("selected", []),
+                ])
                 continue
             fh2m_artifact = H3M_TO_FH2M_ARTIFACTS.get(artifact, -1)
             if fh2m_artifact < 1:
@@ -901,6 +919,72 @@ def _translate_h3m_tile_objects(obj_list, objects_section, translated_metadata,
                 ("index", 0),
             ]))
             translated_metadata.setdefault("castleMetadata", OrderedDict())[str(obj_id)] = _h3m_town_to_fh2m_castle(town_meta)
+        elif group == "KINGDOM_HEROES":
+            hero_meta = (objects_section.get("heroMetadata") or {}).get(str(obj_id)) or {}
+            owner = hero_meta.get("owner")
+            hero_type = hero_meta.get("type")
+            if owner is None or owner >= len(FH2M_PLAYER_COLORS) or hero_type is None:
+                # Random or unsupported hero: keep the color only when
+                # possible, otherwise drop.
+                if owner is not None and owner < len(FH2M_PLAYER_COLORS):
+                    color_id = FH2M_PLAYER_COLORS.index(
+                        FH2M_PLAYER_COLORS[owner]) if False else owner
+                else:
+                    dropped_ids.append(obj_id)
+                    continue
+                hero_type = 0
+            fh2m_hero = H3M_TO_FH2M_HEROES.get(hero_type)
+            if fh2m_hero is None:
+                dropped_ids.append(obj_id)
+                continue
+            fh2m_race_id = _fh2m_hero_race_id(fh2m_hero)
+            if fh2m_race_id is None:
+                dropped_ids.append(obj_id)
+                continue
+            color_id = owner if owner < len(FH2M_PLAYER_COLORS) else 0
+            translated.append(OrderedDict([
+                ("id", obj_id),
+                ("group", "KINGDOM_HEROES"),
+                ("index", color_id * 7 + fh2m_race_id),
+            ]))
+            hero_entry = OrderedDict([
+                ("customName", H3M_HERO_NAMES[hero_type] if hero_type < len(H3M_HERO_NAMES) else ""),
+                ("customPortrait", 0),
+                ("armyMonsterType", [0, 0, 0, 0, 0]),
+                ("armyMonsterCount", [0, 0, 0, 0, 0]),
+                ("artifacts", [0] * 14),
+                ("artifactMetadata", [0] * 14),
+                ("availableSpells", []),
+                ("isOnPatrol", False),
+                ("patrolRadius", 0),
+                ("secondarySkill", [0] * 8),
+                ("secondarySkillLevel", [0] * 8),
+                ("customLevel", -1),
+                ("customExperience", -1),
+                ("customAttack", -1),
+                ("customDefense", -1),
+                ("customKnowledge", -1),
+                ("customSpellPower", -1),
+                ("magicPoints", -1),
+                ("raceId", 0x01 << (fh2m_race_id - 1) if 1 <= fh2m_race_id <= 6 else 0),
+            ])
+            translated_metadata.setdefault("heroMetadata", OrderedDict())[str(obj_id)] = hero_entry
+        elif group in ("ADVENTURE_MINES", "ADVENTURE_DWELLINGS"):
+            ownable_meta = (objects_section.get("ownableMetadata") or {}).get(str(obj_id)) or {}
+            owner = ownable_meta.get("owner")
+            owner_names = []
+            if owner is not None and 0 <= owner < 8:
+                h3m_colors = ["Red", "Blue", "Tan", "Green", "Orange", "Purple", "Teal", "Pink"]
+                if owner < 6 and h3m_colors[owner] in FH2M_PLAYER_COLORS:
+                    owner_names = [h3m_colors[owner]]
+            translated.append(OrderedDict([
+                ("id", obj_id),
+                ("group", group),
+                ("index", 0),
+            ]))
+            translated_metadata.setdefault("capturableObjectsMetadata", OrderedDict())[str(obj_id)] = OrderedDict([
+                ("ownerColor", owner_names),
+            ])
         elif group == "ADVENTURE_MISCELLANEOUS":
             sign_meta = (objects_section.get("signMetadata") or {}).get(str(obj_id))
             if sign_meta:
@@ -917,6 +1001,28 @@ def _translate_h3m_tile_objects(obj_list, objects_section, translated_metadata,
         else:
             dropped_ids.append(obj_id)
     return translated
+
+
+def _fh2m_hero_race_id(fh2m_hero_id):
+    """
+    Race id (0-6, the fh2m playerRace encoding) of a regular Heroes II
+    hero: Knight 1-9, Barbarian 10-18, Sorceress 19-27, Warlock 28-36,
+    Wizard 37-45, Necromancer 46-54. Returns None for campaign and
+    debug heroes.
+    """
+    if 1 <= fh2m_hero_id <= 9:
+        return 1
+    if 10 <= fh2m_hero_id <= 18:
+        return 2
+    if 19 <= fh2m_hero_id <= 27:
+        return 3
+    if 28 <= fh2m_hero_id <= 36:
+        return 4
+    if 37 <= fh2m_hero_id <= 45:
+        return 5
+    if 46 <= fh2m_hero_id <= 54:
+        return 6
+    return None
 
 
 def _h3m_town_to_fh2m_castle(town_meta):

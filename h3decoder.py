@@ -1046,9 +1046,20 @@ def parse_h3m_objects(raw_objects, level_ab, level_sod, artifact_id_bytes,
             has_treasure = safe_read(buffer, 1)[0]
             if has_treasure:
                 msg_len = struct.unpack('<i', safe_read(buffer, 4))[0]
-                safe_read(buffer, msg_len)
-                safe_read(buffer, 4 * 7)  # resources
-                safe_read(buffer, artifact_id_bytes)
+                monster_metadata[str(object_id)]['message'] = read_string(buffer, msg_len)
+                resources = struct.unpack('<7i', safe_read(buffer, 4 * 7))
+                monster_metadata[str(object_id)]['resources'] = OrderedDict([
+                    ('wood', resources[0]), ('mercury', resources[1]),
+                    ('ore', resources[2]), ('sulfur', resources[3]),
+                    ('crystal', resources[4]), ('gems', resources[5]),
+                    ('gold', resources[6]),
+                ])
+                artifact_data = safe_read(buffer, artifact_id_bytes)
+                if len(artifact_data) < artifact_id_bytes:
+                    break
+                artifact = struct.unpack('<H' if artifact_id_bytes == 2 else '<B', artifact_data)[0]
+                monster_metadata[str(object_id)]['artifact'] = (
+                    None if artifact in (0xFFFF, 0xFF) else artifact)
             safe_read(buffer, 4)  # canFlee/canGrow + 2 unknown
         elif kind_name == 'resource':
             # Guarded object: an optional guard comes first.
