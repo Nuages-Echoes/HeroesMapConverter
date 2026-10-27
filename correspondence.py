@@ -870,29 +870,223 @@ FH2M_HERO_NAMES = [
     'Debug Hero',
 ]
 
-# h3m hero id -> fh2m hero id, matched by name: only the heroes
-# carried over from Heroes II to Heroes III share their name.
+# h3m hero id -> fh2m hero id: the heroes sharing their name match
+# by name (Gem, Halon, Solmyr, Sandro, Alamar, Crag Hack, Luna,
+# Roland); the others are paired within their faction
+# (Castle->Knight, Stronghold/Fortress->Barbarian,
+# Rampart/Conflux->Sorceress, Tower->Wizard,
+# Dungeon/Inferno->Warlock, Necropolis->Necromancer),
+# round-robin in the game order. Campaign heroes and the
+# Debug Hero have no equivalent.
 H3M_TO_FH2M_HEROES = {
-    27: 24,  # Gem -> Gem
-    41: 40,  # Halon -> Halon
-    45: 61,  # Solmyr -> Solmyr
-    74: 53,  # Sandro -> Sandro
-    88: 29,  # Alamar -> Alamar
-    102: 13,  # Crag Hack -> Crag Hack
-    136: 27,  # Luna -> Luna
-    152: 55,  # Roland -> Roland
+    0: 1,  # Orrin -> Lord Kilburn (faction pairing)
+    1: 2,  # Valeska -> Sir Gallant (faction pairing)
+    2: 3,  # Edric -> Ector (faction pairing)
+    3: 4,  # Sylvia -> Gwenneth (faction pairing)
+    4: 5,  # Lord Haart -> Tyro (faction pairing)
+    5: 6,  # Sorsha -> Ambrose (faction pairing)
+    6: 7,  # Christian -> Ruby (faction pairing)
+    7: 8,  # Tyris -> Maximus (faction pairing)
+    8: 9,  # Rion -> Dimitry (faction pairing)
+    9: 1,  # Adela -> Lord Kilburn (faction pairing)
+    10: 2,  # Cuthbert -> Sir Gallant (faction pairing)
+    11: 3,  # Adelaide -> Ector (faction pairing)
+    12: 4,  # Ingham -> Gwenneth (faction pairing)
+    13: 5,  # Sanya -> Tyro (faction pairing)
+    14: 6,  # Loynis -> Ambrose (faction pairing)
+    15: 7,  # Caitlin -> Ruby (faction pairing)
+    16: 19,  # Mephala -> Astra (faction pairing)
+    17: 20,  # Ufretin -> Natasha (faction pairing)
+    18: 21,  # Jenova -> Troyan (faction pairing)
+    19: 22,  # Ryland -> Vatawna (faction pairing)
+    20: 23,  # Thorgrim -> Rebecca (faction pairing)
+    21: 25,  # Ivor -> Ariel (faction pairing)
+    22: 26,  # Clancy -> Carlawn (faction pairing)
+    23: 19,  # Kyrre -> Astra (faction pairing)
+    24: 20,  # Coronius -> Natasha (faction pairing)
+    25: 21,  # Uland -> Troyan (faction pairing)
+    26: 22,  # Elleshar -> Vatawna (faction pairing)
+    27: 24,  # Gem -> Gem (name match)
+    28: 23,  # Malcom -> Rebecca (faction pairing)
+    29: 25,  # Melodia -> Ariel (faction pairing)
+    30: 26,  # Alagar -> Carlawn (faction pairing)
+    31: 19,  # Aeris -> Astra (faction pairing)
+    32: 37,  # Piquedram -> Myra (faction pairing)
+    33: 38,  # Thane -> Flint (faction pairing)
+    34: 39,  # Josephine -> Dawn (faction pairing)
+    35: 41,  # Neela -> Myrini (faction pairing)
+    36: 42,  # Torosar -> Wilfrey (faction pairing)
+    37: 43,  # Fafner -> Sarakin (faction pairing)
+    38: 44,  # Rissa -> Kalindra (faction pairing)
+    39: 45,  # Iona -> Mandigal (faction pairing)
+    40: 37,  # Astral -> Myra (faction pairing)
+    41: 40,  # Halon -> Halon (name match)
+    42: 38,  # Serena -> Flint (faction pairing)
+    43: 39,  # Daremyth -> Dawn (faction pairing)
+    44: 41,  # Theodorus -> Myrini (faction pairing)
+    45: 61,  # Solmyr -> Solmyr (name match)
+    46: 42,  # Cyra -> Wilfrey (faction pairing)
+    47: 43,  # Aine -> Sarakin (faction pairing)
+    48: 28,  # Fiona -> Arie (faction pairing)
+    49: 30,  # Rashka -> Vesper (faction pairing)
+    50: 31,  # Marius -> Crodo (faction pairing)
+    51: 32,  # Ignatius -> Barok (faction pairing)
+    52: 33,  # Octavia -> Kastore (faction pairing)
+    53: 34,  # Calh -> Agar (faction pairing)
+    54: 35,  # Pyre -> Falagar (faction pairing)
+    55: 36,  # Nymus -> Wrathmont (faction pairing)
+    56: 28,  # Ayden -> Arie (faction pairing)
+    57: 30,  # Xyron -> Vesper (faction pairing)
+    58: 31,  # Axsis -> Crodo (faction pairing)
+    59: 32,  # Olema -> Barok (faction pairing)
+    60: 33,  # Calid -> Kastore (faction pairing)
+    61: 34,  # Ash -> Agar (faction pairing)
+    62: 35,  # Zydar -> Falagar (faction pairing)
+    63: 36,  # Xarfax -> Wrathmont (faction pairing)
+    64: 46,  # Straker -> Zom (faction pairing)
+    65: 47,  # Vokial -> Darlana (faction pairing)
+    66: 48,  # Moandor -> Zam (faction pairing)
+    67: 49,  # Charna -> Ranloo (faction pairing)
+    68: 50,  # Tamika -> Charity (faction pairing)
+    69: 51,  # Isra -> Rialdo (faction pairing)
+    70: 52,  # Clavius -> Roxana (faction pairing)
+    71: 54,  # Galthran -> Celia (faction pairing)
+    72: 46,  # Septienna -> Zom (faction pairing)
+    73: 47,  # Aislinn -> Darlana (faction pairing)
+    74: 53,  # Sandro -> Sandro (name match)
+    75: 48,  # Nimbus -> Zam (faction pairing)
+    76: 49,  # Thant -> Ranloo (faction pairing)
+    77: 50,  # Xsi -> Charity (faction pairing)
+    78: 51,  # Vidomina -> Rialdo (faction pairing)
+    79: 52,  # Nagash -> Roxana (faction pairing)
+    80: 28,  # Lorelei -> Arie (faction pairing)
+    81: 30,  # Arlach -> Vesper (faction pairing)
+    82: 31,  # Dace -> Crodo (faction pairing)
+    83: 32,  # Ajit -> Barok (faction pairing)
+    84: 33,  # Damacon -> Kastore (faction pairing)
+    85: 34,  # Gunnar -> Agar (faction pairing)
+    86: 35,  # Synca -> Falagar (faction pairing)
+    87: 36,  # Shakti -> Wrathmont (faction pairing)
+    88: 29,  # Alamar -> Alamar (name match)
+    89: 28,  # Jaegar -> Arie (faction pairing)
+    90: 30,  # Malekith -> Vesper (faction pairing)
+    91: 31,  # Jeddite -> Crodo (faction pairing)
+    92: 32,  # Geon -> Barok (faction pairing)
+    93: 33,  # Deemer -> Kastore (faction pairing)
+    94: 34,  # Sephinroth -> Agar (faction pairing)
+    95: 35,  # Darkstorn -> Falagar (faction pairing)
+    96: 10,  # Yog -> Thundax (faction pairing)
+    97: 11,  # Gurnisson -> Fineous (faction pairing)
+    98: 12,  # Jabarkas -> Jojosh (faction pairing)
+    99: 14,  # Shiva -> Jezebel (faction pairing)
+    100: 15,  # Gretchin -> Jaclyn (faction pairing)
+    101: 16,  # Krellion -> Ergon (faction pairing)
+    102: 13,  # Crag Hack -> Crag Hack (name match)
+    103: 17,  # Tyraxor -> Tsabu (faction pairing)
+    104: 18,  # Gird -> Atlas (faction pairing)
+    105: 10,  # Vey -> Thundax (faction pairing)
+    106: 11,  # Dessa -> Fineous (faction pairing)
+    107: 12,  # Terek -> Jojosh (faction pairing)
+    108: 14,  # Zubin -> Jezebel (faction pairing)
+    109: 15,  # Gundula -> Jaclyn (faction pairing)
+    110: 16,  # Oris -> Ergon (faction pairing)
+    111: 17,  # Saurug -> Tsabu (faction pairing)
+    112: 18,  # Bron -> Atlas (faction pairing)
+    113: 10,  # Drakon -> Thundax (faction pairing)
+    114: 11,  # Wystan -> Fineous (faction pairing)
+    115: 12,  # Tazar -> Jojosh (faction pairing)
+    116: 14,  # Alkin -> Jezebel (faction pairing)
+    117: 15,  # Korbac -> Jaclyn (faction pairing)
+    118: 16,  # Gerwulf -> Ergon (faction pairing)
+    119: 17,  # Broghild -> Tsabu (faction pairing)
+    120: 18,  # Mirlanda -> Atlas (faction pairing)
+    121: 10,  # Rosic -> Thundax (faction pairing)
+    122: 11,  # Voy -> Fineous (faction pairing)
+    123: 12,  # Verdish -> Jojosh (faction pairing)
+    124: 14,  # Merist -> Jezebel (faction pairing)
+    125: 15,  # Styg -> Jaclyn (faction pairing)
+    126: 16,  # Andra -> Ergon (faction pairing)
+    127: 17,  # Tiva -> Tsabu (faction pairing)
+    128: 20,  # Pasis -> Natasha (faction pairing)
+    129: 21,  # Thunar -> Troyan (faction pairing)
+    130: 22,  # Ignissa -> Vatawna (faction pairing)
+    131: 23,  # Lacus -> Rebecca (faction pairing)
+    132: 25,  # Monere -> Ariel (faction pairing)
+    133: 26,  # Erdamon -> Carlawn (faction pairing)
+    134: 19,  # Fiur -> Astra (faction pairing)
+    135: 20,  # Kalt -> Natasha (faction pairing)
+    136: 27,  # Luna -> Luna (name match)
+    137: 21,  # Brissa -> Troyan (faction pairing)
+    138: 22,  # Ciele -> Vatawna (faction pairing)
+    139: 23,  # Labetha -> Rebecca (faction pairing)
+    140: 25,  # Inteus -> Ariel (faction pairing)
+    141: 26,  # Aenain -> Carlawn (faction pairing)
+    142: 19,  # Gelare -> Astra (faction pairing)
+    143: 20,  # Grindan -> Natasha (faction pairing)
+    152: 55,  # Roland -> Roland (name match)
 }
 
-# fh2m hero id -> h3m hero id (inverse for the matched heroes).
+# fh2m hero id -> h3m hero id (inverse for the paired heroes:
+# the preimage is the first Heroes III hero in the game order
+# pointing to the Heroes II hero). Campaign heroes and the
+# Debug Hero have no equivalent.
 FH2M_TO_H3M_HEROES = {
-    13: 102,  # Crag Hack -> crag Hack
-    24: 27,  # Gem -> gem
-    27: 136,  # Luna -> luna
-    29: 88,  # Alamar -> alamar
-    40: 41,  # Halon -> halon
-    53: 74,  # Sandro -> sandro
-    55: 152,  # Roland -> roland
-    61: 45,  # Solmyr -> solmyr
+    1: 0,  # Lord Kilburn <- Orrin
+    2: 1,  # Sir Gallant <- Valeska
+    3: 2,  # Ector <- Edric
+    4: 3,  # Gwenneth <- Sylvia
+    5: 4,  # Tyro <- Lord Haart
+    6: 5,  # Ambrose <- Sorsha
+    7: 6,  # Ruby <- Christian
+    8: 7,  # Maximus <- Tyris
+    9: 8,  # Dimitry <- Rion
+    10: 96,  # Thundax <- Yog
+    11: 97,  # Fineous <- Gurnisson
+    12: 98,  # Jojosh <- Jabarkas
+    13: 102,  # Crag Hack <- Crag Hack
+    14: 99,  # Jezebel <- Shiva
+    15: 100,  # Jaclyn <- Gretchin
+    16: 101,  # Ergon <- Krellion
+    17: 103,  # Tsabu <- Tyraxor
+    18: 104,  # Atlas <- Gird
+    19: 16,  # Astra <- Mephala
+    20: 17,  # Natasha <- Ufretin
+    21: 18,  # Troyan <- Jenova
+    22: 19,  # Vatawna <- Ryland
+    23: 20,  # Rebecca <- Thorgrim
+    24: 27,  # Gem <- Gem
+    25: 21,  # Ariel <- Ivor
+    26: 22,  # Carlawn <- Clancy
+    27: 136,  # Luna <- Luna
+    28: 48,  # Arie <- Fiona
+    29: 88,  # Alamar <- Alamar
+    30: 49,  # Vesper <- Rashka
+    31: 50,  # Crodo <- Marius
+    32: 51,  # Barok <- Ignatius
+    33: 52,  # Kastore <- Octavia
+    34: 53,  # Agar <- Calh
+    35: 54,  # Falagar <- Pyre
+    36: 55,  # Wrathmont <- Nymus
+    37: 32,  # Myra <- Piquedram
+    38: 33,  # Flint <- Thane
+    39: 34,  # Dawn <- Josephine
+    40: 41,  # Halon <- Halon
+    41: 35,  # Myrini <- Neela
+    42: 36,  # Wilfrey <- Torosar
+    43: 37,  # Sarakin <- Fafner
+    44: 38,  # Kalindra <- Rissa
+    45: 39,  # Mandigal <- Iona
+    46: 64,  # Zom <- Straker
+    47: 65,  # Darlana <- Vokial
+    48: 66,  # Zam <- Moandor
+    49: 67,  # Ranloo <- Charna
+    50: 68,  # Charity <- Tamika
+    51: 69,  # Rialdo <- Isra
+    52: 70,  # Roxana <- Clavius
+    53: 74,  # Sandro <- Sandro
+    54: 71,  # Celia <- Galthran
+    55: 152,  # Roland <- Roland
+    61: 45,  # Solmyr <- Solmyr
 }
 
 # Heroes III artifact identifiers, in the ARTIFACT.TXT order used by the
