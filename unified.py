@@ -87,12 +87,12 @@ H3M_TOWN_RACES = {
     "Castle": "Knight",
     "Rampart": "Sorceress",
     "Tower": "Wizard",
-    "Inferno": "Inferno",
+    "Inferno": "Warlock",
     "Necropolis": "Necromancer",
     "Dungeon": "Warlock",
     "Stronghold": "Barbarian",
-    "Fortress": "Fortress",
-    "Conflux": "Conflux",
+    "Fortress": "Barbarian",
+    "Conflux": "Sorceress",
 }
 
 # fh2m race -> unified race (identity, kept explicit)
