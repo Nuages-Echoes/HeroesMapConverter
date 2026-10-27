@@ -411,7 +411,9 @@ quest messages, garrison canTake, event players flags).
    - KINGDOM_HEROES: h3m hero -> fh2m hero object (index = color * 7 +
      race from the hero pairing) with a full heroMetadata: name,
      experience, primary skills, secondary skills (converted through
-     the secondary skill table), army (the first five non-empty
+     the secondary skill table; the skills with no Heroes II
+     equivalent become the random skill, keeping their level), army
+     (the first five non-empty
      creature slots), artifacts (worn slots and backpack through the
      artifact table), available spells (bitfield through the spell
      table) and patrol state; neutral heroes (owner 255) are dropped;
@@ -876,11 +878,11 @@ quest messages, garrison canTake, event players flags).
 | 12     | Necromancy    | 13      | Necromancy    |
 | 13     | Estates       | 14      | Estates      |
 
-   H3M secondary skills with no Heroes II equivalent: Navigation
-   (H3M id 5, UNDEFINE in fh2m; its effect exists in Heroes II as a
-   native terrain bonus, not a skill), Fire Magic, Air Magic, Water
-   Magic, Earth Magic, Scholar, Tactics, Artillery, Learning,
-   Offence, Armorer, Intelligence, Sorcery, Resistance and First Aid.
+   H3M secondary skills with no Heroes II equivalent (Navigation,
+   Fire/Air/Water/Earth Magic, Scholar, Tactics, Artillery,
+   Learning, Offence, Armorer, Intelligence, Sorcery, Resistance and
+   First Aid) convert to the random skill (fh2m id 0, the game draws
+   one on hire), keeping their level.
 
    FH2M secondary skills with no h3m equivalent: none besides
    Navigation described above; all the other Heroes II skills exist in

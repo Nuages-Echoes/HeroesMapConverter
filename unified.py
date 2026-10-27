@@ -1137,16 +1137,17 @@ def _h3m_hero_to_fh2m_hero(hero_meta, hero_type, fh2m_race_id):
                                   H3M_TO_FH2M_SECONDARY_SKILLS,
                                   H3M_TO_FH2M_SPELLS)
 
-    # Secondary skills: up to 8, converted ids and levels.
+    # Secondary skills: up to 8. The skills with a Heroes II
+    # equivalent convert through the table; the others become the
+    # random skill (id 0, the game draws one on hire), keeping their
+    # level.
     skills = [0] * 8
     skill_levels = [0] * 8
     slot = 0
     for sk in (hero_meta.get("skills") or []):
         if slot >= 8:
             break
-        fh2m_skill = H3M_TO_FH2M_SECONDARY_SKILLS.get(sk.get("id"))
-        if fh2m_skill is None:
-            continue
+        fh2m_skill = H3M_TO_FH2M_SECONDARY_SKILLS.get(sk.get("id"), 0)
         skills[slot] = fh2m_skill
         skill_levels[slot] = sk.get("level", 0)
         slot += 1
