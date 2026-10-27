@@ -432,7 +432,16 @@ quest messages, garrison canTake, event players flags).
      shrine circle (Incantation -> First Circle, Gesture -> Second
      Circle, Thought -> Third Circle); other power-up objects are
      dropped
-   - ADVENTURE_MISCELLANEOUS: signs are translated with their message
+   - ADVENTURE_MISCELLANEOUS: ground events (h3m class 26) convert to
+     the fh2m event object (index 38) with a full
+     adventureMapEventMetadata: message, player colors (the h3m
+     player bitmask maps to the Heroes II colors; an empty mask means
+     every player), resources, primary skills, experience, the first
+     secondary skill (through the secondary skill table, the skills
+     with no equivalent becoming the random skill), the first
+     artifact (the Spell Scroll carrying its spell through the spell
+     table) and the first creature; removeAfterVisit inverts into
+     isRecurringEvent. Signs are translated with their message
    The remaining h3m groups (pandora boxes, shrines, seer huts, garrisons...)
    have no fh2m equivalent and are dropped. fh2m object groups that are
    pure landscape (ROADS, STREAMS, LANDSCAPE_*) exist only on the fh2m
