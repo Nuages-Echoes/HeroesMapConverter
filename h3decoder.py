@@ -294,34 +294,64 @@ def parse_h3m(file_path):
 
     # === Predefined Heroes (SoD only) ===
     if level_sod:
-        for _ in range(156):
+        from correspondence import H3M_HERO_NAMES
+        hero_settings = []
+        for hero_id in range(156):
             has_settings = struct.unpack('<B', safe_read(buffer, 1))[0]
             if not has_settings:
                 continue
+            settings = OrderedDict()
+            settings['Hero Id'] = hero_id
+            settings['Hero Name'] = (H3M_HERO_NAMES[hero_id]
+                                     if hero_id < len(H3M_HERO_NAMES) else 'Unknown')
             has_exp = struct.unpack('<B', safe_read(buffer, 1))[0]
             if has_exp:
-                safe_read(buffer, 4)
+                settings['Experience'] = struct.unpack('<I', safe_read(buffer, 4))[0]
             has_sec_skills = struct.unpack('<B', safe_read(buffer, 1))[0]
             if has_sec_skills:
                 skill_count = struct.unpack('<I', safe_read(buffer, 4))[0]
-                safe_read(buffer, skill_count * 2)
+                skills = []
+                for _skill in range(min(skill_count, 8)):
+                    skill_id = struct.unpack('<B', safe_read(buffer, 1))[0]
+                    skill_level = struct.unpack('<B', safe_read(buffer, 1))[0]
+                    skills.append(OrderedDict([('Id', skill_id), ('Level', skill_level)]))
+                settings['Secondary Skills'] = skills
+                # any malformed extra skill bytes are skipped to stay aligned
+                remaining = skill_count - min(skill_count, 8)
+                if remaining > 0:
+                    safe_read(buffer, remaining * 2)
             has_art_set = struct.unpack('<B', safe_read(buffer, 1))[0]
             if has_art_set:
-                safe_read(buffer, artifact_slots * artifact_id_bytes)
+                settings['Artifacts'] = [
+                    struct.unpack('<H' if artifact_id_bytes == 2 else '<B',
+                                  safe_read(buffer, artifact_id_bytes))[0]
+                    for _slot in range(artifact_slots)
+                ]
                 bag_count = struct.unpack('<H', safe_read(buffer, 2))[0]
-                safe_read(buffer, bag_count * artifact_id_bytes)
+                settings['Artifact Bag'] = [
+                    struct.unpack('<H' if artifact_id_bytes == 2 else '<B',
+                                  safe_read(buffer, artifact_id_bytes))[0]
+                    for _art in range(min(bag_count, 64))
+                ]
+                remaining = bag_count - min(bag_count, 64)
+                if remaining > 0:
+                    safe_read(buffer, remaining * artifact_id_bytes)
             has_custom_bio = struct.unpack('<B', safe_read(buffer, 1))[0]
             if has_custom_bio:
                 bio_len = struct.unpack('<I', safe_read(buffer, 4))[0]
-                read_string(buffer, bio_len)
+                settings['Bio'] = read_string(buffer, bio_len)
             safe_read(buffer, 1)  # gender
             has_custom_spells = struct.unpack('<B', safe_read(buffer, 1))[0]
             if has_custom_spells:
-                safe_read(buffer, spells_bytes)
+                settings['Spells'] = safe_read(buffer, spells_bytes).hex()
             has_custom_prim_skills = struct.unpack('<B', safe_read(buffer, 1))[0]
             if has_custom_prim_skills:
-                safe_read(buffer, 4)
-        data['Hero Settings'] = OrderedDict([('Note', 'Skipped for performance')])
+                settings['Primary Skills'] = list(struct.unpack('<4B', safe_read(buffer, 4)))
+            hero_settings.append(settings)
+        data['Hero Settings'] = OrderedDict([
+            ('Number of Heroes', len(hero_settings)),
+            ('Heroes', hero_settings),
+        ])
 
     # === Surface Map ===
     section_surface = OrderedDict()
@@ -476,6 +506,8 @@ def write_h3m(map_data, output_path):
     artifacts_bytes = {0x0E: 0, 0x15: 17, 0x1C: 18}.get(version, 18)
     spells_bytes = 9 if level_sod else 0
     skills_bytes = 4 if level_sod else 0
+    artifact_id_bytes = 1 if not level_ab else 2
+    artifact_slots = 19 if level_sod else 18
     towns_in_format = 8 if not level_ab else 9
 
     # === Basic Map Parameters ===
@@ -653,8 +685,62 @@ def write_h3m(map_data, output_path):
 
     # === Predefined Heroes (SoD only) ===
     if level_sod:
-        for _ in range(156):
-            buffer.write(struct.pack('<B', 0))
+        hero_settings = map_data.get('Hero Settings', {}).get('Heroes', [])
+        settings_by_id = {entry.get('Hero Id'): entry for entry in hero_settings}
+        for hero_id in range(156):
+            entry = settings_by_id.get(hero_id)
+            if entry is None:
+                buffer.write(struct.pack('<B', 0))
+                continue
+            buffer.write(struct.pack('<B', 1))
+            if 'Experience' in entry:
+                buffer.write(struct.pack('<B', 1))
+                buffer.write(struct.pack('<I', entry['Experience']))
+            else:
+                buffer.write(struct.pack('<B', 0))
+            skills = entry.get('Secondary Skills', [])
+            if skills:
+                buffer.write(struct.pack('<B', 1))
+                buffer.write(struct.pack('<I', len(skills)))
+                for skill in skills:
+                    buffer.write(struct.pack('<BB', skill.get('Id', 0), skill.get('Level', 0)))
+            else:
+                buffer.write(struct.pack('<B', 0))
+            artifacts = entry.get('Artifacts')
+            if artifacts is not None:
+                buffer.write(struct.pack('<B', 1))
+                for artifact in artifacts:
+                    if artifact_id_bytes == 2:
+                        buffer.write(struct.pack('<H', artifact))
+                    else:
+                        buffer.write(struct.pack('<B', artifact))
+                bag = entry.get('Artifact Bag', [])
+                buffer.write(struct.pack('<H', len(bag)))
+                for artifact in bag:
+                    if artifact_id_bytes == 2:
+                        buffer.write(struct.pack('<H', artifact))
+                    else:
+                        buffer.write(struct.pack('<B', artifact))
+            else:
+                buffer.write(struct.pack('<B', 0))
+            if 'Bio' in entry:
+                buffer.write(struct.pack('<B', 1))
+                bio_bytes = entry['Bio'].encode('cp1252', errors='replace')
+                buffer.write(struct.pack('<I', len(bio_bytes)))
+                buffer.write(bio_bytes)
+            else:
+                buffer.write(struct.pack('<B', 0))
+            buffer.write(struct.pack('<B', entry.get('Gender', 0)))
+            if 'Spells' in entry:
+                buffer.write(struct.pack('<B', 1))
+                buffer.write(bytes.fromhex(entry['Spells']).ljust(spells_bytes, b'\x00')[:spells_bytes])
+            else:
+                buffer.write(struct.pack('<B', 0))
+            if 'Primary Skills' in entry:
+                buffer.write(struct.pack('<B', 1))
+                buffer.write(struct.pack('<4B', *entry['Primary Skills']))
+            else:
+                buffer.write(struct.pack('<B', 0))
 
     # === Terrain grids ===
     def write_grid(grid, default_z):
