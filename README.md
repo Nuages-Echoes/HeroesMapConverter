@@ -20,3 +20,8 @@ Yes you can, it's a pet project feel free to modify or clone it. Just don't sell
 
 No UI ?
 No, not yet. I'd like to make it work first and then think about UI. Also, I don't much about UI so it's harder for me to review or correct UI related bugs. Even if the project is vibe coded (because honestly setting up the parsing sucks) doesn't mean I don't look at it and modify it by hand.
+
+Known Limitations
+Converting maps with subterranean map to H2 ends in failure (no underground in H2)
+
+Neutral heroes from H3 disappear in H2 maps (no neutral heroes in the game)
