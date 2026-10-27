@@ -398,6 +398,45 @@ FH2M_RACE_FLAGS = {
 FH2M_SPELL_SCROLL_ID = 88
 
 
+# fh2m KINGDOM_TOWNS object index -> race id (fheroes2 Race bit
+# flags): the group lists castle/town pairs per race (index = race
+# position * 2, castle first, then town; see map_object_info.cpp,
+# populateKingdomTowns).
+FH2M_TOWN_INDEX_TO_RACE = {
+    0: 0x01, 1: 0x01,
+    2: 0x02, 3: 0x02,
+    4: 0x04, 5: 0x04,
+    6: 0x08, 7: 0x08,
+    8: 0x10, 9: 0x10,
+    10: 0x20, 11: 0x20,
+}
+
+# fh2m town race bit flag -> monster id recruitable in each of the
+# six castle dwellings, tier 1 to tier 6 (fheroes2 Monster::FromDwelling).
+FH2M_RACE_DWELLING_MONSTERS = {
+    0x01: [1, 2, 4, 6, 8, 10],      # Knight: Peasant, Archer, Pikeman, Swordsman, Cavalry, Paladin
+    0x02: [12, 13, 15, 16, 18, 20],  # Barbarian: Goblin, Orc, Wolf, Ogre, Troll, Cyclops
+    0x04: [21, 22, 24, 26, 28, 29],  # Sorceress: Sprite, Dwarf, Elf, Druid, Unicorn, Phoenix
+    0x08: [30, 31, 32, 33, 35, 36],  # Warlock: Centaur, Gargoyle, Griffin, Minotaur, Hydra, Green Dragon
+    0x10: [39, 40, 41, 43, 44, 46],   # Wizard: Halfling, Boar, Iron Golem, Roc, Mage, Giant
+    0x20: [48, 49, 51, 53, 55, 57],   # Necromancer: Skeleton, Zombie, Mummy, Vampire, Lich, Bone Dragon
+}
+
+
+def fh2m_town_race(town_index):
+    """Race bit flag of a fh2m KINGDOM_TOWNS object index, or None."""
+    return FH2M_TOWN_INDEX_TO_RACE.get(town_index)
+
+
+# fheroes2 HeroBase portrait identifiers: a zero or negative custom
+# portrait means no customization (the default hero portrait is used).
+def fh2m_portrait_name(portrait_id):
+    """Describe an fh2m hero portrait customization value."""
+    if portrait_id is None or portrait_id <= 0:
+        return None
+    return "portrait:{}".format(portrait_id)
+
+
 def fh2m_race_name(race_id):
     """Name of an fh2m race bit flag value, or None when unknown."""
     return FH2M_RACE_FLAGS.get(race_id)
