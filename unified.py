@@ -898,7 +898,7 @@ def _translate_h3m_tile_objects(obj_list, objects_section, translated_metadata,
 
     Returns the list of translated objects for the tile.
     """
-    from correspondence import (H3M_HERO_NAMES,
+    from correspondence import (FH2M_SPELL_SCROLL_ID, H3M_HERO_NAMES,
                                   H3M_RANDOM_MONSTER_CLASSES,
                                   H3M_TO_FH2M_ARTIFACTS,
                                   H3M_TO_FH2M_HEROES,
@@ -1085,18 +1085,30 @@ def _translate_h3m_tile_objects(obj_list, objects_section, translated_metadata,
                 ("spell", fh2m_spell if fh2m_spell and fh2m_spell > 0 else None),
             ])
         elif group == "ADVENTURE_MISCELLANEOUS":
-            sign_meta = (objects_section.get("signMetadata") or {}).get(str(obj_id))
-            if sign_meta:
+            event_meta = (objects_section.get("eventMetadata") or {}).get(str(obj_id))
+            if event_meta:
+                # Ground event: the fh2m OBJ_EVENT object
+                # (ADVENTURE_MISCELLANEOUS index 38) with a full
+                # adventureMapEventMetadata.
                 translated.append(OrderedDict([
                     ("id", obj_id),
                     ("group", "ADVENTURE_MISCELLANEOUS"),
-                    ("index", 0),
+                    ("index", 38),
                 ]))
-                translated_metadata.setdefault("signMetadata", OrderedDict())[str(obj_id)] = OrderedDict([
-                    ("message", sign_meta.get("message", "")),
-                ])
+                translated_metadata.setdefault("adventureMapEventMetadata", OrderedDict())[str(obj_id)] = _h3m_event_to_fh2m_event(event_meta)
             else:
-                dropped_ids.append(obj_id)
+                sign_meta = (objects_section.get("signMetadata") or {}).get(str(obj_id))
+                if sign_meta:
+                    translated.append(OrderedDict([
+                        ("id", obj_id),
+                        ("group", "ADVENTURE_MISCELLANEOUS"),
+                        ("index", 0),
+                    ]))
+                    translated_metadata.setdefault("signMetadata", OrderedDict())[str(obj_id)] = OrderedDict([
+                        ("message", sign_meta.get("message", "")),
+                    ])
+                else:
+                    dropped_ids.append(obj_id)
         else:
             dropped_ids.append(obj_id)
     return translated
@@ -1122,6 +1134,96 @@ def _fh2m_hero_race_id(fh2m_hero_id):
     if 46 <= fh2m_hero_id <= 54:
         return 6
     return None
+
+
+def _h3m_event_to_fh2m_event(event_meta):
+    """
+    Build an fh2m adventureMapEventMetadata entry from an h3m ground
+    event: message, player colors, resources, primary skills,
+    experience, the first secondary skill, the first artifact (the
+    Spell Scroll spell through the artifact metadata) and the first
+    creature. The h3m event removes itself after visit when
+    removeAfterVisit is set: the fh2m event is recurring otherwise.
+    """
+    from correspondence import (FH2M_SPELL_SCROLL_ID,
+                                  H3M_TO_FH2M_ARTIFACTS,
+                                  H3M_TO_FH2M_MONSTERS,
+                                  H3M_TO_FH2M_SECONDARY_SKILLS,
+                                  H3M_TO_FH2M_SPELLS)
+
+    h3m_color_names = ["Red", "Blue", "Tan", "Green", "Orange", "Purple",
+                       "Teal", "Pink"]
+    fh2m_colors = ["Blue", "Green", "Red", "Yellow", "Orange", "Purple"]
+    players_mask = event_meta.get("players") or 0
+    human_colors = []
+    computer_colors = []
+    for bit in range(8):
+        if players_mask & (1 << bit):
+            color = h3m_color_names[bit]
+            if color in fh2m_colors:
+                if event_meta.get("applyToComputer"):
+                    computer_colors.append(color)
+                else:
+                    human_colors.append(color)
+    # No color enabled at all means every player.
+    if not human_colors and not computer_colors:
+        human_colors = list(fh2m_colors)
+
+    artifact = event_meta.get("artifacts") or [None]
+    artifact = artifact[0] if artifact else None
+    fh2m_artifact = 0
+    artifact_metadata = 0
+    if artifact is not None:
+        fh2m_artifact = H3M_TO_FH2M_ARTIFACTS.get(artifact, 0) or 0
+        if fh2m_artifact == FH2M_SPELL_SCROLL_ID:
+            spells = event_meta.get("spells") or []
+            if spells:
+                fh2m_spell = H3M_TO_FH2M_SPELLS.get(spells[0], 0) or 0
+                artifact_metadata = fh2m_spell
+
+    skills = event_meta.get("secondarySkills") or []
+    fh2m_skill = 0
+    fh2m_skill_level = 0
+    if skills:
+        fh2m_skill = H3M_TO_FH2M_SECONDARY_SKILLS.get(skills[0].get("id"), 0)
+        fh2m_skill_level = skills[0].get("level", 0)
+
+    creatures = event_meta.get("creatures") or []
+    fh2m_creature = 0
+    creature_count = 0
+    if creatures and creatures[0].get("creature") is not None:
+        fh2m_creature = H3M_TO_FH2M_MONSTERS.get(creatures[0]["creature"], 0) or 0
+        creature_count = creatures[0].get("count", 0)
+
+    resources = event_meta.get("resources") or {}
+    primaries = event_meta.get("primarySkills") or {}
+
+    return OrderedDict([
+        ("message", event_meta.get("message", "")),
+        ("humanPlayerColors", human_colors),
+        ("computerPlayerColors", computer_colors),
+        ("isRecurringEvent", not bool(event_meta.get("removeAfterVisit"))),
+        ("artifact", fh2m_artifact),
+        ("artifactMetadata", artifact_metadata),
+        ("resources", OrderedDict([
+            ("wood", resources.get("wood", 0)),
+            ("mercury", resources.get("mercury", 0)),
+            ("ore", resources.get("ore", 0)),
+            ("sulfur", resources.get("sulfur", 0)),
+            ("crystal", resources.get("crystal", 0)),
+            ("gems", resources.get("gems", 0)),
+            ("gold", resources.get("gold", 0)),
+        ])),
+        ("attack", primaries.get("attack", 0)),
+        ("defense", primaries.get("defense", 0)),
+        ("knowledge", primaries.get("knowledge", 0)),
+        ("spellPower", primaries.get("spellPower", 0)),
+        ("experience", event_meta.get("experience") or 0),
+        ("secondarySkill", fh2m_skill),
+        ("secondarySkillLevel", fh2m_skill_level),
+        ("monsterType", fh2m_creature),
+        ("monsterCount", creature_count),
+    ])
 
 
 def _h3m_hero_to_fh2m_hero(hero_meta, hero_type, fh2m_race_id):
