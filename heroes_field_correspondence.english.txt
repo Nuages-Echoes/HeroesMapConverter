@@ -301,7 +301,13 @@ from the identifier tables in correspondence.py:
 - heroMetadata army[] (monster, sourceMonsterId, count),
   artifactNames, availableSpellNames, secondarySkills[] (skill,
   sourceSkillId, level, sourceLevelId), primarySkills (attack,
-  defense, knowledge, spellPower), raceName (race bit flags)
+  defense, knowledge, spellPower), raceName (race bit flags),
+  portraitName (portrait:<id>, None for the default portrait),
+  patrol (enabled, radius), progression (level, experience, mana;
+  None keeps the game defaults)
+- castleMetadata raceName (from the KINGDOM_TOWNS object index) and
+  availableToHire[] (monster per dwelling tier 1-6, count; -1 keeps
+  the game default growth)
 - sphinxMetadata artifactName, artifactMetadataName (spell of the
   Spell Scroll reward, when the artifact is a Spell Scroll)
 - adventureMapEventMetadata artifactName, artifactMetadataName (Spell
@@ -312,9 +318,8 @@ from the identifier tables in correspondence.py:
 - artifactMetadata selectedNames (artifacts or spells of the random
   artifact / Spell Scroll selections)
 The remaining raw fh2m fields have no readable-name equivalent yet
-(hero portraits, patrol radius, experience, level, mana, castle
-hiring counts, capturable owner beyond the color, artifact
-radius/captureCondition, selectionObjectMetadata selectedItems).
+(capturable owner beyond the color, artifact radius/captureCondition,
+selectionObjectMetadata selectedItems).
 
 List for H3M (no unified equivalent yet):
 - Basic Parameters > Heroes Mastery Level Cap

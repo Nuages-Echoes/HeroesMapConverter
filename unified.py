@@ -17,9 +17,12 @@ from collections import OrderedDict
 
 from correspondence import (
     FH2M_ARTIFACT_NAMES,
+    FH2M_RACE_DWELLING_MONSTERS,
     FH2M_RESOURCE_ORDER,
     FH2M_SPELL_SCROLL_ID,
+    fh2m_portrait_name,
     fh2m_race_name,
+    fh2m_town_race,
     fh2m_artifact_name,
     fh2m_building_name,
     fh2m_join_condition_name,
@@ -1172,7 +1175,7 @@ def convert_from_unified(unified, source_game):
     return unified_to_h3m(unified)
 
 
-def _fh2m_metadata_to_unified(kind, metadata):
+def _fh2m_metadata_to_unified(kind, metadata, obj=None):
     """
     Normalize one fh2m object metadata entry into the unified schema.
 
@@ -1204,6 +1207,22 @@ def _fh2m_metadata_to_unified(kind, metadata):
             for position, spell in metadata.get("mustHaveSpells", {}).items()
         )
         entry["bannedSpellNames"] = [fh2m_spell_name(spell) for spell in metadata.get("bannedSpells", [])]
+        town_race = None
+        if obj is not None and obj.get("group") == "KINGDOM_TOWNS":
+            town_race = fh2m_town_race(obj.get("index", -1))
+        if town_race:
+            dwelling_monsters = FH2M_RACE_DWELLING_MONSTERS.get(town_race, [])
+            entry["raceName"] = fh2m_race_name(town_race)
+            entry["availableToHire"] = [
+                OrderedDict([
+                    ("monster", fh2m_monster_name(dwelling_monsters[position])
+                     if position < len(dwelling_monsters) else None),
+                    ("sourceMonsterId", dwelling_monsters[position]
+                     if position < len(dwelling_monsters) else None),
+                    ("count", count),
+                ])
+                for position, count in enumerate(metadata.get("availableToHireMonsterCount", []))
+            ]
     elif kind == "heroMetadata":
         entry["army"] = [
             OrderedDict([
@@ -1232,7 +1251,16 @@ def _fh2m_metadata_to_unified(kind, metadata):
             ("knowledge", metadata.get("customKnowledge")),
             ("spellPower", metadata.get("customSpellPower")),
         ])
-        entry["isOnPatrolName"] = bool(metadata.get("isOnPatrol"))
+        entry["portraitName"] = fh2m_portrait_name(metadata.get("customPortrait", 0))
+        entry["patrol"] = OrderedDict([
+            ("enabled", bool(metadata.get("isOnPatrol"))),
+            ("radius", metadata.get("patrolRadius", 0)),
+        ])
+        entry["progression"] = OrderedDict([
+            ("level", None if metadata.get("customLevel", -1) < 0 else metadata.get("customLevel")),
+            ("experience", None if metadata.get("customExperience", -1) < 0 else metadata.get("customExperience")),
+            ("mana", None if metadata.get("magicPoints", -1) < 0 else metadata.get("magicPoints")),
+        ])
         entry["raceName"] = fh2m_race_name(metadata.get("raceId", 0))
     elif kind == "sphinxMetadata":
         entry["artifactName"] = fh2m_artifact_name(metadata.get("artifact", 0))
@@ -1282,6 +1310,10 @@ def _unified_metadata_to_fh2m(kind, entry):
     metadata.pop("monsterName", None)
     metadata.pop("primarySkillBonus", None)
     metadata.pop("primarySkills", None)
+    metadata.pop("portraitName", None)
+    metadata.pop("patrol", None)
+    metadata.pop("progression", None)
+    metadata.pop("availableToHire", None)
     metadata.pop("isOnPatrolName", None)
     metadata.pop("raceName", None)
     metadata.pop("selectedNames", None)
@@ -1320,6 +1352,14 @@ def _fh2m_objects_to_unified(map_data):
     # Metadata maps keyed by object id, normalized into the unified
     # schema; the raw fh2m fields are kept for the byte-perfect
     # round-trip.
+    # A castle id is shared by the KINGDOM_TOWNS object and its
+    # decoration parts (basements, flags): only the town object
+    # itself gives the castle race.
+    objects_by_id = {}
+    for obj_list in tiles.values():
+        for obj in obj_list:
+            if obj.get("group") == "KINGDOM_TOWNS":
+                objects_by_id[str(obj.get("id"))] = obj
     for key in ("castleMetadata", "heroMetadata", "sphinxMetadata",
                 "signMetadata", "adventureMapEventMetadata",
                 "selectionObjectMetadata", "capturableObjectsMetadata",
@@ -1328,7 +1368,8 @@ def _fh2m_objects_to_unified(map_data):
         value_map = map_data.get(key)
         if value_map:
             result[key] = OrderedDict(
-                (obj_id, _fh2m_metadata_to_unified(key, metadata))
+                (obj_id, _fh2m_metadata_to_unified(key, metadata,
+                                                   objects_by_id.get(str(obj_id))))
                 for obj_id, metadata in value_map.items()
             )
 
