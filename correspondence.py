@@ -235,8 +235,8 @@ H3M_CREATURE_NAMES = [
 # to the fh2m tier N creature (see the faction tables in
 # heroes_field_correspondence.english.txt).
 H3M_TO_FH2M_MONSTERS = {
-    0: 4,   # Pikeman -> Pikeman
-    1: 5,   # Halberdier -> Veteran Pikeman
+    0: 1,   # Pikeman -> Peasant (tier 1)
+    1: 1,   # Halberdier -> Peasant (tier 1)
     2: 2,   # Archer -> Archer
     3: 3,   # Marksman -> Ranger
     4: 4,   # Griffin -> Pikeman
@@ -303,7 +303,7 @@ H3M_TO_FH2M_MONSTERS = {
     79: 34,   # Minotaur King -> Minotaur King
     80: 35,   # Manticore -> Hydra
     81: 35,   # Scorpicore -> Hydra
-    82: 36,   # Red Dragon -> Green Dragon
+    82: 37,   # Red Dragon -> Red Dragon
     83: 38,   # Black Dragon -> Black Dragon
     84: 12,   # Goblin -> Goblin
     85: 12,   # Hobgoblin -> Goblin
@@ -326,13 +326,13 @@ H3M_TO_FH2M_MONSTERS = {
     114: 65,   # Fire Elemental -> Fire Element
     115: 66,   # Water Elemental -> Water Element
     131: 29,   # Phoenix -> Phoenix
-    138: 39,   # Halfling -> Halfling
-    139: 1,   # Peasant -> Peasant
-    140: 40,   # Boar -> Boar
-    141: 51,   # Mummy -> Mummy
+    138: 58,   # Halfling -> Rogue (neutral tier 1)
+    139: 58,   # Peasant -> Rogue (neutral tier 1)
+    140: 59,   # Boar -> Nomad (neutral tier 2)
+    141: 59,   # Mummy -> Nomad (neutral tier 2)
     142: 59,   # Nomad -> Nomad
     143: 58,   # Rogue -> Rogue
-    144: 18,   # Troll -> Troll
+    144: 62,   # Troll -> Medusa (neutral tier 3)
     42: 30,   # Imp -> Centaur
     43: 30,   # Familiar -> Centaur
     44: 31,   # Gog -> Gargoyle
@@ -364,10 +364,10 @@ H3M_TO_FH2M_MONSTERS = {
     118: 21,   # Pixie -> Sprite
     120: 28,   # Psychic Elemental -> Unicorn
     121: 28,   # Magic Elemental -> Unicorn
-    123: 25,   # Ice Elemental -> Grand Elf
-    125: 27,   # Magma Elemental -> Greater Druid
-    127: 23,   # Storm Elemental -> Battle Dwarf
-    129: 26,   # Energy Elemental -> Druid
+    123: 66,   # Ice Elemental -> Water Element
+    125: 63,   # Magma Elemental -> Earth Element
+    127: 64,   # Storm Elemental -> Air Element
+    129: 65,   # Energy Elemental -> Fire Element
     130: 29,   # Firebird -> Phoenix
 }
 
@@ -528,7 +528,7 @@ FH2M_TO_H3M_MONSTERS = {
     34: 79,   # Minotaur King <- Minotaur King
     35: 80,   # Hydra <- Manticore
     36: 82,   # Green Dragon <- Red Dragon
-    37: 83,   # Red Dragon <- Black Dragon
+    37: 82,   # Red Dragon <- Red Dragon
     38: 83,   # Black Dragon <- Black Dragon
     39: 28,   # Halfling <- Gremlin
     40: 30,   # Boar <- Stone Gargoyle
