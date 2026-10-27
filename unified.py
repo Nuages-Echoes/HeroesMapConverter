@@ -1229,7 +1229,7 @@ def _fh2m_metadata_to_unified(kind, metadata, obj=None):
         )
         entry["bannedSpellNames"] = [fh2m_spell_name(spell) for spell in metadata.get("bannedSpells", [])]
         town_race = None
-        if obj is not None and obj.get("group") == "KINGDOM_TOWNS":
+        if obj is not None:
             town_race = fh2m_town_race(obj.get("index", -1))
         if town_race:
             dwelling_monsters = FH2M_RACE_DWELLING_MONSTERS.get(town_race, [])
@@ -1304,6 +1304,19 @@ def _fh2m_metadata_to_unified(kind, metadata, obj=None):
         entry["joinConditionName"] = fh2m_join_condition_name(metadata.get("joinCondition", 0))
     elif kind == "artifactMetadata":
         entry["selectedNames"] = [fh2m_artifact_name(item) for item in metadata.get("selected", [])]
+    elif kind == "selectionObjectMetadata":
+        # The item type depends on the placed object: Witch's Hut
+        # (ADVENTURE_MISCELLANEOUS index 26) selects secondary skills,
+        # Pyramid (index 29) selects level 5 spells (world_loadmap.cpp).
+        index = obj.get("index") if obj is not None else None
+        if index == 26:
+            entry["selectedItemNames"] = [
+                fh2m_secondary_skill_name(item) for item in metadata.get("selectedItems", [])
+            ]
+        elif index == 29:
+            entry["selectedItemNames"] = [
+                fh2m_spell_name(item) for item in metadata.get("selectedItems", [])
+            ]
     return entry
 
 
@@ -1338,6 +1351,7 @@ def _unified_metadata_to_fh2m(kind, entry):
     metadata.pop("isOnPatrolName", None)
     metadata.pop("raceName", None)
     metadata.pop("selectedNames", None)
+    metadata.pop("selectedItemNames", None)
     metadata.pop("joinConditionName", None)
     return metadata
 
@@ -1376,14 +1390,15 @@ def _fh2m_objects_to_unified(map_data):
     # Metadata maps keyed by object id, normalized into the unified
     # schema; the raw fh2m fields are kept for the byte-perfect
     # round-trip.
-    # A castle id is shared by the KINGDOM_TOWNS object and its
-    # decoration parts (basements, flags): only the town object
-    # itself gives the castle race.
+    # Objects sharing an id (a castle and its decoration parts): keep
+    # the first object of each relevant group per id.
     objects_by_id = {}
     for obj_list in tiles.values():
         for obj in obj_list:
-            if obj.get("group") == "KINGDOM_TOWNS":
-                objects_by_id[str(obj.get("id"))] = obj
+            obj_id = str(obj.get("id"))
+            group = obj.get("group")
+            if group in ("KINGDOM_TOWNS", "ADVENTURE_MISCELLANEOUS"):
+                objects_by_id.setdefault(obj_id, {}).setdefault(group, obj)
     for key in ("castleMetadata", "heroMetadata", "sphinxMetadata",
                 "signMetadata", "adventureMapEventMetadata",
                 "selectionObjectMetadata", "capturableObjectsMetadata",
@@ -1391,9 +1406,14 @@ def _fh2m_objects_to_unified(map_data):
                 "standardObjectMetadata"):
         value_map = map_data.get(key)
         if value_map:
+            expected_group = "KINGDOM_TOWNS" if key == "castleMetadata" else (
+                "ADVENTURE_MISCELLANEOUS" if key == "selectionObjectMetadata" else None)
+            def _lookup(obj_id):
+                if expected_group is None:
+                    return None
+                return (objects_by_id.get(str(obj_id)) or {}).get(expected_group)
             result[key] = OrderedDict(
-                (obj_id, _fh2m_metadata_to_unified(key, metadata,
-                                                   objects_by_id.get(str(obj_id))))
+                (obj_id, _fh2m_metadata_to_unified(key, metadata, _lookup(obj_id)))
                 for obj_id, metadata in value_map.items()
             )
 

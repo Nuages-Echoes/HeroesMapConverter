@@ -323,9 +323,11 @@ from the identifier tables in correspondence.py:
 - monsterMetadata joinConditionName
 - artifactMetadata selectedNames (artifacts or spells of the random
   artifact / Spell Scroll selections)
+- selectionObjectMetadata selectedItemNames: the items of the choice
+  objects, typed by the placed object (Witch's Hut -> secondary
+  skills, Pyramid -> level 5 spells)
 The remaining raw fh2m fields have no readable-name equivalent yet
-(capturable owner beyond the color, artifact radius/captureCondition,
-selectionObjectMetadata selectedItems).
+(capturable owner beyond the color, artifact radius/captureCondition).
 
 List for H3M (no unified equivalent yet):
 - Basic Parameters > Heroes Mastery Level Cap
