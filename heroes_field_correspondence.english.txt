@@ -347,20 +347,28 @@ List for H3M (no unified equivalent yet):
    equivalent exists; the others are dropped and their ids are listed
    under objects.dropped. The identifier pairs (creatures, artifacts,
    spells, resources) come from the tables in correspondence.py:
-   - MONSTERS: h3m creature -> fh2m monster (index = monster id - 1);
-     creatures with no Heroes II equivalent are dropped
+   - MONSTERS: h3m creature -> fh2m monster (index = monster id - 1),
+     with the count, the after-defeat message and resources when
+     present; creatures with no Heroes II equivalent are dropped
    - ADVENTURE_TREASURES: h3m resource -> fh2m resource object index
      (0 wood ... 6 gold)
    - ADVENTURE_ARTIFACTS: h3m artifact -> fh2m artifact (index follows
-     the fheroes2 ADVENTURE_ARTIFACTS group order); artifacts with no
-     Heroes II equivalent are dropped
+     the fheroes2 ADVENTURE_ARTIFACTS group order); random h3m
+     artifacts become fh2m random artifacts; artifacts with no Heroes
+     II equivalent are dropped
+   - KINGDOM_HEROES: h3m hero -> fh2m hero object (index = color * 7 +
+     race from the hero pairing) with a heroMetadata carrying the
+     hero name and race; neutral heroes (owner 255) are dropped
+   - ADVENTURE_MINES / ADVENTURE_DWELLINGS: translated with a
+     capturableObjectsMetadata carrying the owner color (when the
+     owner is a Heroes II color)
    - KINGDOM_TOWNS: translated with an empty fh2m castleMetadata
      (custom name only)
    - ADVENTURE_MISCELLANEOUS: signs are translated with their message
-   The remaining h3m groups (pandora boxes, shrines, seer huts, garrisons,
-   random artifacts...) have no fh2m equivalent and are dropped. fh2m
-   object groups that are pure landscape (ROADS, STREAMS, LANDSCAPE_*)
-   exist only on the fh2m side.
+   The remaining h3m groups (pandora boxes, shrines, seer huts, garrisons...)
+   have no fh2m equivalent and are dropped. fh2m object groups that are
+   pure landscape (ROADS, STREAMS, LANDSCAPE_*) exist only on the fh2m
+   side.
 
 
 
