@@ -380,6 +380,20 @@ quest messages, garrison canTake, event players flags).
    defenders (the first five non-empty slots, converted through the
    creature table).
 
+   Shrine conversion (h3m -> fh2m): the Heroes III shrines convert to
+   the Heroes II shrine circles (ADVENTURE_POWER_UPS group):
+
+| H3M class | H3M shrine                | FH2M index | FH2M shrine              |
+|-----------|---------------------------|------------|--------------------------|
+| 88        | Shrine of Magic Incantation | 14       | Shrine of the First Circle |
+| 89        | Shrine of Magic Gesture    | 15        | Shrine of the Second Circle |
+| 90        | Shrine of Magic Thought   | 16        | Shrine of the Third Circle |
+
+   The Heroes II Shrine of Magic Mystery has no Heroes III
+   equivalent: it converts to the Third Circle (h3m class 90). A
+   definite h3m shrine spell converts through the spell table when
+   an equivalent exists; a random h3m spell (0xFF) stays random.
+
    Cross-format object translation (h3m -> fh2m, main.py --target fh2m):
    placed objects are translated group by group when an fh2m
    equivalent exists; the others are dropped and their ids are listed
@@ -404,6 +418,10 @@ quest messages, garrison canTake, event players flags).
      type (see the town/race table above) and a castleMetadata
      carrying the custom name and the garrison creatures as
      defenders
+   - ADVENTURE_POWER_UPS: shrines are translated to the matching
+     shrine circle (Incantation -> First Circle, Gesture -> Second
+     Circle, Thought -> Third Circle); other power-up objects are
+     dropped
    - ADVENTURE_MISCELLANEOUS: signs are translated with their message
    The remaining h3m groups (pandora boxes, shrines, seer huts, garrisons...)
    have no fh2m equivalent and are dropped. fh2m object groups that are

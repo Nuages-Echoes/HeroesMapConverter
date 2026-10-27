@@ -631,6 +631,27 @@ FH2M_TO_H3M_SPELLS = {
     5: 63,   # Teleport <- Teleport
 }
 
+# Shrine mapping: the Heroes III shrines (class 88 Incantation,
+# 89 Gesture, 90 Thought) map to the Heroes II shrine circles (the
+# ADVENTURE_POWER_UPS group: index 14 First Circle, 15 Second Circle,
+# 16 Third Circle). The Heroes II Shrine of Magic Mystery has no
+# Heroes III equivalent: it converts to the Third Circle (per
+# decision).
+H3M_TO_FH2M_SHRINES = {
+    88: 14,  # Shrine of Magic Incantation -> Shrine of the First Circle
+    89: 15,  # Shrine of Magic Gesture -> Shrine of the Second Circle
+    90: 16,  # Shrine of Magic Thought -> Shrine of the Third Circle
+}
+
+# fh2m shrine index -> h3m shrine class (inverse; the fh2m Mystery
+# shrine, whatever its index, maps to the Third Circle per decision).
+FH2M_TO_H3M_SHRINES = {
+    14: 88,  # Shrine of the First Circle -> Shrine of Magic Incantation
+    15: 89,  # Shrine of the Second Circle -> Shrine of Magic Gesture
+    16: 90,  # Shrine of the Third Circle -> Shrine of Magic Thought
+}
+
+
 # h3m town type (subclass of the town object, 0-8; -1 for a random
 # town) -> fh2m town race, following the validated faction pairings:
 # Castle->Knight, Rampart/Conflux->Sorceress, Tower->Wizard,

@@ -902,7 +902,9 @@ def _translate_h3m_tile_objects(obj_list, objects_section, translated_metadata,
                                   H3M_RANDOM_MONSTER_CLASSES,
                                   H3M_TO_FH2M_ARTIFACTS,
                                   H3M_TO_FH2M_HEROES,
-                                  H3M_TO_FH2M_MONSTERS)
+                                  H3M_TO_FH2M_MONSTERS,
+                                  H3M_TO_FH2M_SHRINES,
+                                  H3M_TO_FH2M_SPELLS)
 
     translated = []
     for obj in obj_list:
@@ -1081,6 +1083,25 @@ def _translate_h3m_tile_objects(obj_list, objects_section, translated_metadata,
             ]))
             translated_metadata.setdefault("capturableObjectsMetadata", OrderedDict())[str(obj_id)] = OrderedDict([
                 ("ownerColor", owner_names),
+            ])
+        elif group == "ADVENTURE_POWER_UPS":
+            shrine_meta = (objects_section.get("shrineMetadata") or {}).get(str(obj_id)) or {}
+            shrine_class = shrine_meta.get("shrineClass")
+            fh2m_index = H3M_TO_FH2M_SHRINES.get(shrine_class, -1)
+            if fh2m_index < 0:
+                # Not a shrine: drop (other power-up objects have no
+                # fh2m equivalent).
+                dropped_ids.append(obj_id)
+                continue
+            translated.append(OrderedDict([
+                ("id", obj_id),
+                ("group", "ADVENTURE_POWER_UPS"),
+                ("index", fh2m_index),
+            ]))
+            spell = shrine_meta.get("spell")
+            fh2m_spell = H3M_TO_FH2M_SPELLS.get(spell, -1) if spell is not None else -1
+            translated_metadata.setdefault("shrineMetadata", OrderedDict())[str(obj_id)] = OrderedDict([
+                ("spell", fh2m_spell if fh2m_spell and fh2m_spell > 0 else None),
             ])
         elif group == "ADVENTURE_MISCELLANEOUS":
             sign_meta = (objects_section.get("signMetadata") or {}).get(str(obj_id))
