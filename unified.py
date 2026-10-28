@@ -861,10 +861,20 @@ def unified_to_h3m(unified):
     ])
     data["Reserved Bytes"] = ""
 
+    # Rumors: the fh2m rumors carry no name; the h3m rumors need
+    # one, generated as RumeurX with X incremented per rumor.
     rumors = unified.get("rumors", [])
+    rumor_number = 0
+    converted_rumors = []
+    for r in rumors:
+        name = r.get("name")
+        if not name:
+            rumor_number += 1
+            name = "Rumeur%d" % rumor_number
+        converted_rumors.append(OrderedDict([("Name", name), ("Text", r.get("text", ""))]))
     data["Rumors"] = OrderedDict([
-        ("Number of Rumors", len(rumors)),
-        ("Rumors", [OrderedDict([("Name", r.get("name") or ""), ("Text", r.get("text", ""))]) for r in rumors]),
+        ("Number of Rumors", len(converted_rumors)),
+        ("Rumors", converted_rumors),
     ])
 
     is_fh2m_source = unified.get("sourceGame") != "h3m"
