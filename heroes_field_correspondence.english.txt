@@ -464,10 +464,12 @@ quest messages, garrison canTake, event players flags).
    fh2m conversion - the decorative ones have no Heroes II
    landscape object and the interactive ones have no Heroes II
    gameplay equivalent (identities from the VCMI object configs,
-   which match the raw h3m classes). Decorative: log (130,
-   AvLdlog), moss (132, AVLmoss), river delta (143, clrdelt4),
-   skull (151, AVLskul), stump (153, AvLStm2), volcano (158,
-   AVLvol4), hole (124, AVLholg). Interactive: altar of sacrifice
+   which match the raw h3m classes). Decorative: none left - the
+   log (130), moss (132), river delta (143), skull (151), stump
+   (153), volcano (158) and hole (124) classes map to the Heroes II
+   log, mossy rocks, river deltas, cow skull, stumps, volcano
+   craters and dug holes through H3M_DECORATIVE_TO_FH2M.
+   Interactive: altar of sacrifice
    (2, AvXAltar), cursed ground (21, AVXcrsd), marletto tower
    (23, AvSMarl), fountain of fortune (30, AVSfntn), garden of
    revelation (32, AVSgrdn), idol of fortune (38, AVSidol),
@@ -485,10 +487,11 @@ quest messages, garrison canTake, event players flags).
    direction is not wired yet), whirlpool (111, AVXwhrl),
    windmill (112, AVMwndd - the Heroes II windmill maps back
    through FH2M_TO_H3M_MISC but this direction is not wired yet).
-   The dropped classes of the test maps total 581 occurrences
-   over the classes 2, 21, 23, 30, 32, 38, 45, 46, 47, 49, 55,
-   58, 61, 82, 96, 97, 100, 102, 103, 108, 109, 111, 112, 124,
-   130, 132, 143, 151, 153, 158.
+   The dropped classes of the test maps total 386 occurrences
+   over the interactive classes 2, 21, 23, 30, 32, 38, 45, 46,
+   47, 49, 55, 58, 61, 82, 96, 97, 100, 102, 103, 108, 109, 111,
+   112 (the 195 terrain objects of the classes 124, 130, 132,
+   143, 151, 153, 158 are now converted).
 
    Tile writer (fh2m -> h3m): the fh2m terrain image index (the
    raw sourceTerrain 'terrain:<index>') becomes the h3m Terrain
