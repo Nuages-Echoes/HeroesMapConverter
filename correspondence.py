@@ -1119,6 +1119,22 @@ H3M_TO_FH2M_INTERACTIVE = {
     100: ("ADVENTURE_POWER_UPS", 11),      # learning stone -> Gazebo
     109: ("ADVENTURE_MISCELLANEOUS", 24),  # water wheel -> Water Wheel
     112: ("ADVENTURE_MISCELLANEOUS", 4),   # windmill -> Windmill
+    # Manual pairings (per user decision): the h3m interactive
+    # classes map to the closest Heroes II gameplay objects.
+    2: ("ADVENTURE_MISCELLANEOUS", 27),    # altar of sacrifice -> Daemon Cave
+    23: ("ADVENTURE_POWER_UPS", 13),       # marletto tower -> Mercenary Camp
+    30: ("ADVENTURE_POWER_UPS", 2),        # fountain of fortune -> Faerie Ring
+    32: ("ADVENTURE_POWER_UPS", 12),       # garden of revelation -> Witch Doctor's Hut
+    38: ("ADVENTURE_POWER_UPS", 17),       # idol of fortune -> Idol
+    61: ("ADVENTURE_POWER_UPS", 18),       # star axis -> Standing Stones
+    82: ("ADVENTURE_WATER", 1),            # sea chest -> Sea Chest
+    96: ("ADVENTURE_POWER_UPS", 19),       # temple -> Temple
+    97: ("ADVENTURE_MISCELLANEOUS", 32),   # den of thieves -> Trading Post
+    102: ("ADVENTURE_POWER_UPS", 20),      # tree of knowledge -> Tree of Knowledge
+    108: ("ADVENTURE_MISCELLANEOUS", 0),   # warrior's tomb -> Graveyard
+    111: ("ADVENTURE_WATER", 7),           # whirlpool -> Whirlpool
+    # Dropped (no Heroes II gameplay equivalent): cursed ground (21),
+    # magic plains (46), subterranean gate (103).
 }
 
 
