@@ -2337,6 +2337,25 @@ def _encode_h3m_objects(unified, version_ab, version_sod):
                 if town_type is not None:
                     castle_meta = (objects_section.get("castleMetadata") or {}).get(str(obj_id)) or {}
                     entry = ("town", (x, y, z), (98, town_type), castle_meta)
+            elif group in ("ADVENTURE_MISCELLANEOUS", "ADVENTURE_WATER"):
+                # The miscellaneous and water objects with a
+                # confirmed h3m sprite map through the misc table.
+                from correspondence import FH2M_TO_H3M_MISC
+                h3m_key = index if group == "ADVENTURE_MISCELLANEOUS" else "WATER_%d" % index
+                h3m_target = FH2M_TO_H3M_MISC.get(h3m_key)
+                if h3m_target is not None:
+                    obj_class, obj_subclass = h3m_target
+                    meta = (objects_section.get("signMetadata") or {}).get(str(obj_id)) or {}
+                    entry = ("generic", (x, y, z), (obj_class, obj_subclass), meta)
+            elif group == "ADVENTURE_POWER_UPS":
+                # The shrine circles (index 14-16) map back to the
+                # h3m shrine classes 88-90; the other power-up
+                # objects have no simple h3m equivalent.
+                from correspondence import FH2M_TO_H3M_SHRINES
+                h3m_shrine = FH2M_TO_H3M_SHRINES.get(index)
+                if h3m_shrine is not None:
+                    shrine_meta = (objects_section.get("shrineMetadata") or {}).get(str(obj_id)) or {}
+                    entry = ("shrine", (x, y, z), (h3m_shrine, 0), shrine_meta)
             elif group == "ADVENTURE_MINES":
                 # The fh2m mine index maps to the h3m ownable mine
                 # (class 53, subclass per mine type).
@@ -2429,16 +2448,38 @@ def _encode_h3m_objects(unified, version_ab, version_sod):
             pass  # no per-instance data
         elif kind_name == "ownable":
             buffer.write(struct.pack("<I", 0xFFFFFF))  # neutral owner
+        elif kind_name == "shrine":
+            # RoE shrine: a random spell (0xFFFFFFFF).
+            buffer.write(struct.pack("<I", 0xFFFFFFFF))
+        elif kind_name == "generic":
+            # The generic objects: signs (classes 59/91) carry a
+            # message; the ownable objects (class 42 Stone Liths)
+            # carry an owner; the other misc objects (windmill,
+            # lean-to, water wheel, witch hut, observation tower,
+            # bottle, buoy) carry no per-instance data.
+            if obj_class in (59, 91):
+                message = (payload or {}).get("message") or ""
+                msg_bytes = message.encode("cp1252", errors="replace")
+                buffer.write(struct.pack("<i", len(msg_bytes)))
+                buffer.write(msg_bytes)
+                buffer.write(b"\x00" * 4)
+            elif obj_class == 42:
+                # The Stone Liths are ownable: an owner word.
+                buffer.write(struct.pack("<I", 0xFFFFFF))  # neutral
         elif kind_name == "hero":
             # RoE hero layout: owner, type, then the customization
             # flags (name, experience, face, skills, creatures,
             # formation, artifacts, patrol radius) and 16 trailing
-            # unknown bytes.
+            # unknown bytes. The fh2m heroMetadata converts: the
+            # custom name, the experience, the secondary skills
+            # (through the inverse secondary skill table) and the
+            # army (the creature pairs).
+            from correspondence import FH2M_TO_H3M_MONSTERS
             meta = payload or {}
             buffer.write(struct.pack("<B", 0xFF))  # owner: neutral
             hero_type = meta.get("type")
             buffer.write(struct.pack("<B", hero_type if hero_type is not None else 0xFF))
-            name = meta.get("name") or ""
+            name = meta.get("customName") or meta.get("name") or ""
             if name:
                 name_bytes = name.encode("cp1252", errors="replace")
                 buffer.write(struct.pack("<B", 1))
@@ -2446,24 +2487,141 @@ def _encode_h3m_objects(unified, version_ab, version_sod):
                 buffer.write(name_bytes)
             else:
                 buffer.write(struct.pack("<B", 0))
-            buffer.write(struct.pack("<I", meta.get("experience") or 0))
+            experience = meta.get("customExperience")
+            buffer.write(struct.pack("<I", experience if experience and experience > 0 else 0))
             buffer.write(struct.pack("<B", 0))  # no custom face
-            buffer.write(struct.pack("<B", 0))  # no custom skills
-            buffer.write(struct.pack("<B", 0))  # no custom creatures
+            # Secondary skills: convert the first non-empty fh2m
+            # skills through the inverse table.
+            skills = meta.get("secondarySkill") or []
+            skill_levels = meta.get("secondarySkillLevel") or []
+            converted_skills = []
+            for i, skill_id in enumerate(skills[:8]):
+                if not skill_id:
+                    continue
+                level = skill_levels[i] if i < len(skill_levels) else 0
+                converted_skills.append((skill_id, level))
+            if converted_skills:
+                buffer.write(struct.pack("<B", 1))
+                buffer.write(struct.pack("<I", len(converted_skills)))
+                for h3_skill, level in converted_skills:
+                    # The fh2m secondary skill ids map back to the
+                    # h3m ids through the forward table.
+                    from correspondence import H3M_TO_FH2M_SECONDARY_SKILLS
+                    fh2_to_h3 = {v: k for k, v in H3M_TO_FH2M_SECONDARY_SKILLS.items()}
+                    buffer.write(struct.pack("<BB", fh2_to_h3.get(h3_skill, 0), level))
+            else:
+                buffer.write(struct.pack("<B", 0))
+            # Army: the fh2m 5 slots convert to the h3m 7 slots.
+            army_types = meta.get("armyMonsterType") or []
+            army_counts = meta.get("armyMonsterCount") or []
+            army = []
+            for i in range(min(len(army_types), 5)):
+                creature = army_types[i]
+                count = army_counts[i] if i < len(army_counts) else 0
+                h3_creature = FH2M_TO_H3M_MONSTERS.get(creature) if creature else None
+                if h3_creature is None or not count:
+                    continue
+                army.append((h3_creature, count))
+            if army:
+                buffer.write(struct.pack("<B", 1))
+                for slot in range(7):
+                    if slot < len(army):
+                        buffer.write(struct.pack("<BH", army[slot][0], army[slot][1]))
+                    else:
+                        # An empty slot: creature 0xFF means none.
+                        buffer.write(struct.pack("<BH", 0xFF, 0))
+            else:
+                buffer.write(struct.pack("<B", 0))
             buffer.write(struct.pack("<B", 0))  # formation
-            buffer.write(struct.pack("<B", 0))  # no custom artifacts
-            buffer.write(struct.pack("<B", 0xFF))  # patrol radius: free
+            # Artifacts: the fh2m worn artifacts convert through the
+            # inverse artifact table.
+            from correspondence import H3M_TO_FH2M_ARTIFACTS
+            fh2_to_h3_art = {v: k for k, v in H3M_TO_FH2M_ARTIFACTS.items()}
+            artifacts = meta.get("artifacts") or []
+            converted_artifacts = []
+            for art in artifacts[:18]:
+                converted_artifacts.append(fh2_to_h3_art.get(art, 0) or 0)
+            if any(converted_artifacts):
+                buffer.write(struct.pack("<B", 1))
+                for slot in range(18):
+                    value = converted_artifacts[slot] if slot < len(converted_artifacts) else 0
+                    buffer.write(struct.pack("<B", value & 0xFF))
+                buffer.write(struct.pack("<H", 0))  # empty bag
+            else:
+                buffer.write(struct.pack("<B", 0))
+            patrol = meta.get("isOnPatrol")
+            radius = meta.get("patrolRadius") or 0
+            buffer.write(struct.pack("<B", radius if patrol else 0xFF))
             buffer.write(b"\x00" * 16)
         elif kind_name == "town":
             # RoE town layout: owner, name, creatures (7 slots),
             # formation, buildings flags, spell bitfields and events.
+            # The fh2m castleMetadata converts: the custom name, the
+            # garrison defenders and the built buildings (the fh2m
+            # flags map back through the building bit tables).
+            from correspondence import (H3M_DWELLING_BITS,
+                                         H3M_TOWN_BUILDING_BITS,
+                                         FH2M_TO_H3M_MONSTERS)
             meta = payload or {}
             buffer.write(struct.pack("<B", 0xFF))  # owner: neutral
-            buffer.write(struct.pack("<B", 0))  # no custom name
-            buffer.write(struct.pack("<B", 0))  # no custom creatures
+            name = meta.get("customName") or ""
+            if name:
+                name_bytes = name.encode("cp1252", errors="replace")
+                buffer.write(struct.pack("<B", 1))
+                buffer.write(struct.pack("<i", len(name_bytes)))
+                buffer.write(name_bytes)
+            else:
+                buffer.write(struct.pack("<B", 0))
+            # Garrison: the fh2m defenders convert to the h3m 7
+            # creature slots.
+            defender_types = meta.get("defenderMonsterType") or []
+            defender_counts = meta.get("defenderMonsterCount") or []
+            defenders = []
+            for i in range(min(len(defender_types), 5)):
+                creature = defender_types[i]
+                count = defender_counts[i] if i < len(defender_counts) else 0
+                h3_creature = FH2M_TO_H3M_MONSTERS.get(creature) if creature else None
+                if h3_creature is None or not count:
+                    continue
+                defenders.append((h3_creature, count))
+            if defenders:
+                buffer.write(struct.pack("<B", 1))
+                for slot in range(7):
+                    if slot < len(defenders):
+                        buffer.write(struct.pack("<BH", defenders[slot][0], defenders[slot][1]))
+                    else:
+                        buffer.write(struct.pack("<BH", 0xFF, 0))
+            else:
+                buffer.write(struct.pack("<B", 0))
             buffer.write(struct.pack("<B", 0))  # formation
-            buffer.write(struct.pack("<B", 0))  # no custom buildings: hasFort below
-            buffer.write(struct.pack("<B", 0))  # hasFort: no
+            # Buildings: the fh2m built flags map back to the h3m
+            # bitfield through the inverse of the bit tables.
+            built_flags = meta.get("builtBuildings") or []
+            bitfield = bytearray(6)
+            flag_to_bit = {}
+            for (byte_index, bit), flag in list(H3M_TOWN_BUILDING_BITS.items()) + list(H3M_DWELLING_BITS.items()):
+                if flag:
+                    flag_to_bit[flag] = (byte_index, bit)
+            for flag in built_flags:
+                position = flag_to_bit.get(flag)
+                if position:
+                    bitfield[position[0]] |= (1 << position[1])
+            has_custom_buildings = bool(built_flags) or bool(meta.get("bannedBuildings"))
+            if has_custom_buildings:
+                buffer.write(struct.pack("<B", 1))
+                buffer.write(bytes(bitfield))
+                # Disabled buildings: the banned flags map back the
+                # same way.
+                banned_flags = meta.get("bannedBuildings") or []
+                banned_field = bytearray(6)
+                for flag in banned_flags:
+                    position = flag_to_bit.get(flag)
+                    if position:
+                        banned_field[position[0]] |= (1 << position[1])
+                buffer.write(bytes(banned_field))
+            else:
+                buffer.write(struct.pack("<B", 0))
+                buffer.write(struct.pack("<B", 0))  # hasFort: no
             buffer.write(b"\x00" * 9)  # impossible spells: all allowed
             buffer.write(struct.pack("<I", 0))  # no events
             buffer.write(b"\x00\x00\x00")  # trailing 3 bytes
