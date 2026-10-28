@@ -433,8 +433,9 @@ def _h3m_objects_to_unified(map_data):
     section: objects stored per tile with metadata maps keyed by object
     id, as the fh2m format does.
 
-    Objects whose group could not be mapped to a unified group are
-    dropped (UNDEFINED_* groups); their ids are listed under "dropped".
+    Objects whose group could not be mapped to a unified group keep
+    their UNDEFINED_<class> group: the fh2m conversion maps the
+    decorative classes and drops the others.
     """
     objects_section = map_data.get("Objects", {})
     tiles_data = objects_section.get("Tiles")
@@ -442,26 +443,22 @@ def _h3m_objects_to_unified(map_data):
         return None
 
     tiles = OrderedDict()
-    dropped = []
     for tile_key, obj_list in tiles_data.get("tiles", {}).items():
-        x, y, z = tile_key.split("_")
         unified_objs = []
         for obj in obj_list:
-            group = obj.get("group", "")
-            if group.startswith("UNDEFINED"):
-                dropped.append(obj.get("id"))
-                continue
             unified_objs.append(OrderedDict([
                 ("id", obj.get("id")),
-                ("group", group),
+                ("group", obj.get("group")),
                 ("index", obj.get("index")),
             ]))
         if unified_objs:
             tiles[tile_key] = unified_objs
+        if unified_objs:
+            tiles[tile_key] = unified_objs
 
     # Metadata maps are already keyed by object id and use unified-friendly
-    # field names; pass them through, dropping ids of dropped objects.
-    dropped_set = set(dropped)
+    # field names; pass them through.
+    dropped_set = set()
     metadata = OrderedDict()
     for key, value_map in tiles_data.items():
         if key == "tiles":
@@ -475,8 +472,6 @@ def _h3m_objects_to_unified(map_data):
 
     result = OrderedDict([("tiles", tiles)])
     result.update(metadata)
-    if dropped:
-        result["dropped"] = dropped
     # Raw object section bytes (h3m only), for a byte-perfect round-trip:
     # the binary writer re-encodes them verbatim.
     raw_data = objects_section.get("Raw Data", "")
@@ -899,7 +894,8 @@ def _translate_h3m_tile_objects(obj_list, objects_section, translated_metadata,
 
     Returns the list of translated objects for the tile.
     """
-    from correspondence import (FH2M_SPELL_SCROLL_ID, H3M_HERO_NAMES,
+    from correspondence import (FH2M_SPELL_SCROLL_ID, H3M_DECORATIVE_TO_FH2M,
+                                  H3M_HERO_NAMES,
                                   H3M_RANDOM_MONSTER_CLASSES,
                                   H3M_TO_FH2M_ARTIFACTS,
                                   H3M_TO_FH2M_HEROES,
@@ -1192,6 +1188,26 @@ def _translate_h3m_tile_objects(obj_list, objects_section, translated_metadata,
                     ])
                 else:
                     dropped_ids.append(obj_id)
+        elif group.startswith("UNDEFINED_"):
+            # Decorative objects: the h3m class (from the group name)
+            # converts to a representative Heroes II landscape object
+            # through the decorative table; the classes without a
+            # mapping stay dropped.
+            try:
+                obj_class = int(group[len("UNDEFINED_"):])
+            except ValueError:
+                dropped_ids.append(obj_id)
+                continue
+            decorative = H3M_DECORATIVE_TO_FH2M.get(obj_class)
+            if decorative is None:
+                dropped_ids.append(obj_id)
+                continue
+            fh2m_group, fh2m_index = decorative
+            translated.append(OrderedDict([
+                ("id", obj_id),
+                ("group", fh2m_group),
+                ("index", fh2m_index),
+            ]))
         else:
             dropped_ids.append(obj_id)
     return translated
