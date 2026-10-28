@@ -396,6 +396,16 @@ quest messages, garrison canTake, event players flags).
    definite h3m shrine spell converts through the spell table when
    an equivalent exists; a random h3m spell (0xFF) stays random.
 
+   Tile writer (fh2m -> h3m): the fh2m terrain image index (the
+   raw sourceTerrain 'terrain:<index>') becomes the h3m Terrain
+   Picture: the position within the fh2m terrain image range, modulo
+   the about 72 h3m per-terrain image variants, gives a valid and
+   visually varied h3m picture. The fh2m ROADS and STREAMS objects
+   convert back to the h3m per-tile Road Type (Dirt) and River Type
+   (Clear) fields. The h3m road/river variants (the per-tile
+   properties) are not carried back (the h3m engine recomputes the
+   connections from the neighbors).
+
    Header bitfields (h3m -> unified): the available heroes bitfield
    is decoded - a cleared bit means the hero cannot be hired (e.g.
    Verdish, id 123, blocked in the 'all for one' prison) and is
