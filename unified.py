@@ -1014,7 +1014,7 @@ def _translate_h3m_tile_objects(obj_list, objects_section, translated_metadata,
     Returns the list of translated objects for the tile.
     """
     from correspondence import (FH2M_SPELL_SCROLL_ID, H3M_DECORATIVE_TO_FH2M,
-                                  H3M_HERO_NAMES,
+                                  H3M_HERO_NAMES, H3M_TO_FH2M_INTERACTIVE,
                                   H3M_RANDOM_MONSTER_CLASSES,
                                   H3M_TO_FH2M_ARTIFACTS,
                                   H3M_TO_FH2M_HEROES,
@@ -1308,14 +1308,24 @@ def _translate_h3m_tile_objects(obj_list, objects_section, translated_metadata,
                 else:
                     dropped_ids.append(obj_id)
         elif group.startswith("UNDEFINED_"):
-            # Decorative objects: the h3m class (from the group name)
-            # converts to a representative Heroes II landscape object
-            # through the decorative table; the classes without a
-            # mapping stay dropped.
+            # The h3m class (from the group name) converts to a
+            # Heroes II object: the interactive classes with an
+            # equivalent first (monoliths, wells, gardens, towers,
+            # learning stones, water wheels, windmills), then the
+            # decorative families; the classes without a mapping
+            # stay dropped.
             try:
                 obj_class = int(group[len("UNDEFINED_"):])
             except ValueError:
                 dropped_ids.append(obj_id)
+                continue
+            interactive = H3M_TO_FH2M_INTERACTIVE.get(obj_class)
+            if interactive is not None:
+                translated.append(OrderedDict([
+                    ("id", obj_id),
+                    ("group", interactive[0]),
+                    ("index", interactive[1]),
+                ]))
                 continue
             decorative = H3M_DECORATIVE_TO_FH2M.get(obj_class)
             if decorative is None:
