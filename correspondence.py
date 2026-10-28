@@ -491,70 +491,75 @@ def fh2m_artifact_name(artifact_id):
 # Lich/Power Lich <- Lich/Power Lich, Mage/Archmage <-
 # Mage/Archmage, Giant/Titan <- Giant/Titan, and the dragon
 # chain Green <- Red, Red <- Black, Black <- Black.
+# fh2m monster id -> h3m creature id: the inverse of the validated
+# H3M_TO_FH2M_MONSTERS table (the first h3m creature of each pair).
 FH2M_TO_H3M_MONSTERS = {
-    1: 139,   # Peasant <- Peasant
-    2: 2,   # Archer <- Archer
-    3: 3,   # Ranger <- Marksman
-    4: 0,   # Pikeman <- Pikeman
-    5: 1,   # Veteran Pikeman <- Halberdier
-    6: 6,   # Swordsman <- Swordsman
-    7: 7,   # Master Swordsman <- Crusader
-    8: 10,   # Cavalry <- Cavalier
-    9: 11,   # Champion <- Champion
-    10: 12,   # Paladin <- Angel
-    11: 13,   # Crusader <- Archangel
-    12: 84,   # Goblin <- Goblin
-    13: 86,   # Orc <- Goblin Wolf Rider
-    14: 87,   # Orc Chief <- Hobgoblin Wolf Rider
-    15: 88,   # Wolf <- Orc
-    16: 90,   # Ogre <- Ogre
-    17: 91,   # Ogre Lord <- Ogre Mage
-    18: 144,   # Troll <- Troll
-    19: 93,   # War Troll <- Thunderbird
-    20: 94,   # Cyclops <- Cyclops
-    21: 14,   # Sprite <- Centaur
-    22: 16,   # Dwarf <- Dwarf
-    23: 17,   # Battle Dwarf <- Battle Dwarf
-    24: 18,   # Elf <- Wood Elf
-    25: 19,   # Grand Elf <- Grand Elf
-    26: 20,   # Druid <- Pegasus
-    27: 21,   # Greater Druid <- Silver Pegasus
-    28: 24,   # Unicorn <- Unicorn
-    29: 26,   # Phoenix <- Green Dragon
-    30: 70,   # Centaur <- Troglodyte
-    31: 72,   # Gargoyle <- Harpy
-    32: 74,   # Griffin <- Beholder
-    33: 78,   # Minotaur <- Minotaur
-    34: 79,   # Minotaur King <- Minotaur King
-    35: 80,   # Hydra <- Manticore
-    36: 82,   # Green Dragon <- Red Dragon
-    37: 82,   # Red Dragon <- Red Dragon
-    38: 83,   # Black Dragon <- Black Dragon
-    39: 28,   # Halfling <- Gremlin
-    40: 30,   # Boar <- Stone Gargoyle
-    41: 32,   # Iron Golem <- Iron Golem
-    42: 33,   # Steel Golem <- Stone Golem
-    44: 34,   # Mage <- Mage
-    45: 35,   # Archmage <- Archmage
-    46: 40,   # Giant <- Giant
-    47: 41,   # Titan <- Titan
-    48: 56,   # Skeleton <- Skeleton
-    49: 58,   # Zombie <- Walking Dead
-    50: 59,   # Mutant Zombie <- Zombie Lord
-    51: 60,   # Mummy <- Wight
-    52: 61,   # Royal Mummy <- Wraith
-    53: 62,   # Vampire <- Vampire
-    54: 63,   # Vampire Lord <- Vampire Lord
-    55: 64,   # Lich <- Lich
-    56: 65,   # Power Lich <- Power Lich
-    57: 68,   # Bone Dragon <- Bone Dragon
-    58: 143,   # Rogue <- Rogue
-    59: 142,   # Nomad <- Nomad
-    63: 113,   # Earth Element <- Earth Elemental
-    64: 112,   # Air Element <- Air Elemental
-    65: 114,   # Fire Element <- Fire Elemental
-    66: 115,   # Water Element <- Water Elemental
+    1: 0,
+    2: 2,
+    3: 3,
+    4: 4,
+    5: 5,
+    6: 6,
+    7: 7,
+    8: 8,
+    9: 9,
+    10: 12,
+    11: 13,
+    12: 84,
+    13: 86,
+    14: 87,
+    15: 88,
+    16: 90,
+    17: 91,
+    18: 92,
+    19: 93,
+    20: 94,
+    21: 14,
+    22: 16,
+    23: 17,
+    24: 18,
+    25: 19,
+    26: 20,
+    27: 21,
+    28: 24,
+    29: 26,
+    30: 70,
+    31: 72,
+    32: 74,
+    33: 76,
+    34: 77,
+    35: 80,
+    36: 54,
+    37: 82,
+    38: 83,
+    39: 28,
+    40: 30,
+    41: 32,
+    42: 33,
+    43: 34,
+    44: 36,
+    45: 37,
+    46: 38,
+    47: 41,
+    48: 56,
+    49: 58,
+    50: 59,
+    51: 60,
+    52: 61,
+    53: 62,
+    54: 63,
+    55: 64,
+    56: 65,
+    57: 68,
+    58: 138,
+    59: 140,
+    62: 144,
+    63: 113,
+    64: 112,
+    65: 114,
+    66: 115,
 }
+
 
 # fh2m monsters with no h3m creature equivalent: converted to
 # an h3m random monster of level 4 (object class 75).
@@ -654,6 +659,59 @@ FH2M_TO_H3M_SPELLS = {
     14: 62,   # Blind <- Blind
     5: 63,   # Teleport <- Teleport
 }
+
+# fh2m mine object index -> h3m (class, subclass). The Heroes II
+# mines: index 0-39 are the 5 resources (ore, sulfur, crystal,
+# gems, gold in the order) x 8 appearances (generic, grass, snow,
+# swamp, lava, desert, dirt, wasteland), 40-44 the abandoned mines,
+# 45-46 the sawmills, 47-48 the alchemist labs. The h3m class 53
+# subclass identifies the mine type: 0 sawmill, 1 alchemist lab,
+# 2 ore, 3 sulfur, 4 crystal, 5 gems, 6 gold, 7 abandoned.
+FH2M_TO_H3M_MINES = {}
+_mine_resources = [2, 3, 4, 5, 6]  # ore, sulfur, crystal, gems, gold
+for _appearance in range(8):
+    for _res_index, _subclass in enumerate(_mine_resources):
+        FH2M_TO_H3M_MINES[_appearance * 5 + _res_index] = (53, _subclass)
+for _i in range(5):
+    FH2M_TO_H3M_MINES[40 + _i] = (53, 7)  # abandoned mines
+FH2M_TO_H3M_MINES[45] = (53, 0)  # sawmill grass/swamp
+FH2M_TO_H3M_MINES[46] = (53, 0)  # sawmill other
+FH2M_TO_H3M_MINES[47] = (53, 1)  # alchemist lab
+FH2M_TO_H3M_MINES[48] = (53, 1)  # alchemist lab snow
+
+# fh2m dwelling object index -> h3m (class, subclass). The Heroes
+# II dwellings house a Heroes II creature; the h3m dwelling class
+# 17 carries the paired h3m creature id as its subclass (see the
+# FH2M_TO_H3M_MONSTERS creature table). The dwellings whose
+# creature has no h3m pairing map to subclass 0.
+FH2M_TO_H3M_DWELLINGS = {
+    0: (17, 0),  # Peasant -> Pikeman
+    1: (17, 144),  # Medusa -> Troll
+    2: (17, 14),  # Sprite -> Centaur
+    3: (17, 86),  # Orc -> Goblin Wolf Rider
+    4: (17, 86),  # Orc -> Goblin Wolf Rider
+    5: (17, 28),  # Halfling -> Gremlin
+    6: (17, 28),  # Halfling -> Gremlin
+    7: (17, 14),  # Sprite -> Centaur
+    8: (17, 14),  # Sprite -> Centaur
+    9: (17, 140),  # Nomad -> Boar
+    10: (17, 64),  # Lich -> Lich
+    11: (17, 56),  # Skeleton -> Skeleton
+    12: (17, 92),  # Troll -> Roc
+    13: (17, 2),  # Archer -> Archer
+    14: (17, 84),  # Goblin -> Goblin
+    15: (17, 16),  # Dwarf -> Dwarf
+    16: (17, 91),  # Ogre Lord -> Ogre Mage
+    17: (17, 138),  # Rogue -> Halfling
+    18: (17, 70),  # Centaur -> Troglodyte
+    19: (17, 70),  # Centaur -> Troglodyte
+    20: (17, 0),  # Ghost -> ?
+    21: (17, 94),  # Cyclops -> Cyclops
+    22: (17, 14),  # Sprite -> Centaur
+    23: (17, 16),  # Dwarf -> Dwarf
+    24: (17, 17),  # Battle Dwarf -> Battle Dwarf
+}
+
 
 # fh2m landscape object index -> h3m decorative class. The Heroes
 # II landscape groups carry one entry per sprite variant; each maps
@@ -981,6 +1039,22 @@ FH2M_TO_H3M_CATALOG = {
     (163, 0): ("AVWmon6.def", "ffffffffff7f000000000080ff000100", "020000000000000000000000000000000000"),
     (164, 0): ("AVWmon7.def", "ffffffffff7f000000000080ff010100", "020000000000000000000000000000000000"),
 }
+
+# fh2m hero race id (the KINGDOM_HEROES object index modulo 7:
+# 0 Knight, 1 Barbarian, 2 Sorceress, 3 Warlock, 4 Wizard,
+# 5 Necromancer, 6 random) -> the first h3m hero id of the paired
+# faction (the 144 h3m heroes are ordered by 16 per faction:
+# Castle 0, Rampart 16, Tower 32, Inferno 48, Necropolis 64,
+# Dungeon 80, Stronghold 96, Fortress 112).
+FH2M_TO_H3M_HERO_RACE = {
+    0: 0,    # Knight -> Castle (Orrin)
+    1: 96,   # Barbarian -> Stronghold (Yog)
+    2: 16,   # Sorceress -> Rampart (Mephala? no: Jenova)
+    3: 80,   # Warlock -> Dungeon (Lorelei)
+    4: 32,   # Wizard -> Tower (Piquedram)
+    5: 64,   # Necromancer -> Necropolis (Straker)
+}
+
 
 # h3m decorative object classes -> (fh2m landscape group, index).
 # The h3m classes cover the families of decorative objects (the sprite
