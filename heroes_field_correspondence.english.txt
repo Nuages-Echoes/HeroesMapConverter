@@ -340,11 +340,6 @@ List for H3M (no unified equivalent yet):
 - Basic Parameters > Heroes Mastery Level Cap
 - Players Attributes > Behavior (0-Random, 1-Warrior, 2-Builder,
   3-Explorer)
-- Player Heroes > Hero Face and Hero Name (converted heroes carry the
-  default face and name; Has Random Hero / Hero Type are converted)
-- Random Artifacts > Bitfield
-- Allowed Spells > Bitfield
-- Allowed Abilities > Bitfield
 - Reserved Bytes
 
 The h3m metadata maps are carried into the unified format with
@@ -400,6 +395,20 @@ quest messages, garrison canTake, event players flags).
    equivalent: it converts to the Third Circle (h3m class 90). A
    definite h3m shrine spell converts through the spell table when
    an equivalent exists; a random h3m spell (0xFF) stays random.
+
+   Header bitfields (h3m -> unified): the available heroes bitfield
+   is decoded - a cleared bit means the hero cannot be hired (e.g.
+   Verdish, id 123, blocked in the 'all for one' prison) and is
+   transported as unavailableHeroes with the hero id and name; the
+   raw bitfield stays for the round-trip. The player AI behaviors
+   (Random, Warrior, Builder, Explorer) are transported as
+   playerBehaviors; the custom starting heroes (Hero Type with the
+   hero name) as customStartingHeroes; the AB+ random artifacts and
+   the SoD allowed spells/abilities bitfields are transported raw
+   (randomArtifactsBitfield, allowedSpellsBitfield,
+   allowedAbilitiesBitfield). None of these has a Heroes II
+   equivalent: the Heroes II editor does not restrict heroes,
+   spells or artifacts.
 
    Decorative objects (h3m -> fh2m): the decorative h3m classes
    (identified by the sprite families: AVLsh shrubs, AVLmt

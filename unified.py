@@ -268,6 +268,52 @@ def convert_h3m_to_unified(map_data):
     unified["hasHero"] = bool(basic_hero)
     unified["availableHeroesBitfield"] = map_data.get("Available Heroes", {}).get("Bitfield", "")
 
+    # The available heroes bitfield decoded: a cleared bit means the
+    # hero cannot be hired (e.g. placed in a prison on the map).
+    from correspondence import H3M_HERO_NAMES
+    heroes_bitfield_hex = map_data.get("Available Heroes", {}).get("Bitfield", "")
+    unavailable_heroes = []
+    if heroes_bitfield_hex:
+        heroes_bytes = bytes.fromhex(heroes_bitfield_hex)
+        for byte_index, hero_byte in enumerate(heroes_bytes):
+            for bit in range(8):
+                hero_id = byte_index * 8 + bit
+                if not hero_byte & (1 << bit) and hero_id < len(H3M_HERO_NAMES):
+                    unavailable_heroes.append(OrderedDict([
+                        ("id", hero_id),
+                        ("name", H3M_HERO_NAMES[hero_id]),
+                    ]))
+    if unavailable_heroes:
+        unified["unavailableHeroes"] = unavailable_heroes
+
+    # The AI behaviors and the custom starting heroes of the h3m
+    # players (Behavior: Random, Warrior, Builder, Explorer).
+    behaviors = OrderedDict()
+    custom_starting_heroes = OrderedDict()
+    for player in map_data.get("Players Attributes", {}).get("Players", []):
+        behaviors[player.get("Color")] = player.get("Behavior")
+    for hero_info in map_data.get("Player Heroes", {}).get("Player Heroes", []):
+        color = hero_info.get("Color")
+        if hero_info.get("Hero Type") is not None:
+            hero_id = hero_info["Hero Type"]
+            custom_starting_heroes[color] = OrderedDict([
+                ("id", hero_id),
+                ("name", H3M_HERO_NAMES[hero_id] if hero_id < len(H3M_HERO_NAMES) else None),
+            ])
+    if behaviors:
+        unified["playerBehaviors"] = behaviors
+    if custom_starting_heroes:
+        unified["customStartingHeroes"] = custom_starting_heroes
+
+    # The restriction bitfields (AB+ random artifacts, SoD allowed
+    # spells and abilities) carried raw.
+    if map_data.get("Random Artifacts"):
+        unified["randomArtifactsBitfield"] = map_data["Random Artifacts"].get("Bitfield", "")
+    if map_data.get("Allowed Spells"):
+        unified["allowedSpellsBitfield"] = map_data["Allowed Spells"].get("Bitfield", "")
+    if map_data.get("Allowed Abilities"):
+        unified["allowedAbilitiesBitfield"] = map_data["Allowed Abilities"].get("Bitfield", "")
+
     # Teams
     teams = []
     team_data = map_data.get("Teams", {})
