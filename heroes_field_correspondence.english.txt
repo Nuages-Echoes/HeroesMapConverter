@@ -487,7 +487,7 @@ quest messages, garrison canTake, event players flags).
    Skeleton, pyramid (63) -> Pyramid, shipwreck survivor (86) ->
    Shipwreck Survivor, sirens (92) -> Sirens, scholar (47) ->
    Witch's Hut, swan pond (28) -> Faerie Ring, fountain of youth
-   (31) -> Faerie Ring. Dropped (no Heroes II gameplay
+   (31) -> Watering Hole. Dropped (no Heroes II gameplay
    equivalent): cursed ground (21), magic plains (46),
    subterranean gate (103) and the editor objects (arena 4,
    black market 7, border gates, keymaster tents, cartographer,

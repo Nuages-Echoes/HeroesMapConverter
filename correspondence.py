@@ -1152,7 +1152,7 @@ H3M_TO_FH2M_INTERACTIVE = {
     92: ("ADVENTURE_WATER", 10),           # sirens -> Sirens
     47: ("ADVENTURE_MISCELLANEOUS", 26),   # scholar -> Witch's Hut
     28: ("ADVENTURE_POWER_UPS", 2),        # swan pond -> Faerie Ring
-    31: ("ADVENTURE_POWER_UPS", 2),        # fountain of youth -> Faerie Ring
+    31: ("ADVENTURE_POWER_UPS", 1),        # fountain of youth -> Watering Hole
     # Dropped (no Heroes II gameplay equivalent): cursed ground (21),
     # magic plains (46), subterranean gate (103), arena (4),
     # black market (7), border gate (9), keymaster tent (10),
