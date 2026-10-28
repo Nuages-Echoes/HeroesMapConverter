@@ -1575,8 +1575,15 @@ def unified_to_fh2m(unified):
     if unified.get("hasUnderground", False):
         raise ValueError(
             "Heroes of Might and Magic 2 ne permet pas de jouer avec le sous-sol, "
-            "la carte {} ne peut pas être convertie".format(unified.get("name", ""))
-        )
+            "la carte {} ne peut pas être convertie".format(unified.get("name", "")))
+
+    # Heroes II supports at most 6 players: a map with more than 6
+    # available colors cannot be converted.
+    available_colors = (unified.get("players") or {}).get("availableColors") or []
+    if len(available_colors) > 6:
+        raise ValueError(
+            "Le nombre de factions est limité à 6 dans H2, "
+            "impossible de convertir la carte {}".format(unified.get("name", "")))
 
     data = OrderedDict()
 
