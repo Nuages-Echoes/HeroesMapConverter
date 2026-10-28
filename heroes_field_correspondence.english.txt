@@ -432,7 +432,16 @@ quest messages, garrison canTake, event players flags).
      shrine circle (Incantation -> First Circle, Gesture -> Second
      Circle, Thought -> Third Circle); other power-up objects are
      dropped
-   - ADVENTURE_MISCELLANEOUS: ground events (h3m class 26) convert to
+   - ADVENTURE_MISCELLANEOUS: witch huts (h3m class 113) and scholars
+     (h3m class 62) convert to the fh2m Witch's Hut object (index 26);
+     the fh2m format carries no per-hut metadata, the engine draws
+     the secondary skill at game start (the h3m fixed skill and the
+     scholar reward are lost). Garrisons (h3m class 35) convert to a
+     monster troop: the highest level creature (the highest h3m
+     creature id among the non-empty slots) becomes a placed monster
+     with its count; a garrison with no creature, or whose best
+     creature has no Heroes II equivalent, is dropped. Ground events
+     (h3m class 26) convert to
      the fh2m event object (index 38) with a full
      adventureMapEventMetadata: message, player colors (the h3m
      player bitmask maps to the Heroes II colors; an empty mask means

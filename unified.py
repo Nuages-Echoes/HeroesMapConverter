@@ -1085,8 +1085,55 @@ def _translate_h3m_tile_objects(obj_list, objects_section, translated_metadata,
                 ("spell", fh2m_spell if fh2m_spell and fh2m_spell > 0 else None),
             ])
         elif group == "ADVENTURE_MISCELLANEOUS":
-            event_meta = (objects_section.get("eventMetadata") or {}).get(str(obj_id))
-            if event_meta:
+            # Witch huts (class 113) and scholars (class 62) convert
+            # to the fh2m Witch's Hut object (index 26). The fh2m
+            # format carries no per-hut metadata: the engine draws
+            # the secondary skill at game start.
+            witch_meta = (objects_section.get("witchhutMetadata") or {}).get(str(obj_id))
+            scholar_meta = (objects_section.get("scholarMetadata") or {}).get(str(obj_id))
+            garrison_meta = (objects_section.get("garrisonMetadata") or {}).get(str(obj_id))
+            if witch_meta is not None or scholar_meta is not None:
+                translated.append(OrderedDict([
+                    ("id", obj_id),
+                    ("group", "ADVENTURE_MISCELLANEOUS"),
+                    ("index", 26),
+                ]))
+            elif garrison_meta is not None:
+                # A garrison converts to a monster troop: the highest
+                # level creature of the garrison (the highest h3m
+                # creature id among the non-empty slots) becomes a
+                # placed monster with its count. An empty garrison is
+                # dropped.
+                best_creature = None
+                best_count = 0
+                for creature_slot in (garrison_meta.get("creatures") or []):
+                    creature = creature_slot.get("creature")
+                    count = creature_slot.get("count") or 0
+                    if creature is None or count <= 0:
+                        continue
+                    if best_creature is None or creature > best_creature:
+                        best_creature = creature
+                        best_count = count
+                if best_creature is None:
+                    dropped_ids.append(obj_id)
+                    continue
+                fh2m_monster = H3M_TO_FH2M_MONSTERS.get(best_creature, 0) or 0
+                if fh2m_monster < 1:
+                    dropped_ids.append(obj_id)
+                    continue
+                translated.append(OrderedDict([
+                    ("id", obj_id),
+                    ("group", "MONSTERS"),
+                    ("index", fh2m_monster - 1),
+                ]))
+                translated_metadata.setdefault("monsterMetadata", OrderedDict())[str(obj_id)] = OrderedDict([
+                    ("count", best_count),
+                    ("joinCondition", 0),
+                    ("isWeeklyGrowthDisabled", False),
+                    ("selected", []),
+                ])
+            elif (objects_section.get("eventMetadata") or {}).get(str(obj_id)):
+                event_meta = objects_section["eventMetadata"][str(obj_id)]
                 # Ground event: the fh2m OBJ_EVENT object
                 # (ADVENTURE_MISCELLANEOUS index 38) with a full
                 # adventureMapEventMetadata.
