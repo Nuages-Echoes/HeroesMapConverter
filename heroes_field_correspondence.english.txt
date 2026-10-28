@@ -474,21 +474,23 @@ quest messages, garrison canTake, event players flags).
    Stone Liths, magic well (49) -> Magic Well, mystical garden
    (55) -> Magic Garden, redwood observatory (58) -> Observation
    Tower, learning stone (100) -> Gazebo, water wheel (109) ->
-   Water Wheel, windmill (112) -> Windmill. The remaining
-   interactive classes without a Heroes II gameplay equivalent
-   stay dropped: altar of sacrifice (2), cursed ground (21),
-   marletto tower (23), fountain of fortune (30), garden of
-   revelation (32), idol of fortune (38), magic plains (46),
-   scholar (47 - the scholars convert to the Witch's Hut but the
-   class also appears in the raw decorative lists), star axis
-   (61), sea chest (82), temple (96), den of thieves (97), tree
-   of knowledge (102), subterranean gate (103 - the underground
-   is rejected by the conversion guard), warrior's tomb (108),
-   whirlpool (111). The dropped classes of the test maps now
-   total 303 occurrences over the 16 remaining interactive
-   classes (the 195 terrain objects of the classes 124, 130,
-   132, 143, 151, 153, 158 and the 83 interactive objects of
-   the classes 45, 49, 55, 58, 100, 109, 112 are converted).
+   Water Wheel, windmill (112) -> Windmill; and the manual
+   pairings: altar of sacrifice (2) -> Daemon Cave, marletto
+   tower (23) -> Mercenary Camp, fountain of fortune (30) ->
+   Faerie Ring, garden of revelation (32) -> Witch Doctor's Hut,
+   idol of fortune (38) -> Idol, star axis (61) -> Standing
+   Stones, sea chest (82) -> Sea Chest, temple (96) -> Temple,
+   den of thieves (97) -> Trading Post, tree of knowledge (102)
+   -> Tree of Knowledge, warrior's tomb (108) -> Graveyard,
+   whirlpool (111) -> Whirlpool. Dropped (no Heroes II gameplay
+   equivalent): cursed ground (21), magic plains (46),
+   subterranean gate (103). The remaining dropped classes of the
+   test maps total 76 occurrences over these 3 classes (the 195
+   terrain objects of the classes 124, 130, 132, 143, 151, 153,
+   158, the 83 interactive objects of the classes 45, 49, 55, 58,
+   100, 109, 112 and the 127 manually paired objects of the
+   classes 2, 23, 30, 32, 38, 61, 82, 96, 97, 102, 108, 111 are
+   converted).
 
    Tile writer (fh2m -> h3m): the fh2m terrain image index (the
    raw sourceTerrain 'terrain:<index>') becomes the h3m Terrain
