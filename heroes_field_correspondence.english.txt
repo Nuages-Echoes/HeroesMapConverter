@@ -469,29 +469,26 @@ quest messages, garrison canTake, event players flags).
    (153), volcano (158) and hole (124) classes map to the Heroes II
    log, mossy rocks, river deltas, cow skull, stumps, volcano
    craters and dug holes through H3M_DECORATIVE_TO_FH2M.
-   Interactive: altar of sacrifice
-   (2, AvXAltar), cursed ground (21, AVXcrsd), marletto tower
-   (23, AvSMarl), fountain of fortune (30, AVSfntn), garden of
-   revelation (32, AVSgrdn), idol of fortune (38, AVSidol),
-   two-way monolith (45, AVXmn2p - the Heroes II Stone Liths map
-   back through FH2M_TO_H3M_MISC but this direction is not wired
-   yet), magic plains (46, AVXplns), scholar (47, AVSschm - the
-   scholars convert to the Witch's Hut), magic well (49, AVXwelg),
-   mystical garden (55, AVTmyst), redwood observatory (58,
-   AvXRedW), star axis (61, AVSaxis), sea chest (82, AVXccht -
-   the h3m sea chest), temple (96, AVStmpl), den of thieves (97,
-   AVXdend), learning stone (100, AVSgzbo), tree of knowledge
-   (102, AVXtrek), subterranean gate (103, AvTCave), warrior's
-   tomb (108, AVXtomb), water wheel (109, AVMwwhl - the Heroes II
-   water wheel maps back through FH2M_TO_H3M_MISC but this
-   direction is not wired yet), whirlpool (111, AVXwhrl),
-   windmill (112, AVMwndd - the Heroes II windmill maps back
-   through FH2M_TO_H3M_MISC but this direction is not wired yet).
-   The dropped classes of the test maps total 386 occurrences
-   over the interactive classes 2, 21, 23, 30, 32, 38, 45, 46,
-   47, 49, 55, 58, 61, 82, 96, 97, 100, 102, 103, 108, 109, 111,
-   112 (the 195 terrain objects of the classes 124, 130, 132,
-   143, 151, 153, 158 are now converted).
+   Interactive with a Heroes II equivalent (mapped through the
+   H3M_TO_FH2M_INTERACTIVE table): two-way monolith (45) ->
+   Stone Liths, magic well (49) -> Magic Well, mystical garden
+   (55) -> Magic Garden, redwood observatory (58) -> Observation
+   Tower, learning stone (100) -> Gazebo, water wheel (109) ->
+   Water Wheel, windmill (112) -> Windmill. The remaining
+   interactive classes without a Heroes II gameplay equivalent
+   stay dropped: altar of sacrifice (2), cursed ground (21),
+   marletto tower (23), fountain of fortune (30), garden of
+   revelation (32), idol of fortune (38), magic plains (46),
+   scholar (47 - the scholars convert to the Witch's Hut but the
+   class also appears in the raw decorative lists), star axis
+   (61), sea chest (82), temple (96), den of thieves (97), tree
+   of knowledge (102), subterranean gate (103 - the underground
+   is rejected by the conversion guard), warrior's tomb (108),
+   whirlpool (111). The dropped classes of the test maps now
+   total 303 occurrences over the 16 remaining interactive
+   classes (the 195 terrain objects of the classes 124, 130,
+   132, 143, 151, 153, 158 and the 83 interactive objects of
+   the classes 45, 49, 55, 58, 100, 109, 112 are converted).
 
    Tile writer (fh2m -> h3m): the fh2m terrain image index (the
    raw sourceTerrain 'terrain:<index>') becomes the h3m Terrain
