@@ -1056,6 +1056,55 @@ FH2M_TO_H3M_HERO_RACE = {
 }
 
 
+# fh2m shrine circle index (ADVENTURE_POWER_UPS 14 First Circle,
+# 15 Second Circle, 16 Third Circle) -> the h3m shrine class (88
+# Incantation, 89 Gesture, 90 Thought). The Heroes II Shrine of
+# Magic Mystery converts to the Third Circle as well.
+FH2M_TO_H3M_SHRINES = {
+    14: 88,  # Shrine of the First Circle -> Magic Incantation
+    15: 89,  # Shrine of the Second Circle -> Magic Gesture
+    16: 90,  # Shrine of the Third Circle -> Magic Thought
+}
+
+
+# fh2m miscellaneous/water object index -> h3m (class, subclass).
+# Only the objects with a confirmed h3m sprite in the reference
+# catalog are mapped; the others (obelisk, oracle, pyramid, PoL
+# objects...) stay dropped until their h3m classes are confirmed.
+FH2M_TO_H3M_MISC = {
+    # MISC: windmills -> windmill (112), lean-tos -> lean-to (39),
+    # signs -> sign (91), water wheels -> water wheel (109),
+    # witch's hut -> witch hut (113), stone liths -> two-way
+    # monolith (42), daemon caves -> subterranean gate? no: dropped,
+    # sphinx -> seer hut (83) [the sphinx riddle], magic garden ->
+    # ... dropped, trading post -> market of trading? (7) dropped.
+    4: (112, 0),   # Windmill, grass
+    5: (112, 0),   # Windmill, snow
+    6: (112, 0),   # Windmill, dirt
+    16: (39, 0),   # Lean-to, snow
+    17: (39, 0),   # Lean-to, grass
+    18: (91, 0),   # Sign, snow
+    19: (91, 0),   # Sign, swamp
+    20: (91, 0),   # Sign, lava
+    21: (91, 0),   # Sign, desert
+    22: (91, 0),   # Sign, generic
+    23: (109, 0),  # Water wheel, snow
+    24: (109, 0),  # Water wheel, generic
+    26: (113, 0),  # Witch's Hut, swamp
+    35: (42, 0),   # Stone Liths, generic
+    36: (42, 0),   # Stone Liths, generic 2
+    37: (42, 0),   # Stone Liths, Resurrection variant
+    41: (99, 0),   # Observation Tower, grass -> lookout tower (99)
+    42: (99, 0),   # Observation Tower, generic
+    43: (99, 0),   # Observation Tower, desert
+    44: (99, 0),   # Observation Tower, snow
+    # WATER: bottle -> bottle (59), buoy -> buoy (11), flotsam ->
+    # flotsam? no confirmed class: dropped.
+    "WATER_0": (59, 0),  # Bottle
+    "WATER_3": (11, 0),  # Buoy
+}
+
+
 # h3m decorative object classes -> (fh2m landscape group, index).
 # The h3m classes cover the families of decorative objects (the sprite
 # names identify them: AVLsh = shrubs, AVLmt = mountains, AVLf =

@@ -415,13 +415,20 @@ quest messages, garrison canTake, event players flags).
    FH2M_TO_H3M_DWELLINGS (25 entries: the dwelling creature pairs
    to the h3m creature of the FH2M_TO_H3M_MONSTERS table), the
    heroes (class 34, the hero type being the first h3m hero of the
-   paired faction, sprite AH0<type>00.DEF) and the towns (class 98,
-   the faction subclass through the town/race pairing, with the
-   neutral RoE town layout). The maps convert to the RoE layout.
-   The hero and town per-instance details (the name, experience,
-   skills, army, artifacts, buildings, garrison) are the next
-   increments; the sprite catalog covers the sprites present in
-   the reference maps, the hero sprites follow the AH0 convention.
+   paired faction, sprite AH0<type>00.DEF, with the full RoE hero
+   layout: the custom name, the experience, the secondary skills
+   through the inverse skill table, the army through the creature
+   pairs and the artifacts through the inverse artifact table) and
+   the towns (class 98, the faction subclass through the town/race
+   pairing, with the custom name, the garrison defenders and the
+   built buildings mapped back through the building bit tables).
+   The shrines map back through FH2M_TO_H3M_SHRINES (First Circle
+   -> Incantation and so on) and the miscellaneous/water objects
+   through FH2M_TO_H3M_MISC (windmills, lean-tos, signs, water
+   wheels, witch huts, stone liths with their ownable owner,
+   observation towers, bottles and buoys; the objects without a
+   confirmed h3m sprite class stay dropped). The maps convert to
+   the RoE layout.
 
    Tile writer (fh2m -> h3m): the fh2m terrain image index (the
    raw sourceTerrain 'terrain:<index>') becomes the h3m Terrain
