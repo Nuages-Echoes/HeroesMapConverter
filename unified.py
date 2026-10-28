@@ -2306,6 +2306,51 @@ def _encode_h3m_objects(unified, version_ab, version_sod):
                 entry = ("artifact", (x, y, z), (5, h3m_artifact), None)
             elif group == "ADVENTURE_MISCELLANEOUS" and index == 0:
                 entry = ("sign", (x, y, z), (91, 0), None)
+            elif group == "KINGDOM_HEROES":
+                # A hero: the object index is color * 7 + race. The
+                # hero type comes from the hero pairing: the first
+                # h3m hero paired to the Heroes II race.
+                hero_meta = (objects_section.get("heroMetadata") or {}).get(str(obj_id)) or {}
+                from correspondence import FH2M_TO_H3M_HERO_RACE
+                race = index % 7
+                hero_type = FH2M_TO_H3M_HERO_RACE.get(race)
+                if hero_type is None:
+                    # A random race (6) or an unmapped race: encode
+                    # a random hero (type 0xFF, sprite AH0000).
+                    hero_type = 0
+                hero_payload = dict(hero_meta)
+                hero_payload["type"] = hero_type
+                entry = ("hero", (x, y, z), (34, hero_type), hero_payload)
+            elif group == "KINGDOM_TOWNS":
+                # A town: the object index encodes the race (race * 2
+                # for a castle); the castleMetadata carries the
+                # defenders.
+                from correspondence import FH2M_TOWN_RACE_ORDER
+                race_id = index // 2
+                town_type = None
+                if 0 <= race_id < len(FH2M_TOWN_RACE_ORDER):
+                    from correspondence import H3M_TOWN_TYPE_TO_FH2M_RACE
+                    for tt, race in H3M_TOWN_TYPE_TO_FH2M_RACE.items():
+                        if race == FH2M_TOWN_RACE_ORDER[race_id]:
+                            town_type = tt
+                            break
+                if town_type is not None:
+                    castle_meta = (objects_section.get("castleMetadata") or {}).get(str(obj_id)) or {}
+                    entry = ("town", (x, y, z), (98, town_type), castle_meta)
+            elif group == "ADVENTURE_MINES":
+                # The fh2m mine index maps to the h3m ownable mine
+                # (class 53, subclass per mine type).
+                from correspondence import FH2M_TO_H3M_MINES
+                h3m_mine = FH2M_TO_H3M_MINES.get(index)
+                if h3m_mine is not None:
+                    entry = ("ownable", (x, y, z), h3m_mine, None)
+            elif group == "ADVENTURE_DWELLINGS":
+                # The fh2m dwelling index maps to the h3m ownable
+                # dwelling (class 17, subclass = creature id).
+                from correspondence import FH2M_TO_H3M_DWELLINGS
+                h3m_dwelling = FH2M_TO_H3M_DWELLINGS.get(index)
+                if h3m_dwelling is not None:
+                    entry = ("ownable", (x, y, z), h3m_dwelling, None)
             elif group.startswith("LANDSCAPE"):
                 # Decorative objects: the landscape index maps back
                 # to the h3m decorative class (subclass 0).
@@ -2328,6 +2373,14 @@ def _encode_h3m_objects(unified, version_ab, version_sod):
         key = (obj_class, obj_subclass)
         if key not in kind_of:
             ref = FH2M_TO_H3M_CATALOG.get(key)
+            if ref is None and obj_class == 34:
+                # The hero sprites follow the AH0<type>00.DEF
+                # convention (the standard hero sprite naming of the
+                # h3m format); the passability matches the prison
+                # sprite (the closest single-tile hero object).
+                ref = ('AH0%02X00.DEF' % (obj_subclass or 0),
+                       'ffffffffff3f000000000080ff01ff00',
+                       '000000000000000000000000000000000000')
             if ref is None:
                 continue
             kind_of[key] = len(catalog_keys)
@@ -2376,6 +2429,44 @@ def _encode_h3m_objects(unified, version_ab, version_sod):
             pass  # no per-instance data
         elif kind_name == "ownable":
             buffer.write(struct.pack("<I", 0xFFFFFF))  # neutral owner
+        elif kind_name == "hero":
+            # RoE hero layout: owner, type, then the customization
+            # flags (name, experience, face, skills, creatures,
+            # formation, artifacts, patrol radius) and 16 trailing
+            # unknown bytes.
+            meta = payload or {}
+            buffer.write(struct.pack("<B", 0xFF))  # owner: neutral
+            hero_type = meta.get("type")
+            buffer.write(struct.pack("<B", hero_type if hero_type is not None else 0xFF))
+            name = meta.get("name") or ""
+            if name:
+                name_bytes = name.encode("cp1252", errors="replace")
+                buffer.write(struct.pack("<B", 1))
+                buffer.write(struct.pack("<i", len(name_bytes)))
+                buffer.write(name_bytes)
+            else:
+                buffer.write(struct.pack("<B", 0))
+            buffer.write(struct.pack("<I", meta.get("experience") or 0))
+            buffer.write(struct.pack("<B", 0))  # no custom face
+            buffer.write(struct.pack("<B", 0))  # no custom skills
+            buffer.write(struct.pack("<B", 0))  # no custom creatures
+            buffer.write(struct.pack("<B", 0))  # formation
+            buffer.write(struct.pack("<B", 0))  # no custom artifacts
+            buffer.write(struct.pack("<B", 0xFF))  # patrol radius: free
+            buffer.write(b"\x00" * 16)
+        elif kind_name == "town":
+            # RoE town layout: owner, name, creatures (7 slots),
+            # formation, buildings flags, spell bitfields and events.
+            meta = payload or {}
+            buffer.write(struct.pack("<B", 0xFF))  # owner: neutral
+            buffer.write(struct.pack("<B", 0))  # no custom name
+            buffer.write(struct.pack("<B", 0))  # no custom creatures
+            buffer.write(struct.pack("<B", 0))  # formation
+            buffer.write(struct.pack("<B", 0))  # no custom buildings: hasFort below
+            buffer.write(struct.pack("<B", 0))  # hasFort: no
+            buffer.write(b"\x00" * 9)  # impossible spells: all allowed
+            buffer.write(struct.pack("<I", 0))  # no events
+            buffer.write(b"\x00\x00\x00")  # trailing 3 bytes
 
     return buffer.getvalue().hex()
 

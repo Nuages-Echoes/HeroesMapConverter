@@ -408,11 +408,20 @@ quest messages, garrison canTake, event players flags).
    artifact table), signs (empty message) and the landscape
    decorative objects through the FH2M_LANDSCAPE_TO_H3M table (209
    entries: the trees, mountains, rocks, water and miscellaneous
-   sprite variants map to the closest h3m decorative class). The
-   maps convert to the RoE layout. The remaining groups (mines,
-   dwellings, heroes, towns) are the next increments; the sprite
-   catalog covers the sprites present in the reference maps, the
-   others are dropped.
+   sprite variants map to the closest h3m decorative class), the
+   mines through FH2M_TO_H3M_MINES (49 entries: the 5 resources x 8
+   appearances, the abandoned mines, sawmills and alchemist labs
+   map to the h3m class 53 subclasses), the dwellings through
+   FH2M_TO_H3M_DWELLINGS (25 entries: the dwelling creature pairs
+   to the h3m creature of the FH2M_TO_H3M_MONSTERS table), the
+   heroes (class 34, the hero type being the first h3m hero of the
+   paired faction, sprite AH0<type>00.DEF) and the towns (class 98,
+   the faction subclass through the town/race pairing, with the
+   neutral RoE town layout). The maps convert to the RoE layout.
+   The hero and town per-instance details (the name, experience,
+   skills, army, artifacts, buildings, garrison) are the next
+   increments; the sprite catalog covers the sprites present in
+   the reference maps, the hero sprites follow the AH0 convention.
 
    Tile writer (fh2m -> h3m): the fh2m terrain image index (the
    raw sourceTerrain 'terrain:<index>') becomes the h3m Terrain
