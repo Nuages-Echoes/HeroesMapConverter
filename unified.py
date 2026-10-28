@@ -1092,12 +1092,32 @@ def _translate_h3m_tile_objects(obj_list, objects_section, translated_metadata,
             witch_meta = (objects_section.get("witchhutMetadata") or {}).get(str(obj_id))
             scholar_meta = (objects_section.get("scholarMetadata") or {}).get(str(obj_id))
             garrison_meta = (objects_section.get("garrisonMetadata") or {}).get(str(obj_id))
+            seer_meta = (objects_section.get("seerMetadata") or {}).get(str(obj_id))
             if witch_meta is not None or scholar_meta is not None:
                 translated.append(OrderedDict([
                     ("id", obj_id),
                     ("group", "ADVENTURE_MISCELLANEOUS"),
                     ("index", 26),
                 ]))
+            elif seer_meta is not None:
+                # A seer hut converts to the fh2m Sphinx object
+                # (index 31): the artifact quest becomes the riddle
+                # (the artifact name being the answer) and the
+                # reward converts when the fh2m sphinx supports it
+                # (artifact or resources); the other h3m reward
+                # types (experience, skills, spells, creatures)
+                # are lost.
+                sphinx_entry = _h3m_seer_to_fh2m_sphinx(seer_meta)
+                if sphinx_entry is not None:
+                    translated.append(OrderedDict([
+                        ("id", obj_id),
+                        ("group", "ADVENTURE_MISCELLANEOUS"),
+                        ("index", 31),
+                    ]))
+                    translated_metadata.setdefault("sphinxMetadata", OrderedDict())[str(obj_id)] = sphinx_entry
+                else:
+                    dropped_ids.append(obj_id)
+                    continue
             elif garrison_meta is not None:
                 # A garrison converts to a monster troop: the highest
                 # level creature of the garrison (the highest h3m
@@ -1181,6 +1201,66 @@ def _fh2m_hero_race_id(fh2m_hero_id):
     if 46 <= fh2m_hero_id <= 54:
         return 6
     return None
+
+
+def _h3m_seer_to_fh2m_sphinx(seer_meta):
+    """
+    Build an fh2m sphinxMetadata entry from an h3m seer hut (RoE
+    artifact quest or AB+ quest): the riddle describes the quest
+    (the quest artifact name being the answer) and the reward
+    converts when the fh2m sphinx supports it (an artifact or
+    resources); the other h3m reward types (experience, morale,
+    luck, primary and secondary skills, spells, creatures) have no
+    sphinx equivalent and are lost. Returns None when the seer
+    carries no quest.
+    """
+    from correspondence import (FH2M_SPELL_SCROLL_ID, H3M_ARTIFACT_NAMES,
+                                  H3M_TO_FH2M_ARTIFACTS, H3M_TO_FH2M_SPELLS)
+
+    quest = seer_meta.get("quest")
+    quest_artifact = seer_meta.get("questArtifact")
+    if quest is None and quest_artifact is None:
+        return None
+
+    answers = []
+    if quest_artifact is not None:
+        if quest_artifact < len(H3M_ARTIFACT_NAMES):
+            answers = [H3M_ARTIFACT_NAMES[quest_artifact]]
+        riddle = "Bring me the %s and you shall be rewarded." % (answers[0] if answers else "artifact")
+    else:
+        # AB+ quest: use the first visit message when present.
+        riddle = (quest.get("firstVisitMessage") or
+                  quest.get("nextVisitMessage") or
+                  "Complete my quest and you shall be rewarded.")
+        if quest.get("artifacts"):
+            answers = [H3M_ARTIFACT_NAMES[a] if a < len(H3M_ARTIFACT_NAMES) else str(a)
+                       for a in quest["artifacts"]]
+
+    reward = seer_meta.get("reward") or {}
+    fh2m_artifact = 0
+    artifact_metadata = 0
+    resources = OrderedDict([
+        ("wood", 0), ("mercury", 0), ("ore", 0), ("sulfur", 0),
+        ("crystal", 0), ("gems", 0), ("gold", 0),
+    ])
+    reward_type = reward.get("type")
+    if reward_type == 8:
+        artifact = reward.get("artifact")
+        fh2m_artifact = H3M_TO_FH2M_ARTIFACTS.get(artifact, 0) or 0
+    elif reward_type == 5:
+        resource_names = ["wood", "mercury", "ore", "sulfur",
+                         "crystal", "gems", "gold"]
+        resource_index = reward.get("resourceType", 0)
+        if 0 <= resource_index < len(resource_names):
+            resources[resource_names[resource_index]] = reward.get("amount", 0)
+
+    return OrderedDict([
+        ("riddle", riddle),
+        ("answers", answers),
+        ("artifact", fh2m_artifact),
+        ("artifactMetadata", artifact_metadata),
+        ("resources", resources),
+    ])
 
 
 def _h3m_event_to_fh2m_event(event_meta):
