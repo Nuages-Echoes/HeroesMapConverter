@@ -405,11 +405,14 @@ quest messages, garrison canTake, event players flags).
    creature table and the random monsters 1-4 through the h3m
    classes 71-75, with their count), resources (the 7 types through
    the resource table, with their count), artifacts (through the
-   artifact table) and signs (empty message). The maps convert to
-   the RoE layout. The remaining groups (landscape decorative,
-   mines, dwellings, heroes, towns) are the next increments; the
-   sprite catalog covers the creatures present in the reference
-   maps, the others are dropped.
+   artifact table), signs (empty message) and the landscape
+   decorative objects through the FH2M_LANDSCAPE_TO_H3M table (209
+   entries: the trees, mountains, rocks, water and miscellaneous
+   sprite variants map to the closest h3m decorative class). The
+   maps convert to the RoE layout. The remaining groups (mines,
+   dwellings, heroes, towns) are the next increments; the sprite
+   catalog covers the sprites present in the reference maps, the
+   others are dropped.
 
    Tile writer (fh2m -> h3m): the fh2m terrain image index (the
    raw sourceTerrain 'terrain:<index>') becomes the h3m Terrain
