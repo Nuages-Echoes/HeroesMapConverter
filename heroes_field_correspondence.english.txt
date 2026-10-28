@@ -430,6 +430,61 @@ quest messages, garrison canTake, event players flags).
    confirmed h3m sprite class stay dropped). The maps convert to
    the RoE layout.
 
+   Objects without a confirmed h3m class (fh2m -> h3m): the
+   Heroes II objects below have no confirmed h3m sprite class in
+   the reference catalog and stay dropped by the h3m encoder (they
+   would risk a misaligned binary layout). ADVENTURE_MISCELLANEOUS:
+   Graveyards (indexes 0-1, 52-54), Hill Forts (2-3), Oracles
+   (7-8), Obelisks (9-15), Daemon Caves (27-28), Pyramids (29),
+   Skeletons (30), Sphinxes (31), Trading Posts (32-33),
+   Lighthouses (34), Events (38 - the ground events need their
+   dedicated h3m layout), Freeman's Foundry (39), Magic Gardens
+   (40), Alchemist's Tower (45), Stables (46), Jails (47), Hut of
+   the Magi (48), Eye of the Magi (49), Barriers (50),
+   Traveller's Tents (51), Wagons (25), Black Cats (55).
+   ADVENTURE_POWER_UPS: Artesian Springs (0), Watering Holes (1),
+   Faerie Rings (2-4), Oases (5), Fountains (6), Magic Wells
+   (7-9), Forts (10), Gazebos (11), Witch Doctor's Huts (12),
+   Mercenary Camps (13), Idols (17), Standing Stones (18), Temples
+   (19), Trees of Knowledge (20), Xanadus (21), Arenas (22).
+   ADVENTURE_WATER: Sea Chests (1), Flotsam (2), Shipwreck
+   Survivors (5), Magellan's Maps (6), Whirlpools (7), Shipwrecks
+   (8), Derelict Ships (9), Sirens (10), Barrels (12); the Boats
+   (4) need the h3m boat class. The Treasure Chest, Campfire and
+   Genie's Lamp treasures (ADVENTURE_TREASURES 1-4+) and the boats
+   are also dropped.
+
+   Classes h3m without a Heroes II equivalent (h3m -> fh2m): the
+   classes below appear in the test maps and stay dropped by the
+   fh2m conversion - the decorative ones have no Heroes II
+   landscape object and the interactive ones have no Heroes II
+   gameplay equivalent (identities from the VCMI object configs,
+   which match the raw h3m classes). Decorative: log (130,
+   AvLdlog), moss (132, AVLmoss), river delta (143, clrdelt4),
+   skull (151, AVLskul), stump (153, AvLStm2), volcano (158,
+   AVLvol4), hole (124, AVLholg). Interactive: altar of sacrifice
+   (2, AvXAltar), cursed ground (21, AVXcrsd), marletto tower
+   (23, AvSMarl), fountain of fortune (30, AVSfntn), garden of
+   revelation (32, AVSgrdn), idol of fortune (38, AVSidol),
+   two-way monolith (45, AVXmn2p - the Heroes II Stone Liths map
+   back through FH2M_TO_H3M_MISC but this direction is not wired
+   yet), magic plains (46, AVXplns), scholar (47, AVSschm - the
+   scholars convert to the Witch's Hut), magic well (49, AVXwelg),
+   mystical garden (55, AVTmyst), redwood observatory (58,
+   AvXRedW), star axis (61, AVSaxis), sea chest (82, AVXccht -
+   the h3m sea chest), temple (96, AVStmpl), den of thieves (97,
+   AVXdend), learning stone (100, AVSgzbo), tree of knowledge
+   (102, AVXtrek), subterranean gate (103, AvTCave), warrior's
+   tomb (108, AVXtomb), water wheel (109, AVMwwhl - the Heroes II
+   water wheel maps back through FH2M_TO_H3M_MISC but this
+   direction is not wired yet), whirlpool (111, AVXwhrl),
+   windmill (112, AVMwndd - the Heroes II windmill maps back
+   through FH2M_TO_H3M_MISC but this direction is not wired yet).
+   The dropped classes of the test maps total 581 occurrences
+   over the classes 2, 21, 23, 30, 32, 38, 45, 46, 47, 49, 55,
+   58, 61, 82, 96, 97, 100, 102, 103, 108, 109, 111, 112, 124,
+   130, 132, 143, 151, 153, 158.
+
    Tile writer (fh2m -> h3m): the fh2m terrain image index (the
    raw sourceTerrain 'terrain:<index>') becomes the h3m Terrain
    Picture: the position within the fh2m terrain image range, modulo
