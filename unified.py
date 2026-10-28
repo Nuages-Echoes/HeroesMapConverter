@@ -1220,17 +1220,17 @@ def _fh2m_hero_race_id(fh2m_hero_id):
 
 def _h3m_pandora_to_fh2m_sphinx(pandora_meta):
     """
-    Build an fh2m sphinxMetadata entry from an h3m pandora box: the
-    guard message becomes the riddle (a default riddle when there is
-    no guard) and the artifact and resource bonuses convert; the
+    Build an fh2m sphinxMetadata entry from an h3m pandora box:
+    the riddle is the fixed 'Validez pour obtenir la recompense.'
+    prompt with an empty valid answer, and the artifact and
+    resource bonuses convert; the
     other h3m bonuses (experience, mana, morale, luck, primary and
     secondary skills, spells, creatures) and the guard fight have
     no sphinx equivalent and are lost.
     """
     from correspondence import H3M_TO_FH2M_ARTIFACTS
 
-    guard = pandora_meta.get("guard") or {}
-    riddle = guard.get("message") or "Answer my riddle and you shall be rewarded."
+    riddle = "Validez pour obtenir la recompense."
 
     fh2m_artifact = 0
     artifacts = pandora_meta.get("artifacts") or []
@@ -1255,35 +1255,23 @@ def _h3m_pandora_to_fh2m_sphinx(pandora_meta):
 def _h3m_seer_to_fh2m_sphinx(seer_meta):
     """
     Build an fh2m sphinxMetadata entry from an h3m seer hut (RoE
-    artifact quest or AB+ quest): the riddle describes the quest
-    (the quest artifact name being the answer) and the reward
-    converts when the fh2m sphinx supports it (an artifact or
-    resources); the other h3m reward types (experience, morale,
-    luck, primary and secondary skills, spells, creatures) have no
-    sphinx equivalent and are lost. Returns None when the seer
-    carries no quest.
+    artifact quest or AB+ quest): the riddle is the fixed
+    'Validez pour obtenir la recompense.' prompt with an empty
+    valid answer, and the reward converts when the fh2m sphinx
+    supports it (an artifact or resources); the other h3m reward
+    types (experience, morale, luck, primary and secondary skills,
+    spells, creatures) have no sphinx equivalent and are lost.
+    Returns None when the seer carries no quest.
     """
-    from correspondence import (FH2M_SPELL_SCROLL_ID, H3M_ARTIFACT_NAMES,
-                                  H3M_TO_FH2M_ARTIFACTS, H3M_TO_FH2M_SPELLS)
+    from correspondence import H3M_TO_FH2M_ARTIFACTS
 
     quest = seer_meta.get("quest")
     quest_artifact = seer_meta.get("questArtifact")
     if quest is None and quest_artifact is None:
         return None
 
+    riddle = "Validez pour obtenir la recompense."
     answers = []
-    if quest_artifact is not None:
-        if quest_artifact < len(H3M_ARTIFACT_NAMES):
-            answers = [H3M_ARTIFACT_NAMES[quest_artifact]]
-        riddle = "Bring me the %s and you shall be rewarded." % (answers[0] if answers else "artifact")
-    else:
-        # AB+ quest: use the first visit message when present.
-        riddle = (quest.get("firstVisitMessage") or
-                  quest.get("nextVisitMessage") or
-                  "Complete my quest and you shall be rewarded.")
-        if quest.get("artifacts"):
-            answers = [H3M_ARTIFACT_NAMES[a] if a < len(H3M_ARTIFACT_NAMES) else str(a)
-                       for a in quest["artifacts"]]
 
     reward = seer_meta.get("reward") or {}
     fh2m_artifact = 0
