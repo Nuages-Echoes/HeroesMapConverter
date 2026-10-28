@@ -439,15 +439,14 @@ quest messages, garrison canTake, event players flags).
      artifact or resource bonuses convert; the other h3m bonuses
      (experience, mana, morale, luck, primary and secondary skills,
      spells, creatures) and the guard fight are lost. Seer huts
-     (h3m class 62 group) convert
-     to the fh2m Sphinx object (index 31): the artifact quest becomes
-     the riddle ('Bring me the X and you shall be rewarded.') with
-     the artifact name as the answer; an AB+ quest uses its first
-     visit message and artifact list. The reward converts when the
-     fh2m sphinx supports it (an artifact or resources); the other
-     h3m reward types (experience, morale, luck, primary and
-     secondary skills, spells, creatures) are lost. A seer with no
-     quest is dropped. Witch huts (h3m class 113) and scholars
+     (h3m class 62 group) convert to the fh2m Sphinx object
+     (index 31): the riddle is the fixed 'Validez pour obtenir la
+     recompense.' prompt with an empty valid answer. The reward
+     converts when the fh2m sphinx supports it (an artifact or
+     resources); the other h3m reward types (experience, morale,
+     luck, primary and secondary skills, spells, creatures) are
+     lost. A seer with no quest is dropped. Witch huts (h3m class
+     113) and scholars
      (h3m class 62) convert to the fh2m Witch's Hut object (index 26);
      the fh2m format carries no per-hut metadata, the engine draws
      the secondary skill at game start (the h3m fixed skill and the
