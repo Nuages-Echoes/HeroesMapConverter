@@ -2372,13 +2372,17 @@ def _encode_h3m_objects(unified, version_ab, version_sod):
                     entry = ("generic", (x, y, z), (obj_class, obj_subclass), meta)
             elif group == "ADVENTURE_POWER_UPS":
                 # The shrine circles (index 14-16) map back to the
-                # h3m shrine classes 88-90; the other power-up
-                # objects have no simple h3m equivalent.
+                # h3m shrine classes 88-90; the Gazebo (11) maps to
+                # the h3m learning stone; the other power-up objects
+                # have no simple h3m equivalent.
                 from correspondence import FH2M_TO_H3M_SHRINES
                 h3m_shrine = FH2M_TO_H3M_SHRINES.get(index)
                 if h3m_shrine is not None:
                     shrine_meta = (objects_section.get("shrineMetadata") or {}).get(str(obj_id)) or {}
                     entry = ("shrine", (x, y, z), (h3m_shrine, 0), shrine_meta)
+                elif index == 11:
+                    from correspondence import FH2M_TO_H3M_MISC
+                    entry = ("generic", (x, y, z), FH2M_TO_H3M_MISC["POWER_11"], None)
             elif group == "ADVENTURE_MINES":
                 # The fh2m mine index maps to the h3m ownable mine
                 # (class 53, subclass per mine type).
