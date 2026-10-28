@@ -973,7 +973,15 @@ def unified_to_h3m(unified):
     version_ab = "Armageddon" in version_name or "Shadow" in version_name
     version_sod = "Shadow" in version_name
     if unified.get("sourceGame") != "h3m":
-        encoded = _encode_h3m_objects(unified, version_ab, version_sod)
+        # The h3m terrain per tile (level 0), used by the object
+        # encoder to pick the terrain-dependent decorative classes
+        # (mountains, volcanos, dunes).
+        tile_terrains = {}
+        if terrain_by_level:
+            for (x, y), values in terrain_by_level[0].items():
+                tile_terrains[(x, y)] = values[1]
+        encoded = _encode_h3m_objects(unified, version_ab, version_sod,
+                                      tile_terrains)
         if encoded:
             object_count = struct.unpack("<I", bytes.fromhex(encoded)[12:16])[0] if len(encoded) > 32 else 0
             data["Objects"] = OrderedDict([
@@ -2253,7 +2261,7 @@ def _fh2m_objects_to_unified(map_data):
     return result
 
 
-def _encode_h3m_objects(unified, version_ab, version_sod):
+def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
     """
     Encode the unified objects (from an fh2m source map) into the h3m
     raw object section bytes: a sprite catalog (one def per h3m class
@@ -2399,9 +2407,23 @@ def _encode_h3m_objects(unified, version_ab, version_sod):
                     entry = ("ownable", (x, y, z), h3m_dwelling, None)
             elif group.startswith("LANDSCAPE"):
                 # Decorative objects: the landscape index maps back
-                # to the h3m decorative class (subclass 0).
+                # to the h3m decorative class (subclass 0). The
+                # mountains pick their h3m class from the terrain of
+                # the tile (the fh2m variant index formula is
+                # undocumented): Lava -> volcano, Desert -> dune,
+                # Dirt -> mound, others -> mountain.
                 from correspondence import FH2M_LANDSCAPE_TO_H3M
                 h3m_class = FH2M_LANDSCAPE_TO_H3M.get((group, index))
+                if group == "LANDSCAPE_MOUNTAINS" and h3m_class is not None:
+                    tile_terrain = (tile_terrains or {}).get((x, y), "Grass")
+                    if tile_terrain == "Lava":
+                        h3m_class = 158  # volcano
+                    elif tile_terrain == "Sand":
+                        h3m_class = 148  # dune
+                    elif tile_terrain == "Dirt":
+                        h3m_class = 133  # mound
+                    else:
+                        h3m_class = 134  # mountain
                 if h3m_class is not None:
                     entry = ("decorative", (x, y, z), (h3m_class, 0), None)
             if entry:
