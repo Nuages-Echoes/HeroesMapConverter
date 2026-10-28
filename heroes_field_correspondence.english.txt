@@ -432,7 +432,14 @@ quest messages, garrison canTake, event players flags).
      shrine circle (Incantation -> First Circle, Gesture -> Second
      Circle, Thought -> Third Circle); other power-up objects are
      dropped
-   - ADVENTURE_MISCELLANEOUS: seer huts (h3m class 62 group) convert
+   - ADVENTURE_MISCELLANEOUS: pandora boxes (h3m class 21 group)
+     convert to the fh2m Sphinx object (index 31) like the seer
+     huts: the guard message becomes the riddle (a default riddle
+     when there is no guard), the answers stay empty and the
+     artifact or resource bonuses convert; the other h3m bonuses
+     (experience, mana, morale, luck, primary and secondary skills,
+     spells, creatures) and the guard fight are lost. Seer huts
+     (h3m class 62 group) convert
      to the fh2m Sphinx object (index 31): the artifact quest becomes
      the riddle ('Bring me the X and you shall be rewarded.') with
      the artifact name as the answer; an AB+ quest uses its first
