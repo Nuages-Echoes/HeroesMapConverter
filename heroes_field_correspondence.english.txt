@@ -396,6 +396,11 @@ quest messages, garrison canTake, event players flags).
    definite h3m shrine spell converts through the spell table when
    an equivalent exists; a random h3m spell (0xFF) stays random.
 
+   Rumors (fh2m -> h3m): the Heroes II rumors carry no name; the
+   h3m rumors need one, so the conversion generates RumeurX names
+   (Rumeur1, Rumeur2...) with X incremented per unnamed rumor. The
+   rumors that already carry a name (from an h3m source) keep it.
+
    Object writer (fh2m -> h3m): the unified objects of an fh2m
    source map are encoded into a fresh h3m raw object section: a
    sprite catalog built from the FH2M_TO_H3M_CATALOG reference (154
