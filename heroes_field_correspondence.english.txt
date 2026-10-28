@@ -176,14 +176,17 @@ Values used in the unified JSON format and their equivalents in .fh2m and .h3m
 | "Snow"           | SNOW (92-145)                        | "Snow"     |
 | "Swamp"          | SWAMP (146-207)                      | "Swamp"    |
 | "Lava"           | LAVA (208-261)                       | "Lava"     |
-| "Desert"         | DESERT (262-320)                     | UNDEFINE   |
+| "Desert"         | DESERT (262-320)                     | "Sand"     |
 | "Dirt"           | DIRT (321-360)                       | "Dirt"     |
 | "Wasteland"      | WASTELAND (361-414)                 | "Rough"    |
-| "Beach"          | BEACH (415-431)                      | UNDEFINE   |
-| "Sand"           | UNDEFINE                             | "Sand"     |
+| "Beach"          | BEACH (415-431)                      | "Sand"     |
 | "Subterranean"   | UNDEFINE (no underground in H2)     | "Subterranean" |
 | "Rock"           | UNDEFINE (impassable images)         | "Rock"     |
 
+   The H3M Sand terrain converts to the Heroes II DESERT terrain
+   and back (the unified value is "Desert"); the Heroes II BEACH
+   terrain converts back to the H3M Sand terrain (the unified
+   "Beach" value). "Sand" is not a unified terrain value anymore.
    sourceTerrain keeps the raw value: "terrain:<imageIndex>" for FH2M
    (e.g. "terrain:92"), the terrain name for H3M (e.g. "Snow").
 
