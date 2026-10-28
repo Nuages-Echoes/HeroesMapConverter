@@ -1105,6 +1105,23 @@ FH2M_TO_H3M_MISC = {
 }
 
 
+# h3m interactive classes with a Heroes II object equivalent,
+# mapped in the h3m -> fh2m direction (the inverse pairs of the
+# FH2M_TO_H3M_MISC table): two-way monolith -> Stone Liths, magic
+# well -> Magic Well, mystical garden -> Magic Garden, redwood
+# observatory -> Observation Tower, learning stone -> Gazebo,
+# water wheel -> Water Wheel, windmill -> Windmill.
+H3M_TO_FH2M_INTERACTIVE = {
+    45: ("ADVENTURE_MISCELLANEOUS", 35),   # two-way monolith -> Stone Liths
+    49: ("ADVENTURE_POWER_UPS", 7),        # magic well -> Magic Well
+    55: ("ADVENTURE_MISCELLANEOUS", 40),   # mystical garden -> Magic Garden
+    58: ("ADVENTURE_MISCELLANEOUS", 41),   # redwood observatory -> Observation Tower
+    100: ("ADVENTURE_POWER_UPS", 11),      # learning stone -> Gazebo
+    109: ("ADVENTURE_MISCELLANEOUS", 24),  # water wheel -> Water Wheel
+    112: ("ADVENTURE_MISCELLANEOUS", 4),   # windmill -> Windmill
+}
+
+
 # h3m decorative object classes -> (fh2m landscape group, index).
 # The h3m classes cover the families of decorative objects (the sprite
 # names identify them: AVLsh = shrubs, AVLmt = mountains, AVLf =
