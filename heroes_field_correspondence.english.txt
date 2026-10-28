@@ -401,6 +401,17 @@ quest messages, garrison canTake, event players flags).
    definite h3m shrine spell converts through the spell table when
    an equivalent exists; a random h3m spell (0xFF) stays random.
 
+   Roads and rivers (h3m -> fh2m): the h3m format stores the road
+   and river types per tile (Dirt/Gravel/Cobblestone roads,
+   Clear/Icy/Muddy/Lava rivers); the Heroes II format places a ROADS
+   or STREAMS object per tile whose index is the connection bitfield
+   (TOP_LEFT=1, TOP=2, TOP_RIGHT=4, RIGHT=8, BOTTOM_RIGHT=16,
+   BOTTOM=32, BOTTOM_LEFT=64, LEFT=128). The connections are derived
+   from the neighboring tiles carrying a road/river. The road and
+   river variants and the type distinction (all the h3m road types
+   become the single Heroes II road, all the river types the single
+   stream) are not carried.
+
    Conversion guards (h3m -> fh2m, unified_to_fh2m): a map with an
    underground raises 'Heroes of Might and Magic 2 ne permet pas de
    jouer avec le sous-sol, la carte X ne peut pas être convertie';

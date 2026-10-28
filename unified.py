@@ -1692,6 +1692,56 @@ def unified_to_fh2m(unified):
         objects_section["dropped"] = dropped_ids
 
     default_terrain = (UNIFIED_TO_FH2M_TERRAIN_INDEX.get("Grass", 30), 0)
+
+    # Roads and rivers (h3m source only): the h3m format stores the
+    # road/river type per tile; the directions are derived from the
+    # neighboring tiles and encoded as the fheroes2 bitfield
+    # (TOP_LEFT=1, TOP=2, TOP_RIGHT=4, RIGHT=8, BOTTOM_RIGHT=16,
+    # BOTTOM=32, BOTTOM_LEFT=64, LEFT=128).
+    road_tiles = {}
+    river_tiles = {}
+    if is_h3m_source:
+        _h3m_direction_bits = [(-1, -1, 1), (0, -1, 2), (1, -1, 4),
+                                (1, 0, 8), (1, 1, 16), (0, 1, 32),
+                                (-1, 1, 64), (-1, 0, 128)]
+        for level in unified.get("terrain", {}).get("levels", []):
+            for cell in level.get("grid", []):
+                if cell.get("z", 0) != 0:
+                    continue
+                pos = (cell.get("x", 0), cell.get("y", 0))
+                if cell.get("sourceRoad") and cell.get("sourceRoad") != "None":
+                    road_tiles[pos] = cell.get("sourceRoad")
+                if cell.get("sourceRiver") and cell.get("sourceRiver") != "None":
+                    river_tiles[pos] = cell.get("sourceRiver")
+
+        def _direction_bitfield(present_set, x, y):
+            bits = 0
+            for dx, dy, bit in _h3m_direction_bits:
+                if (x + dx, y + dy) in present_set:
+                    bits |= bit
+            return bits
+
+        next_road_id = 100000
+        for (x, y) in road_tiles:
+            bits = _direction_bitfield(road_tiles, x, y)
+            obj = OrderedDict([
+                ("id", next_road_id),
+                ("group", "ROADS"),
+                ("index", bits),
+            ])
+            next_road_id += 1
+            objects_by_tile.setdefault((x, y), []).insert(0, obj)
+        next_river_id = 200000
+        for (x, y) in river_tiles:
+            bits = _direction_bitfield(river_tiles, x, y)
+            obj = OrderedDict([
+                ("id", next_river_id),
+                ("group", "STREAMS"),
+                ("index", bits),
+            ])
+            next_river_id += 1
+            objects_by_tile.setdefault((x, y), []).insert(0, obj)
+
     tiles = []
     for y in range(data["height"]):
         for x in range(width):
