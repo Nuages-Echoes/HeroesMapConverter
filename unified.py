@@ -2309,15 +2309,18 @@ def _encode_h3m_objects(unified, version_ab, version_sod):
             elif group == "ADVENTURE_TREASURES":
                 # The fh2m treasure index is the resource type
                 # (0-6: wood, mercury, ore, sulfur, crystal, gems,
-                # gold); the other treasure objects (genie lamp,
-                # random resource, chest, campfire) have no simple
-                # h3m equivalent here.
+                # gold); the campfires (8-9) map to the h3m campfire
+                # class through the misc table.
                 h3m_resource = FH2M_TO_H3M_RESOURCES.get(index)
-                if h3m_resource is None:
-                    continue
-                m = resource_meta.get(str(obj_id)) or {}
-                count = m.get("count") or 0
-                entry = ("resource", (x, y, z), (79, h3m_resource), count)
+                if h3m_resource is not None:
+                    m = resource_meta.get(str(obj_id)) or {}
+                    count = m.get("count") or 0
+                    entry = ("resource", (x, y, z), (79, h3m_resource), count)
+                else:
+                    from correspondence import FH2M_TO_H3M_MISC
+                    h3m_target = FH2M_TO_H3M_MISC.get(index)
+                    if h3m_target is not None:
+                        entry = ("generic", (x, y, z), h3m_target, None)
             elif group == "ADVENTURE_ARTIFACTS":
                 artifact = index + 1
                 h3m_artifact = FH2M_TO_H3M_ARTIFACTS.get(artifact)

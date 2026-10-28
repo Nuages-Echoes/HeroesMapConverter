@@ -1072,6 +1072,10 @@ FH2M_TO_H3M_SHRINES = {
 # catalog are mapped; the others (obelisk, oracle, pyramid, PoL
 # objects...) stay dropped until their h3m classes are confirmed.
 FH2M_TO_H3M_MISC = {
+    # Campfires (ADVENTURE_TREASURES indexes 8-9, the two campfire
+    # sprites) -> campfire (12).
+    8: (12, 0),   # Campfire
+    9: (12, 0),   # Campfire on show
     # MISC: windmills -> windmill (112), lean-tos -> lean-to (39),
     # signs -> sign (91), water wheels -> water wheel (109),
     # witch's hut -> witch hut (113), stone liths -> two-way
@@ -1098,10 +1102,14 @@ FH2M_TO_H3M_MISC = {
     42: (99, 0),   # Observation Tower, generic
     43: (99, 0),   # Observation Tower, desert
     44: (99, 0),   # Observation Tower, snow
-    # WATER: bottle -> bottle (59), buoy -> buoy (11), flotsam ->
-    # flotsam? no confirmed class: dropped.
+    # WATER: bottle -> bottle (59), buoy -> buoy (11), sea chest ->
+    # sea chest (82), flotsam -> flotsam (29), shipwreck survivor
+    # -> shipwreck survivor (86).
     "WATER_0": (59, 0),  # Bottle
+    "WATER_1": (82, 0),  # Sea Chest
+    "WATER_2": (29, 0),  # Flotsam
     "WATER_3": (11, 0),  # Buoy
+    "WATER_5": (86, 0),  # Shipwreck Survivor
 }
 
 
@@ -1133,8 +1141,29 @@ H3M_TO_FH2M_INTERACTIVE = {
     102: ("ADVENTURE_POWER_UPS", 20),      # tree of knowledge -> Tree of Knowledge
     108: ("ADVENTURE_MISCELLANEOUS", 0),   # warrior's tomb -> Graveyard
     111: ("ADVENTURE_WATER", 7),           # whirlpool -> Whirlpool
+    # Additional pairings (the h3m interactive objects with a
+    # Heroes II counterpart).
+    12: ("ADVENTURE_TREASURES", 8),        # campfire -> Campfire
+    29: ("ADVENTURE_WATER", 2),            # flotsam -> Flotsam
+    11: ("ADVENTURE_WATER", 3),            # buoy -> Buoy
+    22: ("ADVENTURE_MISCELLANEOUS", 30),   # corpse -> Skeleton
+    63: ("ADVENTURE_MISCELLANEOUS", 29),   # pyramid -> Pyramid
+    86: ("ADVENTURE_WATER", 5),            # shipwreck survivor -> Shipwreck Survivor
+    92: ("ADVENTURE_WATER", 10),           # sirens -> Sirens
+    47: ("ADVENTURE_MISCELLANEOUS", 26),   # scholar -> Witch's Hut
+    28: ("ADVENTURE_POWER_UPS", 2),        # swan pond -> Faerie Ring
+    31: ("ADVENTURE_POWER_UPS", 2),        # fountain of youth -> Faerie Ring
     # Dropped (no Heroes II gameplay equivalent): cursed ground (21),
-    # magic plains (46), subterranean gate (103).
+    # magic plains (46), subterranean gate (103), arena (4),
+    # black market (7), border gate (9), keymaster tent (10),
+    # cartographer (13), cover of darkness (15), hill fort (35),
+    # hut of the magi (37), magic spring (48), resource merchant
+    # (52), rally point (64), stables (94), trading post (99 - the
+    # den of thieves already maps to it), wagon (105), war memorial
+    # (107), water wheel (110 - the h3m water wheel class maps to
+    # the Heroes II water wheel through 109, this 110 sprite is
+    # another variant kept dropped), gallows (117), frozen lake
+    # (121), sand pit (149).
 }
 
 
