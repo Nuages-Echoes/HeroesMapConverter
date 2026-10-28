@@ -1137,6 +1137,13 @@ H3M_DECORATIVE_TO_FH2M = {
     148: ("LANDSCAPE_MISCELLANEOUS", 25), # shrubs (snow) -> small shrub, snow
     57:  ("LANDSCAPE_TREES", 5),           # forest -> three trees, grass
     12:  ("LANDSCAPE_MISCELLANEOUS", 69), # cactus -> tiny cactus
+    124: ("LANDSCAPE_MISCELLANEOUS", 19), # hole -> dug hole, grass
+    130: ("LANDSCAPE_TREES", 25),          # log -> log, generic
+    132: ("LANDSCAPE_ROCKS", 13),          # moss -> medium mossy rock
+    143: ("LANDSCAPE_MISCELLANEOUS", 112), # river delta -> river delta
+    151: ("LANDSCAPE_MISCELLANEOUS", 102), # skull -> cow skull
+    153: ("LANDSCAPE_TREES", 26),          # stump -> three stumps, generic
+    158: ("LANDSCAPE_MISCELLANEOUS", 67), # volcano -> smoking volcano crater
 }
 
 
