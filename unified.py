@@ -1614,6 +1614,10 @@ def unified_to_fh2m(unified):
 
     victory = unified.get("victoryCondition", {})
     victory_codes = {name: code for code, name in FH2M_VICTORY_CONDITIONS.items()}
+    # The unified victory types with no Heroes II equivalent
+    # (accumulateCreatures, buildGrail, defeatMonster, flagDwellings,
+    # flagMines, transportArtifact, upgradeTown) fall back to
+    # VICTORY_DEFEAT_EVERYONE (code 0).
     data["victoryConditionType"] = victory_codes.get(victory.get("type", "defeatEveryone"), 0)
     data["isVictoryConditionApplicableForAI"] = bool(victory.get("appliesToAI", False))
     data["allowNormalVictory"] = bool(victory.get("allowNormalVictory", False))
