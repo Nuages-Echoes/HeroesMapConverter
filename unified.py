@@ -2307,13 +2307,12 @@ def _encode_h3m_objects(unified, version_ab, version_sod):
             elif group == "ADVENTURE_MISCELLANEOUS" and index == 0:
                 entry = ("sign", (x, y, z), (91, 0), None)
             elif group.startswith("LANDSCAPE"):
-                # Decorative objects: the inverse of the decorative
-                # table maps back to the h3m class (subclass 0).
-                from correspondence import H3M_DECORATIVE_TO_FH2M
-                for h3m_class, (fh2m_group, fh2m_index) in H3M_DECORATIVE_TO_FH2M.items():
-                    if fh2m_group == group and fh2m_index == index:
-                        entry = ("decorative", (x, y, z), (h3m_class, 0), None)
-                        break
+                # Decorative objects: the landscape index maps back
+                # to the h3m decorative class (subclass 0).
+                from correspondence import FH2M_LANDSCAPE_TO_H3M
+                h3m_class = FH2M_LANDSCAPE_TO_H3M.get((group, index))
+                if h3m_class is not None:
+                    entry = ("decorative", (x, y, z), (h3m_class, 0), None)
             if entry:
                 instances.append(entry)
 
