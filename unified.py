@@ -1823,6 +1823,28 @@ def unified_to_fh2m(unified):
     objects_by_tile = {}
     objects_section = unified.get("objects") or {}
     is_h3m_source = unified.get("sourceGame") == "h3m"
+
+    # The h3m terrain overlays (cursed ground, magic plains) are
+    # passive battlefield zones with no Heroes II mechanic: their
+    # tiles become plain terrain instead - the cursed grounds
+    # become Dirt, the magic plains Grass.
+    if is_h3m_source:
+        overlay_terrains = {}
+        for tile_key, obj_list in (objects_section.get("tiles") or {}).items():
+            parts = tile_key.split("_")
+            if len(parts) != 3:
+                continue
+            for obj in obj_list:
+                group = obj.get("group", "")
+                if group == "UNDEFINED_21":
+                    overlay_terrains[(int(parts[0]), int(parts[1]))] = "Dirt"
+                elif group == "UNDEFINED_46":
+                    overlay_terrains[(int(parts[0]), int(parts[1]))] = "Grass"
+        for (x, y), terrain_name in overlay_terrains.items():
+            if (x, y) in terrain_by_position:
+                terrain_index = UNIFIED_TO_FH2M_TERRAIN_INDEX.get(terrain_name, 30)
+                flags = terrain_by_position[(x, y)][1]
+                terrain_by_position[(x, y)] = (terrain_index, flags)
     translated_metadata = {}
     dropped_ids = []
     for tile_key, obj_list in objects_section.get("tiles", {}).items():
