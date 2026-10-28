@@ -1093,6 +1093,7 @@ def _translate_h3m_tile_objects(obj_list, objects_section, translated_metadata,
             scholar_meta = (objects_section.get("scholarMetadata") or {}).get(str(obj_id))
             garrison_meta = (objects_section.get("garrisonMetadata") or {}).get(str(obj_id))
             seer_meta = (objects_section.get("seerMetadata") or {}).get(str(obj_id))
+            pandora_meta = (objects_section.get("pandoraMetadata") or {}).get(str(obj_id))
             if witch_meta is not None or scholar_meta is not None:
                 translated.append(OrderedDict([
                     ("id", obj_id),
@@ -1118,6 +1119,20 @@ def _translate_h3m_tile_objects(obj_list, objects_section, translated_metadata,
                 else:
                     dropped_ids.append(obj_id)
                     continue
+            elif pandora_meta is not None:
+                # A pandora box converts to the fh2m Sphinx object
+                # (index 31): the guard message becomes the riddle
+                # and the artifact or resource bonuses convert; the
+                # other h3m bonuses (experience, mana, morale, luck,
+                # skills, spells, creatures) and the guard fight are
+                # lost.
+                sphinx_entry = _h3m_pandora_to_fh2m_sphinx(pandora_meta)
+                translated.append(OrderedDict([
+                    ("id", obj_id),
+                    ("group", "ADVENTURE_MISCELLANEOUS"),
+                    ("index", 31),
+                ]))
+                translated_metadata.setdefault("sphinxMetadata", OrderedDict())[str(obj_id)] = sphinx_entry
             elif garrison_meta is not None:
                 # A garrison converts to a monster troop: the highest
                 # level creature of the garrison (the highest h3m
@@ -1201,6 +1216,40 @@ def _fh2m_hero_race_id(fh2m_hero_id):
     if 46 <= fh2m_hero_id <= 54:
         return 6
     return None
+
+
+def _h3m_pandora_to_fh2m_sphinx(pandora_meta):
+    """
+    Build an fh2m sphinxMetadata entry from an h3m pandora box: the
+    guard message becomes the riddle (a default riddle when there is
+    no guard) and the artifact and resource bonuses convert; the
+    other h3m bonuses (experience, mana, morale, luck, primary and
+    secondary skills, spells, creatures) and the guard fight have
+    no sphinx equivalent and are lost.
+    """
+    from correspondence import H3M_TO_FH2M_ARTIFACTS
+
+    guard = pandora_meta.get("guard") or {}
+    riddle = guard.get("message") or "Answer my riddle and you shall be rewarded."
+
+    fh2m_artifact = 0
+    artifacts = pandora_meta.get("artifacts") or []
+    if artifacts:
+        fh2m_artifact = H3M_TO_FH2M_ARTIFACTS.get(artifacts[0], 0) or 0
+
+    resources_meta = pandora_meta.get("resources") or OrderedDict()
+    resource_names = ["wood", "mercury", "ore", "sulfur", "crystal", "gems", "gold"]
+    resources = OrderedDict([
+        (name, resources_meta.get(name, 0) or 0) for name in resource_names
+    ])
+
+    return OrderedDict([
+        ("riddle", riddle),
+        ("answers", []),
+        ("artifact", fh2m_artifact),
+        ("artifactMetadata", 0),
+        ("resources", resources),
+    ])
 
 
 def _h3m_seer_to_fh2m_sphinx(seer_meta):
