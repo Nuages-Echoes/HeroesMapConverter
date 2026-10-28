@@ -513,9 +513,13 @@ quest messages, garrison canTake, event players flags).
    Skeleton, pyramid (63) -> Pyramid, shipwreck survivor (86) ->
    Shipwreck Survivor, sirens (92) -> Sirens, scholar (47) ->
    Witch's Hut, swan pond (28) -> Faerie Ring, fountain of youth
-   (31) -> Watering Hole. Dropped (no Heroes II gameplay
-   equivalent): cursed ground (21), magic plains (46),
-   subterranean gate (103) and the editor objects (arena 4,
+   (31) -> Watering Hole. Dropped as objects but converted as terrain: the cursed ground
+   (21) and magic plains (46) tiles become plain Heroes II
+   terrain - the cursed grounds become Dirt, the magic plains
+   Grass (the h3m battlefield overlays have no Heroes II
+   mechanic, the tile keeps a natural terrain). Dropped (no
+   Heroes II gameplay equivalent): subterranean gate (103) and
+   the editor objects (arena 4,
    black market 7, border gates, keymaster tents, cartographer,
    cover of darkness, hill fort, hut of the magi, magic spring,
    resource merchant, rally point, stables, trading post 99,
