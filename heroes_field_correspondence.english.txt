@@ -482,10 +482,20 @@ quest messages, garrison canTake, event players flags).
    Stones, sea chest (82) -> Sea Chest, temple (96) -> Temple,
    den of thieves (97) -> Trading Post, tree of knowledge (102)
    -> Tree of Knowledge, warrior's tomb (108) -> Graveyard,
-   whirlpool (111) -> Whirlpool. Dropped (no Heroes II gameplay
+   whirlpool (111) -> Whirlpool; campfire (12) -> Campfire,
+   flotsam (29) -> Flotsam, buoy (11) -> Buoy, corpse (22) ->
+   Skeleton, pyramid (63) -> Pyramid, shipwreck survivor (86) ->
+   Shipwreck Survivor, sirens (92) -> Sirens, scholar (47) ->
+   Witch's Hut, swan pond (28) -> Faerie Ring, fountain of youth
+   (31) -> Faerie Ring. Dropped (no Heroes II gameplay
    equivalent): cursed ground (21), magic plains (46),
-   subterranean gate (103). The remaining dropped classes of the
-   test maps total 76 occurrences over these 3 classes (the 195
+   subterranean gate (103) and the editor objects (arena 4,
+   black market 7, border gates, keymaster tents, cartographer,
+   cover of darkness, hill fort, hut of the magi, magic spring,
+   resource merchant, rally point, stables, trading post 99,
+   wagon, war memorial, gallows, frozen lake, sand pit). The
+   remaining dropped classes of the
+   test maps total ~100 occurrences (the 195
    terrain objects of the classes 124, 130, 132, 143, 151, 153,
    158, the 83 interactive objects of the classes 45, 49, 55, 58,
    100, 109, 112 and the 127 manually paired objects of the
