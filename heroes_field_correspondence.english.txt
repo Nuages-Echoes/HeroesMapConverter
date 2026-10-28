@@ -136,14 +136,18 @@ Values used in the unified JSON format and their equivalents in .fh2m and .h3m
 | "obtainArtifact"       | 3 VICTORY_OBTAIN_ARTIFACT        | "0x0"       |
 | "defeatOtherSide"      | 4 VICTORY_DEFEAT_OTHER_SIDE      | UNDEFINE    |
 | "collectGold"          | 5 VICTORY_COLLECT_ENOUGH_GOLD    | "0x2"       |
-| "accumulateCreatures"  | UNDEFINE                         | "0x1"       |
-| "upgradeTown"          | UNDEFINE                         | "0x3"       |
-| "buildGrail"           | UNDEFINE                         | "0x4"       |
-| "defeatMonster"        | UNDEFINE                         | "0x7"       |
-| "flagDwellings"        | UNDEFINE                         | "0x8"       |
-| "flagMines"            | UNDEFINE                         | "0x9"       |
-| "transportArtifact"    | UNDEFINE                         | "0xA"       |
+| "accumulateCreatures"  | 0 VICTORY_DEFEAT_EVERYONE       | "0x1"       |
+| "upgradeTown"          | 0 VICTORY_DEFEAT_EVERYONE       | "0x3"       |
+| "buildGrail"           | 0 VICTORY_DEFEAT_EVERYONE       | "0x4"       |
+| "defeatMonster"        | 0 VICTORY_DEFEAT_EVERYONE       | "0x7"       |
+| "flagDwellings"        | 0 VICTORY_DEFEAT_EVERYONE       | "0x8"       |
+| "flagMines"            | 0 VICTORY_DEFEAT_EVERYONE       | "0x9"       |
+| "transportArtifact"    | 0 VICTORY_DEFEAT_EVERYONE       | "0xA"       |
 
+   The unified victory types with no Heroes II equivalent
+   (accumulateCreatures, upgradeTown, buildGrail, defeatMonster,
+   flagDwellings, flagMines, transportArtifact) convert to
+   0 VICTORY_DEFEAT_EVERYONE.
    Booleans: victoryCondition.allowNormalVictory = FH2M
    allowNormalVictory / H3M "Regular ending also possible" (not
    extracted); victoryCondition.appliesToAI = FH2M
