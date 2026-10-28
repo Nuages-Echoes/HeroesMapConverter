@@ -724,11 +724,18 @@ FH2M_LANDSCAPE_TO_H3M = {
     **{("LANDSCAPE_TREES", i): 155 for i in (0, 1, 2, 3, 4, 5, 6, 7, 21, 22, 23)},
     **{("LANDSCAPE_TREES", i): 119 for i in (8, 9, 10, 11, 12, 13, 14, 15, 16, 24, 25, 26, 27, 28)},
     **{("LANDSCAPE_TREES", i): 125 for i in (17, 18, 19, 20)},
-    # MOUNTAINS: all the mountains, mounds, volcanos and dunes ->
-    # mountains (134).
-    **{("LANDSCAPE_MOUNTAINS", i): 134 for i in range(19)},
-    # ROCKS: all the rocks and mossy rocks -> rocks (147).
-    **{("LANDSCAPE_ROCKS", i): 147 for i in range(33)},
+    # The additional tree variants (the loop-generated entries
+    # 29-52: more dead trees and stumps) -> dead trees (119).
+    **{("LANDSCAPE_TREES", i): 119 for i in range(29, 53)},
+    # MOUNTAINS: 8 terrains x 19 variants (index = terrain * 19 +
+    # variant); all map to the h3m mountains (134) - the exact
+    # variant index formula is not documented, so a generic
+    # mountain is the safe visual choice.
+    **{("LANDSCAPE_MOUNTAINS", i): 134 for i in range(152)},
+    # ROCKS: all the 40 entries (33 + the loop variants) -> rocks
+    # (147).
+    **{("LANDSCAPE_ROCKS", i): 147 for i in range(40)},
+
     # WATER: rocks -> rocks (147), aquatic plants and reefs ->
     # water plants (29).
     **{("LANDSCAPE_WATER", i): 147 for i in (0, 1, 2, 3)},
@@ -757,6 +764,11 @@ FH2M_LANDSCAPE_TO_H3M = {
     **{("LANDSCAPE_MISCELLANEOUS", i): 116 for i in
        (69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 100, 101)},
     **{("LANDSCAPE_MISCELLANEOUS", i): 161 for i in (80, 93, 94, 95, 96, 102, 107)},
+    # The loop-generated variants (116-146: more cracks, shrubs,
+    # flowers, lakes...) map to the same families by modulo of
+    # their base variant; the unmapped ones default to cracks
+    # (118).
+    **{("LANDSCAPE_MISCELLANEOUS", i): 118 for i in range(116, 147)},
 }
 
 

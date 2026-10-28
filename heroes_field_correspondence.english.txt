@@ -401,6 +401,22 @@ quest messages, garrison canTake, event players flags).
    (Rumeur1, Rumeur2...) with X incremented per unnamed rumor. The
    rumors that already carry a name (from an h3m source) keep it.
 
+   Landscape variants (fh2m -> h3m): the Heroes II landscape
+   groups carry more entries than the literal ObjectInfo count of
+   map_object_info.cpp (the populate functions generate variants
+   through loops): LANDSCAPE_MOUNTAINS holds 8 terrains x 19
+   variants (indexes 0-151), LANDSCAPE_ROCKS 40, LANDSCAPE_TREES
+   53, LANDSCAPE_MISCELLANEOUS 147, LANDSCAPE_TOWN_BASEMENTS 8
+   (one per terrain) and LANDSCAPE_FLAGS 14 (7 colors x 2
+   sides). The FH2M_LANDSCAPE_TO_H3M table now covers them all:
+   the mountains map to the h3m mountains (134 - the exact
+   variant index formula being undocumented, a generic mountain
+   is the safe choice), the extra rocks to rocks (147), the extra
+   trees to dead trees (119) and the loop-generated misc
+   variants to cracks (118). The flags and the town basements
+   stay dropped: the h3m towns carry their own basements and
+   flags.
+
    Gazebo (fh2m -> h3m): the Heroes II Gazebo (ADVENTURE_POWER_UPS
    11) encodes to the h3m learning stone (class 100), the inverse
    of the H3M_TO_FH2M_INTERACTIVE pairing. The creature sprite
