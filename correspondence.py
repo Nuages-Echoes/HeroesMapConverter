@@ -1038,6 +1038,14 @@ FH2M_TO_H3M_CATALOG = {
     (162, 0): ("AVWmon5.def", "ffffffffff7f000000000080ff010100", "020000000000000000000000000000000000"),
     (163, 0): ("AVWmon6.def", "ffffffffff7f000000000080ff000100", "020000000000000000000000000000000000"),
     (164, 0): ("AVWmon7.def", "ffffffffff7f000000000080ff010100", "020000000000000000000000000000000000"),
+    (54, 0): ("avwpike.def", "ffffffffff7f000000000080ff010100", "000000000000000000000000000000000000"),  # Pikeman
+    (54, 5): ("avwgrix0.def", "ffffffffff7f000000000080ff010100", "000000000000000000000000000000000000"),  # Royal Griffin
+    (54, 3): ("avwhcrs.def", "ffffffffff7f000000000080ff010100", "000000000000000000000000000000000000"),  # Marksman
+    (54, 84): ("avwgobl0.def", "ffffffffff7f000000000080ff010100", "000000000000000000000000000000000000"),  # Goblin
+    (54, 86): ("avwwolf0.def", "ffffffffff7f000000000080ff010100", "000000000000000000000000000000000000"),  # Goblin Wolf Rider
+    (54, 88): ("avworc0.def", "ffffffffff7f000000000080ff010100", "000000000000000000000000000000000000"),  # Orc
+    (54, 93): ("avwrocx0.def", "ffffffffff7f000000000080ff010100", "000000000000000000000000000000000000"),  # Thunderbird (Roc upgrade)
+    (54, 28): ("avwgrem0.def", "ffffffffff7f000000000080ff010100", "000000000000000000000000000000000000"),  # Gremlin
 }
 
 # fh2m hero race id (the KINGDOM_HEROES object index modulo 7:
@@ -1102,6 +1110,11 @@ FH2M_TO_H3M_MISC = {
     42: (99, 0),   # Observation Tower, generic
     43: (99, 0),   # Observation Tower, desert
     44: (99, 0),   # Observation Tower, snow
+    # POWER_UPS: the Gazebo (index 11) maps to the h3m learning
+    # stone (100 - the inverse pairing: the h3m learning stone
+    # converts to the Heroes II Gazebo); the other power-ups stay
+    # dropped or map through the shrines.
+    "POWER_11": (100, 0),  # Gazebo -> learning stone
     # WATER: bottle -> bottle (59), buoy -> buoy (11), sea chest ->
     # sea chest (82), flotsam -> flotsam (29), shipwreck survivor
     # -> shipwreck survivor (86).
