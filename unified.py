@@ -865,23 +865,69 @@ def unified_to_h3m(unified):
         ("Rumors", [OrderedDict([("Name", r.get("name") or ""), ("Text", r.get("text", ""))]) for r in rumors]),
     ])
 
+    is_fh2m_source = unified.get("sourceGame") != "h3m"
+
+    # Roads and rivers (fh2m source): the fh2m format stores them as
+    # ROADS and STREAMS objects on tiles; convert them back to the
+    # h3m per-tile Road/River Type fields.
+    fh2m_road_tiles = set()
+    fh2m_river_tiles = set()
+    if is_fh2m_source:
+        for tile_key, obj_list in (unified.get("objects") or {}).get("tiles", {}).items():
+            parts = tile_key.split("_")
+            if len(parts) != 3:
+                continue
+            x, y, z = int(parts[0]), int(parts[1]), int(parts[2])
+            for obj in obj_list:
+                group = obj.get("group")
+                if group == "ROADS":
+                    fh2m_road_tiles.add((x, y, z))
+                elif group == "STREAMS":
+                    fh2m_river_tiles.add((x, y, z))
+
     terrain_by_level = []
     for level in unified.get("terrain", {}).get("levels", []):
         grid = OrderedDict()
         for cell in level.get("grid", []):
+            x, y, z = cell.get("x", 0), cell.get("y", 0), cell.get("z", 0)
             if unified.get("sourceGame") == "h3m":
                 terrain_name = cell.get("sourceTerrain", cell.get("terrain", "Dirt"))
                 if terrain_name not in H3M_TOWN_TYPES and terrain_name not in UNIFIED_TO_H3M_TERRAINS.values():
                     terrain_name = UNIFIED_TO_H3M_TERRAINS.get(cell.get("terrain", "Dirt"), "Dirt")
+                picture = cell.get("sourcePicture", 0)
+                mirroring = cell.get("sourceMirroring", "0x00")
+                road = cell.get("sourceRoad", "None")
+                road_props = cell.get("sourceRoadProperties", 0)
+                river = cell.get("sourceRiver", "None")
+                river_props = cell.get("sourceRiverProperties", 0)
             else:
                 terrain_name = UNIFIED_TO_H3M_TERRAINS.get(cell.get("terrain", "Grass"), "Dirt")
-            grid[(cell.get("x", 0), cell.get("y", 0))] = (cell.get("z", 0), terrain_name,
-                                                           cell.get("sourcePicture", 0),
-                                                           cell.get("sourceMirroring", "0x00"),
-                                                           cell.get("sourceRoad", "None"),
-                                                           cell.get("sourceRoadProperties", 0),
-                                                           cell.get("sourceRiver", "None"),
-                                                           cell.get("sourceRiverProperties", 0))
+                # The fh2m terrain image index becomes the h3m
+                # Terrain Picture: the fh2m images are numbered
+                # globally by terrain range while the h3m images are
+                # per-terrain variants (about 72 per terrain). The
+                # position within the fh2m terrain range, modulo 72,
+                # gives a valid h3m image variant.
+                picture = 0
+                source_terrain = cell.get("sourceTerrain", "")
+                if source_terrain.startswith("terrain:"):
+                    try:
+                        image_index = int(source_terrain[len("terrain:"):])
+                        range_start = 0
+                        for start_index, name in FH2M_TERRAIN_INDEX_RANGES:
+                            if name == cell.get("terrain", "Grass"):
+                                break
+                            range_start = start_index
+                        picture = (image_index - range_start) % 72
+                    except ValueError:
+                        picture = 0
+                mirroring = "0x00"
+                road = "Dirt" if (x, y, z) in fh2m_road_tiles else "None"
+                road_props = 0
+                river = "Clear" if (x, y, z) in fh2m_river_tiles else "None"
+                river_props = 0
+            grid[(x, y)] = (z, terrain_name, picture, mirroring,
+                            road, road_props, river, river_props)
         terrain_by_level.append(grid)
 
     def build_section(z):
