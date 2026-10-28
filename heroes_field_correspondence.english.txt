@@ -401,6 +401,13 @@ quest messages, garrison canTake, event players flags).
    definite h3m shrine spell converts through the spell table when
    an equivalent exists; a random h3m spell (0xFF) stays random.
 
+   Conversion guards (h3m -> fh2m, unified_to_fh2m): a map with an
+   underground raises 'Heroes of Might and Magic 2 ne permet pas de
+   jouer avec le sous-sol, la carte X ne peut pas être convertie';
+   a map with more than 6 available players raises 'Le nombre de
+   factions est limité à 6 dans H2, impossible de convertir la carte
+   X'.
+
    Cross-format object translation (h3m -> fh2m, main.py --target fh2m):
    placed objects are translated group by group when an fh2m
    equivalent exists; the others are dropped and their ids are listed
