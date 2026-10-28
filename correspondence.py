@@ -655,6 +655,41 @@ FH2M_TO_H3M_SPELLS = {
     5: 63,   # Teleport <- Teleport
 }
 
+# h3m decorative object classes -> (fh2m landscape group, index).
+# The h3m classes cover the families of decorative objects (the sprite
+# names identify them: AVLsh = shrubs, AVLmt = mountains, AVLf =
+# flowers...); each family converts to a representative Heroes II
+# landscape object (see fheroes2 map_object_info.cpp). The classes
+# not listed here stay dropped.
+H3M_DECORATIVE_TO_FH2M = {
+    150: ("LANDSCAPE_MISCELLANEOUS", 10),  # shrubs -> small shrub, grass
+    134: ("LANDSCAPE_MOUNTAINS", 4),        # mountains -> medium mountain
+    137: ("LANDSCAPE_MISCELLANEOUS", 11),  # plants -> pink flowers, grass
+    119: ("LANDSCAPE_TREES", 24),           # dead trees -> dead tree, generic
+    147: ("LANDSCAPE_ROCKS", 2),            # rocks -> single medium rock, grass
+    120: ("LANDSCAPE_MISCELLANEOUS", 18),  # flowers -> small flowers, grass
+    116: ("LANDSCAPE_MISCELLANEOUS", 73),  # cacti -> small cactus, desert
+    131: ("LANDSCAPE_MISCELLANEOUS", 7),   # mandrakes -> wide shrub, grass
+    155: ("LANDSCAPE_TREES", 7),            # deciduous trees -> single tree, grass
+    129: ("LANDSCAPE_MISCELLANEOUS", 30),  # mosses -> shrub, swamp
+    118: ("LANDSCAPE_MISCELLANEOUS", 0),   # cracks -> crack, grass
+    127: ("LANDSCAPE_MISCELLANEOUS", 56),  # lava lakes -> small lava pool
+    161: ("LANDSCAPE_MISCELLANEOUS", 19),  # debris -> dug hole, grass
+    135: ("LANDSCAPE_MOUNTAINS", 4),      # mountains (snow) -> medium mountain
+    136: ("LANDSCAPE_MOUNTAINS", 4),      # mountains (dirt) -> medium mountain
+    101: ("LANDSCAPE_TREES", 7),           # conifers -> single tree, grass
+    126: ("LANDSCAPE_MISCELLANEOUS", 11), # flowers (tall) -> pink flowers
+    128: ("LANDSCAPE_MISCELLANEOUS", 12), # flowers (wide) -> wide flowers
+    125: ("LANDSCAPE_TREES", 17),          # palms -> two tall palms, desert
+    133: ("LANDSCAPE_ROCKS", 2),            # rocks (dirt) -> medium rock
+    22:  ("LANDSCAPE_MISCELLANEOUS", 20), # small cliffs -> small cliff, grass
+    29:  ("LANDSCAPE_WATER", 4),            # water plants -> aquatic plants
+    148: ("LANDSCAPE_MISCELLANEOUS", 25), # shrubs (snow) -> small shrub, snow
+    57:  ("LANDSCAPE_TREES", 5),           # forest -> three trees, grass
+    12:  ("LANDSCAPE_MISCELLANEOUS", 69), # cactus -> tiny cactus
+}
+
+
 # Shrine mapping: the Heroes III shrines (class 88 Incantation,
 # 89 Gesture, 90 Thought) map to the Heroes II shrine circles (the
 # ADVENTURE_POWER_UPS group: index 14 First Circle, 15 Second Circle,

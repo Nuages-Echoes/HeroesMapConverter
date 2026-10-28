@@ -401,6 +401,17 @@ quest messages, garrison canTake, event players flags).
    definite h3m shrine spell converts through the spell table when
    an equivalent exists; a random h3m spell (0xFF) stays random.
 
+   Decorative objects (h3m -> fh2m): the decorative h3m classes
+   (identified by the sprite families: AVLsh shrubs, AVLmt
+   mountains, AVLf flowers, AVLca cacti, AVLtr trees, AVLr rocks,
+   AVLdead dead trees, AVLlav lava lakes, AVLms mosses and so on)
+   convert to representative Heroes II landscape objects through
+   the H3M_DECORATIVE_TO_FH2M table (a shrub becomes a grass shrub,
+   a mountain a medium mountain, a cactus a desert cactus, a dead
+   tree a generic dead tree...). The classes without a mapping stay
+   dropped. The UNDEFINED_<class> objects stay in the unified JSON
+   so future mappings can extend the coverage.
+
    Roads and rivers (h3m -> fh2m): the h3m format stores the road
    and river types per tile (Dirt/Gravel/Cobblestone roads,
    Clear/Icy/Muddy/Lava rivers); the Heroes II format places a ROADS
