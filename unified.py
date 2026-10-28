@@ -751,9 +751,11 @@ def unified_to_h3m(unified):
     data = OrderedDict()
 
     if unified.get("sourceGame") == "h3m":
-        version_name = H3M_VERSION_NAMES.get(unified.get("sourceVersion"), "SoD (Shadow of Death)")
+        version_name = H3M_VERSION_NAMES.get(unified.get("sourceVersion"), "RoE (Restoration of Erathia)")
     else:
-        version_name = "SoD (Shadow of Death)"
+        # The fh2m maps encode to the RoE layout (the object encoder
+        # writes the RoE object data).
+        version_name = "RoE (Restoration of Erathia)"
 
     basic = OrderedDict()
     basic["Version"] = version_name
@@ -955,20 +957,35 @@ def unified_to_h3m(unified):
     if has_underground:
         data["Underground Map"] = build_section(1)
 
-    objects_section = _unified_objects_from_h3m(unified)
-    if objects_section:
-        raw_data = objects_section.get("rawData", "")
-        if raw_data:
-            object_count = struct.unpack("<I", bytes.fromhex(raw_data)[:4])[0]
+    # Objects: an h3m source keeps its raw object section for a
+    # byte-perfect round-trip; an fh2m source gets its objects
+    # encoded into a fresh h3m raw section.
+    version_ab = "Armageddon" in version_name or "Shadow" in version_name
+    version_sod = "Shadow" in version_name
+    if unified.get("sourceGame") != "h3m":
+        encoded = _encode_h3m_objects(unified, version_ab, version_sod)
+        if encoded:
+            object_count = struct.unpack("<I", bytes.fromhex(encoded)[12:16])[0] if len(encoded) > 32 else 0
+            data["Objects"] = OrderedDict([
+                ("Number of Objects", object_count),
+                ("Raw Data", encoded),
+                ("Tiles", OrderedDict()),
+            ])
+    if "Objects" not in data:
+        objects_section = _unified_objects_from_h3m(unified)
+        if objects_section:
+            raw_data = objects_section.get("rawData", "")
+            if raw_data:
+                object_count = struct.unpack("<I", bytes.fromhex(raw_data)[:4])[0]
+            else:
+                object_count = sum(len(objs) for objs in objects_section["tiles"].values())
+            data["Objects"] = OrderedDict([
+                ("Number of Objects", object_count),
+                ("Raw Data", raw_data),
+                ("Tiles", objects_section),
+            ])
         else:
-            object_count = sum(len(objs) for objs in objects_section["tiles"].values())
-        data["Objects"] = OrderedDict([
-            ("Number of Objects", object_count),
-            ("Raw Data", raw_data),
-            ("Tiles", objects_section),
-        ])
-    else:
-        data["Objects"] = OrderedDict([("Number of Objects", 0), ("Raw Data", "")])
+            data["Objects"] = OrderedDict([("Number of Objects", 0), ("Raw Data", "")])
 
     return data
 
@@ -2214,6 +2231,154 @@ def _fh2m_objects_to_unified(map_data):
             )
 
     return result
+
+
+def _encode_h3m_objects(unified, version_ab, version_sod):
+    """
+    Encode the unified objects (from an fh2m source map) into the h3m
+    raw object section bytes: a sprite catalog (one def per h3m class
+    and subclass, from the FH2M_TO_H3M_CATALOG reference extracted
+    from real maps) followed by the object instances with their
+    per-type data. The supported types cover the main game objects:
+    monsters, resources, artifacts, mines, dwellings, signs, towns,
+    heroes and the landscape decorative families.
+
+    Returns the hex string of the raw section, or None when nothing
+    could be encoded.
+    """
+    import struct
+    from io import BytesIO
+    from correspondence import (FH2M_TO_H3M_CATALOG,
+                                  FH2M_TO_H3M_MONSTERS,
+                                  FH2M_TO_H3M_ARTIFACTS,
+                                  FH2M_TO_H3M_RESOURCES)
+
+    objects_section = unified.get("objects") or {}
+    tiles = objects_section.get("tiles") or {}
+    monster_meta = objects_section.get("monsterMetadata") or {}
+    resource_meta = objects_section.get("resourceMetadata") or {}
+    artifact_meta = objects_section.get("artifactMetadata") or {}
+
+    # --- Collect the instances to encode, in tile order ---
+    instances = []
+    for tile_key, obj_list in tiles.items():
+        parts = tile_key.split("_")
+        if len(parts) != 3:
+            continue
+        x, y, z = int(parts[0]), int(parts[1]), int(parts[2])
+        for obj in obj_list:
+            group = obj.get("group")
+            index = obj.get("index", 0)
+            obj_id = obj.get("id", 0)
+            meta = None
+            entry = None
+            if group == "MONSTERS":
+                creature = index + 1
+                m = monster_meta.get(str(obj_id)) or {}
+                count = m.get("count") or 0
+                # Random monsters (fh2m ids 67-71) map to the h3m
+                # random monster classes 71-75.
+                if creature in (67, 68, 69, 70, 71):
+                    obj_class = 71 + (creature - 67)
+                    entry = ("monster", (x, y, z), (obj_class, 0), count)
+                else:
+                    h3m_creature = FH2M_TO_H3M_MONSTERS.get(creature)
+                    if h3m_creature is None:
+                        continue
+                    entry = ("monster", (x, y, z), (54, h3m_creature), count)
+            elif group == "ADVENTURE_TREASURES":
+                # The fh2m treasure index is the resource type
+                # (0-6: wood, mercury, ore, sulfur, crystal, gems,
+                # gold); the other treasure objects (genie lamp,
+                # random resource, chest, campfire) have no simple
+                # h3m equivalent here.
+                h3m_resource = FH2M_TO_H3M_RESOURCES.get(index)
+                if h3m_resource is None:
+                    continue
+                m = resource_meta.get(str(obj_id)) or {}
+                count = m.get("count") or 0
+                entry = ("resource", (x, y, z), (79, h3m_resource), count)
+            elif group == "ADVENTURE_ARTIFACTS":
+                artifact = index + 1
+                h3m_artifact = FH2M_TO_H3M_ARTIFACTS.get(artifact)
+                if h3m_artifact is None:
+                    continue
+                entry = ("artifact", (x, y, z), (5, h3m_artifact), None)
+            elif group == "ADVENTURE_MISCELLANEOUS" and index == 0:
+                entry = ("sign", (x, y, z), (91, 0), None)
+            elif group.startswith("LANDSCAPE"):
+                # Decorative objects: the inverse of the decorative
+                # table maps back to the h3m class (subclass 0).
+                from correspondence import H3M_DECORATIVE_TO_FH2M
+                for h3m_class, (fh2m_group, fh2m_index) in H3M_DECORATIVE_TO_FH2M.items():
+                    if fh2m_group == group and fh2m_index == index:
+                        entry = ("decorative", (x, y, z), (h3m_class, 0), None)
+                        break
+            if entry:
+                instances.append(entry)
+
+    if not instances:
+        return None
+
+    # --- Build the sprite catalog: one def per used (class, subclass) ---
+    catalog_keys = []
+    catalog_entries = []
+    kind_of = {}
+    for entry in instances:
+        _, _, (obj_class, obj_subclass), _ = entry
+        key = (obj_class, obj_subclass)
+        if key not in kind_of:
+            ref = FH2M_TO_H3M_CATALOG.get(key)
+            if ref is None:
+                continue
+            kind_of[key] = len(catalog_keys)
+            catalog_keys.append(key)
+            catalog_entries.append(ref)
+
+    # Drop the instances whose sprite is unknown.
+    instances = [e for e in instances
+                 if (e[2][0], e[2][1]) in kind_of]
+    if not instances:
+        return None
+
+    buffer = BytesIO()
+    buffer.write(struct.pack("<I", len(catalog_entries)))
+    for i, key in enumerate(catalog_keys):
+        sprite, passability, trailing = catalog_entries[i]
+        name_bytes = sprite.encode("latin1")
+        buffer.write(struct.pack("<i", len(name_bytes)))
+        buffer.write(name_bytes)
+        buffer.write(bytes.fromhex(passability))
+        buffer.write(struct.pack("<II", key[0], key[1]))
+        buffer.write(b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00")
+
+    # --- Instances ---
+    buffer.write(struct.pack("<I", len(instances)))
+    for entry in instances:
+        kind_name, (x, y, z), (obj_class, obj_subclass), payload = entry
+        buffer.write(struct.pack("<BBB", x, y, z))
+        buffer.write(struct.pack("<I", kind_of[(obj_class, obj_subclass)]))
+        buffer.write(b"\x00" * 5)
+        if kind_name == "monster":
+            if version_ab:
+                buffer.write(struct.pack("<I", 0))  # objectID
+            buffer.write(struct.pack("<HB", payload & 0xFFFF or 1, 0))
+            buffer.write(struct.pack("<B", 0))  # no treasure
+            buffer.write(b"\x00" * 4)
+        elif kind_name == "resource":
+            buffer.write(struct.pack("<B", 0))  # not guarded
+            buffer.write(struct.pack("<II", payload, 0))
+        elif kind_name == "artifact":
+            buffer.write(struct.pack("<B", 0))  # not guarded
+        elif kind_name == "sign":
+            buffer.write(struct.pack("<i", 0))  # empty message
+            buffer.write(b"\x00" * 4)
+        elif kind_name == "decorative":
+            pass  # no per-instance data
+        elif kind_name == "ownable":
+            buffer.write(struct.pack("<I", 0xFFFFFF))  # neutral owner
+
+    return buffer.getvalue().hex()
 
 
 def _unified_objects_from_h3m(unified):
