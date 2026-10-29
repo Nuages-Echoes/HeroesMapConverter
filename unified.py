@@ -2346,11 +2346,9 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
                     m = resource_meta.get(str(obj_id)) or {}
                     count = m.get("count") or 0
                     entry = ("resource", (x, y, z), (79, h3m_resource), count)
-                else:
-                    from correspondence import FH2M_TO_H3M_MISC
-                    h3m_target = FH2M_TO_H3M_MISC.get(index)
-                    if h3m_target is not None:
-                        entry = ("generic", (x, y, z), h3m_target, None)
+                elif index in (8, 9):
+                    # The campfires map to the h3m campfire (12).
+                    entry = ("generic", (x, y, z), (12, 0), None)
             elif group == "ADVENTURE_ARTIFACTS":
                 artifact = index + 1
                 h3m_artifact = FH2M_TO_H3M_ARTIFACTS.get(artifact)
@@ -2394,7 +2392,7 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
                 # The miscellaneous and water objects with a
                 # confirmed h3m sprite map through the misc table.
                 from correspondence import FH2M_TO_H3M_MISC
-                h3m_key = index if group == "ADVENTURE_MISCELLANEOUS" else "WATER_%d" % index
+                h3m_key = ("MISC_%d" % index) if group == "ADVENTURE_MISCELLANEOUS" else "WATER_%d" % index
                 h3m_target = FH2M_TO_H3M_MISC.get(h3m_key)
                 if h3m_target is not None:
                     obj_class, obj_subclass = h3m_target

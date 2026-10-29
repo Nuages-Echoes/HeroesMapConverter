@@ -418,6 +418,16 @@ quest messages, garrison canTake, event players flags).
    cracks (118). The flags and the town basements stay dropped:
    the h3m towns carry their own basements and flags.
 
+   Obelisks (both directions): the Heroes II obelisks (the 7
+   terrain variants, ADVENTURE_MISCELLANEOUS 9-15) encode to the
+   h3m obelisk (class 57) - the puzzle-map mechanic exists in
+   both games; the h3m obelisk converts back to the generic
+   Heroes II obelisk (MISC 15). The FH2M_TO_H3M_MISC keys are
+   now prefixed MISC_<index> (as the WATER_ keys) so the
+   ADVENTURE_MISCELLANEOUS indexes cannot collide with the
+   ADVENTURE_TREASURES indexes (the campfires 8-9 stay on the
+   treasure keys).
+
    Gazebo (fh2m -> h3m): the Heroes II Gazebo (ADVENTURE_POWER_UPS
    11) encodes to the h3m learning stone (class 100), the inverse
    of the H3M_TO_FH2M_INTERACTIVE pairing. The creature sprite

@@ -1094,39 +1094,50 @@ FH2M_TO_H3M_SHRINES = {
 FH2M_TO_H3M_MISC = {
     # Campfires (ADVENTURE_TREASURES indexes 8-9, the two campfire
     # sprites) -> campfire (12).
-    8: (12, 0),   # Campfire
-    9: (12, 0),   # Campfire on show
+    "MISC_8": (12, 0),   # Campfire
+    "MISC_9": (12, 0),   # Campfire on show
     # MISC: windmills -> windmill (112), lean-tos -> lean-to (39),
     # signs -> sign (91), water wheels -> water wheel (109),
     # witch's hut -> witch hut (113), stone liths -> two-way
     # monolith (42), daemon caves -> subterranean gate? no: dropped,
     # sphinx -> seer hut (83) [the sphinx riddle], magic garden ->
     # ... dropped, trading post -> market of trading? (7) dropped.
-    4: (112, 0),   # Windmill, grass
-    5: (112, 0),   # Windmill, snow
-    6: (112, 0),   # Windmill, dirt
-    16: (39, 0),   # Lean-to, snow
-    17: (39, 0),   # Lean-to, grass
-    18: (91, 0),   # Sign, snow
-    19: (91, 0),   # Sign, swamp
-    20: (91, 0),   # Sign, lava
-    21: (91, 0),   # Sign, desert
-    22: (91, 0),   # Sign, generic
-    23: (109, 0),  # Water wheel, snow
-    24: (109, 0),  # Water wheel, generic
-    26: (113, 0),  # Witch's Hut, swamp
-    35: (42, 0),   # Stone Liths, generic
-    36: (42, 0),   # Stone Liths, generic 2
-    37: (42, 0),   # Stone Liths, Resurrection variant
-    41: (99, 0),   # Observation Tower, grass -> lookout tower (99)
-    42: (99, 0),   # Observation Tower, generic
-    43: (99, 0),   # Observation Tower, desert
-    44: (99, 0),   # Observation Tower, snow
+    "MISC_4": (112, 0),   # Windmill, grass
+    "MISC_5": (112, 0),   # Windmill, snow
+    "MISC_6": (112, 0),   # Windmill, dirt
+    "MISC_16": (39, 0),   # Lean-to, snow
+    "MISC_17": (39, 0),   # Lean-to, grass
+    "MISC_18": (91, 0),   # Sign, snow
+    "MISC_19": (91, 0),   # Sign, swamp
+    "MISC_20": (91, 0),   # Sign, lava
+    "MISC_21": (91, 0),   # Sign, desert
+    "MISC_22": (91, 0),   # Sign, generic
+    "MISC_23": (109, 0),  # Water wheel, snow
+    "MISC_24": (109, 0),  # Water wheel, generic
+    "MISC_26": (113, 0),  # Witch's Hut, swamp
+    "MISC_35": (42, 0),   # Stone Liths, generic
+    "MISC_36": (42, 0),   # Stone Liths, generic 2
+    "MISC_37": (42, 0),   # Stone Liths, Resurrection variant
+    "MISC_41": (99, 0),   # Observation Tower, grass -> lookout tower (99)
+    "MISC_42": (99, 0),   # Observation Tower, generic
+    "MISC_43": (99, 0),   # Observation Tower, desert
+    "MISC_44": (99, 0),   # Observation Tower, snow
     # POWER_UPS: the Gazebo (index 11) maps to the h3m learning
     # stone (100 - the inverse pairing: the h3m learning stone
     # converts to the Heroes II Gazebo); the other power-ups stay
     # dropped or map through the shrines.
     "POWER_11": (100, 0),  # Gazebo -> learning stone
+    # Obelisks (the ADVENTURE_MISCELLANEOUS terrain variants,
+    # keyed MISC_x to avoid colliding with the ADVENTURE_TREASURES
+    # indexes) -> obelisk (57 - the same puzzle-map mechanic in
+    # both games).
+    "MISC_9": (57, 0),    # Obelisk, grass
+    "MISC_10": (57, 0),   # Obelisk, snow
+    "MISC_11": (57, 0),   # Obelisk, swamp
+    "MISC_12": (57, 0),   # Obelisk, lava
+    "MISC_13": (57, 0),   # Obelisk, desert
+    "MISC_14": (57, 0),   # Obelisk, wasteland
+    "MISC_15": (57, 0),   # Obelisk, dirt
     # WATER: bottle -> bottle (59), buoy -> buoy (11), sea chest ->
     # sea chest (82), flotsam -> flotsam (29), shipwreck survivor
     # -> shipwreck survivor (86).
@@ -1178,6 +1189,7 @@ H3M_TO_FH2M_INTERACTIVE = {
     47: ("ADVENTURE_MISCELLANEOUS", 26),   # scholar -> Witch's Hut
     28: ("ADVENTURE_POWER_UPS", 2),        # swan pond -> Faerie Ring
     31: ("ADVENTURE_POWER_UPS", 1),        # fountain of youth -> Watering Hole
+    57: ("ADVENTURE_MISCELLANEOUS", 15),   # obelisk -> Obelisk
     # Dropped (no Heroes II gameplay equivalent): cursed ground (21),
     # magic plains (46), subterranean gate (103), arena (4),
     # black market (7), border gate (9), keymaster tent (10),
