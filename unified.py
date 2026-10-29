@@ -2349,6 +2349,9 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
                 elif index in (8, 9):
                     # The campfires map to the h3m campfire (12).
                     entry = ("generic", (x, y, z), (12, 0), None)
+                elif index == 7:
+                    # The Genie's Lamp maps to the h3m Refugee Camp.
+                    entry = ("generic", (x, y, z), (78, 0), None)
             elif group == "ADVENTURE_ARTIFACTS":
                 artifact = index + 1
                 h3m_artifact = FH2M_TO_H3M_ARTIFACTS.get(artifact)
@@ -2408,9 +2411,11 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
                 if h3m_shrine is not None:
                     shrine_meta = (objects_section.get("shrineMetadata") or {}).get(str(obj_id)) or {}
                     entry = ("shrine", (x, y, z), (h3m_shrine, 0), shrine_meta)
-                elif index == 11:
+                else:
                     from correspondence import FH2M_TO_H3M_MISC
-                    entry = ("generic", (x, y, z), FH2M_TO_H3M_MISC["POWER_11"], None)
+                    h3m_target = FH2M_TO_H3M_MISC.get("POWER_%d" % index)
+                    if h3m_target is not None:
+                        entry = ("generic", (x, y, z), h3m_target, None)
             elif group == "ADVENTURE_MINES":
                 # The fh2m mine index maps to the h3m ownable mine
                 # (class 53, subclass per mine type).

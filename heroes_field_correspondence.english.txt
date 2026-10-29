@@ -418,6 +418,18 @@ quest messages, garrison canTake, event players flags).
    cracks (118). The flags and the town basements stay dropped:
    the h3m towns carry their own basements and flags.
 
+   Power-up pairings (per user decision, fh2m -> h3m): the
+   Heroes II power-ups map to their h3m counterparts - Artesian
+   Spring -> Magic Spring (48), Watering Hole -> Watering Hole
+   (110), Faerie Ring (the 3 variants) -> Faerie Ring (28), Oasis
+   -> Oasis (56), Fountain -> Fountain of Fortune (30), Fort ->
+   Marletto Tower (23), Witch Doctor's Hut -> Garden of
+   Revelation (32), Mercenary Camp -> Mercenary Camp (51),
+   Standing Stones -> Star Axis (61), Temple -> Temple (96),
+   Xanadu -> Library of Enlightenment (41), Arena -> Arena (4);
+   the Genie's Lamp -> Refugee Camp (78). The Oasis sprite
+   (AVXosis0.def) is added to the reference catalog.
+
    Obelisks (both directions): the Heroes II obelisks (the 7
    terrain variants, ADVENTURE_MISCELLANEOUS 9-15) encode to the
    h3m obelisk (class 57) - the puzzle-map mechanic exists in
