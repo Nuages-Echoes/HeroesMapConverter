@@ -2439,6 +2439,13 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
                 # Dirt -> mound, others -> mountain.
                 from correspondence import FH2M_LANDSCAPE_TO_H3M
                 h3m_class = FH2M_LANDSCAPE_TO_H3M.get((group, index))
+                if group == "LANDSCAPE_TREES" and h3m_class is not None:
+                    # The tree variants pick their h3m class from
+                    # the tile terrain: Swamps and Dirt -> dead
+                    # vegetation (119 - the bare/dead trees), the
+                    # other terrains -> trees (155).
+                    tile_terrain = (tile_terrains or {}).get((x, y), "Grass")
+                    h3m_class = 119 if tile_terrain in ("Swamp", "Dirt") else 155
                 if group == "LANDSCAPE_MOUNTAINS" and h3m_class is not None:
                     tile_terrain = (tile_terrains or {}).get((x, y), "Grass")
                     if tile_terrain == "Lava":

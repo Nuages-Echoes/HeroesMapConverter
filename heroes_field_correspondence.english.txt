@@ -413,10 +413,14 @@ quest messages, garrison canTake, event players flags).
    tile (the fh2m variant index formula being undocumented):
    Lava -> volcano (158), Desert/Sand -> dune (148), Dirt ->
    mound (133), the others -> mountain (134); the extra rocks
-   map to rocks (147), the extra tree variants (29-52) to dead
-   trees (119) and the loop-generated misc variants (116-146) to
-   cracks (118). The flags and the town basements stay dropped:
-   the h3m towns carry their own basements and flags.
+   map to rocks (147), the extra tree variants (29-62) to the h3m
+   tree classes - the encoder refines by tile terrain (Swamp and
+   Dirt -> dead vegetation 119, the other terrains -> trees 155)
+   - and the loop-generated misc variants (116-146) to cracks
+   (118). The flags, the town basements and the Barrel
+   (ADVENTURE_WATER 12, an fheroes2-specific object with no h3m
+   counterpart) stay dropped: the h3m towns carry their own
+   basements and flags.
 
    Power-up pairings (per user decision, fh2m -> h3m): the
    Heroes II power-ups map to their h3m counterparts - Artesian
