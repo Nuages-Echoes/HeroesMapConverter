@@ -1058,6 +1058,7 @@ FH2M_TO_H3M_CATALOG = {
     (54, 88): ("avworc0.def", "ffffffffff7f000000000080ff010100", "000000000000000000000000000000000000"),  # Orc
     (54, 93): ("avwrocx0.def", "ffffffffff7f000000000080ff010100", "000000000000000000000000000000000000"),  # Thunderbird (Roc upgrade)
     (54, 28): ("avwgrem0.def", "ffffffffff7f000000000080ff010100", "000000000000000000000000000000000000"),  # Gremlin
+    (56, 0): ("AVXosis0.def", "ffffffffff7f000000000080ff01ff00", "000000000000000000000000000000000000"),  # Oasis
 }
 
 # fh2m hero race id (the KINGDOM_HEROES object index modulo 7:
@@ -1127,6 +1128,24 @@ FH2M_TO_H3M_MISC = {
     # converts to the Heroes II Gazebo); the other power-ups stay
     # dropped or map through the shrines.
     "POWER_11": (100, 0),  # Gazebo -> learning stone
+    # Power-up pairings (per user decision): the Heroes II
+    # power-ups map to their h3m counterparts.
+    "POWER_0": (48, 0),    # Artesian Spring -> Magic Spring
+    "POWER_1": (110, 0),   # Watering Hole -> Watering Hole
+    "POWER_2": (28, 0),    # Faerie Ring -> Faerie Ring
+    "POWER_3": (28, 0),    # Faerie Ring variant -> Faerie Ring
+    "POWER_4": (28, 0),    # Faerie Ring variant -> Faerie Ring
+    "POWER_5": (56, 0),    # Oasis -> Oasis
+    "POWER_6": (30, 0),    # Fountain -> Fountain of Fortune
+    "POWER_10": (23, 0),   # Fort -> Marletto Tower
+    "POWER_12": (32, 0),   # Witch Doctor's Hut -> Garden of Revelation
+    "POWER_13": (51, 0),   # Mercenary Camp -> Mercenary Camp
+    "POWER_18": (61, 0),   # Standing Stones -> Star Axis
+    "POWER_19": (96, 0),   # Temple -> Temple
+    "POWER_21": (41, 0),   # Xanadu -> Library of Enlightenment
+    "POWER_22": (4, 0),     # Arena -> Arena
+    # Genie's Lamp -> Refugee Camp (the h3m creature vendor).
+    "TREASURE_7": (78, 0),  # Genie's Lamp -> Refugee Camp
     # Obelisks (the ADVENTURE_MISCELLANEOUS terrain variants,
     # keyed MISC_x to avoid colliding with the ADVENTURE_TREASURES
     # indexes) -> obelisk (57 - the same puzzle-map mechanic in
