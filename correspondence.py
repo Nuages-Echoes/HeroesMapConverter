@@ -725,8 +725,9 @@ FH2M_LANDSCAPE_TO_H3M = {
     **{("LANDSCAPE_TREES", i): 119 for i in (8, 9, 10, 11, 12, 13, 14, 15, 16, 24, 25, 26, 27, 28)},
     **{("LANDSCAPE_TREES", i): 125 for i in (17, 18, 19, 20)},
     # The additional tree variants (the loop-generated entries
-    # 29-52: more dead trees and stumps) -> dead trees (119).
-    **{("LANDSCAPE_TREES", i): 119 for i in range(29, 53)},
+    # 29-62: more dead trees, palms, dirt trees and stumps) -> the
+    # h3m tree classes; the encoder refines by tile terrain.
+    **{("LANDSCAPE_TREES", i): 155 for i in range(29, 63)},
     # MOUNTAINS: 8 terrains x 19 variants (index = terrain * 19 +
     # variant); all map to the h3m mountains (134) - the exact
     # variant index formula is not documented, so a generic
