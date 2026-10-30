@@ -586,6 +586,10 @@ def convert_fh2m_to_unified(map_data):
                 if 0 <= color_id < len(FH2M_PLAYER_COLORS):
                     color = FH2M_PLAYER_COLORS[color_id]
                     hero_object_colors[color] = obj.get("index", 0)
+    # The map has heroes when at least one hero object exists: the
+    # official Heroes III tools read this header byte to validate
+    # the starting conditions of the playable players.
+    unified["hasHero"] = bool(hero_object_colors)
     race_ids = map_data.get("playerRaceId", [])
     for index, color in enumerate(FH2M_PLAYER_COLORS):
         # The race of every player is carried, available or not, so that
@@ -2430,7 +2434,9 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
             elif group == "KINGDOM_HEROES":
                 # A hero: the object index is color * 7 + race. The
                 # hero type comes from the hero pairing: the first
-                # h3m hero paired to the Heroes II race.
+                # h3m hero paired to the Heroes II race. The color
+                # (index // 7) converts to the h3m owner byte so the
+                # playable players keep their starting heroes.
                 hero_meta = (objects_section.get("heroMetadata") or {}).get(str(obj_id)) or {}
                 from correspondence import FH2M_TO_H3M_HERO_RACE
                 race = index % 7
@@ -2441,6 +2447,11 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
                     hero_type = 0
                 hero_payload = dict(hero_meta)
                 hero_payload["type"] = hero_type
+                owner_color_id = index // 7
+                if 0 <= owner_color_id < len(FH2M_PLAYER_COLORS):
+                    owner_color = FH2M_PLAYER_COLORS[owner_color_id]
+                    if owner_color in H3M_PLAYER_COLORS:
+                        hero_payload["owner"] = H3M_PLAYER_COLORS.index(owner_color)
                 entry = ("hero", (x, y, z), (34, hero_type), hero_payload)
             elif group == "KINGDOM_TOWNS":
                 # A town: the object index encodes the race (race * 2
@@ -2624,7 +2635,8 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
             # army (the creature pairs).
             from correspondence import FH2M_TO_H3M_MONSTERS
             meta = payload or {}
-            buffer.write(struct.pack("<B", 0xFF))  # owner: neutral
+            owner = meta.get("owner")
+            buffer.write(struct.pack("<B", owner if owner is not None else 0xFF))
             hero_type = meta.get("type")
             buffer.write(struct.pack("<B", hero_type if hero_type is not None else 0xFF))
             name = meta.get("customName") or meta.get("name") or ""
