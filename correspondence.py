@@ -269,6 +269,7 @@ H3M_TO_FH2M_MONSTERS = {
     31: 40,   # Obsidian Gargoyle -> Boar
     32: 41,   # Iron Golem -> Iron Golem
     33: 42,   # Stone Golem -> Steel Golem
+    116: 42,  # Gold Golem -> Steel Golem (per user decision)
     34: 43,   # Mage -> Roc
     35: 43,   # Archmage -> Roc
     36: 44,   # Genie -> Mage
@@ -1296,6 +1297,9 @@ H3M_DECORATIVE_TO_FH2M = {
     151: ("LANDSCAPE_MISCELLANEOUS", 102), # skull -> cow skull
     153: ("LANDSCAPE_TREES", 26),          # stump -> three stumps, generic
     158: ("LANDSCAPE_MISCELLANEOUS", 67), # volcano -> smoking volcano crater
+    121: ("LANDSCAPE_MISCELLANEOUS", 26), # frozen lake -> frozen water lake, snow
+    149: ("LANDSCAPE_MISCELLANEOUS", 79), # sand pit -> dug hole, desert
+    117: ("LANDSCAPE_MISCELLANEOUS", 104), # canyon -> big crack, wasteland
 }
 
 
