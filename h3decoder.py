@@ -925,7 +925,9 @@ H3M_CLASS_TO_GROUP = {
     89: 'ADVENTURE_POWER_UPS',   # shrine of magic gesture
     90: 'ADVENTURE_POWER_UPS',   # shrine of magic thought
     36: 'ADVENTURE_MISCELLANEOUS',   # witch hut
-    51: 'ADVENTURE_MISCELLANEOUS',
+    # 51 (mercenary camp) stays UNDEFINED_ so the interactive
+    # table routes it to the fh2m Mercenary Camp; the class
+    # carries no per-instance data.
     83: 'ADVENTURE_MISCELLANEOUS',   # seer hut
     215: 'ADVENTURE_MISCELLANEOUS',  # quest guard / gate
     81: 'ADVENTURE_MISCELLANEOUS',  # scholar
@@ -1397,6 +1399,13 @@ def parse_h3m_objects(raw_objects, level_ab, level_sod, artifact_id_bytes,
                 witchhut_metadata[str(object_id)] = OrderedDict([
                     ('skill', None if struct.unpack('<I', skill_data)[0] == 0xFFFFFFFF
                      else struct.unpack('<I', skill_data)[0]),
+                ])
+            else:
+                # RoE witch huts carry no skill bytes: emit an entry
+                # with no fixed skill so the object still converts
+                # (the Heroes II engine draws the skill at start).
+                witchhut_metadata[str(object_id)] = OrderedDict([
+                    ('skill', None),
                 ])
         elif kind_name == 'shrine':
             spell_data = safe_read(buffer, 4)

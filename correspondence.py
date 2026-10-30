@@ -1231,6 +1231,7 @@ H3M_TO_FH2M_INTERACTIVE = {
     48: ("ADVENTURE_POWER_UPS", 0),           # magic spring -> Artesian Spring
     43: ("ADVENTURE_MISCELLANEOUS", 35),      # monolith one-way entrance -> Stone Liths
     44: ("ADVENTURE_MISCELLANEOUS", 35),      # monolith one-way exit -> Stone Liths
+    51: ("ADVENTURE_POWER_UPS", 13),           # mercenary camp -> Mercenary Camp
     111: ("ADVENTURE_WATER", 7),           # whirlpool -> Whirlpool
     # Additional pairings (the h3m interactive objects with a
     # Heroes II counterpart).
