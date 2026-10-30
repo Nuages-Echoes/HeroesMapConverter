@@ -548,7 +548,7 @@ quest messages, garrison canTake, event players flags).
    Eye of the Magi (MISC 49), refugee camp (78) -> Wagon Camp
    (ADVENTURE_DWELLINGS 17), wagon (105) -> Wagon (MISC 25),
    lean-to (39) -> Lean-to, snow terrain (MISC 16), watering
-   hole variant (110) -> Water Wheel (MISC 24). The random
+   hole variant (110) -> Watering Hole (POWER_UPS 1). The random
    resource (h3m class 76) converts to the fh2m Random Resource
    object (ADVENTURE_TREASURES 8) and the treasure chest (101)
    to the fh2m Treasure Chest (ADVENTURE_TREASURES 9); the
