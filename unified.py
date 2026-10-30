@@ -441,7 +441,13 @@ def _h3m_h3m_metadata_to_unified(kind, metadata):
         entry["spellName"] = (H3M_SPELL_NAMES[spell]
                               if spell is not None and spell < len(H3M_SPELL_NAMES) else None)
     elif kind == "witchhutMetadata":
-        entry["skillName"] = H3M_SECONDARY_SKILL_NAMES.get(entry.get("skill"), str(entry.get("skill")))
+        skill = entry.get("skill")
+        if skill is None:
+            entry["skillName"] = None
+        elif skill < len(H3M_SECONDARY_SKILL_NAMES):
+            entry["skillName"] = H3M_SECONDARY_SKILL_NAMES[skill]
+        else:
+            entry["skillName"] = str(skill)
     elif kind == "scholarMetadata":
         reward_names = {0: "primary skill", 1: "secondary skill", 2: "spell", 255: "random"}
         entry["rewardTypeName"] = reward_names.get(entry.get("rewardType"), str(entry.get("rewardType")))

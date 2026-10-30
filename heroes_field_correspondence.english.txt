@@ -700,7 +700,11 @@ quest messages, garrison canTake, event players flags).
      (h3m class 62) convert to the fh2m Witch's Hut object (index 26);
      the fh2m format carries no per-hut metadata, the engine draws
      the secondary skill at game start (the h3m fixed skill and the
-     scholar reward are lost). Garrisons (h3m class 35) convert to a
+     scholar reward are lost). RoE witch huts carry no skill bytes:
+     the decoder emits an empty witchhutMetadata entry so the
+     object still converts. Mercenary camps (h3m class 51, no
+     per-instance data) route through the interactive table to
+     the fh2m Mercenary Camp (ADVENTURE_POWER_UPS 13). Garrisons (h3m class 35) convert to a
      monster troop: the highest level creature (the highest h3m
      creature id among the non-empty slots) becomes a placed monster
      with its count; a garrison with no creature, or whose best
