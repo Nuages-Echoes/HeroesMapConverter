@@ -810,7 +810,18 @@ def unified_to_h3m(unified):
             player["Has Defined Towns"] = True
         else:
             player["Has Defined Towns"] = False
-        player["Owns Random Town"] = bool(detail.get("ownsRandomTown", False))
+        # A playable player needs a starting condition. The official
+        # maps give every active player a main town or the random
+        # town flag; a player with nothing would make the map invalid
+        # for the official tools. The converted Heroes II maps carry
+        # no starting town placement, so the active players without a
+        # main town get the random town flag.
+        owns_random_town = bool(detail.get("ownsRandomTown", False))
+        is_active = (color in human_colors) or (color in computer_colors)
+        if is_active and not detail.get("mainTown") and not owns_random_town \
+                and not any(owned_towns.values()):
+            owns_random_town = True
+        player["Owns Random Town"] = owns_random_town
         player["Owned Towns"] = owned_towns
 
         main_town = detail.get("mainTown")
@@ -870,8 +881,12 @@ def unified_to_h3m(unified):
         team_data["Team Assignments"] = assignments
     data["Teams"] = team_data
 
+    # Available heroes bitfield: bit=1 means the hero can be hired.
+    # A converted Heroes II map restricts no hero, so the default is
+    # every hero available (all bits set), like the official maps.
+    bitfield = unified.get("availableHeroesBitfield") or "ff" * 16
     data["Available Heroes"] = OrderedDict([
-        ("Bitfield", unified.get("availableHeroesBitfield", "")),
+        ("Bitfield", bitfield),
     ])
     data["Reserved Bytes"] = ""
 
