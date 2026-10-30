@@ -832,7 +832,11 @@ def unified_to_h3m(unified):
     victory = unified.get("victoryCondition", {})
     victory_type = victory.get("type", "defeatEveryone")
     victory_codes = {name: code for code, name in H3M_VICTORY_CONDITIONS.items()}
-    if victory_type == "defeatEveryone":
+    # The Heroes II defeatOtherSide (a team-based victory) has no
+    # special Heroes III condition: the standard victory (defeating
+    # every other side) already covers it, so it converts to None
+    # like defeatEveryone.
+    if victory_type in ("defeatEveryone", "defeatOtherSide"):
         data["Victory Condition"] = OrderedDict([("Type", "None")])
     else:
         data["Victory Condition"] = OrderedDict([

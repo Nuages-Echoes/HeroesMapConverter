@@ -134,7 +134,7 @@ Values used in the unified JSON format and their equivalents in .fh2m and .h3m
 | "captureTown"          | 1 VICTORY_CAPTURE_TOWN           | "0x6"       |
 | "killHero"             | 2 VICTORY_KILL_HERO              | "0x5"       |
 | "obtainArtifact"       | 3 VICTORY_OBTAIN_ARTIFACT        | "0x0"       |
-| "defeatOtherSide"      | 4 VICTORY_DEFEAT_OTHER_SIDE      | UNDEFINE    |
+| "defeatOtherSide"      | 4 VICTORY_DEFEAT_OTHER_SIDE      | "None"      |
 | "collectGold"          | 5 VICTORY_COLLECT_ENOUGH_GOLD    | "0x2"       |
 | "accumulateCreatures"  | 0 VICTORY_DEFEAT_EVERYONE       | "0x1"       |
 | "upgradeTown"          | 0 VICTORY_DEFEAT_EVERYONE       | "0x3"       |
@@ -147,7 +147,10 @@ Values used in the unified JSON format and their equivalents in .fh2m and .h3m
    The unified victory types with no Heroes II equivalent
    (accumulateCreatures, upgradeTown, buildGrail, defeatMonster,
    flagDwellings, flagMines, transportArtifact) convert to
-   0 VICTORY_DEFEAT_EVERYONE.
+   0 VICTORY_DEFEAT_EVERYONE. The Heroes II defeatOtherSide (a
+   team-based victory) converts to the Heroes III None condition:
+   the standard Heroes III victory (defeating every other side)
+   already covers it, like defeatEveryone.
    Booleans: victoryCondition.allowNormalVictory = FH2M
    allowNormalVictory / H3M "Regular ending also possible" (not
    extracted); victoryCondition.appliesToAI = FH2M
