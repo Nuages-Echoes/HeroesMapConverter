@@ -1944,9 +1944,44 @@ H3M_ARTIFACT_NAMES = [
     "Unused 1", "Unused 2", "Unused 3",
 ]
 
-# h3m artifact id -> fh2m artifact id (fheroes2 Artifact enum); -1
-# when the artifact has no Heroes II equivalent. Only artifacts with a
-# clear Heroes II counterpart (same role and name) are mapped.
+# h3m artifact id -> Heroes III artifact class: 1 Treasure, 2 Minor,
+# 3 Major, 4 Relic (the official RoE/AB/SoD classification). The
+# artifacts with no Heroes II equivalent convert to the fh2m random
+# artifact of the matching class (Relic -> Random Major per user
+# decision: Heroes II has no random relic). Sources: the Heroes III
+# artifact lists (weapon/shield/torso/helmet/feet/cape/necklace/
+# ring/misc slots).
+H3M_ARTIFACT_CLASSES = {
+    7: 1, 8: 2, 9: 2, 10: 3, 11: 3, 12: 4,           # weapons
+    13: 1, 14: 2, 15: 2, 16: 3, 17: 3, 18: 4,       # shields
+    25: 1, 26: 2, 27: 2, 28: 3, 29: 3, 30: 4,       # torso
+    19: 1, 20: 1, 21: 2, 22: 2, 23: 3, 24: 4,       # helmets
+    41: 1, 98: 2, 56: 3, 59: 4, 32: 4, 90: 4,       # feet
+    78: 1, 42: 2, 55: 2, 58: 3, 68: 3, 109: 3,      # capes
+    83: 3, 99: 3, 72: 4,                            # capes (SoD)
+    37: 1, 45: 1, 33: 4, 34: 4, 36: 4, 44: 4,       # necklaces (dragons)
+    100: 1, 105: 1, 103: 1, 104: 1, 102: 1, 107: 1,  # pendant immunities
+    101: 3, 106: 3, 76: 1, 54: 1, 57: 3, 66: 3,     # necklaces
+    97: 1, 108: 3, 43: 3, 71: 3, 119: 2, 120: 2, 121: 3, 122: 3,  # necklaces/rings
+    46: 1, 47: 1, 48: 1, 49: 1, 50: 1, 51: 1,       # luck/morale misc
+    84: 1, 52: 1, 53: 1, 85: 1, 62: 3, 91: 3,       # eagle eye/archery misc
+    60: 1, 61: 2,                                   # archery misc
+    73: 1, 74: 1, 75: 1,                            # mana misc
+    80: 3, 79: 3, 82: 3, 81: 3,                     # orbs
+    86: 4, 87: 4, 88: 4, 89: 4,                     # tomes
+    92: 3, 126: 4, 93: 4,                          # sphere/orb of inhibition
+    63: 1, 64: 1, 65: 2,                            # eagle eye misc
+    94: 1, 95: 1, 96: 3,                            # rings of life
+    115: 4, 116: 3, 117: 3,                         # endless gold
+    114: 2, 112: 2, 111: 3, 113: 2,                 # resource carts
+    118: 1, 110: 3, 125: 3, 127: 4,                  # legion/shackles
+    128: 4, 129: 4, 130: 4, 131: 4, 132: 4, 133: 4,  # combos
+    134: 4, 135: 4, 136: 4, 137: 4, 138: 4, 139: 4, 140: 4,
+    123: 4, 124: 4,                                 # Sea Captain's/Spellbinder's
+    39: 3, 40: 4,                                   # dragon scale shield/armor
+    31: 2,                                          # Armor of Wonder
+}
+
 # h3m artifact id -> fh2m artifact id (fheroes2 Artifact enum); -1
 # when the artifact has no Heroes II equivalent. Only artifacts with a
 # clear Heroes II counterpart (same role and name) are mapped.

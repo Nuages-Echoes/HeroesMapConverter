@@ -1118,7 +1118,29 @@ def _translate_h3m_tile_objects(obj_list, objects_section, translated_metadata,
                 continue
             fh2m_artifact = H3M_TO_FH2M_ARTIFACTS.get(artifact, -1)
             if fh2m_artifact < 1:
-                dropped_ids.append(obj_id)
+                # No Heroes II equivalent: a random artifact of the
+                # same Heroes III class (Treasure -> 92, Minor -> 93,
+                # Major and Relic -> 94; Heroes II has no random
+                # relic, the relic convert to the random major).
+                from correspondence import H3M_ARTIFACT_CLASSES
+                artifact_class = H3M_ARTIFACT_CLASSES.get(artifact)
+                if artifact_class is None:
+                    dropped_ids.append(obj_id)
+                    continue
+                fh2m_index = {1: 92, 2: 93, 3: 94, 4: 94}.get(artifact_class)
+                if fh2m_index is None:
+                    dropped_ids.append(obj_id)
+                    continue
+                translated.append(OrderedDict([
+                    ("id", obj_id),
+                    ("group", "ADVENTURE_ARTIFACTS"),
+                    ("index", fh2m_index),
+                ]))
+                translated_metadata.setdefault("artifactMetadata", OrderedDict())[str(obj_id)] = OrderedDict([
+                    ("radius", 0),
+                    ("captureCondition", 0),
+                    ("selected", []),
+                ])
                 continue
             # The fh2m ADVENTURE_ARTIFACTS group lists the artifacts
             # from the Arcane Necklace (fheroes2 id 9) up to Magic Book,
@@ -2379,11 +2401,20 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
                         else:
                             entry = ("generic", (x, y, z), h3m_target, None)
             elif group == "ADVENTURE_ARTIFACTS":
-                artifact = index + 1
-                h3m_artifact = FH2M_TO_H3M_ARTIFACTS.get(artifact)
-                if h3m_artifact is None:
-                    continue
-                entry = ("artifact", (x, y, z), (5, h3m_artifact), None)
+                if index in (91, 92, 93, 94, 95):
+                    # The fh2m random artifacts (see map_object_info.cpp,
+                    # populateAdventureArtifacts) encode to the matching
+                    # h3m random artifact classes; the Ultimate maps to
+                    # the random relic (69).
+                    entry = ("artifact", (x, y, z),
+                             (65 + {91: 0, 92: 1, 93: 2, 94: 3, 95: 4}[index], 0),
+                             None)
+                else:
+                    artifact = index + 1
+                    h3m_artifact = FH2M_TO_H3M_ARTIFACTS.get(artifact)
+                    if h3m_artifact is None:
+                        continue
+                    entry = ("artifact", (x, y, z), (5, h3m_artifact), None)
             elif group == "ADVENTURE_MISCELLANEOUS" and index == 0:
                 entry = ("sign", (x, y, z), (91, 0), None)
             elif group == "KINGDOM_HEROES":
