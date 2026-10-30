@@ -786,6 +786,20 @@ def unified_to_h3m(unified):
     computer_colors = set(players.get("computerColors", []))
     details_by_color = {d.get("color"): d for d in unified.get("playerDetails", [])}
 
+    # Positions of the first owned town per color: the official maps
+    # give every active player a main town; the converted maps set it
+    # to the first town flying the player's flag (decoded from the
+    # LANDSCAPE_FLAGS by the fh2m conversion).
+    castle_meta = (unified.get("objects") or {}).get("castleMetadata") or {}
+    town_tile_by_color = {}
+    for tile_key, obj_list in ((unified.get("objects") or {}).get("tiles") or {}).items():
+        for obj in obj_list:
+            if obj.get("group") != "KINGDOM_TOWNS":
+                continue
+            owner = (castle_meta.get(str(obj.get("id"))) or {}).get("ownerColor")
+            if owner and owner not in town_tile_by_color:
+                town_tile_by_color[owner] = tile_key
+
     players_list = []
     for color in H3M_PLAYER_COLORS:
         detail = details_by_color.get(color, {})
@@ -818,13 +832,25 @@ def unified_to_h3m(unified):
         # main town get the random town flag.
         owns_random_town = bool(detail.get("ownsRandomTown", False))
         is_active = (color in human_colors) or (color in computer_colors)
+        # An active player with an owned town on the map gets it as
+        # the main town (the official starting condition); a player
+        # with nothing gets the random town flag.
+        fallback_town_tile = town_tile_by_color.get(color) if is_active else None
         if is_active and not detail.get("mainTown") and not owns_random_town \
-                and not any(owned_towns.values()):
+                and not any(owned_towns.values()) and not fallback_town_tile:
             owns_random_town = True
         player["Owns Random Town"] = owns_random_town
         player["Owned Towns"] = owned_towns
 
         main_town = detail.get("mainTown")
+        if not main_town and fallback_town_tile:
+            parts = fallback_town_tile.split("_")
+            main_town = OrderedDict([
+                ("generateHero", True),
+                ("x", int(parts[0])),
+                ("y", int(parts[1])),
+                ("z", int(parts[2]) if len(parts) > 2 else 0),
+            ])
         if main_town:
             player["Main Town"] = True
             player["Generate Hero At Main Town"] = bool(main_town.get("generateHero", True))
@@ -2315,6 +2341,40 @@ def _fh2m_objects_to_unified(map_data):
         tiles[tile_key] = unified_objs
 
     result = OrderedDict([("tiles", tiles)])
+
+    # Castle owners: the fh2m format encodes the owner of a castle
+    # through the LANDSCAPE_FLAGS object placed on the tile to the
+    # left of the castle entrance, carrying the castle's object id.
+    # The flag index is color * 2 (left flag) or color * 2 + 1
+    # (right flag), the colors being 0 Blue, 1 Green, 2 Red,
+    # 3 Yellow, 4 Orange, 5 Purple, 6 neutral. The decoded owner is
+    # stored on the castleMetadata so the h3m writer can assign the
+    # towns to their players.
+    town_positions = {}
+    for tile_key, obj_list in tiles.items():
+        for obj in obj_list:
+            if obj.get("group") == "KINGDOM_TOWNS":
+                town_positions[obj.get("id")] = tile_key
+    flag_owners = {}
+    for tile_key, obj_list in tiles.items():
+        for obj in obj_list:
+            if obj.get("group") != "LANDSCAPE_FLAGS":
+                continue
+            owner_id = obj.get("id")
+            if owner_id not in town_positions:
+                continue
+            parts = town_positions[owner_id].split("_")
+            town_x, town_y = int(parts[0]), int(parts[1])
+            parts = tile_key.split("_")
+            flag_x, flag_y = int(parts[0]), int(parts[1])
+            # The left flag sits on the tile to the left of the castle.
+            if flag_y == town_y and flag_x == town_x - 1:
+                color_id = obj.get("index", 0) // 2
+                if 0 <= color_id < len(FH2M_PLAYER_COLORS):
+                    flag_owners[str(owner_id)] = FH2M_PLAYER_COLORS[color_id]
+                else:
+                    flag_owners[str(owner_id)] = None
+
     translation_info = map_data.get("translationInfo") or {}
     if translation_info:
         result["translationInfo"] = OrderedDict(translation_info)
@@ -2344,10 +2404,16 @@ def _fh2m_objects_to_unified(map_data):
                 if expected_group is None:
                     return None
                 return (objects_by_id.get(str(obj_id)) or {}).get(expected_group)
-            result[key] = OrderedDict(
+            entries = OrderedDict(
                 (obj_id, _fh2m_metadata_to_unified(key, metadata, _lookup(obj_id)))
                 for obj_id, metadata in value_map.items()
             )
+            if key == "castleMetadata":
+                for obj_id, owner_color in flag_owners.items():
+                    for entry_id in entries:
+                        if str(entry_id) == obj_id and owner_color is not None:
+                            entries[entry_id]["ownerColor"] = owner_color
+            result[key] = entries
 
     return result
 
@@ -2732,13 +2798,19 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
             # RoE town layout: owner, name, creatures (7 slots),
             # formation, buildings flags, spell bitfields and events.
             # The fh2m castleMetadata converts: the custom name, the
-            # garrison defenders and the built buildings (the fh2m
-            # flags map back through the building bit tables).
+            # garrison defenders, the built buildings (the fh2m
+            # flags map back through the building bit tables) and
+            # the owner decoded from the castle flags.
             from correspondence import (H3M_DWELLING_BITS,
                                          H3M_TOWN_BUILDING_BITS,
                                          FH2M_TO_H3M_MONSTERS)
             meta = payload or {}
-            buffer.write(struct.pack("<B", 0xFF))  # owner: neutral
+            owner = meta.get("ownerColor")
+            if owner in H3M_PLAYER_COLORS:
+                owner_byte = H3M_PLAYER_COLORS.index(owner)
+            else:
+                owner_byte = 0xFF
+            buffer.write(struct.pack("<B", owner_byte))
             name = meta.get("customName") or ""
             if name:
                 name_bytes = name.encode("cp1252", errors="replace")
