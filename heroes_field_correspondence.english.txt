@@ -497,8 +497,10 @@ quest messages, garrison canTake, event players flags).
    Lighthouses (34), Events (38 - the ground events need their
    dedicated h3m layout), Freeman's Foundry (39), Magic Gardens
    (40), Alchemist's Tower (45), Stables (46), Jails (47), Hut of
-   the Magi (48), Eye of the Magi (49), Barriers (50),
-   Traveller's Tents (51), Wagons (25), Black Cats (55).
+   the Magi (48), Barriers (50), Traveller's Tents (51),
+   Black Cats (55); the Eye of the Magi (49) encodes to the
+   h3m eye of the magi (27) and the Wagon (25) to the h3m
+   wagon (105).
    ADVENTURE_POWER_UPS: Artesian Springs (0), Watering Holes (1),
    Faerie Rings (2-4), Oases (5), Fountains (6), Magic Wells
    (7-9), Forts (10), Gazebos (11), Witch Doctor's Huts (12),
@@ -507,9 +509,11 @@ quest messages, garrison canTake, event players flags).
    ADVENTURE_WATER: Sea Chests (1), Flotsam (2), Shipwreck
    Survivors (5), Magellan's Maps (6), Whirlpools (7), Shipwrecks
    (8), Derelict Ships (9), Sirens (10), Barrels (12); the Boats
-   (4) need the h3m boat class. The Treasure Chest, Campfire and
-   Genie's Lamp treasures (ADVENTURE_TREASURES 1-4+) and the boats
-   are also dropped.
+   (4) encode to the h3m boat (class 8). The Genie's Lamp
+   (ADVENTURE_TREASURES 7) encodes to the h3m Refugee Camp (78),
+   the Random Resource (8) to the h3m random resource (76), the
+   Treasure Chest (9) to the h3m treasure chest (101) and the
+   campfires (10-12) to the h3m campfire (12).
 
    Classes h3m without a Heroes II equivalent (h3m -> fh2m): the
    classes below appear in the test maps and stay dropped by the
@@ -539,17 +543,31 @@ quest messages, garrison canTake, event players flags).
    Skeleton, pyramid (63) -> Pyramid, shipwreck survivor (86) ->
    Shipwreck Survivor, sirens (92) -> Sirens, scholar (47) ->
    Witch's Hut, swan pond (28) -> Faerie Ring, fountain of youth
-   (31) -> Watering Hole. Dropped as objects but converted as terrain: the cursed ground
+   (31) -> Watering Hole; and the per-user-decision pairings:
+   boat (8) -> Boat (ADVENTURE_WATER 4), eye of the magi (27) ->
+   Eye of the Magi (MISC 49), refugee camp (78) -> Wagon Camp
+   (ADVENTURE_DWELLINGS 17), wagon (105) -> Wagon (MISC 25),
+   lean-to (39) -> Lean-to, snow terrain (MISC 16), watering
+   hole variant (110) -> Water Wheel (MISC 24). The random
+   resource (h3m class 76) converts to the fh2m Random Resource
+   object (ADVENTURE_TREASURES 8) and the treasure chest (101)
+   to the fh2m Treasure Chest (ADVENTURE_TREASURES 9); the
+   campfire (12) converts to the fh2m Campfire
+   (ADVENTURE_TREASURES 10 - the fheroes2 treasure group lists
+   the 7 resources, the Genie's Lamp (7), the Random Resource
+   (8), the Treasure Chest (9) and the 3 campfire variants
+   (10-12)). Dropped as objects but converted as terrain: the cursed ground
    (21) and magic plains (46) tiles become plain Heroes II
    terrain - the cursed grounds become Dirt, the magic plains
    Grass (the h3m battlefield overlays have no Heroes II
    mechanic, the tile keeps a natural terrain). Dropped (no
    Heroes II gameplay equivalent): subterranean gate (103) and
    the editor objects (arena 4,
-   black market 7, border gates, keymaster tents, cartographer,
+   black market 7, border gates (9), keymaster tents (10),
+   cartographer (13),
    cover of darkness, hill fort, hut of the magi, magic spring,
    resource merchant, rally point, stables, trading post 99,
-   wagon, war memorial, gallows, frozen lake, sand pit). The
+   war memorial, gallows, frozen lake, sand pit). The
    remaining dropped classes of the
    test maps total ~100 occurrences (the 195
    terrain objects of the classes 124, 130, 132, 143, 151, 153,
