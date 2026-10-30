@@ -662,7 +662,11 @@ quest messages, garrison canTake, event players flags).
    - ADVENTURE_ARTIFACTS: h3m artifact -> fh2m artifact (index follows
      the fheroes2 ADVENTURE_ARTIFACTS group order); random h3m
      artifacts become fh2m random artifacts; artifacts with no Heroes
-     II equivalent are dropped
+     II equivalent become the fh2m random artifact of the same
+     Heroes III class through H3M_ARTIFACT_CLASSES (Treasure ->
+     Random Treasure, Minor -> Random Minor, Major -> Random Major;
+     the Relic map to the Random Major per user decision - Heroes II
+     has no random relic)
    - KINGDOM_HEROES: h3m hero -> fh2m hero object (index = color * 7 +
      race from the hero pairing) with a full heroMetadata: name,
      experience, primary skills, secondary skills (converted through
@@ -1050,13 +1054,15 @@ quest messages, garrison canTake, event players flags).
 | 116    | Endless Bag of Gold           | 32      | Endless Bag of Gold     |
 | 117    | Endless Purse of Gold         | 33      | Endless Purse of Gold   |
 
-   H3M artifacts with no Heroes II equivalent (UNDEFINE, dropped by
-   the cross-format translation): all the remaining ones, notably the
-   Ultimate artifacts have different names and effects, the
-   faction-specific weapons/armor (Centaur Axe, Shield of the Dwarven
-   Lords...), the Legion set pieces, the tomes of magic,
-   the Angel Wings, the Shackles of War, the Armageddon's Blade and
-   the other campaign artifacts.
+   H3M artifacts with no Heroes II equivalent (UNDEFINE): the
+   remaining ones (the faction-specific weapons/armor like the
+   Centaur Axe or the Shield of the Dwarven Lords, the Legion set
+   pieces, the tomes of magic, the Angel Wings, the Shackles of War,
+   the Armageddon's Blade and the other campaign artifacts) convert
+   to the fh2m random artifact of their Heroes III class (see
+   H3M_ARTIFACT_CLASSES) instead of being dropped. The fh2m random
+   artifacts encode back to the h3m random artifact classes 65-68
+   and the fh2m Ultimate to the h3m random relic (69).
 
    FH2M artifacts with no h3m artifact equivalent: the Succession
    Wars Ultimate artifacts (Ultimate Book, Ultimate Sword, Ultimate
