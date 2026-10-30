@@ -1094,10 +1094,6 @@ FH2M_TO_H3M_SHRINES = {
 # catalog are mapped; the others (obelisk, oracle, pyramid, PoL
 # objects...) stay dropped until their h3m classes are confirmed.
 FH2M_TO_H3M_MISC = {
-    # Campfires (ADVENTURE_TREASURES indexes 8-9, the two campfire
-    # sprites) -> campfire (12).
-    "MISC_8": (12, 0),   # Campfire
-    "MISC_9": (12, 0),   # Campfire on show
     # MISC: windmills -> windmill (112), lean-tos -> lean-to (39),
     # signs -> sign (91), water wheels -> water wheel (109),
     # witch's hut -> witch hut (113), stone liths -> two-way
@@ -1145,8 +1141,15 @@ FH2M_TO_H3M_MISC = {
     "POWER_19": (96, 0),   # Temple -> Temple
     "POWER_21": (41, 0),   # Xanadu -> Library of Enlightenment
     "POWER_22": (4, 0),     # Arena -> Arena
-    # Genie's Lamp -> Refugee Camp (the h3m creature vendor).
-    "TREASURE_7": (78, 0),  # Genie's Lamp -> Refugee Camp
+    # TREASURES: Genie's Lamp -> Refugee Camp (the h3m creature
+    # vendor); Random Resource -> random resource (76); Treasure
+    # Chest -> treasure chest (101); campfires -> campfire (12).
+    "TREASURE_7": (78, 0),   # Genie's Lamp -> Refugee Camp
+    "TREASURE_8": (76, 0),   # Random Resource -> random resource
+    "TREASURE_9": (101, 0),  # Treasure Chest -> treasure chest
+    "TREASURE_10": (12, 0),   # Campfire -> campfire
+    "TREASURE_11": (12, 0),   # Campfire on show -> campfire
+    "TREASURE_12": (12, 0),   # Campfire in desert -> campfire
     # Obelisks (the ADVENTURE_MISCELLANEOUS terrain variants,
     # keyed MISC_x to avoid colliding with the ADVENTURE_TREASURES
     # indexes) -> obelisk (57 - the same puzzle-map mechanic in
@@ -1196,10 +1199,18 @@ H3M_TO_FH2M_INTERACTIVE = {
     97: ("ADVENTURE_MISCELLANEOUS", 32),   # den of thieves -> Trading Post
     102: ("ADVENTURE_POWER_UPS", 20),      # tree of knowledge -> Tree of Knowledge
     108: ("ADVENTURE_MISCELLANEOUS", 0),   # warrior's tomb -> Graveyard
+    # Additional pairings (per user decision): the h3m editor-only
+    # and PoL classes map to their Heroes II counterparts.
+    8: ("ADVENTURE_WATER", 4),             # boat -> Boat
+    27: ("ADVENTURE_MISCELLANEOUS", 49),    # eye of the magi -> Eye of the Magi
+    78: ("ADVENTURE_DWELLINGS", 17),        # refugee camp -> Wagon Camp
+    105: ("ADVENTURE_MISCELLANEOUS", 25),   # wagon -> Wagon
+    39: ("ADVENTURE_MISCELLANEOUS", 16),    # lean-to -> Lean-to, snow terrain
+    110: ("ADVENTURE_MISCELLANEOUS", 24),   # watering hole variant -> Water Wheel
     111: ("ADVENTURE_WATER", 7),           # whirlpool -> Whirlpool
     # Additional pairings (the h3m interactive objects with a
     # Heroes II counterpart).
-    12: ("ADVENTURE_TREASURES", 8),        # campfire -> Campfire
+    12: ("ADVENTURE_TREASURES", 10),       # campfire -> Campfire
     29: ("ADVENTURE_WATER", 2),            # flotsam -> Flotsam
     11: ("ADVENTURE_WATER", 3),            # buoy -> Buoy
     22: ("ADVENTURE_MISCELLANEOUS", 30),   # corpse -> Skeleton
@@ -1216,11 +1227,8 @@ H3M_TO_FH2M_INTERACTIVE = {
     # cartographer (13), cover of darkness (15), hill fort (35),
     # hut of the magi (37), magic spring (48), resource merchant
     # (52), rally point (64), stables (94), trading post (99 - the
-    # den of thieves already maps to it), wagon (105), war memorial
-    # (107), water wheel (110 - the h3m water wheel class maps to
-    # the Heroes II water wheel through 109, this 110 sprite is
-    # another variant kept dropped), gallows (117), frozen lake
-    # (121), sand pit (149).
+    # den of thieves already maps to it), war memorial (107),
+    # gallows (117), frozen lake (121), sand pit (149).
 }
 
 

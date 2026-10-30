@@ -1070,7 +1070,19 @@ def _translate_h3m_tile_objects(obj_list, objects_section, translated_metadata,
         elif group == "ADVENTURE_TREASURES":
             resource_meta = (objects_section.get("resourceMetadata") or {}).get(str(obj_id)) or {}
             resource = resource_meta.get("resource")
-            if resource is None or resource < 0 or resource >= len(FH2M_RESOURCE_ORDER):
+            if resource is None:
+                # Random resource (h3m class 76): the fh2m Random
+                # Resource object (ADVENTURE_TREASURES index 8).
+                translated.append(OrderedDict([
+                    ("id", obj_id),
+                    ("group", "ADVENTURE_TREASURES"),
+                    ("index", 8),
+                ]))
+                translated_metadata.setdefault("resourceMetadata", OrderedDict())[str(obj_id)] = OrderedDict([
+                    ("count", resource_meta.get("count") or 0),
+                ])
+                continue
+            if resource < 0 or resource >= len(FH2M_RESOURCE_ORDER):
                 dropped_ids.append(obj_id)
                 continue
             translated.append(OrderedDict([
@@ -2339,19 +2351,27 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
             elif group == "ADVENTURE_TREASURES":
                 # The fh2m treasure index is the resource type
                 # (0-6: wood, mercury, ore, sulfur, crystal, gems,
-                # gold); the campfires (8-9) map to the h3m campfire
-                # class through the misc table.
+                # gold); the Genie's Lamp (7), the Random Resource
+                # (8), the Treasure Chest (9) and the campfires
+                # (10-12) map through the misc table.
                 h3m_resource = FH2M_TO_H3M_RESOURCES.get(index)
                 if h3m_resource is not None:
                     m = resource_meta.get(str(obj_id)) or {}
                     count = m.get("count") or 0
                     entry = ("resource", (x, y, z), (79, h3m_resource), count)
-                elif index in (8, 9):
-                    # The campfires map to the h3m campfire (12).
-                    entry = ("generic", (x, y, z), (12, 0), None)
-                elif index == 7:
-                    # The Genie's Lamp maps to the h3m Refugee Camp.
-                    entry = ("generic", (x, y, z), (78, 0), None)
+                else:
+                    from correspondence import FH2M_TO_H3M_MISC
+                    h3m_target = FH2M_TO_H3M_MISC.get("TREASURE_%d" % index)
+                    if h3m_target is not None:
+                        if h3m_target[0] == 76:
+                            # Random Resource: the h3m random resource
+                            # carries the same count layout as a fixed
+                            # resource.
+                            m = resource_meta.get(str(obj_id)) or {}
+                            count = m.get("count") or 0
+                            entry = ("resource", (x, y, z), (76, 0), count)
+                        else:
+                            entry = ("generic", (x, y, z), h3m_target, None)
             elif group == "ADVENTURE_ARTIFACTS":
                 artifact = index + 1
                 h3m_artifact = FH2M_TO_H3M_ARTIFACTS.get(artifact)
