@@ -496,11 +496,13 @@ quest messages, garrison canTake, event players flags).
    Skeletons (30), Sphinxes (31), Trading Posts (32-33),
    Lighthouses (34), Events (38 - the ground events need their
    dedicated h3m layout), Freeman's Foundry (39), Magic Gardens
-   (40), Alchemist's Tower (45), Stables (46), Jails (47), Hut of
+   (40), Alchemist's Tower (45), Stables (46), Hut of
    the Magi (48), Barriers (50), Traveller's Tents (51),
    Black Cats (55); the Eye of the Magi (49) encodes to the
-   h3m eye of the magi (27) and the Wagon (25) to the h3m
-   wagon (105).
+   h3m eye of the magi (27), the Wagon (25) to the h3m
+   wagon (105); the Jail (47) stays dropped (the h3m prison
+   class 62 requires the full hero layout) but converts in
+   the h3m -> fh2m direction (a neutral hero becomes a Jail).
    ADVENTURE_POWER_UPS: Artesian Springs (0), Watering Holes (1),
    Faerie Rings (2-4), Oases (5), Fountains (6), Magic Wells
    (7-9), Forts (10), Gazebos (11), Witch Doctor's Huts (12),
@@ -675,7 +677,9 @@ quest messages, garrison canTake, event players flags).
      (the first five non-empty
      creature slots), artifacts (worn slots and backpack through the
      artifact table), available spells (bitfield through the spell
-     table) and patrol state; neutral heroes (owner 255) are dropped;
+     table) and patrol state; neutral heroes (owner 255) are prison
+     inmates: they convert to the fh2m Jail object (ADVENTURE_MISC
+     47), the Heroes II prison releasing the hero on capture;
      biography, face and gender have no Heroes II equivalent
    - ADVENTURE_MINES / ADVENTURE_DWELLINGS: translated with a
      capturableObjectsMetadata carrying the owner color (when the

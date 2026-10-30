@@ -1189,14 +1189,20 @@ def _translate_h3m_tile_objects(obj_list, objects_section, translated_metadata,
             hero_type = hero_meta.get("type")
             if owner is None or owner >= len(FH2M_PLAYER_COLORS) or hero_type is None:
                 # Random or unsupported hero: keep the color only when
-                # possible, otherwise drop.
+                # possible; a neutral hero (owner 255) is a prison
+                # inmate - it converts to the fh2m Jail (MISC 47), the
+                # Heroes II prison releasing the hero on capture.
                 if owner is not None and owner < len(FH2M_PLAYER_COLORS):
                     color_id = FH2M_PLAYER_COLORS.index(
                         FH2M_PLAYER_COLORS[owner]) if False else owner
+                    hero_type = 0
                 else:
-                    dropped_ids.append(obj_id)
+                    translated.append(OrderedDict([
+                        ("id", obj_id),
+                        ("group", "ADVENTURE_MISCELLANEOUS"),
+                        ("index", 47),
+                    ]))
                     continue
-                hero_type = 0
             fh2m_hero = H3M_TO_FH2M_HEROES.get(hero_type)
             if fh2m_hero is None:
                 dropped_ids.append(obj_id)
