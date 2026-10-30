@@ -2656,11 +2656,12 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
         if key not in kind_of:
             ref = FH2M_TO_H3M_CATALOG.get(key)
             if ref is None and obj_class == 34:
-                # The hero sprites follow the AH0<type>00.DEF
+                # The hero sprites follow the AH<type>_00.DEF
                 # convention (the standard hero sprite naming of the
-                # h3m format); the passability matches the prison
-                # sprite (the closest single-tile hero object).
-                ref = ('AH0%02X00.DEF' % (obj_subclass or 0),
+                # h3m format, two hex digits for the hero type);
+                # the passability matches the prison sprite (the
+                # closest single-tile hero object).
+                ref = ('AH%02X_00.DEF' % (obj_subclass or 0),
                        'ffffffffff3f000000000080ff01ff00',
                        '000000000000000000000000000000000000')
             if ref is None:
