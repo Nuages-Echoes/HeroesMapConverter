@@ -1206,7 +1206,7 @@ H3M_TO_FH2M_INTERACTIVE = {
     78: ("ADVENTURE_DWELLINGS", 17),        # refugee camp -> Wagon Camp
     105: ("ADVENTURE_MISCELLANEOUS", 25),   # wagon -> Wagon
     39: ("ADVENTURE_MISCELLANEOUS", 16),    # lean-to -> Lean-to, snow terrain
-    110: ("ADVENTURE_MISCELLANEOUS", 24),   # watering hole variant -> Water Wheel
+    110: ("ADVENTURE_POWER_UPS", 1),         # watering hole variant -> Watering Hole
     111: ("ADVENTURE_WATER", 7),           # whirlpool -> Whirlpool
     # Additional pairings (the h3m interactive objects with a
     # Heroes II counterpart).
