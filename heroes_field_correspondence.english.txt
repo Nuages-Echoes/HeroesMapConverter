@@ -581,8 +581,13 @@ quest messages, garrison canTake, event players flags).
    mechanic, the tile keeps a natural terrain). Dropped (no
    Heroes II gameplay equivalent): subterranean gate (103),
    cover of darkness (15) and
-   the editor objects (border gates (9), keymaster tents (10),
-   gallows (117), frozen lake (121), sand pit (149)). The
+   the editor objects (border gates (9), keymaster tents (10)).
+   The terrain-object pairings (per user decision): the frozen
+   lake (121) converts to the Heroes II frozen water lake
+   (LANDSCAPE_MISCELLANEOUS 26), the sand pit (149) to the dug
+   hole, desert terrain (79) and the canyon (117) to the big
+   crack, wasteland terrain (104). The Gold Golem maps to the
+   Heroes II Steel Golem (per user decision). The
    remaining dropped classes of the
    test maps total ~100 occurrences (the 195
    terrain objects of the classes 124, 130, 132, 143, 151, 153,
