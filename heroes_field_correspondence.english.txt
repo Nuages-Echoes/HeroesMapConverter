@@ -508,7 +508,8 @@ quest messages, garrison canTake, event players flags).
    (19), Trees of Knowledge (20), Xanadus (21), Arenas (22).
    ADVENTURE_WATER: Sea Chests (1), Flotsam (2), Shipwreck
    Survivors (5), Magellan's Maps (6), Whirlpools (7), Shipwrecks
-   (8), Derelict Ships (9), Sirens (10), Barrels (12); the Boats
+   (8), Derelict Ships (9), Mermaids (10), Sirens (11), Barrels
+   (12); the Boats
    (4) encode to the h3m boat (class 8). The Genie's Lamp
    (ADVENTURE_TREASURES 7) encodes to the h3m Refugee Camp (78),
    the Random Resource (8) to the h3m random resource (76), the
@@ -548,7 +549,24 @@ quest messages, garrison canTake, event players flags).
    Eye of the Magi (MISC 49), refugee camp (78) -> Wagon Camp
    (ADVENTURE_DWELLINGS 17), wagon (105) -> Wagon (MISC 25),
    lean-to (39) -> Lean-to, snow terrain (MISC 16), watering
-   hole variant (110) -> Watering Hole (POWER_UPS 1). The random
+   hole variant (110) -> Watering Hole (POWER_UPS 1). The
+   per-user-decision pairings also map the remaining h3m editor
+   and interactive classes: sanctuary (80) -> Temple (POWER_UPS
+   19), trading post (99) and black market (7) -> Trading Post
+   (MISC 32), library of enlightenment (41) and university (104)
+   -> Xanadu (POWER_UPS 21), pillar of fire (60) and
+   cartographer (13) -> Observation Tower (MISC 41), arena (4)
+   and school of war (107) -> Arena (POWER_UPS 22), stables (94)
+   -> Stables (MISC 46), war machine factory (106) -> Freeman's
+   Foundry (MISC 39), rally flag (64) -> Watering Hole (POWER_UPS
+   1), hut of the magi (37) -> Hut of the Magi (MISC 48), swan
+   pond (14) -> Idol (POWER_UPS 17), mermaid (52) -> Mermaid
+   (WATER 10), tavern (95) -> Oracle (MISC 7), hill fort (35) ->
+   Hill Fort (MISC 2), magic spring (48) -> Artesian Spring
+   (POWER_UPS 0), monolith one-way entrance (43) and exit (44)
+   -> Stone Liths (MISC 35). The sirens (92) convert to the
+   fh2m Sirens (WATER 11 - the fheroes2 water group lists the
+   Mermaid at 10 and the Sirens at 11). The random
    resource (h3m class 76) converts to the fh2m Random Resource
    object (ADVENTURE_TREASURES 8) and the treasure chest (101)
    to the fh2m Treasure Chest (ADVENTURE_TREASURES 9); the
@@ -561,13 +579,10 @@ quest messages, garrison canTake, event players flags).
    terrain - the cursed grounds become Dirt, the magic plains
    Grass (the h3m battlefield overlays have no Heroes II
    mechanic, the tile keeps a natural terrain). Dropped (no
-   Heroes II gameplay equivalent): subterranean gate (103) and
-   the editor objects (arena 4,
-   black market 7, border gates (9), keymaster tents (10),
-   cartographer (13),
-   cover of darkness, hill fort, hut of the magi, magic spring,
-   resource merchant, rally point, stables, trading post 99,
-   war memorial, gallows, frozen lake, sand pit). The
+   Heroes II gameplay equivalent): subterranean gate (103),
+   cover of darkness (15) and
+   the editor objects (border gates (9), keymaster tents (10),
+   gallows (117), frozen lake (121), sand pit (149)). The
    remaining dropped classes of the
    test maps total ~100 occurrences (the 195
    terrain objects of the classes 124, 130, 132, 143, 151, 153,
