@@ -1169,6 +1169,8 @@ FH2M_TO_H3M_MISC = {
     "WATER_2": (29, 0),  # Flotsam
     "WATER_3": (11, 0),  # Buoy
     "WATER_5": (86, 0),  # Shipwreck Survivor
+    "WATER_10": (52, 0),  # Mermaid
+    "WATER_11": (92, 0),  # Sirens
 }
 
 
@@ -1207,6 +1209,28 @@ H3M_TO_FH2M_INTERACTIVE = {
     105: ("ADVENTURE_MISCELLANEOUS", 25),   # wagon -> Wagon
     39: ("ADVENTURE_MISCELLANEOUS", 16),    # lean-to -> Lean-to, snow terrain
     110: ("ADVENTURE_POWER_UPS", 1),         # watering hole variant -> Watering Hole
+    # Per-user-decision pairings for the remaining h3m interactive
+    # and editor classes.
+    80: ("ADVENTURE_POWER_UPS", 19),         # sanctuary -> Temple
+    99: ("ADVENTURE_MISCELLANEOUS", 32),     # trading post -> Trading Post
+    41: ("ADVENTURE_POWER_UPS", 21),         # library of enlightenment -> Xanadu
+    104: ("ADVENTURE_POWER_UPS", 21),        # university -> Xanadu
+    7: ("ADVENTURE_MISCELLANEOUS", 32),      # black market -> Trading Post
+    60: ("ADVENTURE_MISCELLANEOUS", 41),     # pillar of fire -> Observation Tower
+    4: ("ADVENTURE_POWER_UPS", 22),           # arena -> Arena
+    94: ("ADVENTURE_MISCELLANEOUS", 46),     # stables -> Stables
+    106: ("ADVENTURE_MISCELLANEOUS", 39),    # war machine factory -> Freeman's Foundry
+    64: ("ADVENTURE_POWER_UPS", 1),           # rally flag -> Watering Hole
+    37: ("ADVENTURE_MISCELLANEOUS", 48),     # hut of the magi -> Hut of the Magi
+    14: ("ADVENTURE_POWER_UPS", 17),          # swan pond -> Idol
+    52: ("ADVENTURE_WATER", 10),              # mermaid -> Mermaid
+    107: ("ADVENTURE_POWER_UPS", 22),         # school of war -> Arena
+    13: ("ADVENTURE_MISCELLANEOUS", 41),      # cartographer -> Observation Tower
+    95: ("ADVENTURE_MISCELLANEOUS", 7),       # tavern -> Oracle
+    35: ("ADVENTURE_MISCELLANEOUS", 2),       # hill fort -> Hill Fort
+    48: ("ADVENTURE_POWER_UPS", 0),           # magic spring -> Artesian Spring
+    43: ("ADVENTURE_MISCELLANEOUS", 35),      # monolith one-way entrance -> Stone Liths
+    44: ("ADVENTURE_MISCELLANEOUS", 35),      # monolith one-way exit -> Stone Liths
     111: ("ADVENTURE_WATER", 7),           # whirlpool -> Whirlpool
     # Additional pairings (the h3m interactive objects with a
     # Heroes II counterpart).
@@ -1216,7 +1240,7 @@ H3M_TO_FH2M_INTERACTIVE = {
     22: ("ADVENTURE_MISCELLANEOUS", 30),   # corpse -> Skeleton
     63: ("ADVENTURE_MISCELLANEOUS", 29),   # pyramid -> Pyramid
     86: ("ADVENTURE_WATER", 5),            # shipwreck survivor -> Shipwreck Survivor
-    92: ("ADVENTURE_WATER", 10),           # sirens -> Sirens
+    92: ("ADVENTURE_WATER", 11),           # sirens -> Sirens
     47: ("ADVENTURE_MISCELLANEOUS", 26),   # scholar -> Witch's Hut
     28: ("ADVENTURE_POWER_UPS", 2),        # swan pond -> Faerie Ring
     31: ("ADVENTURE_POWER_UPS", 1),        # fountain of youth -> Watering Hole
