@@ -786,19 +786,29 @@ def unified_to_h3m(unified):
     computer_colors = set(players.get("computerColors", []))
     details_by_color = {d.get("color"): d for d in unified.get("playerDetails", [])}
 
-    # Positions of the first owned town per color: the official maps
-    # give every active player a main town; the converted maps set it
-    # to the first town flying the player's flag (decoded from the
-    # LANDSCAPE_FLAGS by the fh2m conversion).
+    # Positions of the first owned town per color and the h3m town
+    # types owned by each color: the official maps give every active
+    # player a main town and set the owned town type bits; the
+    # converted maps read them from the towns flying the player's
+    # flag (decoded from the LANDSCAPE_FLAGS by the fh2m conversion).
     castle_meta = (unified.get("objects") or {}).get("castleMetadata") or {}
     town_tile_by_color = {}
+    town_types_by_color = {}
     for tile_key, obj_list in ((unified.get("objects") or {}).get("tiles") or {}).items():
         for obj in obj_list:
             if obj.get("group") != "KINGDOM_TOWNS":
                 continue
-            owner = (castle_meta.get(str(obj.get("id"))) or {}).get("ownerColor")
-            if owner and owner not in town_tile_by_color:
+            meta = castle_meta.get(str(obj.get("id"))) or {}
+            owner = meta.get("ownerColor")
+            if not owner:
+                continue
+            if owner not in town_tile_by_color:
                 town_tile_by_color[owner] = tile_key
+            race_name = meta.get("raceName")
+            for town_type, race in H3M_TOWN_TYPE_TO_FH2M_RACE.items():
+                if race == race_name:
+                    town_types_by_color.setdefault(owner, set()).add(H3M_TOWN_TYPES[town_type])
+                    break
 
     players_list = []
     for color in H3M_PLAYER_COLORS:
@@ -813,6 +823,7 @@ def unified_to_h3m(unified):
 
         owned_towns = OrderedDict((town, False) for town in H3M_TOWN_TYPES)
         detail_owned = detail.get("ownedTowns", {})
+        is_active = (color in human_colors) or (color in computer_colors)
         if detail_owned:
             # Detailed per-town ownership carried by the unified format.
             for town in detail_owned:
@@ -824,6 +835,19 @@ def unified_to_h3m(unified):
             player["Has Defined Towns"] = True
         else:
             player["Has Defined Towns"] = False
+        # The converted maps: an active player owns the town types
+        # placed on the map (decoded from the castle flags); a player
+        # with no defined town can play any faction, like the official
+        # maps (all town bits set - the editor shows Random).
+        owned_types = town_types_by_color.get(color)
+        if is_active and owned_types:
+            for town in owned_types:
+                owned_towns[town] = True
+            player["Has Defined Towns"] = True
+        elif is_active and not player["Has Defined Towns"]:
+            for town in owned_towns:
+                owned_towns[town] = True
+            player["Has Defined Towns"] = True
         # A playable player needs a starting condition. The official
         # maps give every active player a main town or the random
         # town flag; a player with nothing would make the map invalid
@@ -831,7 +855,6 @@ def unified_to_h3m(unified):
         # no starting town placement, so the active players without a
         # main town get the random town flag.
         owns_random_town = bool(detail.get("ownsRandomTown", False))
-        is_active = (color in human_colors) or (color in computer_colors)
         # An active player with an owned town on the map gets it as
         # the main town (the official starting condition); a player
         # with nothing gets the random town flag.
