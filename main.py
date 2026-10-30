@@ -14,12 +14,31 @@ OUTPUT_UNIFIED_DIR = "outputunified"
 SKIP_DISPLAY_KEYS = {"Surface Map", "Underground Map", "Objects"}
 
 
+def write_target(unified_data, target_game, base_name):
+    """Convertit le JSON unifié vers le format cible et écrit le fichier.
+
+    Retourne le chemin du fichier écrit, ou None avec un message
+    d'erreur affiché.
+    """
+    map_data = convert_from_unified(unified_data, target_game)
+
+    if target_game == "fh2m":
+        output_path = os.path.join(OUTPUT_DIR, f"{base_name}.fh2m")
+        write_fh2m(map_data, output_path)
+        print(f"FH2M file written to {output_path}")
+    else:
+        output_path = os.path.join(OUTPUT_DIR, f"{base_name}.h3m")
+        write_h3m(map_data, output_path)
+
+    return output_path
+
+
 def main():
     parser = argparse.ArgumentParser(
-        description="Convertit les cartes Heroes vers le format unifié puis vers un format cible.")
+        description="Convertit les cartes Heroes vers le format unifié puis vers tous les formats cibles.")
     parser.add_argument("--target", choices=["h3m", "fh2m"], default=None,
-                        help="Format cible de la conversion. Par défaut, "
-                             "le format d'origine (aller-retour).")
+                        help="Format cible unique de la conversion. Par défaut, "
+                             "toutes les cartes sont converties vers les deux formats (H2 et H3).")
     args = parser.parse_args()
 
     os.makedirs(OUTPUT_DIR, exist_ok=True)
@@ -57,21 +76,21 @@ def main():
                 json.dump(unified_result, json_file, indent=4, ensure_ascii=False)
             print(f"JSON unifié écrit dans '{unified_file_path}'")
 
-            # Étape 2 : lecture du JSON unifié et écriture du fichier dans le dossier output
+            # Étape 2 : lecture du JSON unifié et écriture des fichiers cibles
             with open(unified_file_path, "r", encoding="utf-8") as json_file:
                 unified_data = json.load(json_file)
 
-            target_game = args.target or source_game
-            map_data = convert_from_unified(unified_data, target_game)
-
-            if target_game == "fh2m":
-                fh2m_output_path = os.path.join(OUTPUT_DIR, f"{base_name}.fh2m")
-                write_fh2m(map_data, fh2m_output_path)
-                print(f"FH2M file written to {fh2m_output_path}")
+            if args.target is not None:
+                targets = [args.target]
             else:
-                h3m_output_path = os.path.join(OUTPUT_DIR, f"{base_name}.h3m")
-                write_h3m(map_data, h3m_output_path)
-                print(f"H3M file written to {h3m_output_path}")
+                targets = ["h3m", "fh2m"]
+
+            for target_game in targets:
+                try:
+                    write_target(unified_data, target_game, base_name)
+                except Exception as e:
+                    print(f"Erreur lors de la conversion de '{file_name}' "
+                          f"vers {target_game.upper()}: {e}")
         except Exception as e:
             print(f"Erreur lors de la conversion de '{file_name}': {e}")
             continue
