@@ -899,9 +899,14 @@ def unified_to_h3m(unified):
     # The Heroes II defeatOtherSide (a team-based victory) has no
     # special Heroes III condition: the standard victory (defeating
     # every other side) already covers it, so it converts to None
-    # like defeatEveryone.
+    # like defeatEveryone. The Heroes II obtainArtifact with artifact
+    # id 0 is the buried Ultimate Artifact: its Heroes III equivalent
+    # is building the Grail.
+    victory_metadata = victory.get("metadata") or []
     if victory_type in ("defeatEveryone", "defeatOtherSide"):
         data["Victory Condition"] = OrderedDict([("Type", "None")])
+    elif victory_type == "obtainArtifact" and victory_metadata and victory_metadata[0] == 0:
+        data["Victory Condition"] = OrderedDict([("Type", hex(victory_codes["buildGrail"]))])
     else:
         data["Victory Condition"] = OrderedDict([
             ("Type", hex(victory_codes.get(victory_type, 0x6))),
@@ -2693,7 +2698,7 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
         buffer.write(name_bytes)
         buffer.write(bytes.fromhex(passability))
         buffer.write(struct.pack("<II", key[0], key[1]))
-        buffer.write(b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00")
+        buffer.write(bytes.fromhex(trailing))
 
     # --- Instances ---
     buffer.write(struct.pack("<I", len(instances)))
