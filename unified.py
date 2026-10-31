@@ -2556,7 +2556,14 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
                     owner_color = FH2M_PLAYER_COLORS[owner_color_id]
                     if owner_color in H3M_PLAYER_COLORS:
                         hero_payload["owner"] = H3M_PLAYER_COLORS.index(owner_color)
-                entry = ("hero", (x, y, z), (34, hero_type), hero_payload)
+                # The hero template carries the hero CLASS (the first
+                # hero of each block of 8 heroes: 0-7 knight, 8-15
+                # cleric, 16-23 ranger... 136-143 elementalist), not
+                # the hero type; the sprite of a placed hero is the
+                # class sprite (AH<class>_E.DEF, see the official
+                # heroClasses table and the real maps' catalogs).
+                hero_class = (hero_type or 0) // 8
+                entry = ("hero", (x, y, z), (34, hero_class), hero_payload)
             elif group == "KINGDOM_TOWNS":
                 # A town: the object index encodes the race (race * 2
                 # for a castle); the castleMetadata carries the
@@ -2656,15 +2663,15 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
         if key not in kind_of:
             ref = FH2M_TO_H3M_CATALOG.get(key)
             if ref is None and obj_class == 34:
-                # The hero sprites follow the ah<type>_e.def
-                # convention - the actual file names of the game
-                # archives (H3sprite.lod), lowercase with the type in
-                # two decimal digits: hero 32 is ah32_e.def.
-                # The passability matches the prison sprite (the
-                # closest single-tile hero object).
-                ref = ('ah%02d_e.def' % (obj_subclass or 0),
-                       'ffffffffff3f000000000080ff01ff00',
-                       '000000000000000000000000000000000000')
+                # The hero template subclass is the hero CLASS and
+                # the sprite is the class sprite AH<class>_E.DEF (the
+                # official heroClasses animation names, as written in
+                # the real maps' catalogs). The passability and the
+                # trailing bytes match the hero templates of the real
+                # maps.
+                ref = ('AH%02d_E.DEF' % (obj_subclass or 0),
+                       'ffffffffffbf000000000040ff00ff00',
+                       '030000000000000000000000000000000000')
             if ref is None:
                 continue
             kind_of[key] = len(catalog_keys)
