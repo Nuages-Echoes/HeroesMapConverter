@@ -998,11 +998,18 @@ def unified_to_h3m(unified):
             else:
                 terrain_name = UNIFIED_TO_H3M_TERRAINS.get(cell.get("terrain", "Grass"), "Dirt")
                 # The fh2m terrain image index becomes the h3m
-                # Terrain Picture: the fh2m images are numbered
-                # globally by terrain range while the h3m images are
-                # per-terrain variants (about 72 per terrain). The
-                # position within the fh2m terrain range, modulo 72,
-                # gives a valid h3m image variant.
+                # Terrain Picture. In fh2m, each terrain range starts
+                # with transition images (16 for Water and Dirt, 38
+                # for the other land terrains, none for Beach) followed
+                # by the main terrain images (7 plain variants, then
+                # variants with embedded objects). In h3m the layout
+                # per terrain is also transitions first then the main
+                # variants, but at different offsets: main tiles start
+                # at 21 for Water/Dirt/Sand and at 49 for the other
+                # land terrains (8 variants each). Map transition
+                # offsets onto the h3m transition range and main
+                # offsets onto the h3m main range so pure terrain
+                # tiles never get a transition image.
                 picture = 0
                 source_terrain = cell.get("sourceTerrain", "")
                 if source_terrain.startswith("terrain:"):
@@ -1013,7 +1020,14 @@ def unified_to_h3m(unified):
                             if name == cell.get("terrain", "Grass"):
                                 break
                             range_start = start_index
-                        picture = (image_index - range_start) % 72
+                        offset = image_index - range_start
+                        unified_name = cell.get("terrain", "Grass")
+                        if unified_name in ("Water", "Dirt"):
+                            picture = offset if offset < 16 else 21 + (offset - 16) % 8
+                        elif unified_name == "Beach":
+                            picture = offset % 23
+                        else:
+                            picture = offset if offset < 38 else 49 + (offset - 38) % 8
                     except ValueError:
                         picture = 0
                 mirroring = "0x00"
