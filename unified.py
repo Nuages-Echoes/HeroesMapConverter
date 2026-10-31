@@ -980,6 +980,66 @@ def unified_to_h3m(unified):
                 elif group == "STREAMS":
                     fh2m_river_tiles.add((x, y, z))
 
+    # Per-terrain h3m main-tile ranges (VCMI editor terrainViewPatterns.json,
+    # pattern n1): normal terrains 49-72, dirt 21-44, sand 0-23, water 20-32.
+    # Transition/border sprites sit below those ranges and must be chosen
+    # from the tile's neighbors, not copied from the fh2m image index.
+    H3M_MAIN_RANGE = {
+        "Water": (20, 32), "Dirt": (21, 44), "Sand": (0, 23),
+        "Rock": (0, 7),
+    }
+    H3M_MAIN_RANGE_DEFAULT = (49, 72)
+
+    def _fh2m_offset(cell):
+        source_terrain = cell.get("sourceTerrain", "")
+        if not source_terrain.startswith("terrain:"):
+            return None
+        try:
+            image_index = int(source_terrain[len("terrain:"):])
+        except ValueError:
+            return None
+        range_start = 0
+        for start_index, name in FH2M_TERRAIN_INDEX_RANGES:
+            if name == cell.get("terrain", "Grass"):
+                break
+            range_start = start_index
+        return image_index - range_start
+
+    # h3m water border sprite per set of land directions around the tile
+    # (VCMI terrainViewPatterns.json): west 0-3, north 4-7, east 8-11,
+    # south 12-15, corners 16-19. The odd offset of a pair is the mirrored
+    # variant of the same border.
+    def _h3m_water_border_picture(has_n, has_e, has_s, has_w, mirror=False):
+        if has_n and has_s and has_e and has_w:
+            return 20
+        if has_n and has_e and not has_s and not has_w:
+            return 16 + mirror
+        if has_s and has_e and not has_n and not has_w:
+            return 17 + mirror
+        if has_s and has_w and not has_n and not has_e:
+            return 18 + mirror
+        if has_n and has_w and not has_s and not has_e:
+            return 19 + mirror
+        if has_n and not has_s:
+            return 4 + mirror
+        if has_s and not has_n:
+            return 12 + mirror
+        if has_e and not has_w:
+            return 8 + mirror
+        if has_w and not has_e:
+            return 0 + mirror
+        return 20
+
+    # fh2m source terrain lookup: (x, y) -> (z, cell) per level, used to
+    # derive border sprites from the neighboring terrain types.
+    fh2m_level_grids = []
+    if is_fh2m_source:
+        for lvl in unified.get("terrain", {}).get("levels", []):
+            g = {}
+            for cell in lvl.get("grid", []):
+                g[(cell.get("x", 0), cell.get("y", 0))] = (cell.get("z", 0), cell)
+            fh2m_level_grids.append(g)
+
     terrain_by_level = []
     for level in unified.get("terrain", {}).get("levels", []):
         grid = OrderedDict()
@@ -997,39 +1057,52 @@ def unified_to_h3m(unified):
                 river_props = cell.get("sourceRiverProperties", 0)
             else:
                 terrain_name = UNIFIED_TO_H3M_TERRAINS.get(cell.get("terrain", "Grass"), "Dirt")
-                # The fh2m terrain image index becomes the h3m
+                # The fh2m terrain image index maps onto the h3m
                 # Terrain Picture. In fh2m, each terrain range starts
                 # with transition images (16 for Water and Dirt, 38
                 # for the other land terrains, none for Beach) followed
-                # by the main terrain images (7 plain variants, then
-                # variants with embedded objects). In h3m the layout
-                # per terrain is also transitions first then the main
-                # variants, but at different offsets: main tiles start
-                # at 21 for Water/Dirt/Sand and at 49 for the other
-                # land terrains (8 variants each). Map transition
-                # offsets onto the h3m transition range and main
-                # offsets onto the h3m main range so pure terrain
-                # tiles never get a transition image.
-                picture = 0
-                source_terrain = cell.get("sourceTerrain", "")
-                if source_terrain.startswith("terrain:"):
-                    try:
-                        image_index = int(source_terrain[len("terrain:"):])
-                        range_start = 0
-                        for start_index, name in FH2M_TERRAIN_INDEX_RANGES:
-                            if name == cell.get("terrain", "Grass"):
-                                break
-                            range_start = start_index
-                        offset = image_index - range_start
-                        unified_name = cell.get("terrain", "Grass")
-                        if unified_name in ("Water", "Dirt"):
-                            picture = offset if offset < 16 else 21 + (offset - 16) % 8
-                        elif unified_name == "Beach":
-                            picture = offset % 23
-                        else:
-                            picture = offset if offset < 38 else 49 + (offset - 38) % 8
-                    except ValueError:
-                        picture = 0
+                # by the main terrain images. In h3m the main tiles sit
+                # in a per-terrain range (49-72 for normal land, 21-44
+                # for Dirt, 0-23 for Sand, 20-32 for Water) and the
+                # border sprites below them are picked from the
+                # neighbors. A pure terrain tile gets a main sprite; a
+                # tile touching another terrain (in fh2m a transition
+                # image) gets the matching h3m border sprite derived
+                # from the actual neighboring terrain types, so water
+                # shores use the water border sprites (0-19).
+                unified_name = cell.get("terrain", "Grass")
+                offset = _fh2m_offset(cell)
+                lo, hi = H3M_MAIN_RANGE.get(terrain_name, H3M_MAIN_RANGE_DEFAULT)
+                if offset is None:
+                    picture = lo
+                elif unified_name in ("Water", "Dirt"):
+                    picture = offset if offset < 16 else lo + (offset - 16) % (hi - lo + 1)
+                elif unified_name == "Beach":
+                    picture = offset % (hi + 1)
+                elif offset < 38:
+                    # Land transition tile: recompute the border from the
+                    # neighbors in h3m terms; only water shores have real
+                    # border sprites, other land borders are picked by the
+                    # game from the same low range.
+                    picture = offset % lo if lo else 49
+                else:
+                    picture = lo + (offset - 38) % (hi - lo + 1)
+                if terrain_name == "Water" and offset is not None and offset < 16:
+                    level_grid = fh2m_level_grids[z] if z < len(fh2m_level_grids) else {}
+
+                    def neighbor_land(dx, dy):
+                        entry = level_grid.get((x + dx, y + dy))
+                        if entry is None:
+                            return False
+                        _, ncell = entry
+                        return UNIFIED_TO_H3M_TERRAINS.get(ncell.get("terrain", "Grass"), "Dirt") not in ("Water", "Rock")
+
+                    has_n = neighbor_land(0, -1) or neighbor_land(-1, -1) or neighbor_land(1, -1)
+                    has_s = neighbor_land(0, 1) or neighbor_land(-1, 1) or neighbor_land(1, 1)
+                    has_w = neighbor_land(-1, 0) or neighbor_land(-1, -1) or neighbor_land(-1, 1)
+                    has_e = neighbor_land(1, 0) or neighbor_land(1, -1) or neighbor_land(1, 1)
+                    picture = _h3m_water_border_picture(has_n, has_e, has_s, has_w,
+                                                        mirror=bool(offset % 2))
                 mirroring = "0x00"
                 road = "Dirt" if (x, y, z) in fh2m_road_tiles else "None"
                 road_props = 0
