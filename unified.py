@@ -903,13 +903,25 @@ def unified_to_h3m(unified):
     # id 0 is the buried Ultimate Artifact: its Heroes III equivalent
     # is building the Grail.
     victory_metadata = victory.get("metadata") or []
+    allow_normal = bool(victory.get("allowNormalVictory", True))
+    applies_ai = bool(victory.get("appliesToAI", True))
     if victory_type in ("defeatEveryone", "defeatOtherSide"):
         data["Victory Condition"] = OrderedDict([("Type", "None")])
     elif victory_type == "obtainArtifact" and victory_metadata and victory_metadata[0] == 0:
-        data["Victory Condition"] = OrderedDict([("Type", hex(victory_codes["buildGrail"]))])
+        # buildGrail takes a town position; FF FF FF means any town. The
+        # original game only accepts the Grail condition with the normal
+        # victory and the AI allowed.
+        data["Victory Condition"] = OrderedDict([
+            ("Type", hex(victory_codes["buildGrail"])),
+            ("Allow Normal Victory", True),
+            ("Applies To AI", True),
+            ("Detail", "ffffff"),
+        ])
     else:
         data["Victory Condition"] = OrderedDict([
             ("Type", hex(victory_codes.get(victory_type, 0x6))),
+            ("Allow Normal Victory", allow_normal),
+            ("Applies To AI", applies_ai),
         ])
 
     loss = unified.get("lossCondition", {})
