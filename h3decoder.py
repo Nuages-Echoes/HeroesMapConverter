@@ -590,14 +590,19 @@ def write_h3m(map_data, output_path):
         else:
             vic_byte = 0
         buffer.write(struct.pack('<B', vic_byte))
-        buffer.write(b'\x00\x00')
+        buffer.write(struct.pack('<B', 1 if vic.get('Allow Normal Victory', True) else 0))
+        buffer.write(struct.pack('<B', 1 if vic.get('Applies To AI', True) else 0))
         artifact_id_bytes = 1 if not level_ab else 2
         creature_id_bytes = 1 if not level_ab else 2
         detail_size = {
             0: artifact_id_bytes, 1: creature_id_bytes + 4, 2: 5,
             3: 5, 4: 3, 5: 3, 6: 3, 7: 3, 8: 0, 9: 0, 10: 4
         }.get(vic_byte, 6)
-        buffer.write(b'\x00' * detail_size)
+        detail = vic.get('Detail')
+        if isinstance(detail, str) and detail:
+            buffer.write(bytes.fromhex(detail).ljust(detail_size, b'\x00')[:detail_size])
+        else:
+            buffer.write(b'\x00' * detail_size)
 
     # === Special Loss Condition ===
     loss = map_data.get('Loss Condition', {})
