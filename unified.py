@@ -2571,7 +2571,8 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
     from correspondence import (FH2M_TO_H3M_CATALOG,
                                   FH2M_TO_H3M_MONSTERS,
                                   FH2M_TO_H3M_ARTIFACTS,
-                                  FH2M_TO_H3M_RESOURCES)
+                                  FH2M_TO_H3M_RESOURCES,
+                                  H3M_CREATURE_DEF_NAMES)
 
     objects_section = unified.get("objects") or {}
     tiles = objects_section.get("tiles") or {}
@@ -2800,6 +2801,23 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
                  if (e[2][0], e[2][1]) in kind_of]
     if not instances:
         return None
+
+    # The game resolves random monsters against the map's own catalog
+    # (NewfullMap::findObjectType in game::convertObject): a class-54 def
+    # must exist for every creature id the game can roll, or the load
+    # crashes. Add the missing creature defs with the standard monster
+    # body (passable FF FF FF FF FF 7F, all lands, group 2) observed in
+    # the real maps.
+    for creature_id, def_name in H3M_CREATURE_DEF_NAMES.items():
+        key = (54, creature_id)
+        if key in kind_of:
+            continue
+        body = ("ffffffffff7f" + "000000000000" + "80ff" + "0101"
+                + struct.pack("<II", 54, creature_id).hex()
+                + "02" + "00" + "00" * 16)
+        kind_of[key] = len(catalog_keys)
+        catalog_keys.append(key)
+        catalog_entries.append((def_name, body[:32], body[48:]))
 
     buffer = BytesIO()
     buffer.write(struct.pack("<I", len(catalog_entries)))
