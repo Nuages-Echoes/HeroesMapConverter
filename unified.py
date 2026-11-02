@@ -3043,6 +3043,41 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
             buffer.write(struct.pack("<I", 0))  # no events
             buffer.write(b"\x00\x00\x00")  # trailing 3 bytes
 
+    # --- Global events section ---
+    # Every h3m file ends with a uint32 event count followed by the
+    # events, right after the object details; the game reads this
+    # section when loading the map and crashes when it is missing.
+    # Convert the fh2m daily events (RoE/AB body layout; SoD adds the
+    # applies-to-human byte).
+    events = unified.get("dailyEvents") or []
+    buffer.write(struct.pack("<I", len(events)))
+    fh2m_to_h3m_color_bit = {"Red": 0, "Blue": 1, "Yellow": 2, "Green": 3,
+                             "Orange": 4, "Purple": 5}
+    for event in events:
+        name_bytes = b""
+        buffer.write(struct.pack("<I", len(name_bytes)))
+        buffer.write(name_bytes)
+        msg = (event.get("message") or "").encode("cp1252", errors="replace")
+        buffer.write(struct.pack("<I", len(msg)))
+        buffer.write(msg)
+        res = event.get("resources") or {}
+        values = [res.get(key, 0) or 0 for key in
+                  ("wood", "mercury", "ore", "sulfur", "crystal", "gems", "gold")]
+        buffer.write(struct.pack("<7i", *values))
+        players_mask = 0
+        for color in (event.get("humanColors") or []) + (event.get("computerColors") or []):
+            bit = fh2m_to_h3m_color_bit.get(color)
+            if bit is not None:
+                players_mask |= (1 << bit)
+        buffer.write(struct.pack("<B", players_mask))
+        if version_sod:
+            buffer.write(struct.pack("<B", 1 if event.get("humanColors") else 0))
+        buffer.write(struct.pack("<B", 1 if event.get("computerColors") else 0))
+        first = (event.get("firstOccurrenceDay") or 1) - 1
+        buffer.write(struct.pack("<H", max(0, min(671, first))))
+        buffer.write(struct.pack("<B", min(28, event.get("repeatPeriodInDays") or 0)))
+        buffer.write(b"\x00" * 17)
+
     return buffer.getvalue().hex()
 
 
