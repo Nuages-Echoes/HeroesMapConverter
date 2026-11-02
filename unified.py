@@ -2766,9 +2766,14 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
         return None
 
     # --- Build the sprite catalog: one def per used (class, subclass) ---
-    catalog_keys = []
-    catalog_entries = []
-    kind_of = {}
+    # Every real map's catalog starts with two reserved, never-instanced
+    # defs (the random monster template AVWmrnd0.def class 71 and the
+    # holy ground AVLholg0.def class 124); the game expects them at
+    # indexes 0 and 1, so object instances start at index 2.
+    catalog_keys = [(71, 0), (124, 0)]
+    catalog_entries = [FH2M_TO_H3M_CATALOG[(71, 0)],
+                       FH2M_TO_H3M_CATALOG[(124, 0)]]
+    kind_of = {(71, 0): 0, (124, 0): 1}
     for entry in instances:
         _, _, (obj_class, obj_subclass), _ = entry
         key = (obj_class, obj_subclass)
@@ -2781,7 +2786,7 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
                 # the real maps' catalogs). The passability and the
                 # trailing bytes match the hero templates of the real
                 # maps.
-                ref = ('AH%02d_E.DEF' % (obj_subclass or 0),
+                ref = ('ah%02d_e.def' % (obj_subclass or 0),
                        'ffffffffffbf000000000040ff00ff00',
                        '030000000000000000000000000000000000')
             if ref is None:
@@ -2827,15 +2832,13 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
         buffer.write(struct.pack("<H" if version_ab else "<B",
                                  artifact_none if art is None else art))
 
-    next_uid = 1
     for entry in instances:
         kind_name, (x, y, z), (obj_class, obj_subclass), payload = entry
         buffer.write(struct.pack("<BBB", x, y, z))
         buffer.write(struct.pack("<I", kind_of[(obj_class, obj_subclass)]))
-        # The 5 trailing header bytes carry the object UID (uint32) used
-        # by the game to reference objects; give each a unique one.
-        buffer.write(struct.pack("<I", next_uid) + b"\x00")
-        next_uid += 1
+        # The 5 trailing header bytes are unknown and always 0 in the
+        # real maps (h3mlib: unknown1[5]; //0x00).
+        buffer.write(b"\x00" * 5)
         if kind_name in ("monster", "hero", "town"):
             if version_ab:
                 buffer.write(struct.pack("<I", 0))  # objectID
