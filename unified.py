@@ -2811,12 +2811,17 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
         key = (54, creature_id)
         if key in kind_of:
             continue
-        body = ("ffffffffff7f" + "000000000000" + "80ff" + "0101"
-                + struct.pack("<II", 54, creature_id).hex()
-                + "02" + "00" + "00" * 16)
+        body = bytearray(42)
+        body[0:6] = bytes.fromhex("ffffffffff7f")       # passable cells
+        body[6:12] = bytes.fromhex("000000000080")      # actionable cells
+        body[12:14] = bytes.fromhex("ff01")             # allowed landscapes
+        body[14:16] = bytes.fromhex("ff00")             # landscape group
+        body[16:24] = struct.pack("<II", 54, creature_id)
+        body[24] = 2                                    # editor group: monster
+        body[25:42] = b"\x00" * 17                      # above + 16 unknown
         kind_of[key] = len(catalog_keys)
         catalog_keys.append(key)
-        catalog_entries.append((def_name, body[:32], body[48:]))
+        catalog_entries.append((def_name, body[:16].hex(), body[24:].hex()))
 
     buffer = BytesIO()
     buffer.write(struct.pack("<I", len(catalog_entries)))
