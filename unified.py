@@ -951,8 +951,15 @@ def unified_to_h3m(unified):
 
     # Available heroes bitfield: bit=1 means the hero can be hired.
     # A converted Heroes II map restricts no hero, so the default is
-    # every hero available (all bits set), like the official maps.
+    # every hero available (all bits set), like the official maps. The
+    # bitfield is 16 bytes in RoE and 20 bytes in AB/SoD, so pad with 0xFF
+    # up to the target version's width.
+    version_str = basic.get("Version", "")
+    heroes_width = 20 if version_str != "RoE (Restoration of Erathia)" else 16
     bitfield = unified.get("availableHeroesBitfield") or "ff" * 16
+    bitfield_bytes = bytes.fromhex(bitfield)
+    bitfield_bytes = bitfield_bytes + b"\xff" * max(0, heroes_width - len(bitfield_bytes))
+    bitfield = bitfield_bytes[:heroes_width].hex()
     data["Available Heroes"] = OrderedDict([
         ("Bitfield", bitfield),
     ])
