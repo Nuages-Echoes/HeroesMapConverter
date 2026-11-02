@@ -1100,11 +1100,10 @@ def unified_to_h3m(unified):
                 elif unified_name == "Beach":
                     picture = offset % (hi + 1)
                 elif offset < 38:
-                    # Land transition tile: recompute the border from the
-                    # neighbors in h3m terms; only water shores have real
-                    # border sprites, other land borders are picked by the
-                    # game from the same low range.
-                    picture = offset % lo if lo else 49
+                    # Land transition tile: pick a border sprite inside the
+                    # terrain's own low range (Sand has lo == 0, so its
+                    # valid pictures are 0..hi; never emit 49 there).
+                    picture = offset % (lo if lo else hi + 1)
                 else:
                     picture = lo + (offset - 38) % (hi - lo + 1)
                 if terrain_name == "Water" and offset is not None and offset < 16:
