@@ -763,10 +763,11 @@ def unified_to_h3m(unified):
     if unified.get("sourceGame") == "h3m":
         version_name = H3M_VERSION_NAMES.get(unified.get("sourceVersion"), "RoE (Restoration of Erathia)")
     else:
-        # The fh2m maps encode to the SoD layout so the HD Edition
-        # (SoD-based) accepts them; the writer emits the SoD sections
-        # (level cap, hero settings, artifact/spell/skill bitfields).
-        version_name = "SoD (Shadow of Death)"
+        # The fh2m maps encode to the AB layout so both the Armageddon's
+        # Blade editor/game (0x15) and the SoD-based HD Edition accept
+        # them; the writer emits the AB sections (level cap, hero
+        # placeholders, artifact bitfield).
+        version_name = "AB (Armageddon Blade)"
 
     basic = OrderedDict()
     basic["Version"] = version_name
