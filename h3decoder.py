@@ -191,7 +191,12 @@ def parse_h3m(file_path):
         hero_type = struct.unpack('<B', safe_read(buffer, 1))[0]
         hero_info['Hero Type'] = hero_type if hero_type != 0xFF else None
 
-        if hero_type != 0xFF:
+        if level_ab:
+            # AB/SoD always store face and name even for type 0xFF.
+            hero_info['Hero Face'] = struct.unpack('<B', safe_read(buffer, 1))[0]
+            name_len = struct.unpack('<I', safe_read(buffer, 4))[0]
+            hero_info['Hero Name'] = read_string(buffer, name_len)
+        elif hero_type != 0xFF:
             hero_info['Hero Face'] = struct.unpack('<B', safe_read(buffer, 1))[0]
             name_len = struct.unpack('<I', safe_read(buffer, 4))[0]
             hero_info['Hero Name'] = read_string(buffer, name_len)
@@ -567,7 +572,15 @@ def write_h3m(map_data, output_path):
         hero_type_byte = 0xFF if hero_type is None else hero_type
         buffer.write(struct.pack('<B', hero_type_byte))
 
-        if hero_type is not None:
+        if level_ab:
+            # AB/SoD always store the starting hero face and name, even
+            # when the type is 0xFF (no custom hero); RoE omits them.
+            buffer.write(struct.pack('<B', ph.get('Hero Face', 0xFF)))
+            hero_name = ph.get('Hero Name', '') or ''
+            hero_name_bytes = hero_name.encode('cp1252', errors='replace')
+            buffer.write(struct.pack('<I', len(hero_name_bytes)))
+            buffer.write(hero_name_bytes)
+        elif hero_type is not None:
             buffer.write(struct.pack('<B', ph.get('Hero Face', 0xFF)))
             hero_name = ph.get('Hero Name', '')
             hero_name_bytes = hero_name.encode('cp1252', errors='replace')
