@@ -2823,7 +2823,7 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
         elif kind_name == "decorative":
             pass  # no per-instance data
         elif kind_name == "ownable":
-            buffer.write(struct.pack("<I", 0xFFFFFF))  # neutral owner
+            buffer.write(struct.pack("<I", 0xFF))  # neutral owner
         elif kind_name == "shrine":
             # RoE shrine: a random spell (0xFFFFFFFF).
             buffer.write(struct.pack("<I", 0xFFFFFFFF))
@@ -2841,7 +2841,7 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
                 buffer.write(b"\x00" * 4)
             elif obj_class == 42:
                 # The Stone Liths are ownable: an owner word.
-                buffer.write(struct.pack("<I", 0xFFFFFF))  # neutral
+                buffer.write(struct.pack("<I", 0xFF))  # neutral
         elif kind_name == "hero":
             # RoE hero layout: owner, type, then the customization
             # flags (name, experience, face, skills, creatures,
