@@ -763,11 +763,10 @@ def unified_to_h3m(unified):
     if unified.get("sourceGame") == "h3m":
         version_name = H3M_VERSION_NAMES.get(unified.get("sourceVersion"), "RoE (Restoration of Erathia)")
     else:
-        # The fh2m maps encode to the AB layout so both the Armageddon's
-        # Blade editor/game (0x15) and the SoD-based HD Edition accept
-        # them; the writer emits the AB sections (level cap, hero
-        # placeholders, artifact bitfield).
-        version_name = "AB (Armageddon Blade)"
+        # The fh2m maps encode to the RoE layout (the object encoder
+        # writes the RoE object data). RoE (0x0E) is read by every game
+        # version (RoE/AB/SoD/HD) and by every editor up to SoD.
+        version_name = "RoE (Restoration of Erathia)"
 
     basic = OrderedDict()
     basic["Version"] = version_name
@@ -2810,14 +2809,33 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
 
     # --- Instances ---
     buffer.write(struct.pack("<I", len(instances)))
+    # In AB/SoD the creature slots and artifact ids are 16-bit and the
+    # actionable objects carry a 4-byte objectID right after the header.
+    creature_id_bytes = 2 if version_ab else 1
+    artifact_id_bytes = 2 if version_ab else 1
+    creature_fmt = "<HH" if version_ab else "<BH"
+    creature_none = 0xFFFF if version_ab else 0xFF
+    artifact_none = 0xFFFF if version_ab else 0xFF
+
+    def write_creature_slot(creature, count):
+        if creature is None:
+            buffer.write(struct.pack(creature_fmt, creature_none, 0))
+        else:
+            buffer.write(struct.pack(creature_fmt, creature, count))
+
+    def write_artifact_id(art):
+        buffer.write(struct.pack("<H" if version_ab else "<B",
+                                 artifact_none if art is None else art))
+
     for entry in instances:
         kind_name, (x, y, z), (obj_class, obj_subclass), payload = entry
         buffer.write(struct.pack("<BBB", x, y, z))
         buffer.write(struct.pack("<I", kind_of[(obj_class, obj_subclass)]))
         buffer.write(b"\x00" * 5)
-        if kind_name == "monster":
+        if kind_name in ("monster", "hero", "town"):
             if version_ab:
                 buffer.write(struct.pack("<I", 0))  # objectID
+        if kind_name == "monster":
             buffer.write(struct.pack("<HB", payload & 0xFFFF or 1, 0))
             buffer.write(struct.pack("<B", 0))  # no treasure
             buffer.write(b"\x00" * 4)
@@ -2830,7 +2848,10 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
             buffer.write(struct.pack("<i", 0))  # empty message
             buffer.write(b"\x00" * 4)
         elif kind_name == "decorative":
-            pass  # no per-instance data
+            if version_ab and obj_class == 113:
+                # Witch hut carries its 4 skill bits only in AB/SoD.
+                buffer.write(struct.pack("<I", 0xFFFFFFFF))
+            # other decorative objects: no per-instance data
         elif kind_name == "ownable":
             buffer.write(struct.pack("<I", 0xFF))  # neutral owner
         elif kind_name == "shrine":
@@ -2912,10 +2933,10 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
                 buffer.write(struct.pack("<B", 1))
                 for slot in range(7):
                     if slot < len(army):
-                        buffer.write(struct.pack("<BH", army[slot][0], army[slot][1]))
+                        write_creature_slot(army[slot][0], army[slot][1])
                     else:
-                        # An empty slot: creature 0xFF means none.
-                        buffer.write(struct.pack("<BH", 0xFF, 0))
+                        # An empty slot: creature 0xFF/0xFFFF means none.
+                        write_creature_slot(None, 0)
             else:
                 buffer.write(struct.pack("<B", 0))
             buffer.write(struct.pack("<B", 0))  # formation
@@ -2930,8 +2951,8 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
             if any(converted_artifacts):
                 buffer.write(struct.pack("<B", 1))
                 for slot in range(18):
-                    value = converted_artifacts[slot] if slot < len(converted_artifacts) else 0
-                    buffer.write(struct.pack("<B", value & 0xFF))
+                    value = converted_artifacts[slot] if slot < len(converted_artifacts) else artifact_none
+                    write_artifact_id(value)
                 buffer.write(struct.pack("<H", 0))  # empty bag
             else:
                 buffer.write(struct.pack("<B", 0))
@@ -2980,9 +3001,9 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
                 buffer.write(struct.pack("<B", 1))
                 for slot in range(7):
                     if slot < len(defenders):
-                        buffer.write(struct.pack("<BH", defenders[slot][0], defenders[slot][1]))
+                        write_creature_slot(defenders[slot][0], defenders[slot][1])
                     else:
-                        buffer.write(struct.pack("<BH", 0xFF, 0))
+                        write_creature_slot(None, 0)
             else:
                 buffer.write(struct.pack("<B", 0))
             buffer.write(struct.pack("<B", 0))  # formation

@@ -166,7 +166,13 @@ def parse_h3m(file_path):
         if level_sod:
             safe_read(buffer, 1)  # whether factions are selectable
 
-        owned_towns_bits = struct.unpack('<H', safe_read(buffer, factions_bytes).ljust(2, b'\x00'))[0]
+        if level_ab and not level_sod:
+            # AB has town_types (1 byte) + town_conflux (1 byte).
+            town_types_byte = safe_read(buffer, 1)[0]
+            safe_read(buffer, 1)  # town_conflux
+            owned_towns_bits = town_types_byte
+        else:
+            owned_towns_bits = struct.unpack('<H', safe_read(buffer, factions_bytes).ljust(2, b'\x00'))[0] if factions_bytes == 2 else safe_read(buffer, 1)[0] if factions_bytes == 1 else 0
         player['Has Defined Towns'] = owned_towns_bits != 0
         player['Owned Towns'] = OrderedDict()
         for i in range(towns_in_format):
@@ -588,7 +594,9 @@ def write_h3m(map_data, output_path):
             buffer.write(hero_name_bytes)
             buffer.write(struct.pack('<B', 0))
 
-        if level_ab:
+        if level_ab and hero_type is not None:
+            # The AB/SoD "additional info" (placeholder count + hero name
+            # list) is only present when a custom starting hero is set.
             buffer.write(struct.pack('<B', 0))
             buffer.write(struct.pack('<I', ph.get('Number of Heroes', 0) or 0))
 
@@ -1125,6 +1133,8 @@ def parse_h3m_objects(raw_objects, level_ab, level_sod, artifact_id_bytes,
                 ('artifact', obj_subclass if obj_class == 5 else None),
             ])
         elif kind_name == 'hero':
+            if level_ab:
+                safe_read(buffer, 4)  # objectID
             hero_meta = _parse_h3m_hero_object(buffer, level_ab,
                                                artifact_id_bytes,
                                                creature_id_bytes,
