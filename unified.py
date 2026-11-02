@@ -763,9 +763,10 @@ def unified_to_h3m(unified):
     if unified.get("sourceGame") == "h3m":
         version_name = H3M_VERSION_NAMES.get(unified.get("sourceVersion"), "RoE (Restoration of Erathia)")
     else:
-        # The fh2m maps encode to the RoE layout (the object encoder
-        # writes the RoE object data).
-        version_name = "RoE (Restoration of Erathia)"
+        # The fh2m maps encode to the SoD layout so the HD Edition
+        # (SoD-based) accepts them; the writer emits the SoD sections
+        # (level cap, hero settings, artifact/spell/skill bitfields).
+        version_name = "SoD (Shadow of Death)"
 
     basic = OrderedDict()
     basic["Version"] = version_name
