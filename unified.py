@@ -2827,11 +2827,15 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
         buffer.write(struct.pack("<H" if version_ab else "<B",
                                  artifact_none if art is None else art))
 
+    next_uid = 1
     for entry in instances:
         kind_name, (x, y, z), (obj_class, obj_subclass), payload = entry
         buffer.write(struct.pack("<BBB", x, y, z))
         buffer.write(struct.pack("<I", kind_of[(obj_class, obj_subclass)]))
-        buffer.write(b"\x00" * 5)
+        # The 5 trailing header bytes carry the object UID (uint32) used
+        # by the game to reference objects; give each a unique one.
+        buffer.write(struct.pack("<I", next_uid) + b"\x00")
+        next_uid += 1
         if kind_name in ("monster", "hero", "town"):
             if version_ab:
                 buffer.write(struct.pack("<I", 0))  # objectID
