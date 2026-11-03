@@ -2659,6 +2659,10 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
             elif group == "ADVENTURE_MISCELLANEOUS" and index == 0:
                 entry = ("sign", (x, y, z), (91, 0), None)
             elif group == "KINGDOM_HEROES":
+                # TEST BUILD: skip placed heroes entirely to isolate
+                # the 0x005C17D9 crash.
+                continue
+            elif group == "KINGDOM_HEROES_DISABLED":
                 # A hero: the object index is color * 7 + race. The
                 # hero type comes from the hero pairing: the first
                 # h3m hero paired to the Heroes II race. The color
