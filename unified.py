@@ -2803,7 +2803,7 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
                 # leave m_location pointing at the adjacent town.
                 ref = ('ah%02d_e.def' % (obj_subclass or 0),
                        'ffffffffffbf000000000080ff00ff00',
-                       '030000000000000000000000000000000000')
+                       '000000000000000000000000000000000000')
             if ref is None:
                 continue
             kind_of[key] = len(catalog_keys)
