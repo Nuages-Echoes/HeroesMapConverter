@@ -2803,11 +2803,16 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
 
     # The game resolves random monsters against the map's own catalog
     # (NewfullMap::findObjectType in game::convertObject): a class-54 def
-    # must exist for every creature id the game can roll, or the load
+    # must exist for every creature id the game can roll (below
+    # CREATURE_CATAPULT: 0..144 minus the unused slots), or the load
     # crashes. Add the missing creature defs with the standard monster
     # body (passable FF FF FF FF FF 7F, all lands, group 2) observed in
-    # the real maps.
+    # the real maps. Ids 145+ are war machines or unused slots: never
+    # rolled, and several have no def in the game data (the real maps
+    # only carry defs that exist), so they are skipped.
     for creature_id, def_name in H3M_CREATURE_DEF_NAMES.items():
+        if creature_id >= 145 or not def_name.lower().endswith(".def"):
+            continue
         key = (54, creature_id)
         if key in kind_of:
             continue
