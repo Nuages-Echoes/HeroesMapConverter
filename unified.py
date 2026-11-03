@@ -79,6 +79,10 @@ FH2M_LOSS_CONDITIONS = {
 
 FH2M_PLAYER_COLORS = ["Blue", "Green", "Red", "Yellow", "Orange", "Purple"]
 
+# fh2m calls its third player color "Yellow"; Heroes III calls the same
+# slot "Tan" (index 2). Alias used when mapping fh2m colors to h3m ones.
+FH2M_TO_H3M_COLOR_ALIAS = {"Yellow": "Tan"}
+
 # h3m town type -> unified race (Heroes II hero races)
 # h3m town type -> unified race; the unified race set is the union of
 # both games: Inferno, Fortress and Conflux exist in the unified format
@@ -2672,7 +2676,9 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
                 hero_payload["type"] = hero_type
                 owner_color_id = index // 7
                 if 0 <= owner_color_id < len(FH2M_PLAYER_COLORS):
-                    owner_color = FH2M_PLAYER_COLORS[owner_color_id]
+                    owner_color = FH2M_TO_H3M_COLOR_ALIAS.get(
+                        FH2M_PLAYER_COLORS[owner_color_id],
+                        FH2M_PLAYER_COLORS[owner_color_id])
                     if owner_color in H3M_PLAYER_COLORS:
                         hero_payload["owner"] = H3M_PLAYER_COLORS.index(owner_color)
                 # The hero template carries the hero CLASS (the first
@@ -3021,7 +3027,8 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
                                          H3M_TOWN_BUILDING_BITS,
                                          FH2M_TO_H3M_MONSTERS)
             meta = payload or {}
-            owner = meta.get("ownerColor")
+            owner = FH2M_TO_H3M_COLOR_ALIAS.get(meta.get("ownerColor"),
+                                               meta.get("ownerColor"))
             if owner in H3M_PLAYER_COLORS:
                 owner_byte = H3M_PLAYER_COLORS.index(owner)
             else:
