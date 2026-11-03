@@ -2889,8 +2889,10 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
         elif kind_name == "ownable":
             buffer.write(struct.pack("<I", 0xFF))  # neutral owner
         elif kind_name == "shrine":
-            # RoE shrine: a random spell (0xFFFFFFFF).
-            buffer.write(struct.pack("<I", 0xFFFFFFFF))
+            # RoE shrine layout is one spell byte + 3 padding bytes; the
+            # real maps use 0xFF (random spell) there.
+            buffer.write(struct.pack("<B", 0xFF))
+            buffer.write(b"\x00" * 3)
         elif kind_name == "generic":
             # The generic objects: signs (classes 59/91) carry a
             # message; the ownable objects (class 42 Stone Liths)
