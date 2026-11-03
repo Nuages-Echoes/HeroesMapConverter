@@ -2596,16 +2596,23 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
                 creature = index + 1
                 m = monster_meta.get(str(obj_id)) or {}
                 count = m.get("count") or 0
+                join = m.get("joinCondition") or 0
                 # Random monsters (fh2m ids 67-71) map to the h3m
                 # random monster classes 71-75.
                 if creature in (67, 68, 69, 70, 71):
                     obj_class = 71 + (creature - 67)
-                    entry = ("monster", (x, y, z), (obj_class, 0), count)
+                    # The real maps store random monsters with an empty
+                    # quantity (0) and disposition 2.
+                    entry = ("monster", (x, y, z), (obj_class, 0), (0, 2))
                 else:
                     h3m_creature = FH2M_TO_H3M_MONSTERS.get(creature)
                     if h3m_creature is None:
                         continue
-                    entry = ("monster", (x, y, z), (54, h3m_creature), count)
+                    # Fixed monsters: quantity = fh2m count, disposition
+                    # follows the fh2m join condition as in the real maps
+                    # (0/skip -> 2, money/free -> 4).
+                    disp = 4 if join in (1, 2) else 2
+                    entry = ("monster", (x, y, z), (54, h3m_creature), (count, disp))
             elif group == "ADVENTURE_TREASURES":
                 # The fh2m treasure index is the resource type
                 # (0-6: wood, mercury, ore, sulfur, crystal, gems,
@@ -2870,7 +2877,8 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
             if version_ab:
                 buffer.write(struct.pack("<I", 0))  # objectID
         if kind_name == "monster":
-            buffer.write(struct.pack("<HB", payload & 0xFFFF or 1, 0))
+            qty, disp = payload if isinstance(payload, tuple) else (payload & 0xFFFF, 0)
+            buffer.write(struct.pack("<HB", qty & 0xFFFF, disp & 0xFF))
             buffer.write(struct.pack("<B", 0))  # no treasure
             buffer.write(b"\x00" * 4)
         elif kind_name == "resource":
