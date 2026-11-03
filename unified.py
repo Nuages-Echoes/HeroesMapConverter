@@ -2897,9 +2897,13 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
             # carry an owner; the other misc objects (windmill,
             # lean-to, water wheel, witch hut, observation tower,
             # bottle, buoy) carry no per-instance data.
-            if obj_class in (59, 91):
-                message = (payload or {}).get("message") or ""
-                msg_bytes = message.encode("cp1252", errors="replace")
+            if obj_class in (59, 91) and (payload or {}).get("message"):
+                # Only sign/bottle objects (whose fh2m source is a sign
+                # with a message) carry a message; the same h3m classes
+                # reached from other fh2m groups (e.g. the Sea Chest,
+                # class 82 via WATER_1) carry no per-instance data in
+                # the real maps.
+                msg_bytes = (payload["message"]).encode("cp1252", errors="replace")
                 buffer.write(struct.pack("<i", len(msg_bytes)))
                 buffer.write(msg_bytes)
                 buffer.write(b"\x00" * 4)
