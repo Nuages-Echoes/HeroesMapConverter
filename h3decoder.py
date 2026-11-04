@@ -234,7 +234,8 @@ def parse_h3m(file_path):
         safe_read(buffer, 2)  # allow normal victory + applies to AI
         detail_size = {
             0: artifact_id_bytes, 1: creature_id_bytes + 4, 2: 5,
-            3: 5, 4: 3, 5: 3, 6: 3, 7: 3, 8: 0, 9: 0, 10: 4
+            3: 5, 4: 3, 5: 3, 6: 3, 7: 3, 8: 0, 9: 0, 10: 4,
+            11: 0, 12: 4
         }.get(vic_type, 6)
         safe_read(buffer, detail_size)
         data['Victory Condition'] = OrderedDict([('Type', hex(vic_type))])
@@ -617,7 +618,8 @@ def write_h3m(map_data, output_path):
         creature_id_bytes = 1 if not level_ab else 2
         detail_size = {
             0: artifact_id_bytes, 1: creature_id_bytes + 4, 2: 5,
-            3: 5, 4: 3, 5: 3, 6: 3, 7: 3, 8: 0, 9: 0, 10: 4
+            3: 5, 4: 3, 5: 3, 6: 3, 7: 3, 8: 0, 9: 0, 10: 4,
+            11: 0, 12: 4
         }.get(vic_byte, 6)
         detail = vic.get('Detail')
         if isinstance(detail, str) and detail:
