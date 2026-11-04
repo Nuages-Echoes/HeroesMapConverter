@@ -167,10 +167,7 @@ def parse_h3m(file_path):
             safe_read(buffer, 1)  # whether factions are selectable
 
         if level_ab and not level_sod:
-            # AB has town_types (1 byte) + town_conflux (1 byte).
-            town_types_byte = safe_read(buffer, 1)[0]
-            safe_read(buffer, 1)  # town_conflux
-            owned_towns_bits = town_types_byte
+            owned_towns_bits = struct.unpack('<H', safe_read(buffer, 2))[0]
         else:
             owned_towns_bits = struct.unpack('<H', safe_read(buffer, factions_bytes).ljust(2, b'\x00'))[0] if factions_bytes == 2 else safe_read(buffer, 1)[0] if factions_bytes == 1 else 0
         player['Has Defined Towns'] = owned_towns_bits != 0
