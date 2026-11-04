@@ -25,7 +25,7 @@ def read_string(buffer, length):
         raw = raw.ljust(length, b'\x00')
     cleaned = raw.rstrip(b'\x00')
     try:
-        return cleaned.decode('cp1252')
+        return cleaned.decode('windows-1251')
     except:
         return cleaned.decode('latin-1', errors='replace')
 
@@ -160,6 +160,26 @@ def parse_h3m(file_path):
         hero_info['Color'] = color
         player['Human Playable'] = bool(struct.unpack('<B', safe_read(buffer, 1))[0])
         player['AI Playable'] = bool(struct.unpack('<B', safe_read(buffer, 1))[0])
+        if not (player['Human Playable'] or player['AI Playable']):
+            skip = 6
+            if level_ab:
+                skip += 6
+            if level_sod:
+                skip += 1
+            safe_read(buffer, skip)
+            player['Behavior'] = 'Unknown'
+            player['Has Defined Towns'] = False
+            player['Owned Towns'] = OrderedDict((t, False) for t in TOWN_TYPES[:towns_in_format])
+            player['Owns Random Town'] = False
+            player['Main Town'] = False
+            player['Castle X'] = None
+            player['Castle Y'] = None
+            player['Castle Z'] = None
+            hero_info['Has Random Hero'] = False
+            hero_info['Hero Type'] = None
+            players_list.append(player)
+            player_heroes_list.append(hero_info)
+            continue
         behavior = struct.unpack('<B', safe_read(buffer, 1))[0]
         player['Behavior'] = BEHAVIOR_MAP.get(behavior, 'Unknown')
 
@@ -167,10 +187,7 @@ def parse_h3m(file_path):
             safe_read(buffer, 1)  # whether factions are selectable
 
         if level_ab and not level_sod:
-            # AB has town_types (1 byte) + town_conflux (1 byte).
-            town_types_byte = safe_read(buffer, 1)[0]
-            safe_read(buffer, 1)  # town_conflux
-            owned_towns_bits = town_types_byte
+            owned_towns_bits = struct.unpack('<H', safe_read(buffer, 2))[0]
         else:
             owned_towns_bits = struct.unpack('<H', safe_read(buffer, factions_bytes).ljust(2, b'\x00'))[0] if factions_bytes == 2 else safe_read(buffer, 1)[0] if factions_bytes == 1 else 0
         player['Has Defined Towns'] = owned_towns_bits != 0
@@ -197,22 +214,15 @@ def parse_h3m(file_path):
         hero_type = struct.unpack('<B', safe_read(buffer, 1))[0]
         hero_info['Hero Type'] = hero_type if hero_type != 0xFF else None
 
-        if level_ab:
-            # AB/SoD always store face and name even for type 0xFF.
+        if hero_type != 0xFF:
             hero_info['Hero Face'] = struct.unpack('<B', safe_read(buffer, 1))[0]
             name_len = struct.unpack('<I', safe_read(buffer, 4))[0]
             hero_info['Hero Name'] = read_string(buffer, name_len)
-        elif hero_type != 0xFF:
-            hero_info['Hero Face'] = struct.unpack('<B', safe_read(buffer, 1))[0]
-            name_len = struct.unpack('<I', safe_read(buffer, 4))[0]
-            hero_info['Hero Name'] = read_string(buffer, name_len)
-            safe_read(buffer, 1)  # unknown byte
 
         if level_ab:
             safe_read(buffer, 1)  # number of hero placeholders (unused)
             num_heroes = struct.unpack('<I', safe_read(buffer, 4))[0]
             hero_info['Number of Heroes'] = num_heroes
-            num_heroes = min(num_heroes, MAX_HEROES_PER_PLAYER)
             for _ in range(num_heroes):
                 safe_read(buffer, 1)  # hero identifier
                 name_len = struct.unpack('<I', safe_read(buffer, 4))[0]
@@ -234,7 +244,8 @@ def parse_h3m(file_path):
         safe_read(buffer, 2)  # allow normal victory + applies to AI
         detail_size = {
             0: artifact_id_bytes, 1: creature_id_bytes + 4, 2: 5,
-            3: 5, 4: 3, 5: 3, 6: 3, 7: 3, 8: 0, 9: 0, 10: 4
+            3: 5, 4: 3, 5: 3, 6: 3, 7: 3, 8: 0, 9: 0, 10: 4,
+            11: 0, 12: 4
         }.get(vic_type, 6)
         safe_read(buffer, detail_size)
         data['Victory Condition'] = OrderedDict([('Type', hex(vic_type))])
@@ -263,7 +274,7 @@ def parse_h3m(file_path):
     data['Available Heroes'] = OrderedDict([('Bitfield', avail_bytes.hex())])
     if level_ab:
         placeholders_qty = struct.unpack('<I', safe_read(buffer, 4))[0]
-        for _ in range(min(placeholders_qty, 156)):
+        for _ in range(placeholders_qty):
             safe_read(buffer, 1)  # reserved campaign hero identifier
 
     # === Disposed Heroes (SoD only) ===
@@ -293,7 +304,6 @@ def parse_h3m(file_path):
 
     # === Rumors ===
     num_rumors = struct.unpack('<I', safe_read(buffer, 4))[0]
-    num_rumors = min(num_rumors, MAX_RUMORS)
     rumors_list = []
     for _ in range(num_rumors):
         name_len = struct.unpack('<I', safe_read(buffer, 4))[0]
@@ -322,13 +332,13 @@ def parse_h3m(file_path):
             if has_sec_skills:
                 skill_count = struct.unpack('<I', safe_read(buffer, 4))[0]
                 skills = []
-                for _skill in range(min(skill_count, 8)):
+                for _skill in range(skill_count):
                     skill_id = struct.unpack('<B', safe_read(buffer, 1))[0]
                     skill_level = struct.unpack('<B', safe_read(buffer, 1))[0]
                     skills.append(OrderedDict([('Id', skill_id), ('Level', skill_level)]))
                 settings['Secondary Skills'] = skills
                 # any malformed extra skill bytes are skipped to stay aligned
-                remaining = skill_count - min(skill_count, 8)
+                remaining = skill_count - skill_count
                 if remaining > 0:
                     safe_read(buffer, remaining * 2)
             has_art_set = struct.unpack('<B', safe_read(buffer, 1))[0]
@@ -342,9 +352,9 @@ def parse_h3m(file_path):
                 settings['Artifact Bag'] = [
                     struct.unpack('<H' if artifact_id_bytes == 2 else '<B',
                                   safe_read(buffer, artifact_id_bytes))[0]
-                    for _art in range(min(bag_count, 64))
+                    for _art in range(bag_count)
                 ]
-                remaining = bag_count - min(bag_count, 64)
+                remaining = bag_count - bag_count
                 if remaining > 0:
                     safe_read(buffer, remaining * artifact_id_bytes)
             has_custom_bio = struct.unpack('<B', safe_read(buffer, 1))[0]
@@ -529,12 +539,12 @@ def write_h3m(map_data, output_path):
     buffer.write(struct.pack('<B', 1 if has_underground else 0))
 
     map_name = basic.get('Map Name', '')
-    name_bytes = map_name.encode('cp1252', errors='replace')
+    name_bytes = map_name.encode('windows-1251', errors='replace')
     buffer.write(struct.pack('<i', len(name_bytes)))
     buffer.write(name_bytes)
 
     map_desc = basic.get('Map Description', '')
-    desc_bytes = map_desc.encode('cp1252', errors='replace')
+    desc_bytes = map_desc.encode('windows-1251', errors='replace')
     buffer.write(struct.pack('<i', len(desc_bytes)))
     buffer.write(desc_bytes)
 
@@ -545,8 +555,18 @@ def write_h3m(map_data, output_path):
 
     # === Players' Attributes ===
     for player in players_attr:
-        buffer.write(struct.pack('<B', 1 if player.get('Human Playable', False) else 0))
-        buffer.write(struct.pack('<B', 1 if player.get('AI Playable', False) else 0))
+        human = 1 if player.get('Human Playable', False) else 0
+        ai = 1 if player.get('AI Playable', False) else 0
+        buffer.write(struct.pack('<B', human))
+        buffer.write(struct.pack('<B', ai))
+        if not (human or ai):
+            skip = 6
+            if level_ab:
+                skip += 6
+            if level_sod:
+                skip += 1
+            buffer.write(b'\x00' * skip)
+            continue
         buffer.write(struct.pack('<B', BEHAVIOR_INVERSE.get(player.get('Behavior', 'Random'), 0)))
 
         if level_sod:
@@ -578,25 +598,14 @@ def write_h3m(map_data, output_path):
         hero_type_byte = 0xFF if hero_type is None else hero_type
         buffer.write(struct.pack('<B', hero_type_byte))
 
-        if level_ab:
-            # AB/SoD always store the starting hero face and name, even
-            # when the type is 0xFF (no custom hero); RoE omits them.
+        if hero_type is not None:
             buffer.write(struct.pack('<B', ph.get('Hero Face', 0xFF)))
             hero_name = ph.get('Hero Name', '') or ''
-            hero_name_bytes = hero_name.encode('cp1252', errors='replace')
+            hero_name_bytes = hero_name.encode('windows-1251', errors='replace')
             buffer.write(struct.pack('<I', len(hero_name_bytes)))
             buffer.write(hero_name_bytes)
-        elif hero_type is not None:
-            buffer.write(struct.pack('<B', ph.get('Hero Face', 0xFF)))
-            hero_name = ph.get('Hero Name', '')
-            hero_name_bytes = hero_name.encode('cp1252', errors='replace')
-            buffer.write(struct.pack('<I', len(hero_name_bytes)))
-            buffer.write(hero_name_bytes)
-            buffer.write(struct.pack('<B', 0))
 
-        if level_ab and hero_type is not None:
-            # The AB/SoD "additional info" (placeholder count + hero name
-            # list) is only present when a custom starting hero is set.
+        if level_ab:
             buffer.write(struct.pack('<B', 0))
             buffer.write(struct.pack('<I', ph.get('Number of Heroes', 0) or 0))
 
@@ -617,7 +626,8 @@ def write_h3m(map_data, output_path):
         creature_id_bytes = 1 if not level_ab else 2
         detail_size = {
             0: artifact_id_bytes, 1: creature_id_bytes + 4, 2: 5,
-            3: 5, 4: 3, 5: 3, 6: 3, 7: 3, 8: 0, 9: 0, 10: 4
+            3: 5, 4: 3, 5: 3, 6: 3, 7: 3, 8: 0, 9: 0, 10: 4,
+            11: 0, 12: 4
         }.get(vic_byte, 6)
         detail = vic.get('Detail')
         if isinstance(detail, str) and detail:
@@ -700,12 +710,12 @@ def write_h3m(map_data, output_path):
 
     for rumor in rumors_list:
         name = rumor.get('Name', '')
-        name_bytes = name.encode('cp1252', errors='replace')
+        name_bytes = name.encode('windows-1251', errors='replace')
         buffer.write(struct.pack('<I', len(name_bytes)))
         buffer.write(name_bytes)
 
         text = rumor.get('Text', '')
-        text_bytes = text.encode('cp1252', errors='replace')
+        text_bytes = text.encode('windows-1251', errors='replace')
         buffer.write(struct.pack('<I', len(text_bytes)))
         buffer.write(text_bytes)
 
@@ -751,7 +761,7 @@ def write_h3m(map_data, output_path):
                 buffer.write(struct.pack('<B', 0))
             if 'Bio' in entry:
                 buffer.write(struct.pack('<B', 1))
-                bio_bytes = entry['Bio'].encode('cp1252', errors='replace')
+                bio_bytes = entry['Bio'].encode('windows-1251', errors='replace')
                 buffer.write(struct.pack('<I', len(bio_bytes)))
                 buffer.write(bio_bytes)
             else:
@@ -1022,7 +1032,6 @@ def parse_h3m_objects(raw_objects, level_ab, level_sod, artifact_id_bytes,
     if len(count_data) < 4:
         return None
     object_count = struct.unpack('<I', count_data)[0]
-    object_count = min(object_count, 10000)
 
     tiles = OrderedDict()
     monster_metadata = OrderedDict()
@@ -1261,7 +1270,7 @@ def parse_h3m_objects(raw_objects, level_ab, level_sod, artifact_id_bytes,
             primaries = struct.unpack('<4B', safe_read(buffer, 4))
             skill_count = safe_read(buffer, 1)[0]
             skills = []
-            for _sk in range(min(skill_count, 8)):
+            for _sk in range(skill_count):
                 skill_id = safe_read(buffer, 1)[0]
                 skill_level = safe_read(buffer, 1)[0]
                 skills.append(OrderedDict([('id', skill_id), ('level', skill_level)]))
@@ -1353,7 +1362,7 @@ def parse_h3m_objects(raw_objects, level_ab, level_sod, artifact_id_bytes,
             ])
             skill_count = safe_read(buffer, 1)[0]
             skills = []
-            for _sk in range(min(skill_count, 8)):
+            for _sk in range(skill_count):
                 skill_id = safe_read(buffer, 1)[0]
                 skill_level = safe_read(buffer, 1)[0]
                 skills.append(OrderedDict([('id', skill_id), ('level', skill_level)]))
@@ -1615,7 +1624,7 @@ def _parse_h3m_hero_object(buffer, level_ab, artifact_id_bytes,
     if safe_read(buffer, 1)[0]:
         skill_count = struct.unpack('<I', safe_read(buffer, 4))[0]
         skills = []
-        for _sk in range(min(skill_count, 8)):
+        for _sk in range(skill_count):
             skill_id = safe_read(buffer, 1)[0]
             skill_level = safe_read(buffer, 1)[0]
             skills.append(OrderedDict([('id', skill_id), ('level', skill_level)]))
@@ -1649,7 +1658,7 @@ def _parse_h3m_hero_object(buffer, level_ab, artifact_id_bytes,
             artifacts.append(struct.unpack('<H' if artifact_id_bytes == 2 else '<B', art_data)[0])
         bag_count = struct.unpack('<H', safe_read(buffer, 2))[0]
         bag = []
-        for _art in range(min(bag_count, 64)):
+        for _art in range(bag_count):
             art_data = safe_read(buffer, artifact_id_bytes)
             if len(art_data) < artifact_id_bytes:
                 break
