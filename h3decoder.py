@@ -25,7 +25,7 @@ def read_string(buffer, length):
         raw = raw.ljust(length, b'\x00')
     cleaned = raw.rstrip(b'\x00')
     try:
-        return cleaned.decode('cp1252')
+        return cleaned.decode('windows-1251')
     except:
         return cleaned.decode('latin-1', errors='replace')
 
@@ -529,12 +529,12 @@ def write_h3m(map_data, output_path):
     buffer.write(struct.pack('<B', 1 if has_underground else 0))
 
     map_name = basic.get('Map Name', '')
-    name_bytes = map_name.encode('cp1252', errors='replace')
+    name_bytes = map_name.encode('windows-1251', errors='replace')
     buffer.write(struct.pack('<i', len(name_bytes)))
     buffer.write(name_bytes)
 
     map_desc = basic.get('Map Description', '')
-    desc_bytes = map_desc.encode('cp1252', errors='replace')
+    desc_bytes = map_desc.encode('windows-1251', errors='replace')
     buffer.write(struct.pack('<i', len(desc_bytes)))
     buffer.write(desc_bytes)
 
@@ -583,13 +583,13 @@ def write_h3m(map_data, output_path):
             # when the type is 0xFF (no custom hero); RoE omits them.
             buffer.write(struct.pack('<B', ph.get('Hero Face', 0xFF)))
             hero_name = ph.get('Hero Name', '') or ''
-            hero_name_bytes = hero_name.encode('cp1252', errors='replace')
+            hero_name_bytes = hero_name.encode('windows-1251', errors='replace')
             buffer.write(struct.pack('<I', len(hero_name_bytes)))
             buffer.write(hero_name_bytes)
         elif hero_type is not None:
             buffer.write(struct.pack('<B', ph.get('Hero Face', 0xFF)))
             hero_name = ph.get('Hero Name', '')
-            hero_name_bytes = hero_name.encode('cp1252', errors='replace')
+            hero_name_bytes = hero_name.encode('windows-1251', errors='replace')
             buffer.write(struct.pack('<I', len(hero_name_bytes)))
             buffer.write(hero_name_bytes)
             buffer.write(struct.pack('<B', 0))
@@ -700,12 +700,12 @@ def write_h3m(map_data, output_path):
 
     for rumor in rumors_list:
         name = rumor.get('Name', '')
-        name_bytes = name.encode('cp1252', errors='replace')
+        name_bytes = name.encode('windows-1251', errors='replace')
         buffer.write(struct.pack('<I', len(name_bytes)))
         buffer.write(name_bytes)
 
         text = rumor.get('Text', '')
-        text_bytes = text.encode('cp1252', errors='replace')
+        text_bytes = text.encode('windows-1251', errors='replace')
         buffer.write(struct.pack('<I', len(text_bytes)))
         buffer.write(text_bytes)
 
@@ -751,7 +751,7 @@ def write_h3m(map_data, output_path):
                 buffer.write(struct.pack('<B', 0))
             if 'Bio' in entry:
                 buffer.write(struct.pack('<B', 1))
-                bio_bytes = entry['Bio'].encode('cp1252', errors='replace')
+                bio_bytes = entry['Bio'].encode('windows-1251', errors='replace')
                 buffer.write(struct.pack('<I', len(bio_bytes)))
                 buffer.write(bio_bytes)
             else:
