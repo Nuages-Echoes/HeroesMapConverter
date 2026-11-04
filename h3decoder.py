@@ -160,6 +160,26 @@ def parse_h3m(file_path):
         hero_info['Color'] = color
         player['Human Playable'] = bool(struct.unpack('<B', safe_read(buffer, 1))[0])
         player['AI Playable'] = bool(struct.unpack('<B', safe_read(buffer, 1))[0])
+        if not (player['Human Playable'] or player['AI Playable']):
+            skip = 6
+            if level_ab:
+                skip += 6
+            if level_sod:
+                skip += 1
+            safe_read(buffer, skip)
+            player['Behavior'] = 'Unknown'
+            player['Has Defined Towns'] = False
+            player['Owned Towns'] = OrderedDict((t, False) for t in TOWN_TYPES[:towns_in_format])
+            player['Owns Random Town'] = False
+            player['Main Town'] = False
+            player['Castle X'] = None
+            player['Castle Y'] = None
+            player['Castle Z'] = None
+            hero_info['Has Random Hero'] = False
+            hero_info['Hero Type'] = None
+            players_list.append(player)
+            player_heroes_list.append(hero_info)
+            continue
         behavior = struct.unpack('<B', safe_read(buffer, 1))[0]
         player['Behavior'] = BEHAVIOR_MAP.get(behavior, 'Unknown')
 
@@ -545,8 +565,18 @@ def write_h3m(map_data, output_path):
 
     # === Players' Attributes ===
     for player in players_attr:
-        buffer.write(struct.pack('<B', 1 if player.get('Human Playable', False) else 0))
-        buffer.write(struct.pack('<B', 1 if player.get('AI Playable', False) else 0))
+        human = 1 if player.get('Human Playable', False) else 0
+        ai = 1 if player.get('AI Playable', False) else 0
+        buffer.write(struct.pack('<B', human))
+        buffer.write(struct.pack('<B', ai))
+        if not (human or ai):
+            skip = 6
+            if level_ab:
+                skip += 6
+            if level_sod:
+                skip += 1
+            buffer.write(b'\x00' * skip)
+            continue
         buffer.write(struct.pack('<B', BEHAVIOR_INVERSE.get(player.get('Behavior', 'Random'), 0)))
 
         if level_sod:
