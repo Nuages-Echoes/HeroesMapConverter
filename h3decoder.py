@@ -212,7 +212,6 @@ def parse_h3m(file_path):
             safe_read(buffer, 1)  # number of hero placeholders (unused)
             num_heroes = struct.unpack('<I', safe_read(buffer, 4))[0]
             hero_info['Number of Heroes'] = num_heroes
-            num_heroes = min(num_heroes, MAX_HEROES_PER_PLAYER)
             for _ in range(num_heroes):
                 safe_read(buffer, 1)  # hero identifier
                 name_len = struct.unpack('<I', safe_read(buffer, 4))[0]
@@ -263,7 +262,7 @@ def parse_h3m(file_path):
     data['Available Heroes'] = OrderedDict([('Bitfield', avail_bytes.hex())])
     if level_ab:
         placeholders_qty = struct.unpack('<I', safe_read(buffer, 4))[0]
-        for _ in range(min(placeholders_qty, 156)):
+        for _ in range(placeholders_qty):
             safe_read(buffer, 1)  # reserved campaign hero identifier
 
     # === Disposed Heroes (SoD only) ===
@@ -293,7 +292,6 @@ def parse_h3m(file_path):
 
     # === Rumors ===
     num_rumors = struct.unpack('<I', safe_read(buffer, 4))[0]
-    num_rumors = min(num_rumors, MAX_RUMORS)
     rumors_list = []
     for _ in range(num_rumors):
         name_len = struct.unpack('<I', safe_read(buffer, 4))[0]
@@ -322,13 +320,13 @@ def parse_h3m(file_path):
             if has_sec_skills:
                 skill_count = struct.unpack('<I', safe_read(buffer, 4))[0]
                 skills = []
-                for _skill in range(min(skill_count, 8)):
+                for _skill in range(skill_count):
                     skill_id = struct.unpack('<B', safe_read(buffer, 1))[0]
                     skill_level = struct.unpack('<B', safe_read(buffer, 1))[0]
                     skills.append(OrderedDict([('Id', skill_id), ('Level', skill_level)]))
                 settings['Secondary Skills'] = skills
                 # any malformed extra skill bytes are skipped to stay aligned
-                remaining = skill_count - min(skill_count, 8)
+                remaining = skill_count - skill_count
                 if remaining > 0:
                     safe_read(buffer, remaining * 2)
             has_art_set = struct.unpack('<B', safe_read(buffer, 1))[0]
@@ -342,9 +340,9 @@ def parse_h3m(file_path):
                 settings['Artifact Bag'] = [
                     struct.unpack('<H' if artifact_id_bytes == 2 else '<B',
                                   safe_read(buffer, artifact_id_bytes))[0]
-                    for _art in range(min(bag_count, 64))
+                    for _art in range(bag_count)
                 ]
-                remaining = bag_count - min(bag_count, 64)
+                remaining = bag_count - bag_count
                 if remaining > 0:
                     safe_read(buffer, remaining * artifact_id_bytes)
             has_custom_bio = struct.unpack('<B', safe_read(buffer, 1))[0]
@@ -1022,7 +1020,6 @@ def parse_h3m_objects(raw_objects, level_ab, level_sod, artifact_id_bytes,
     if len(count_data) < 4:
         return None
     object_count = struct.unpack('<I', count_data)[0]
-    object_count = min(object_count, 10000)
 
     tiles = OrderedDict()
     monster_metadata = OrderedDict()
@@ -1261,7 +1258,7 @@ def parse_h3m_objects(raw_objects, level_ab, level_sod, artifact_id_bytes,
             primaries = struct.unpack('<4B', safe_read(buffer, 4))
             skill_count = safe_read(buffer, 1)[0]
             skills = []
-            for _sk in range(min(skill_count, 8)):
+            for _sk in range(skill_count):
                 skill_id = safe_read(buffer, 1)[0]
                 skill_level = safe_read(buffer, 1)[0]
                 skills.append(OrderedDict([('id', skill_id), ('level', skill_level)]))
@@ -1353,7 +1350,7 @@ def parse_h3m_objects(raw_objects, level_ab, level_sod, artifact_id_bytes,
             ])
             skill_count = safe_read(buffer, 1)[0]
             skills = []
-            for _sk in range(min(skill_count, 8)):
+            for _sk in range(skill_count):
                 skill_id = safe_read(buffer, 1)[0]
                 skill_level = safe_read(buffer, 1)[0]
                 skills.append(OrderedDict([('id', skill_id), ('level', skill_level)]))
@@ -1615,7 +1612,7 @@ def _parse_h3m_hero_object(buffer, level_ab, artifact_id_bytes,
     if safe_read(buffer, 1)[0]:
         skill_count = struct.unpack('<I', safe_read(buffer, 4))[0]
         skills = []
-        for _sk in range(min(skill_count, 8)):
+        for _sk in range(skill_count):
             skill_id = safe_read(buffer, 1)[0]
             skill_level = safe_read(buffer, 1)[0]
             skills.append(OrderedDict([('id', skill_id), ('level', skill_level)]))
@@ -1649,7 +1646,7 @@ def _parse_h3m_hero_object(buffer, level_ab, artifact_id_bytes,
             artifacts.append(struct.unpack('<H' if artifact_id_bytes == 2 else '<B', art_data)[0])
         bag_count = struct.unpack('<H', safe_read(buffer, 2))[0]
         bag = []
-        for _art in range(min(bag_count, 64)):
+        for _art in range(bag_count):
             art_data = safe_read(buffer, artifact_id_bytes)
             if len(art_data) < artifact_id_bytes:
                 break
