@@ -13,6 +13,9 @@ OUTPUT_UNIFIED_DIR = "outputunified"
 
 SKIP_DISPLAY_KEYS = {"Surface Map", "Underground Map", "Objects"}
 
+H2_EXTENSIONS = (".fh2m", ".mp2")
+MAP_EXTENSIONS = (".h3m",) + H2_EXTENSIONS
+
 
 def write_target(unified_data, target_game, base_name):
     """Convertit le JSON unifié vers le format cible et écrit le fichier.
@@ -45,10 +48,10 @@ def main():
     os.makedirs(OUTPUT_JSON_DIR, exist_ok=True)
     os.makedirs(OUTPUT_UNIFIED_DIR, exist_ok=True)
 
-    map_files = sorted(f for f in os.listdir(INPUT_DIR) if f.lower().endswith((".h3m", ".fh2m")))
+    map_files = sorted(f for f in os.listdir(INPUT_DIR) if f.lower().endswith(MAP_EXTENSIONS))
 
     if not map_files:
-        print(f"Aucun fichier .h3m ou .fh2m trouvé dans le dossier '{INPUT_DIR}'.")
+        print(f"Aucun fichier .h3m, .fh2m ou .mp2 trouvé dans le dossier '{INPUT_DIR}'.")
         return
 
     for file_name in map_files:
@@ -57,7 +60,8 @@ def main():
 
         try:
             # Étape 1 : lecture de la carte et écriture du JSON dans le dossier outputjson
-            if file_name.lower().endswith(".fh2m"):
+            is_h2_map = file_name.lower().endswith(H2_EXTENSIONS)
+            if is_h2_map:
                 result = parse_fh2m(map_file_path)
             else:
                 result = parse_h3m(map_file_path)
@@ -69,7 +73,7 @@ def main():
             print(f"JSON écrit dans '{json_file_path}'")
 
             # Étape 1b : conversion au format unifié dans le dossier outputunified
-            source_game = "fh2m" if file_name.lower().endswith(".fh2m") else "h3m"
+            source_game = "fh2m" if is_h2_map else "h3m"
             unified_result = convert_to_unified(result, source_game)
             unified_file_path = os.path.join(OUTPUT_UNIFIED_DIR, f"{base_name}.json")
             with open(unified_file_path, "w", encoding="utf-8") as json_file:
