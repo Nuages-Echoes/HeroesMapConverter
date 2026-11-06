@@ -110,6 +110,10 @@ def main():
     parser.add_argument("--hero-def-name", default=None,
                         help="Remplace le nom de toutes les defs classe 34 du "
                              "catalogue par ce nom (ex. AVXprsn0.def).")
+    parser.add_argument("--no-main-town", action="store_true",
+                        help="Neutralise Main Town / Castle X/Y/Z dans la section "
+                             "joueurs du h3m généré (teste si les coordonnées de "
+                             "ville de départ causent le crash).")
     args = parser.parse_args()
 
     excluded = sorted({int(x) for x in args.exclude.split(",") if x.strip()})
@@ -161,6 +165,16 @@ def main():
               f"{sorted(used_creatures) or 'aucune'}")
 
     map_data = convert_from_unified(variant, "h3m")
+
+    if args.no_main_town:
+        for p in map_data.get("Players Attributes", {}).get("Players", []):
+            p["Main Town"] = False
+            p["Castle X"] = None
+            p["Castle Y"] = None
+            p["Castle Z"] = None
+            if "Generate Hero At Main Town" in p:
+                p["Generate Hero At Main Town"] = False
+        print("Main Town neutralisé dans la section joueurs")
 
     if args.hero_def_doc or args.hero_def_name:
         import struct
