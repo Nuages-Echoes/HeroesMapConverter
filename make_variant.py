@@ -4,8 +4,12 @@ import json
 import os
 
 import correspondence
-from correspondence import (FH2M_TO_H3M_MISC, FH2M_TO_H3M_MONSTERS,
-                            FH2M_TO_H3M_SHRINES)
+from correspondence import (FH2M_LANDSCAPE_TO_H3M, FH2M_TO_H3M_ARTIFACTS,
+                            FH2M_TO_H3M_DWELLINGS, FH2M_TO_H3M_HERO_RACE,
+                            FH2M_TO_H3M_MINES, FH2M_TO_H3M_MISC,
+                            FH2M_TO_H3M_MONSTERS, FH2M_TO_H3M_RESOURCES,
+                            FH2M_TO_H3M_SHRINES, FH2M_TOWN_RACE_ORDER,
+                            H3M_TOWN_TYPE_TO_FH2M_RACE)
 from h3decoder import write_h3m
 from unified import convert_from_unified
 
@@ -13,26 +17,66 @@ from unified import convert_from_unified
 def h3m_class_of(obj):
     """h3m object class an unified (fh2m-style) tile object encodes to.
 
-    Mirrors the group dispatch of unified._encode_h3m_objects for the
-    groups that can produce the classes we want to exclude; every other
-    group returns None (kept).
+    Mirrors the group dispatch of unified._encode_h3m_objects; groups
+    that are not h3m object instances (ROADS/STREAMS -> terrain) return
+    None.
     """
     group = obj.get("group")
     index = obj.get("index", 0)
     if group == "KINGDOM_HEROES":
+        race = index % 7
+        hero_type = FH2M_TO_H3M_HERO_RACE.get(race) or 0
         return 34
     if group == "MONSTERS":
         creature = index + 1
         if creature in (67, 68, 69, 70, 71):
             return 71 + (creature - 67)
-        return 54
+        if FH2M_TO_H3M_MONSTERS.get(creature) is not None:
+            return 54
+        return None
+    if group == "ADVENTURE_TREASURES":
+        if FH2M_TO_H3M_RESOURCES.get(index) is not None:
+            return 79
+        target = FH2M_TO_H3M_MISC.get("TREASURE_%d" % index)
+        if target is None:
+            return None
+        return 76 if target[0] == 76 else target[0]
+    if group == "ADVENTURE_ARTIFACTS":
+        if index in (91, 92, 93, 94, 95):
+            return 65 + {91: 0, 92: 1, 93: 2, 94: 3, 95: 4}[index]
+        if FH2M_TO_H3M_ARTIFACTS.get(index + 1) is not None:
+            return 5
+        return None
+    if group == "ADVENTURE_MISCELLANEOUS" and index == 0:
+        return 91
+    if group == "KINGDOM_TOWNS":
+        race_id = index // 2
+        if 0 <= race_id < len(FH2M_TOWN_RACE_ORDER):
+            for tt, race in H3M_TOWN_TYPE_TO_FH2M_RACE.items():
+                if race == FH2M_TOWN_RACE_ORDER[race_id]:
+                    return 98
+        return None
+    if group in ("ADVENTURE_MISCELLANEOUS", "ADVENTURE_WATER"):
+        key = ("MISC_%d" % index) if group == "ADVENTURE_MISCELLANEOUS" else ("WATER_%d" % index)
+        target = FH2M_TO_H3M_MISC.get(key)
+        return target[0] if target is not None else None
     if group == "ADVENTURE_POWER_UPS":
         shrine = FH2M_TO_H3M_SHRINES.get(index)
         if shrine is not None:
             return shrine
         target = FH2M_TO_H3M_MISC.get("POWER_%d" % index)
-        if target is not None:
-            return target[0]
+        return target[0] if target is not None else None
+    if group == "ADVENTURE_MINES":
+        target = FH2M_TO_H3M_MINES.get(index)
+        return target[0] if target is not None else None
+    if group == "ADVENTURE_DWELLINGS":
+        target = FH2M_TO_H3M_DWELLINGS.get(index)
+        return target[0] if target is not None else None
+    if group.startswith("LANDSCAPE"):
+        if group in ("LANDSCAPE_TREES", "LANDSCAPE_MOUNTAINS"):
+            return None  # terrain-dependent class, keep
+        target = FH2M_LANDSCAPE_TO_H3M.get((group, index))
+        return target if target is not None else None
     return None
 
 
@@ -56,9 +100,12 @@ def main():
     parser.add_argument("--no-objects", action="store_true",
                         help="Supprime toutes les instances d'objets (garde terrain, "
                              "en-têtes, joueurs, etc.) pour isoler la section en cause.")
+    parser.add_argument("--exclude-groups", default="",
+                        help="Groupes fh2m à retirer entièrement, séparés par des "
+                             "virgules (ex. LANDSCAPE_TREES,LANDSCAPE_MOUNTAINS).")
     args = parser.parse_args()
 
-    excluded = sorted({int(x) for x in args.exclude.split(",")})
+    excluded = sorted({int(x) for x in args.exclude.split(",") if x.strip()})
     if args.no_objects:
         suffix = args.suffix or "noobj"
     else:
@@ -77,11 +124,12 @@ def main():
                             o.get("index"), h3m_class_of(o)) for o in obj_list)
         for tile_key in list(tiles.keys()):
             tiles[tile_key] = []
+    excluded_groups = {g.strip() for g in args.exclude_groups.split(",") if g.strip()}
     for tile_key in list(tiles.keys()):
         kept = []
         for obj in tiles[tile_key]:
             cls = h3m_class_of(obj)
-            if cls in excluded:
+            if obj.get("group") in excluded_groups or cls in excluded:
                 removed.append((tile_key, obj.get("id"), obj.get("group"),
                                 obj.get("index"), cls))
             else:
