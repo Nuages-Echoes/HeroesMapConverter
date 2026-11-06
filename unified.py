@@ -3071,34 +3071,12 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
             else:
                 buffer.write(struct.pack("<B", 0))
             buffer.write(struct.pack("<B", 0))  # formation
-            # Buildings: the fh2m built flags map back to the h3m
-            # bitfield through the inverse of the bit tables.
-            built_flags = meta.get("builtBuildings") or []
-            bitfield = bytearray(6)
-            flag_to_bit = {}
-            for (byte_index, bit), flag in list(H3M_TOWN_BUILDING_BITS.items()) + list(H3M_DWELLING_BITS.items()):
-                if flag:
-                    flag_to_bit[flag] = (byte_index, bit)
-            for flag in built_flags:
-                position = flag_to_bit.get(flag)
-                if position:
-                    bitfield[position[0]] |= (1 << position[1])
-            has_custom_buildings = bool(built_flags) or bool(meta.get("bannedBuildings"))
-            if has_custom_buildings:
-                buffer.write(struct.pack("<B", 1))
-                buffer.write(bytes(bitfield))
-                # Disabled buildings: the banned flags map back the
-                # same way.
-                banned_flags = meta.get("bannedBuildings") or []
-                banned_field = bytearray(6)
-                for flag in banned_flags:
-                    position = flag_to_bit.get(flag)
-                    if position:
-                        banned_field[position[0]] |= (1 << position[1])
-                buffer.write(bytes(banned_field))
-            else:
-                buffer.write(struct.pack("<B", 0))
-                buffer.write(struct.pack("<B", 0))  # hasFort: no
+            # Buildings: the real RoE maps always use the hasFort layout
+            # (has_buildings=0 + one fort byte); the fh2m built flags do
+            # not map onto the h3m building bitfield, and a custom
+            # bitfield without the town hall crashes the game at load.
+            buffer.write(struct.pack("<B", 0))  # no custom buildings
+            buffer.write(struct.pack("<B", 1))  # hasFort: yes
             buffer.write(b"\x00" * 9)  # impossible spells: all allowed
             buffer.write(struct.pack("<I", 0))  # no events
             buffer.write(b"\x00\x00\x00")  # trailing 3 bytes
