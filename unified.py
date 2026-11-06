@@ -1047,32 +1047,24 @@ def unified_to_h3m(unified):
             range_start = start_index
         return image_index - range_start
 
-    # h3m water border sprite per set of land directions around the tile
-    # (VCMI terrainViewPatterns.json, water group): west 4-7, north 8-11,
-    # south 12-15, east 0-3, corners 16-19, open water 20-32. The odd
-    # offset of a pair is the mirrored variant of the same border.
-    def _h3m_water_border_picture(has_n, has_e, has_s, has_w, has_corner=False,
+    # h3m water border sprite per set of land directions around the tile.
+    # The picture encodes the border ORIENTATION, not the compass direction
+    # (E/W and N/S share a range, the mirror flag picks the side), as
+    # learned from the real maps and VCMI terrainViewPatterns.json (water
+    # group): horizontal borders 4-7, vertical 8-11, corners 16-19, open
+    # water 20-32. The odd offset of a pair is the mirrored variant.
+    def _h3m_water_border_picture(has_n, has_e, has_s, has_w, has_diag=False,
                                   mirror=False):
-        if has_corner and not (has_n or has_e or has_s or has_w):
+        horiz = has_e or has_w
+        vert = has_n or has_s
+        if has_diag:
             return 18 + mirror
-        if has_n and has_s and has_e and has_w:
-            return 20
-        if has_n and has_e and not has_s and not has_w:
+        if horiz and vert:
             return 16 + mirror
-        if has_s and has_e and not has_n and not has_w:
-            return 17 + mirror
-        if has_s and has_w and not has_n and not has_e:
-            return 18 + mirror
-        if has_n and has_w and not has_s and not has_e:
-            return 19 + mirror
-        if has_n and not has_s:
-            return 8 + mirror
-        if has_s and not has_n:
-            return 12 + mirror
-        if has_e and not has_w:
-            return 0 + mirror
-        if has_w and not has_e:
+        if horiz:
             return 4 + mirror
+        if vert:
+            return 8 + mirror
         return 20
 
     # fh2m source terrain lookup: (x, y) -> (z, cell) per level, used to
@@ -1154,37 +1146,38 @@ def unified_to_h3m(unified):
                 # for normal terrains) - this is what the real maps store.
                 mirror_bits = int(cell.get("flags", 0) or 0) & 0x03
                 if terrain_name == "Water":
-                    has_n = neighbor_land(0, -1) or neighbor_land(-1, -1) or neighbor_land(1, -1)
-                    has_s = neighbor_land(0, 1) or neighbor_land(-1, 1) or neighbor_land(1, 1)
-                    has_w = neighbor_land(-1, 0) or neighbor_land(-1, -1) or neighbor_land(-1, 1)
-                    has_e = neighbor_land(1, 0) or neighbor_land(1, -1) or neighbor_land(1, 1)
-                    has_corner = (neighbor_land(-1, -1) and not neighbor_land(-1, 0) and not neighbor_land(0, -1)) \
-                        or (neighbor_land(1, -1) and not neighbor_land(1, 0) and not neighbor_land(0, -1)) \
-                        or (neighbor_land(-1, 1) and not neighbor_land(-1, 0) and not neighbor_land(0, 1)) \
-                        or (neighbor_land(1, 1) and not neighbor_land(1, 0) and not neighbor_land(0, 1))
-                    if has_n or has_e or has_s or has_w or has_corner:
+                    has_n = neighbor_land(0, -1)
+                    has_s = neighbor_land(0, 1)
+                    has_w = neighbor_land(-1, 0)
+                    has_e = neighbor_land(1, 0)
+                    any_diag = any(neighbor_land(dx, dy) for dx, dy in
+                                   ((-1, -1), (1, -1), (-1, 1), (1, 1)))
+                    has_corner = any_diag and not (has_n or has_e or has_s or has_w)
+                    if has_n or has_e or has_s or has_w or any_diag:
                         picture = _h3m_water_border_picture(has_n, has_e, has_s, has_w,
                                                             has_corner,
                                                             mirror=bool(mirror_bits & 1))
                 elif any(neighbor_water(dx, dy) for dx in (-1, 0, 1) for dy in (-1, 0, 1)
                          if (dx, dy) != (0, 0)):
-                    # land tile touching water: coast bit + coast border sprite
+                    # land tile touching water: coast bit + coast border sprite.
+                    # Normal terrains (main range 49+): coast sprites are
+                    # horizontal 24-27, vertical 28-31, corners 36-39
+                    # (learned from the real maps).
                     mirror_bits |= 0x40
                     if lo == H3M_MAIN_RANGE_DEFAULT[0]:
-                        w_n = neighbor_water(0, -1); w_s = neighbor_water(0, 1)
-                        w_w = neighbor_water(-1, 0); w_e = neighbor_water(1, 0)
-                        w_corner = any(neighbor_water(dx, dy) for dx, dy in
-                                       ((-1, -1), (1, -1), (-1, 1), (1, 1)))
-                        if w_corner and not (w_n or w_s or w_w or w_e):
+                        w_horiz = neighbor_water(-1, 0) or neighbor_water(1, 0)
+                        w_vert = neighbor_water(0, -1) or neighbor_water(0, 1)
+                        w_diag = (not (w_horiz or w_vert)) and any(
+                            neighbor_water(dx, dy) for dx, dy in
+                            ((-1, -1), (1, -1), (-1, 1), (1, 1)))
+                        if w_diag:
                             base = 38
-                        elif w_n and not w_s:
-                            base = 28
-                        elif w_s and not w_n:
-                            base = 32
-                        elif w_e and not w_w:
+                        elif w_horiz and w_vert:
                             base = 36
-                        elif w_w and not w_e:
+                        elif w_horiz:
                             base = 24
+                        elif w_vert:
+                            base = 28
                         else:
                             base = 24
                         picture = base + (mirror_bits & 1)
