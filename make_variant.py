@@ -53,10 +53,16 @@ def main():
                              "retirées).")
     parser.add_argument("--suffix", default=None,
                         help="Suffixe du fichier de sortie (défaut: no<classes>).")
+    parser.add_argument("--no-objects", action="store_true",
+                        help="Supprime toutes les instances d'objets (garde terrain, "
+                             "en-têtes, joueurs, etc.) pour isoler la section en cause.")
     args = parser.parse_args()
 
     excluded = sorted({int(x) for x in args.exclude.split(",")})
-    suffix = args.suffix or "no" + "_".join(str(c) for c in excluded)
+    if args.no_objects:
+        suffix = args.suffix or "noobj"
+    else:
+        suffix = args.suffix or "no" + "_".join(str(c) for c in excluded)
 
     with open(os.path.join("outputunified", args.map_name + ".json"),
               encoding="utf-8") as f:
@@ -65,6 +71,12 @@ def main():
     variant = copy.deepcopy(unified)
     tiles = variant["objects"]["tiles"]
     removed = []
+    if args.no_objects:
+        for tile_key, obj_list in tiles.items():
+            removed.extend((tile_key, o.get("id"), o.get("group"),
+                            o.get("index"), h3m_class_of(o)) for o in obj_list)
+        for tile_key in list(tiles.keys()):
+            tiles[tile_key] = []
     for tile_key in list(tiles.keys()):
         kept = []
         for obj in tiles[tile_key]:
