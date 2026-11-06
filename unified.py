@@ -1128,23 +1128,40 @@ def unified_to_h3m(unified):
                     picture = offset % (lo if lo else hi + 1)
                 else:
                     picture = lo + (offset - 38) % (hi - lo + 1)
+                level_grid = fh2m_level_grids[z] if z < len(fh2m_level_grids) else {}
+
+                def neighbor_land(dx, dy):
+                    entry = level_grid.get((x + dx, y + dy))
+                    if entry is None:
+                        return False
+                    _, ncell = entry
+                    return UNIFIED_TO_H3M_TERRAINS.get(ncell.get("terrain", "Grass"), "Dirt") not in ("Water", "Rock")
+
+                def neighbor_water(dx, dy):
+                    entry = level_grid.get((x + dx, y + dy))
+                    if entry is None:
+                        return False
+                    _, ncell = entry
+                    return UNIFIED_TO_H3M_TERRAINS.get(ncell.get("terrain", "Grass"), "Dirt") == "Water"
+
                 if terrain_name == "Water" and offset is not None and offset < 16:
-                    level_grid = fh2m_level_grids[z] if z < len(fh2m_level_grids) else {}
-
-                    def neighbor_land(dx, dy):
-                        entry = level_grid.get((x + dx, y + dy))
-                        if entry is None:
-                            return False
-                        _, ncell = entry
-                        return UNIFIED_TO_H3M_TERRAINS.get(ncell.get("terrain", "Grass"), "Dirt") not in ("Water", "Rock")
-
                     has_n = neighbor_land(0, -1) or neighbor_land(-1, -1) or neighbor_land(1, -1)
                     has_s = neighbor_land(0, 1) or neighbor_land(-1, 1) or neighbor_land(1, 1)
                     has_w = neighbor_land(-1, 0) or neighbor_land(-1, -1) or neighbor_land(-1, 1)
                     has_e = neighbor_land(1, 0) or neighbor_land(1, -1) or neighbor_land(1, 1)
                     picture = _h3m_water_border_picture(has_n, has_e, has_s, has_w,
                                                         mirror=bool(offset % 2))
-                mirroring = "0x00"
+                # Mirroring: the fh2m terrain flags carry the horizontal /
+                # vertical terrain mirror bits (0x01/0x02); h3m adds the
+                # coast bit (0x40) on non-water tiles adjacent to water -
+                # every such tile has it set in the real maps, and the game
+                # needs it to draw the sea borders.
+                mirror_bits = int(cell.get("flags", 0) or 0) & 0x03
+                if terrain_name != "Water" and any(
+                        neighbor_water(dx, dy) for dx in (-1, 0, 1) for dy in (-1, 0, 1)
+                        if (dx, dy) != (0, 0)):
+                    mirror_bits |= 0x40
+                mirroring = "0x%02x" % mirror_bits
                 road = "Dirt" if (x, y, z) in fh2m_road_tiles else "None"
                 road_props = 0
                 river = "Clear" if (x, y, z) in fh2m_river_tiles else "None"
