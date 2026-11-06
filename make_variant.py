@@ -107,6 +107,9 @@ def main():
                         help="Renomme les defs classe 34 (héros) du catalogue selon la "
                              "convention de la doc: AH0<sub>00.DEF au lieu de "
                              "ah<sub>_e.def.")
+    parser.add_argument("--hero-def-name", default=None,
+                        help="Remplace le nom de toutes les defs classe 34 du "
+                             "catalogue par ce nom (ex. AVXprsn0.def).")
     args = parser.parse_args()
 
     excluded = sorted({int(x) for x in args.exclude.split(",") if x.strip()})
@@ -159,7 +162,7 @@ def main():
 
     map_data = convert_from_unified(variant, "h3m")
 
-    if args.hero_def_doc:
+    if args.hero_def_doc or args.hero_def_name:
         import struct
         obj_hex = map_data["Objects"]["Raw Data"]
         raw = bytes.fromhex(obj_hex)
@@ -173,7 +176,10 @@ def main():
             body = raw[off + 4 + nl:off + 4 + nl + 42]
             cls, sub = struct.unpack("<II", body[16:24])
             if cls == 34:
-                new_name = ("AH0%02d00.DEF" % sub).encode("latin1")
+                if args.hero_def_name:
+                    new_name = args.hero_def_name.encode("latin1")
+                else:
+                    new_name = ("AH0%02d00.DEF" % sub).encode("latin1")
                 renamed.append((name, new_name.decode()))
                 out += struct.pack("<i", len(new_name)) + new_name + body
             else:
