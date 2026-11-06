@@ -889,7 +889,18 @@ def unified_to_h3m(unified):
         if main_town:
             player["Main Town"] = True
             player["Generate Hero At Main Town"] = bool(main_town.get("generateHero", True))
-            player["Castle X"] = main_town.get("x", 0)
+            # The game locates the starting town at its entrance cell,
+            # which in every real map is the town instance coords shifted
+            # by (-2, 0) (bottom-right corner of the 6x6 town minus 2 in
+            # x). Pointing at the town tile itself leaves the lookup on
+            # an empty cell and crashes the game at load. Only fh2m
+            # sources need the shift: their town tiles are the town's
+            # bottom-right corner, while h3m sources already carry the
+            # entrance coords.
+            castle_x = int(main_town.get("x", 0))
+            if unified.get("sourceGame") != "h3m":
+                castle_x = max(castle_x - 2, 0)
+            player["Castle X"] = castle_x
             player["Castle Y"] = main_town.get("y", 0)
             player["Castle Z"] = main_town.get("z", 0)
         else:
