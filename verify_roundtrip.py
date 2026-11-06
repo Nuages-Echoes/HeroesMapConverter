@@ -81,7 +81,7 @@ def main():
             parse = parse_h3m
             normalize = normalize_h3m
             content_equal = content_equal_h3m
-        elif file_name.lower().endswith(".fh2m"):
+        elif file_name.lower().endswith((".fh2m", ".mp2")):
             kind = "fh2m"
             parse = parse_fh2m
             normalize = normalize_fh2m
@@ -90,7 +90,9 @@ def main():
             continue
 
         input_path = os.path.join(input_dir, file_name)
-        output_path = os.path.join(output_dir, file_name)
+        base_name = os.path.splitext(file_name)[0]
+        output_ext = ".h3m" if kind == "h3m" else ".fh2m"
+        output_path = os.path.join(output_dir, base_name + output_ext)
         if not os.path.exists(output_path):
             failures.append(f"{file_name}: missing output file")
             continue
