@@ -786,10 +786,17 @@ def unified_to_h3m(unified):
     basic["Has Hero"] = bool(unified.get("hasHero", False))
     data["Basic Parameters"] = basic
 
+    # The fh2m color names must be aliased to the h3m ones (Yellow ->
+    # Tan) before being compared against the h3m player slots; otherwise
+    # the Tan slot is never marked playable while hero/town objects still
+    # carry owner=Tan, and the game dereferences a non-playable player.
+    def _h3m_color(name):
+        return FH2M_TO_H3M_COLOR_ALIAS.get(name, name)
+
     players = unified.get("players", {})
-    human_colors = set(players.get("humanColors", []))
-    computer_colors = set(players.get("computerColors", []))
-    details_by_color = {d.get("color"): d for d in unified.get("playerDetails", [])}
+    human_colors = {_h3m_color(c) for c in players.get("humanColors", [])}
+    computer_colors = {_h3m_color(c) for c in players.get("computerColors", [])}
+    details_by_color = {_h3m_color(d.get("color")): d for d in unified.get("playerDetails", [])}
 
     # Positions of the first owned town per color and the h3m town
     # types owned by each color: the official maps give every active
@@ -804,7 +811,7 @@ def unified_to_h3m(unified):
             if obj.get("group") != "KINGDOM_TOWNS":
                 continue
             meta = castle_meta.get(str(obj.get("id"))) or {}
-            owner = meta.get("ownerColor")
+            owner = _h3m_color(meta.get("ownerColor"))
             if not owner:
                 continue
             if owner not in town_tile_by_color:
