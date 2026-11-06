@@ -3,7 +3,9 @@ import copy
 import json
 import os
 
-from correspondence import FH2M_TO_H3M_MISC, FH2M_TO_H3M_SHRINES
+import correspondence
+from correspondence import (FH2M_TO_H3M_MISC, FH2M_TO_H3M_MONSTERS,
+                            FH2M_TO_H3M_SHRINES)
 from h3decoder import write_h3m
 from unified import convert_from_unified
 
@@ -44,10 +46,17 @@ def main():
     parser.add_argument("--exclude", default="34,54,56",
                         help="Classes h3m à retirer, séparées par des virgules "
                              "(défaut: 34,54,56).")
+    parser.add_argument("--strip-unused-monster-defs", action="store_true",
+                        help="Ne garder dans le catalogue que les defs classe 54 "
+                             "référencées par les instances restantes (les defs "
+                             "auto-ajoutées pour toutes les créatures 0-144 sont "
+                             "retirées).")
+    parser.add_argument("--suffix", default=None,
+                        help="Suffixe du fichier de sortie (défaut: no<classes>).")
     args = parser.parse_args()
 
     excluded = sorted({int(x) for x in args.exclude.split(",")})
-    suffix = "no" + "_".join(str(c) for c in excluded)
+    suffix = args.suffix or "no" + "_".join(str(c) for c in excluded)
 
     with open(os.path.join("outputunified", args.map_name + ".json"),
               encoding="utf-8") as f:
@@ -66,6 +75,23 @@ def main():
             else:
                 kept.append(obj)
         tiles[tile_key] = kept
+
+    if args.strip_unused_monster_defs:
+        used_creatures = set()
+        for obj_list in tiles.values():
+            for obj in obj_list:
+                if obj.get("group") == "MONSTERS":
+                    creature = obj.get("index", 0) + 1
+                    if creature not in (67, 68, 69, 70, 71):
+                        h3m_creature = FH2M_TO_H3M_MONSTERS.get(creature)
+                        if h3m_creature is not None:
+                            used_creatures.add(h3m_creature)
+        correspondence.H3M_CREATURE_DEF_NAMES = {
+            cid: name for cid, name in correspondence.H3M_CREATURE_DEF_NAMES.items()
+            if cid in used_creatures
+        }
+        print(f"Catalogue classe 54 restreint aux créatures utilisées: "
+              f"{sorted(used_creatures) or 'aucune'}")
 
     map_data = convert_from_unified(variant, "h3m")
     out_path = os.path.join("output", f"{args.map_name}_{suffix}.h3m")
