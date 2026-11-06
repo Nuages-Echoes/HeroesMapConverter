@@ -103,6 +103,10 @@ def main():
     parser.add_argument("--exclude-groups", default="",
                         help="Groupes fh2m à retirer entièrement, séparés par des "
                              "virgules (ex. LANDSCAPE_TREES,LANDSCAPE_MOUNTAINS).")
+    parser.add_argument("--hero-def-doc", action="store_true",
+                        help="Renomme les defs classe 34 (héros) du catalogue selon la "
+                             "convention de la doc: AH0<sub>00.DEF au lieu de "
+                             "ah<sub>_e.def.")
     args = parser.parse_args()
 
     excluded = sorted({int(x) for x in args.exclude.split(",") if x.strip()})
@@ -154,6 +158,31 @@ def main():
               f"{sorted(used_creatures) or 'aucune'}")
 
     map_data = convert_from_unified(variant, "h3m")
+
+    if args.hero_def_doc:
+        import struct
+        obj_hex = map_data["Objects"]["Raw Data"]
+        raw = bytes.fromhex(obj_hex)
+        n = struct.unpack("<I", raw[:4])[0]
+        out = bytearray(raw[:4])
+        off = 4
+        renamed = []
+        for _ in range(n):
+            nl = struct.unpack("<i", raw[off:off + 4])[0]
+            name = raw[off + 4:off + 4 + nl].decode("latin1")
+            body = raw[off + 4 + nl:off + 4 + nl + 42]
+            cls, sub = struct.unpack("<II", body[16:24])
+            if cls == 34:
+                new_name = ("AH0%02d00.DEF" % sub).encode("latin1")
+                renamed.append((name, new_name.decode()))
+                out += struct.pack("<i", len(new_name)) + new_name + body
+            else:
+                out += raw[off:off + 4 + nl + 42]
+            off += 4 + nl + 42
+        out += raw[off:]
+        map_data["Objects"]["Raw Data"] = out.hex()
+        print(f"Defs classe 34 renommées: {renamed}")
+
     out_path = os.path.join("output", f"{args.map_name}_{suffix}.h3m")
     write_h3m(map_data, out_path)
 
