@@ -1048,10 +1048,13 @@ def unified_to_h3m(unified):
         return image_index - range_start
 
     # h3m water border sprite per set of land directions around the tile
-    # (VCMI terrainViewPatterns.json): west 0-3, north 4-7, east 8-11,
-    # south 12-15, corners 16-19. The odd offset of a pair is the mirrored
-    # variant of the same border.
-    def _h3m_water_border_picture(has_n, has_e, has_s, has_w, mirror=False):
+    # (VCMI terrainViewPatterns.json, water group): west 4-7, north 8-11,
+    # south 12-15, east 0-3, corners 16-19, open water 20-32. The odd
+    # offset of a pair is the mirrored variant of the same border.
+    def _h3m_water_border_picture(has_n, has_e, has_s, has_w, has_corner=False,
+                                  mirror=False):
+        if has_corner and not (has_n or has_e or has_s or has_w):
+            return 18 + mirror
         if has_n and has_s and has_e and has_w:
             return 20
         if has_n and has_e and not has_s and not has_w:
@@ -1063,13 +1066,13 @@ def unified_to_h3m(unified):
         if has_n and has_w and not has_s and not has_e:
             return 19 + mirror
         if has_n and not has_s:
-            return 4 + mirror
+            return 8 + mirror
         if has_s and not has_n:
             return 12 + mirror
         if has_e and not has_w:
-            return 8 + mirror
-        if has_w and not has_e:
             return 0 + mirror
+        if has_w and not has_e:
+            return 4 + mirror
         return 20
 
     # fh2m source terrain lookup: (x, y) -> (z, cell) per level, used to
@@ -1144,23 +1147,47 @@ def unified_to_h3m(unified):
                     _, ncell = entry
                     return UNIFIED_TO_H3M_TERRAINS.get(ncell.get("terrain", "Grass"), "Dirt") == "Water"
 
-                if terrain_name == "Water" and offset is not None and offset < 16:
+                # Sea borders: every water tile touching land gets a water
+                # border sprite (h3m pictures 0-19) chosen from the land
+                # directions, and every land tile touching water gets the
+                # coast bit (0x40) plus a coast-range border sprite (24-39
+                # for normal terrains) - this is what the real maps store.
+                mirror_bits = int(cell.get("flags", 0) or 0) & 0x03
+                if terrain_name == "Water":
                     has_n = neighbor_land(0, -1) or neighbor_land(-1, -1) or neighbor_land(1, -1)
                     has_s = neighbor_land(0, 1) or neighbor_land(-1, 1) or neighbor_land(1, 1)
                     has_w = neighbor_land(-1, 0) or neighbor_land(-1, -1) or neighbor_land(-1, 1)
                     has_e = neighbor_land(1, 0) or neighbor_land(1, -1) or neighbor_land(1, 1)
-                    picture = _h3m_water_border_picture(has_n, has_e, has_s, has_w,
-                                                        mirror=bool(offset % 2))
-                # Mirroring: the fh2m terrain flags carry the horizontal /
-                # vertical terrain mirror bits (0x01/0x02); h3m adds the
-                # coast bit (0x40) on non-water tiles adjacent to water -
-                # every such tile has it set in the real maps, and the game
-                # needs it to draw the sea borders.
-                mirror_bits = int(cell.get("flags", 0) or 0) & 0x03
-                if terrain_name != "Water" and any(
-                        neighbor_water(dx, dy) for dx in (-1, 0, 1) for dy in (-1, 0, 1)
-                        if (dx, dy) != (0, 0)):
+                    has_corner = (neighbor_land(-1, -1) and not neighbor_land(-1, 0) and not neighbor_land(0, -1)) \
+                        or (neighbor_land(1, -1) and not neighbor_land(1, 0) and not neighbor_land(0, -1)) \
+                        or (neighbor_land(-1, 1) and not neighbor_land(-1, 0) and not neighbor_land(0, 1)) \
+                        or (neighbor_land(1, 1) and not neighbor_land(1, 0) and not neighbor_land(0, 1))
+                    if has_n or has_e or has_s or has_w or has_corner:
+                        picture = _h3m_water_border_picture(has_n, has_e, has_s, has_w,
+                                                            has_corner,
+                                                            mirror=bool(mirror_bits & 1))
+                elif any(neighbor_water(dx, dy) for dx in (-1, 0, 1) for dy in (-1, 0, 1)
+                         if (dx, dy) != (0, 0)):
+                    # land tile touching water: coast bit + coast border sprite
                     mirror_bits |= 0x40
+                    if lo == H3M_MAIN_RANGE_DEFAULT[0]:
+                        w_n = neighbor_water(0, -1); w_s = neighbor_water(0, 1)
+                        w_w = neighbor_water(-1, 0); w_e = neighbor_water(1, 0)
+                        w_corner = any(neighbor_water(dx, dy) for dx, dy in
+                                       ((-1, -1), (1, -1), (-1, 1), (1, 1)))
+                        if w_corner and not (w_n or w_s or w_w or w_e):
+                            base = 38
+                        elif w_n and not w_s:
+                            base = 28
+                        elif w_s and not w_n:
+                            base = 32
+                        elif w_e and not w_w:
+                            base = 36
+                        elif w_w and not w_e:
+                            base = 24
+                        else:
+                            base = 24
+                        picture = base + (mirror_bits & 1)
                 mirroring = "0x%02x" % mirror_bits
                 road = "Dirt" if (x, y, z) in fh2m_road_tiles else "None"
                 road_props = 0
