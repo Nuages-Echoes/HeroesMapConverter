@@ -1,0 +1,492 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="910" height="1008" font-family="monospace">
+<rect x="0" y="0" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="40" y="0" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="80" y="0" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="0" y="40" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="40" y="40" width="40" height="40" fill="#facc15" stroke="#ef4444"/>
+<rect x="80" y="40" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="0" y="80" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="40" y="80" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="80" y="80" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<text x="0" y="134" font-size="11">H2-01 Beach i=415 o=0 f=0</text>
+<rect x="130" y="0" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="170" y="0" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="210" y="0" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="130" y="40" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="170" y="40" width="40" height="40" fill="#facc15" stroke="#ef4444"/>
+<rect x="210" y="40" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="130" y="80" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="170" y="80" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="210" y="80" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<text x="130" y="134" font-size="11">H2-02 Beach i=416 o=1 f=0</text>
+<rect x="260" y="0" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="300" y="0" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="340" y="0" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="260" y="40" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="300" y="40" width="40" height="40" fill="#facc15" stroke="#ef4444"/>
+<rect x="340" y="40" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="260" y="80" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="300" y="80" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="340" y="80" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<text x="260" y="134" font-size="11">H2-03 Beach i=417 o=2 f=0</text>
+<rect x="390" y="0" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="430" y="0" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="470" y="0" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="390" y="40" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="430" y="40" width="40" height="40" fill="#facc15" stroke="#ef4444"/>
+<rect x="470" y="40" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="390" y="80" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="430" y="80" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="470" y="80" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<text x="390" y="134" font-size="11">H2-04 Beach i=418 o=3 f=0</text>
+<rect x="520" y="0" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="560" y="0" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="600" y="0" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="520" y="40" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="560" y="40" width="40" height="40" fill="#facc15" stroke="#ef4444"/>
+<rect x="600" y="40" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="520" y="80" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="560" y="80" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="600" y="80" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<text x="520" y="134" font-size="11">H2-05 Beach i=419 o=4 f=0</text>
+<rect x="650" y="0" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="690" y="0" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="730" y="0" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="650" y="40" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="690" y="40" width="40" height="40" fill="#facc15" stroke="#ef4444"/>
+<rect x="730" y="40" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="650" y="80" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="690" y="80" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="730" y="80" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<text x="650" y="134" font-size="11">H2-06 Beach i=420 o=5 f=0</text>
+<rect x="780" y="0" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="820" y="0" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="860" y="0" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="780" y="40" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="820" y="40" width="40" height="40" fill="#facc15" stroke="#ef4444"/>
+<rect x="860" y="40" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="780" y="80" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="820" y="80" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="860" y="80" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<text x="780" y="134" font-size="11">H2-07 Beach i=421 o=6 f=0</text>
+<rect x="0" y="144" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="40" y="144" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="80" y="144" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="0" y="184" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="40" y="184" width="40" height="40" fill="#facc15" stroke="#ef4444"/>
+<rect x="80" y="184" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="0" y="224" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="40" y="224" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="80" y="224" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<text x="0" y="278" font-size="11">H2-08 Beach i=422 o=7 f=0</text>
+<rect x="130" y="144" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="170" y="144" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="210" y="144" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="130" y="184" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="170" y="184" width="40" height="40" fill="#facc15" stroke="#ef4444"/>
+<rect x="210" y="184" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="130" y="224" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="170" y="224" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="210" y="224" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<text x="130" y="278" font-size="11">H2-09 Beach i=423 o=8 f=0</text>
+<rect x="260" y="144" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="300" y="144" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="340" y="144" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="260" y="184" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="300" y="184" width="40" height="40" fill="#facc15" stroke="#ef4444"/>
+<rect x="340" y="184" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="260" y="224" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="300" y="224" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="340" y="224" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<text x="260" y="278" font-size="11">H2-10 Beach i=424 o=9 f=0</text>
+<rect x="390" y="144" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="430" y="144" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="470" y="144" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="390" y="184" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="430" y="184" width="40" height="40" fill="#facc15" stroke="#ef4444"/>
+<rect x="470" y="184" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="390" y="224" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="430" y="224" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="470" y="224" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<text x="390" y="278" font-size="11">H2-11 Beach i=425 o=10 f=0</text>
+<rect x="520" y="144" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="560" y="144" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="600" y="144" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="520" y="184" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="560" y="184" width="40" height="40" fill="#facc15" stroke="#ef4444"/>
+<rect x="600" y="184" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="520" y="224" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="560" y="224" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="600" y="224" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<text x="520" y="278" font-size="11">H2-12 Beach i=426 o=11 f=0</text>
+<rect x="650" y="144" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="690" y="144" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="730" y="144" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="650" y="184" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="690" y="184" width="40" height="40" fill="#facc15" stroke="#ef4444"/>
+<rect x="730" y="184" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="650" y="224" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="690" y="224" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="730" y="224" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<text x="650" y="278" font-size="11">H2-13 Beach i=427 o=12 f=0</text>
+<rect x="780" y="144" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="820" y="144" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="860" y="144" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="780" y="184" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="820" y="184" width="40" height="40" fill="#facc15" stroke="#ef4444"/>
+<rect x="860" y="184" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="780" y="224" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="820" y="224" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="860" y="224" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<text x="780" y="278" font-size="11">H2-14 Beach i=428 o=13 f=0</text>
+<rect x="0" y="288" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="40" y="288" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="80" y="288" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="0" y="328" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="40" y="328" width="40" height="40" fill="#facc15" stroke="#ef4444"/>
+<rect x="80" y="328" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="0" y="368" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="40" y="368" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="80" y="368" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<text x="0" y="422" font-size="11">H2-15 Beach i=430 o=15 f=0</text>
+<rect x="130" y="288" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="170" y="288" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="210" y="288" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="130" y="328" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="170" y="328" width="40" height="40" fill="#facc15" stroke="#ef4444"/>
+<rect x="210" y="328" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="130" y="368" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="170" y="368" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="210" y="368" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<text x="130" y="422" font-size="11">H2-16 Beach i=431 o=16 f=0</text>
+<rect x="260" y="288" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="300" y="288" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="340" y="288" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="260" y="328" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="300" y="328" width="40" height="40" fill="#3b82f6" stroke="#ef4444"/>
+<rect x="340" y="328" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="260" y="368" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="300" y="368" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="340" y="368" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<text x="260" y="422" font-size="11">H2-17 WATER i=0 o=0 f=0</text>
+<rect x="390" y="288" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="430" y="288" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="470" y="288" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="390" y="328" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="430" y="328" width="40" height="40" fill="#3b82f6" stroke="#ef4444"/>
+<rect x="470" y="328" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="390" y="368" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="430" y="368" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="470" y="368" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<text x="390" y="422" font-size="11">H2-18 WATER i=0 o=0 f=1</text>
+<rect x="520" y="288" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="560" y="288" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="600" y="288" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="520" y="328" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="560" y="328" width="40" height="40" fill="#3b82f6" stroke="#ef4444"/>
+<rect x="600" y="328" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="520" y="368" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="560" y="368" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="600" y="368" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<text x="520" y="422" font-size="11">H2-19 WATER i=1 o=1 f=0</text>
+<rect x="650" y="288" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="690" y="288" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="730" y="288" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="650" y="328" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="690" y="328" width="40" height="40" fill="#3b82f6" stroke="#ef4444"/>
+<rect x="730" y="328" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="650" y="368" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="690" y="368" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="730" y="368" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<text x="650" y="422" font-size="11">H2-20 WATER i=1 o=1 f=1</text>
+<rect x="780" y="288" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="820" y="288" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="860" y="288" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="780" y="328" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="820" y="328" width="40" height="40" fill="#3b82f6" stroke="#ef4444"/>
+<rect x="860" y="328" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="780" y="368" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="820" y="368" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="860" y="368" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<text x="780" y="422" font-size="11">H2-21 WATER i=2 o=2 f=0</text>
+<rect x="0" y="432" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="40" y="432" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="80" y="432" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="0" y="472" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="40" y="472" width="40" height="40" fill="#3b82f6" stroke="#ef4444"/>
+<rect x="80" y="472" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="0" y="512" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="40" y="512" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="80" y="512" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<text x="0" y="566" font-size="11">H2-22 WATER i=2 o=2 f=1</text>
+<rect x="130" y="432" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="170" y="432" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="210" y="432" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="130" y="472" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="170" y="472" width="40" height="40" fill="#3b82f6" stroke="#ef4444"/>
+<rect x="210" y="472" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="130" y="512" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="170" y="512" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="210" y="512" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<text x="130" y="566" font-size="11">H2-23 WATER i=3 o=3 f=0</text>
+<rect x="260" y="432" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="300" y="432" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="340" y="432" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="260" y="472" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="300" y="472" width="40" height="40" fill="#3b82f6" stroke="#ef4444"/>
+<rect x="340" y="472" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="260" y="512" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="300" y="512" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="340" y="512" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<text x="260" y="566" font-size="11">H2-24 WATER i=3 o=3 f=1</text>
+<rect x="390" y="432" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="430" y="432" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="470" y="432" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="390" y="472" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="430" y="472" width="40" height="40" fill="#3b82f6" stroke="#ef4444"/>
+<rect x="470" y="472" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="390" y="512" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="430" y="512" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="470" y="512" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<text x="390" y="566" font-size="11">H2-25 WATER i=4 o=4 f=0</text>
+<rect x="520" y="432" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="560" y="432" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="600" y="432" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="520" y="472" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="560" y="472" width="40" height="40" fill="#3b82f6" stroke="#ef4444"/>
+<rect x="600" y="472" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="520" y="512" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="560" y="512" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="600" y="512" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<text x="520" y="566" font-size="11">H2-26 WATER i=4 o=4 f=1</text>
+<rect x="650" y="432" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="690" y="432" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="730" y="432" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="650" y="472" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="690" y="472" width="40" height="40" fill="#3b82f6" stroke="#ef4444"/>
+<rect x="730" y="472" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="650" y="512" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="690" y="512" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="730" y="512" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<text x="650" y="566" font-size="11">H2-27 WATER i=5 o=5 f=0</text>
+<rect x="780" y="432" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="820" y="432" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="860" y="432" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="780" y="472" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="820" y="472" width="40" height="40" fill="#3b82f6" stroke="#ef4444"/>
+<rect x="860" y="472" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="780" y="512" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="820" y="512" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="860" y="512" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<text x="780" y="566" font-size="11">H2-28 WATER i=5 o=5 f=2</text>
+<rect x="0" y="576" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="40" y="576" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="80" y="576" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="0" y="616" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="40" y="616" width="40" height="40" fill="#3b82f6" stroke="#ef4444"/>
+<rect x="80" y="616" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="0" y="656" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="40" y="656" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="80" y="656" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<text x="0" y="710" font-size="11">H2-29 WATER i=6 o=6 f=0</text>
+<rect x="130" y="576" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="170" y="576" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="210" y="576" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="130" y="616" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="170" y="616" width="40" height="40" fill="#3b82f6" stroke="#ef4444"/>
+<rect x="210" y="616" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="130" y="656" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="170" y="656" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="210" y="656" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<text x="130" y="710" font-size="11">H2-30 WATER i=6 o=6 f=2</text>
+<rect x="260" y="576" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="300" y="576" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="340" y="576" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="260" y="616" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="300" y="616" width="40" height="40" fill="#3b82f6" stroke="#ef4444"/>
+<rect x="340" y="616" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="260" y="656" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="300" y="656" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="340" y="656" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<text x="260" y="710" font-size="11">H2-31 WATER i=7 o=7 f=1</text>
+<rect x="390" y="576" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="430" y="576" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="470" y="576" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="390" y="616" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="430" y="616" width="40" height="40" fill="#3b82f6" stroke="#ef4444"/>
+<rect x="470" y="616" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="390" y="656" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="430" y="656" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="470" y="656" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<text x="390" y="710" font-size="11">H2-32 WATER i=7 o=7 f=2</text>
+<rect x="520" y="576" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="560" y="576" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="600" y="576" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="520" y="616" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="560" y="616" width="40" height="40" fill="#3b82f6" stroke="#ef4444"/>
+<rect x="600" y="616" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="520" y="656" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="560" y="656" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="600" y="656" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<text x="520" y="710" font-size="11">H2-33 WATER i=7 o=7 f=3</text>
+<rect x="650" y="576" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="690" y="576" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="730" y="576" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="650" y="616" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="690" y="616" width="40" height="40" fill="#3b82f6" stroke="#ef4444"/>
+<rect x="730" y="616" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="650" y="656" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="690" y="656" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="730" y="656" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<text x="650" y="710" font-size="11">H2-34 WATER i=8 o=8 f=0</text>
+<rect x="780" y="576" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="820" y="576" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="860" y="576" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="780" y="616" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="820" y="616" width="40" height="40" fill="#3b82f6" stroke="#ef4444"/>
+<rect x="860" y="616" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="780" y="656" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="820" y="656" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="860" y="656" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<text x="780" y="710" font-size="11">H2-35 WATER i=8 o=8 f=2</text>
+<rect x="0" y="720" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="40" y="720" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="80" y="720" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="0" y="760" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="40" y="760" width="40" height="40" fill="#3b82f6" stroke="#ef4444"/>
+<rect x="80" y="760" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="0" y="800" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="40" y="800" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="80" y="800" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<text x="0" y="854" font-size="11">H2-36 WATER i=9 o=9 f=0</text>
+<rect x="130" y="720" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="170" y="720" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="210" y="720" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="130" y="760" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="170" y="760" width="40" height="40" fill="#3b82f6" stroke="#ef4444"/>
+<rect x="210" y="760" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="130" y="800" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="170" y="800" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="210" y="800" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<text x="130" y="854" font-size="11">H2-37 WATER i=9 o=9 f=2</text>
+<rect x="260" y="720" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="300" y="720" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="340" y="720" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="260" y="760" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="300" y="760" width="40" height="40" fill="#3b82f6" stroke="#ef4444"/>
+<rect x="340" y="760" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="260" y="800" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="300" y="800" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="340" y="800" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<text x="260" y="854" font-size="11">H2-38 WATER i=10 o=10 f=0</text>
+<rect x="390" y="720" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="430" y="720" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="470" y="720" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="390" y="760" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="430" y="760" width="40" height="40" fill="#3b82f6" stroke="#ef4444"/>
+<rect x="470" y="760" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="390" y="800" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="430" y="800" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="470" y="800" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<text x="390" y="854" font-size="11">H2-39 WATER i=10 o=10 f=2</text>
+<rect x="520" y="720" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="560" y="720" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="600" y="720" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="520" y="760" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="560" y="760" width="40" height="40" fill="#3b82f6" stroke="#ef4444"/>
+<rect x="600" y="760" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="520" y="800" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="560" y="800" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="600" y="800" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<text x="520" y="854" font-size="11">H2-40 WATER i=11 o=11 f=0</text>
+<rect x="650" y="720" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="690" y="720" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="730" y="720" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="650" y="760" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="690" y="760" width="40" height="40" fill="#3b82f6" stroke="#ef4444"/>
+<rect x="730" y="760" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="650" y="800" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="690" y="800" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="730" y="800" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<text x="650" y="854" font-size="11">H2-41 WATER i=11 o=11 f=2</text>
+<rect x="780" y="720" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="820" y="720" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="860" y="720" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="780" y="760" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="820" y="760" width="40" height="40" fill="#3b82f6" stroke="#ef4444"/>
+<rect x="860" y="760" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="780" y="800" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="820" y="800" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="860" y="800" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<text x="780" y="854" font-size="11">H2-42 WATER i=12 o=12 f=1</text>
+<rect x="0" y="864" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="40" y="864" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="80" y="864" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="0" y="904" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="40" y="904" width="40" height="40" fill="#3b82f6" stroke="#ef4444"/>
+<rect x="80" y="904" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="0" y="944" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="40" y="944" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="80" y="944" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<text x="0" y="998" font-size="11">H2-43 WATER i=13 o=13 f=0</text>
+<rect x="130" y="864" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="170" y="864" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="210" y="864" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="130" y="904" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="170" y="904" width="40" height="40" fill="#3b82f6" stroke="#ef4444"/>
+<rect x="210" y="904" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="130" y="944" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="170" y="944" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="210" y="944" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<text x="130" y="998" font-size="11">H2-44 WATER i=13 o=13 f=2</text>
+<rect x="260" y="864" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="300" y="864" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="340" y="864" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="260" y="904" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="300" y="904" width="40" height="40" fill="#3b82f6" stroke="#ef4444"/>
+<rect x="340" y="904" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="260" y="944" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="300" y="944" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="340" y="944" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<text x="260" y="998" font-size="11">H2-45 WATER i=14 o=14 f=0</text>
+<rect x="390" y="864" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="430" y="864" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="470" y="864" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="390" y="904" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="430" y="904" width="40" height="40" fill="#3b82f6" stroke="#ef4444"/>
+<rect x="470" y="904" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="390" y="944" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="430" y="944" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="470" y="944" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<text x="390" y="998" font-size="11">H2-46 WATER i=14 o=14 f=3</text>
+<rect x="520" y="864" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="560" y="864" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="600" y="864" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="520" y="904" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="560" y="904" width="40" height="40" fill="#3b82f6" stroke="#ef4444"/>
+<rect x="600" y="904" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="520" y="944" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="560" y="944" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="600" y="944" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<text x="520" y="998" font-size="11">H2-47 WATER i=15 o=15 f=1</text>
+<rect x="650" y="864" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="690" y="864" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="730" y="864" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="650" y="904" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="690" y="904" width="40" height="40" fill="#3b82f6" stroke="#ef4444"/>
+<rect x="730" y="904" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="650" y="944" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="690" y="944" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="730" y="944" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<text x="650" y="998" font-size="11">H2-48 WATER i=15 o=15 f=2</text>
+<rect x="780" y="864" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="820" y="864" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="860" y="864" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="780" y="904" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="820" y="904" width="40" height="40" fill="#3b82f6" stroke="#ef4444"/>
+<rect x="860" y="904" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="780" y="944" width="40" height="40" fill="#facc15" stroke="#374151"/>
+<rect x="820" y="944" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<rect x="860" y="944" width="40" height="40" fill="#3b82f6" stroke="#374151"/>
+<text x="780" y="998" font-size="11">H2-49 WATER i=15 o=15 f=3</text>
+</svg>
