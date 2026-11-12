@@ -206,3 +206,57 @@ Masque voisins = directions (N,NE,E,SE,S,SW,W,NW) des voisins de l'autre côté 
 | H3-140 | Water | 18 | 0x00 / 0x01 / 0x02 / 0x03 | NE / NW / SE / SW | 202 | ascension.h3m,49,0 |
 | H3-141 | Water | 19 | 0x00 / 0x01 / 0x02 / 0x03 | NE / NW / SE / SW | 198 | ascension.h3m,53,0 |
 
+
+## Tableau 3 — lien H2 -> H3 (PROPOSITION auto à corriger)
+
+| id H2 | kind | masque | id H3 proposé | h3m terrain | picture | mirroring |
+|---|---|---|---|---|---|---|
+| H2-01 | SAND | N+NE+NW | H3-63 | Sand | 3 | 0x40 |
+| H2-02 | SAND | N+NE+NW+W | H3-64 | Sand | 4 | 0x40 |
+| H2-03 | SAND | N+NE+NW | H3-63 | Sand | 3 | 0x40 |
+| H2-04 | SAND | N+NE+NW | H3-63 | Sand | 3 | 0x40 |
+| H2-05 | SAND | N+NW | H3-66 | Sand | 6 | 0x40 |
+| H2-06 | SAND | N+NE+NW | H3-63 | Sand | 3 | 0x40 |
+| H2-07 | SAND | N+NE+NW | H3-63 | Sand | 3 | 0x40 |
+| H2-08 | SAND | N+NW | H3-66 | Sand | 6 | 0x40 |
+| H2-09 | SAND | E+NE+SE | H3-64 | Sand | 4 | 0x40 |
+| H2-10 | SAND | S+SE+SW | H3-24 | Grass | 28 | 0x40/0x42 |
+| H2-11 | SAND | NW | H3-63 | Sand | 3 | 0x40 |
+| H2-12 | SAND | E+NE | H3-63 | Sand | 3 | 0x40 |
+| H2-13 | SAND | N+NE+NW | H3-63 | Sand | 3 | 0x40 |
+| H2-14 | SAND | N+NE+NW | H3-63 | Sand | 3 | 0x40 |
+| H2-15 | SAND | N+NE+NW+SW+W | H3-62 | Sand | 2 | 0x40 |
+| H2-16 | SAND | S+SE+SW | H3-24 | Grass | 28 | 0x40/0x42 |
+| H2-17 | WATER | N+NE | H3-133 | Water | 11 | 0x00/0x02 |
+| H2-18 | WATER | S+SE | H3-133 | Water | 11 | 0x00/0x02 |
+| H2-19 | WATER | N+NE+NW | H3-133 | Water | 11 | 0x00/0x02 |
+| H2-20 | WATER | S+SE | H3-133 | Water | 11 | 0x00/0x02 |
+| H2-21 | WATER | N+NE+NW | H3-133 | Water | 11 | 0x00/0x02 |
+| H2-22 | WATER | S+SE+SW | H3-133 | Water | 11 | 0x00/0x02 |
+| H2-23 | WATER | N+NE+NW | H3-133 | Water | 11 | 0x00/0x02 |
+| H2-24 | WATER | S+SE+SW | H3-133 | Water | 11 | 0x00/0x02 |
+| H2-25 | WATER | E+N+NE+NW+SE | H3-122 | Water | 0 | 0x00/0x01/0x02/0x03 |
+| H2-26 | WATER | E+S+SE+SW | H3-139 | Water | 17 | 0x00/0x01/0x02/0x03 |
+| H2-27 | WATER | E+N+NE+SE | H3-139 | Water | 17 | 0x00/0x01/0x02/0x03 |
+| H2-28 | WATER | N+NE+NW+W | H3-139 | Water | 17 | 0x00/0x01/0x02/0x03 |
+| H2-29 | WATER | E+N+NE | H3-139 | Water | 17 | 0x00/0x01/0x02/0x03 |
+| H2-30 | WATER | N+NE+NW+W | H3-139 | Water | 17 | 0x00/0x01/0x02/0x03 |
+| H2-31 | WATER | E+S+SE+SW | H3-139 | Water | 17 | 0x00/0x01/0x02/0x03 |
+| H2-32 | WATER | N+NW+SW+W | H3-139 | Water | 17 | 0x00/0x01/0x02/0x03 |
+| H2-33 | WATER | NW+S+SE+SW+W | H3-122 | Water | 0 | 0x00/0x01/0x02/0x03 |
+| H2-34 | WATER | E+NE+SE | H3-128 | Water | 6 | 0x00/0x01 |
+| H2-35 | WATER | SW+W | H3-128 | Water | 6 | 0x00/0x01 |
+| H2-36 | WATER | E+NE+SE | H3-128 | Water | 6 | 0x00/0x01 |
+| H2-37 | WATER | NW+SW+W | H3-128 | Water | 6 | 0x00/0x01 |
+| H2-38 | WATER | E+SE | H3-128 | Water | 6 | 0x00/0x01 |
+| H2-39 | WATER | NW+SW+W | H3-128 | Water | 6 | 0x00/0x01 |
+| H2-40 | WATER | E+NE+SE | H3-128 | Water | 6 | 0x00/0x01 |
+| H2-41 | WATER | NW+SW+W | H3-128 | Water | 6 | 0x00/0x01 |
+| H2-42 | WATER | SE | H3-140 | Water | 18 | 0x00/0x01/0x02/0x03 |
+| H2-43 | WATER | NE | H3-140 | Water | 18 | 0x00/0x01/0x02/0x03 |
+| H2-44 | WATER | NW | H3-140 | Water | 18 | 0x00/0x01/0x02/0x03 |
+| H2-45 | WATER | NE | H3-140 | Water | 18 | 0x00/0x01/0x02/0x03 |
+| H2-46 | WATER | SW | H3-140 | Water | 18 | 0x00/0x01/0x02/0x03 |
+| H2-47 | WATER | SE | H3-140 | Water | 18 | 0x00/0x01/0x02/0x03 |
+| H2-48 | WATER | NW | H3-140 | Water | 18 | 0x00/0x01/0x02/0x03 |
+| H2-49 | WATER | SW | H3-140 | Water | 18 | 0x00/0x01/0x02/0x03 |
