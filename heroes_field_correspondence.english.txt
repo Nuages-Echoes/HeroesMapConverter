@@ -501,7 +501,14 @@ quest messages, garrison canTake, event players flags).
    Desert, Dirt, Wasteland and resource = index%5 over Ore, Sulfur,
    Crystal, Gems, Gold -> h3m class 53 subs 2,3,4,5,6; indices 40-47
    are the 8 abandoned mines -> sub 7; 48-53 the sawmills -> sub 0;
-   54-55 the alchemist labs -> sub 1), the dwellings through
+   54-55 the alchemist labs -> sub 1). The h3m class 53 carries one
+   def per mine type AND per terrain (AVMorsn0.def = ore mine on
+   snow, AVMswds0.def = sawmill on sand, ...), all with the same
+   subclass, so the mine sprite also follows the fh2m appearance
+   through FH2M_MINE_DEF_BY_APPEARANCE with the def bodies of
+   H3M_MINE_DEFS (defs matched with the tile terrain of their
+   instances in the reference maps; appearances without a reference
+   def fall back to the type's generic def), the dwellings through
    FH2M_TO_H3M_DWELLINGS (25 entries: the dwelling creature pairs
    to the h3m creature of the FH2M_TO_H3M_MONSTERS table), the
    heroes (class 34, the hero type being the first h3m hero of the
@@ -716,7 +723,13 @@ quest messages, garrison canTake, event players flags).
      biography, face and gender have no Heroes II equivalent
    - ADVENTURE_MINES / ADVENTURE_DWELLINGS: translated with a
      capturableObjectsMetadata carrying the owner color (when the
-     owner is a Heroes II color)
+     owner is a Heroes II color). The h3m class 53 mines convert to
+     the fh2m mine index through h3m_mine_to_fh2m_index: the subclass
+     gives the mine type, the def name gives the terrain appearance
+     (read from the tile terrain when the def has no terrain variant,
+     e.g. the sulfur mine), so index = appearance * 5 + resource for
+     the resource mines, 40 + appearance for the abandoned mines and
+     the sawmill/alchemist slots for subs 0/1
    - KINGDOM_TOWNS: translated with the fh2m race from the h3m town
      type (see the town/race table above) and a castleMetadata
      carrying the custom name, the garrison creatures as defenders

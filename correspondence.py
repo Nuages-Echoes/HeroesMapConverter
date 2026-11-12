@@ -901,6 +901,155 @@ for _i in range(6):
 FH2M_TO_H3M_MINES[54] = (53, 1)  # alchemist lab
 FH2M_TO_H3M_MINES[55] = (53, 1)  # alchemist lab snow
 
+# fh2m mine appearance names, in appearance order: for the resource
+# mines (index 0-39) the appearance is index//5, for the abandoned
+# mines (40-47) it is index-40.
+FH2M_MINE_APPEARANCES = ["Generic", "Grass", "Snow", "Swamp", "Lava",
+                         "Desert", "Dirt", "Wasteland"]
+
+# Appearance of the sawmill (48-53) and alchemist lab (54-55) indices:
+# the sawmills have no generic variant and no swamp variant of their
+# own (the grass sawmill is used on swamp terrain too).
+_FH2M_SAWMILL_APPEARANCES = [1, 2, 4, 5, 6, 7]  # Grass/Swamp, Snow, Lava, Desert, Dirt, Wasteland
+
+
+def fh2m_mine_appearance(index):
+    """Terrain appearance (0-7, see FH2M_MINE_APPEARANCES) of a fh2m
+    mine object index."""
+    if 0 <= index < 40:
+        return index // 5
+    if 40 <= index < 48:
+        return index - 40
+    if 48 <= index < 54:
+        return _FH2M_SAWMILL_APPEARANCES[index - 48]
+    if index == 54:
+        return 0  # alchemist lab, generic
+    if index == 55:
+        return 2  # alchemist lab, snow
+    return 0
+
+
+# The h3m class 53 carries one def per mine type AND per terrain, all
+# with the same subclass: AVMorsn0.def is the ore mine on snow,
+# AVMswds0.def the sawmill on sand, ... Each def name below was matched
+# with the terrain of the tile its instances stand on in the reference
+# maps (input/*.h3m). Appearances with no def in the reference data
+# (e.g. the desert crystal) fall back to the type's generic def.
+H3M_MINE_GENERIC_DEF = {
+    0: "AVMsawg0.def", 1: "AVMalch0.def", 2: "AVMore0.def",
+    3: "AVMsulf0.def", 4: "AVMcrys0.def", 5: "AVMgems0.def",
+    6: "AVMgold0.def", 7: "AVXabnd0.def",
+}
+FH2M_MINE_DEF_BY_APPEARANCE = {
+    0: {0: "AVMsawg0.def", 1: "AVMsawg0.def", 2: "AVMswsn0.def",
+        3: "AVMsawg0.def", 4: "AVMsawl0.def", 5: "AVMswds0.def",
+        6: "AVMsawd0.def", 7: "AVMsawr0.def"},
+    1: {0: "AVMalch0.def", 2: "AVMalcs0.def"},
+    2: {0: "AVMore0.def", 1: "AVMore0.def", 2: "AVMorsn0.def",
+        3: "AVMorsw0.def", 4: "AVMorlv0.def", 5: "AVMords0.def",
+        6: "AVMordr0.def", 7: "AVMorro0.def"},
+    3: {},  # sulfur mine: a single def for every terrain
+    4: {0: "AVMcrys0.def", 1: "AVMcrgr0.def", 2: "AVMcrsn0.def",
+        3: "AVMcrsw0.def", 4: "AVMcrvo0.def", 6: "AVMcrdr0.def",
+        7: "AVMcrrf0.def"},
+    5: {2: "AVMgesn0.def", 6: "AVMgedr0.def", 7: "AVMgerf0.def"},
+    6: {1: "AVMgogr0.def", 4: "AVMgovo0.def", 5: "AVMgods0.def"},
+    7: {},  # abandoned mine: AVXabnd0.def only
+}
+
+
+def fh2m_mine_def_name(index):
+    """h3m class 53 def for a fh2m mine object index, following the
+    mine's terrain appearance (None when the index is not a mine)."""
+    h3m_mine = FH2M_TO_H3M_MINES.get(index)
+    if h3m_mine is None:
+        return None
+    subclass = h3m_mine[1]
+    appearance = fh2m_mine_appearance(index)
+    return (FH2M_MINE_DEF_BY_APPEARANCE.get(subclass, {}).get(appearance)
+            or H3M_MINE_GENERIC_DEF.get(subclass))
+
+
+# h3m terrain name -> fh2m mine appearance, used in the h3m -> fh2m
+# direction when the mine def carries no terrain variant (sulfur,
+# abandoned, ...): the appearance is then read from the terrain of the
+# tile the mine stands on.
+H3M_TERRAIN_TO_FH2M_MINE_APPEARANCE = {
+    "Grass": 1, "Snow": 2, "Swamp": 3, "Lava": 4,
+    "Sand": 5, "Dirt": 6, "Rough": 7,
+}
+
+
+def h3m_mine_to_fh2m_index(subclass, def_name, tile_terrain=None):
+    """fh2m mine index for an h3m class 53 object: the subclass gives
+    the mine type, the def name (or the tile terrain when the def has
+    no terrain variant) gives the appearance."""
+    name = (def_name or "").lower()
+    appearances = [app for app, d in FH2M_MINE_DEF_BY_APPEARANCE.get(subclass, {}).items()
+                   if d.lower() == name]
+    terrain_appearance = H3M_TERRAIN_TO_FH2M_MINE_APPEARANCE.get(tile_terrain)
+    if terrain_appearance in appearances:
+        appearance = terrain_appearance
+    elif appearances:
+        appearance = appearances[0]
+    elif terrain_appearance is not None:
+        appearance = terrain_appearance
+    else:
+        appearance = 0
+    if subclass in (2, 3, 4, 5, 6):
+        return appearance * 5 + (subclass - 2)  # resource mines
+    if subclass == 7:
+        return 40 + appearance  # abandoned mines
+    if subclass == 0:
+        if appearance in _FH2M_SAWMILL_APPEARANCES:
+            return 48 + _FH2M_SAWMILL_APPEARANCES.index(appearance)
+        return 48  # grass/swamp sawmill
+    if subclass == 1:
+        return 55 if appearance == 2 else 54  # alchemist lab
+    return 0
+
+
+# Sprite catalog of the h3m class 53 mine defs (sprite name, passability
+# and landscape masks, trailing bytes), extracted from the catalogs of
+# the reference maps (input/*.h3m), one entry per terrain variant def.
+H3M_MINE_DEFS = {
+    "avmalch0.def": ("AVMalch0.def", "ffffffffff1f000000000040ff010700", "000000000000000000000000000000000000"),
+    "avmalcs0.def": ("AVMalcs0.def", "ffffffffff1f000000000040ff000800", "000000000000000000000000000000000000"),
+    "avmcrdr0.def": ("AVMcrdr0.def", "ffffffffff1f000000000040ff010100", "000000000000000000000000000000000000"),
+    "avmcrgr0.def": ("AVMcrgr0.def", "ffffffffff1f000000000040ff000400", "000000000000000000000000000000000000"),
+    "avmcrrf0.def": ("AVMcrrf0.def", "ffffffffff1f000000000040ff002000", "000000000000000000000000000000000000"),
+    "avmcrsn0.def": ("AVMcrsn0.def", "ffffffffff1f000000000040ff000800", "000000000000000000000000000000000000"),
+    "avmcrsu0.def": ("AVMcrsu0.def", "ffffffffff1f000000000040ff014000", "000000000000000000000000000000000000"),
+    "avmcrsw0.def": ("AVMcrsw0.def", "ffffffff1f1f000000000040ff001000", "000000000000000000000000000000000000"),
+    "avmcrvo0.def": ("AVMcrvo0.def", "ffffffffff1f000000000040ff008000", "000000000000000000000000000000000000"),
+    "avmcrys0.def": ("AVMcrys0.def", "ffffffffff1f000000000040ff010400", "000000000000000000000000000000000000"),
+    "avmgedr0.def": ("AVMgedr0.def", "ffffffff1f1f000000000040ff010100", "000100000000000000000000000000000000"),
+    "avmgems0.def": ("AVMgems0.def", "ffffffff1f1f000000000040ff011400", "000100000000000000000000000000000000"),
+    "avmgerf0.def": ("AVMgerf0.def", "ffffffff1f1f000000000040ff016200", "000100000000000000000000000000000000"),
+    "avmgesn0.def": ("AVMgesn0.def", "ffffffff1f1f000000000040ff000800", "000100000000000000000000000000000000"),
+    "avmgods0.def": ("AVMgods0.def", "ffffffff1f1f000000000040ff010200", "000000000000000000000000000000000000"),
+    "avmgogr0.def": ("AVMgogr0.def", "ffffffffff1f000000000040ff000400", "000000000000000000000000000000000000"),
+    "avmgold0.def": ("AVMgold0.def", "ffffffffff1f000000000040ff000400", "000000000000000000000000000000000000"),
+    "avmgosb0.def": ("AVMgosb0.def", "ffffffffff1f000000000040ff014000", "000000000000000000000000000000000000"),
+    "avmgovo0.def": ("AVMgovo0.def", "ffffffffff1f000000000040ff018000", "000000000000000000000000000000000000"),
+    "avmordr0.def": ("AVMordr0.def", "ffffffff1f1f00000000004001000100", "000100000000000000000000000000000000"),
+    "avmords0.def": ("AVMords0.def", "ffffffff1f1f000000000040ff010200", "000100000000000000000000000000000000"),
+    "avmore0.def": ("AVMore0.def", "ffffffff1f1f000000000040ff010400", "000100000000000000000000000000000000"),
+    "avmorlv0.def": ("AVMorlv0.def", "ffffffff1f1f000000000040ff018000", "000100000000000000000000000000000000"),
+    "avmorro0.def": ("AVMorro0.def", "ffffffff1f1f00000000004020002000", "000100000000000000000000000000000000"),
+    "avmorsb0.def": ("AVMorsb0.def", "ffffffff1f1f000000000040ff014000", "000100000000000000000000000000000000"),
+    "avmorsn0.def": ("AVMorsn0.def", "ffffffff1f1f000000000040ff010800", "000100000000000000000000000000000000"),
+    "avmorsw0.def": ("AVMorsw0.def", "ffffffff1f1f00000000004010001000", "000100000000000000000000000000000000"),
+    "avmsawd0.def": ("AVMsawd0.def", "ffffffff3f0f000000000040ff010100", "000000000000000000000000000000000000"),
+    "avmsawg0.def": ("AVMsawg0.def", "ffffffff3f0f000000000040ff011400", "000000000000000000000000000000000000"),
+    "avmsawl0.def": ("AVMsawl0.def", "ffffffff3f0f000000000040ff01c000", "000000000000000000000000000000000000"),
+    "avmsawr0.def": ("AVMsawr0.def", "ffffffff3f0f000000000040ff002000", "000000000000000000000000000000000000"),
+    "avmsulf0.def": ("AVMsulf0.def", "ffffffffff1f000000000040ff010700", "000000000000000000000000000000000000"),
+    "avmswds0.def": ("AVMswds0.def", "ffffffff3f0f000000000040ff010200", "000000000000000000000000000000000000"),
+    "avmswsn0.def": ("AVMswsn0.def", "ffffffff3f0f000000000040ff000800", "000000000000000000000000000000000000"),
+    "avxabnd0.def": ("AVXabnd0.def", "ffffffffff1f000000000040ff010100", "000000000000000000000000000000000000"),
+}
+
 # fh2m STREAMS object index (0-12, frame of the H2 STREAM animation) ->
 # h3m per-tile (River Properties, river mirror bits 0x04/0x08 of the
 # Mirroring byte). The H2 frame order differs from the H3 river def

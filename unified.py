@@ -502,11 +502,20 @@ def _h3m_objects_to_unified(map_data):
     for tile_key, obj_list in tiles_data.get("tiles", {}).items():
         unified_objs = []
         for obj in obj_list:
-            unified_objs.append(OrderedDict([
+            unified_obj = OrderedDict([
                 ("id", obj.get("id")),
                 ("group", obj.get("group")),
                 ("index", obj.get("index")),
-            ]))
+            ])
+            # The h3m catalog entry of the instance: the sprite name
+            # carries the terrain variant of the multi-def classes
+            # (the class 53 mines) and the subclass is the object
+            # subtype within the class; both are needed by the
+            # h3m -> fh2m mine translation.
+            for extra in ("sprite", "class", "subclass"):
+                if obj.get(extra) is not None:
+                    unified_obj[extra] = obj[extra]
+            unified_objs.append(unified_obj)
         if unified_objs:
             tiles[tile_key] = unified_objs
         if unified_objs:
@@ -1349,7 +1358,7 @@ def unified_to_h3m(unified):
 
 
 def _translate_h3m_tile_objects(obj_list, objects_section, translated_metadata,
-                               dropped_ids):
+                               dropped_ids, tile_terrain=None):
     """
     Translate h3m objects placed on one tile into fh2m objects.
 
@@ -1561,10 +1570,21 @@ def _translate_h3m_tile_objects(obj_list, objects_section, translated_metadata,
                 h3m_colors = ["Red", "Blue", "Tan", "Green", "Orange", "Purple", "Teal", "Pink"]
                 if owner < 6 and h3m_colors[owner] in FH2M_PLAYER_COLORS:
                     owner_names = [h3m_colors[owner]]
+            if group == "ADVENTURE_MINES" and obj.get("class") == 53:
+                # The fh2m mine index encodes both the mine type (from
+                # the h3m subclass) and the terrain appearance (from
+                # the def name, or from the tile terrain when the def
+                # has no terrain variant, e.g. the sulfur mine).
+                from correspondence import h3m_mine_to_fh2m_index
+                fh2m_index = h3m_mine_to_fh2m_index(obj.get("subclass"),
+                                                    obj.get("sprite"),
+                                                    tile_terrain)
+            else:
+                fh2m_index = 0
             translated.append(OrderedDict([
                 ("id", obj_id),
                 ("group", group),
-                ("index", 0),
+                ("index", fh2m_index),
             ]))
             translated_metadata.setdefault("capturableObjectsMetadata", OrderedDict())[str(obj_id)] = OrderedDict([
                 ("ownerColor", owner_names),
@@ -2227,6 +2247,14 @@ def unified_to_fh2m(unified):
                 terrain_by_position[(x, y)] = (terrain_index, flags)
     translated_metadata = {}
     dropped_ids = []
+    # h3m terrain name per tile, used by the mine translation to read
+    # the appearance of the mine defs with no terrain variant.
+    h3m_tile_terrains = {}
+    if is_h3m_source:
+        for level in unified.get("terrain", {}).get("levels", []):
+            for cell in level.get("grid", []):
+                h3m_tile_terrains[(cell.get("x", 0), cell.get("y", 0), cell.get("z", 0))] = \
+                    cell.get("sourceTerrain") or cell.get("terrain")
     for tile_key, obj_list in objects_section.get("tiles", {}).items():
         parts = tile_key.split("_")
         if len(parts) != 3:
@@ -2239,7 +2267,8 @@ def unified_to_fh2m(unified):
             continue
         translated = _translate_h3m_tile_objects(obj_list, objects_section,
                                                   translated_metadata,
-                                                  dropped_ids)
+                                                  dropped_ids,
+                                                  h3m_tile_terrains.get((x, y, z)))
         if translated:
             objects_by_tile[(x, y)] = translated
     if dropped_ids:
@@ -2879,11 +2908,16 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
                         entry = ("generic", (x, y, z), h3m_target, None)
             elif group == "ADVENTURE_MINES":
                 # The fh2m mine index maps to the h3m ownable mine
-                # (class 53, subclass per mine type).
-                from correspondence import FH2M_TO_H3M_MINES
+                # (class 53, subclass per mine type). The h3m class 53
+                # has one def per terrain variant, so the def follows
+                # the mine's appearance: the catalog key carries the
+                # def name as a third element.
+                from correspondence import FH2M_TO_H3M_MINES, fh2m_mine_def_name
                 h3m_mine = FH2M_TO_H3M_MINES.get(index)
                 if h3m_mine is not None:
-                    entry = ("ownable", (x, y, z), h3m_mine, None)
+                    def_name = fh2m_mine_def_name(index)
+                    entry = ("ownable", (x, y, z),
+                             (h3m_mine[0], h3m_mine[1], def_name), None)
             elif group == "ADVENTURE_DWELLINGS":
                 # The fh2m dwelling index maps to the h3m ownable
                 # dwelling (class 17, subclass = creature id).
@@ -2935,10 +2969,16 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
                        FH2M_TO_H3M_CATALOG[(124, 0)]]
     kind_of = {(71, 0): 0, (124, 0): 1}
     for entry in instances:
-        _, _, (obj_class, obj_subclass), _ = entry
-        key = (obj_class, obj_subclass)
+        key = entry[2]
+        obj_class, obj_subclass = key[0], key[1]
         if key not in kind_of:
-            ref = FH2M_TO_H3M_CATALOG.get(key)
+            if len(key) == 3:
+                # A mine terrain variant: the def name is the third key
+                # element and its sprite body comes from H3M_MINE_DEFS.
+                from correspondence import H3M_MINE_DEFS
+                ref = H3M_MINE_DEFS.get((key[2] or "").lower())
+            else:
+                ref = FH2M_TO_H3M_CATALOG.get(key)
             if ref is None and obj_class == 34:
                 # The hero template subclass is the hero CLASS and
                 # the sprite is the class sprite AH<class>_E.DEF (the
@@ -2958,8 +2998,7 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
             catalog_entries.append(ref)
 
     # Drop the instances whose sprite is unknown.
-    instances = [e for e in instances
-                 if (e[2][0], e[2][1]) in kind_of]
+    instances = [e for e in instances if e[2] in kind_of]
     if not instances:
         return None
 
@@ -3022,9 +3061,10 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
                                  artifact_none if art is None else art))
 
     for entry in instances:
-        kind_name, (x, y, z), (obj_class, obj_subclass), payload = entry
+        kind_name, (x, y, z), key, payload = entry
+        obj_class, obj_subclass = key[0], key[1]
         buffer.write(struct.pack("<BBB", x, y, z))
-        buffer.write(struct.pack("<I", kind_of[(obj_class, obj_subclass)]))
+        buffer.write(struct.pack("<I", kind_of[key]))
         # The 5 trailing header bytes are unknown and always 0 in the
         # real maps (h3mlib: unknown1[5]; //0x00).
         buffer.write(b"\x00" * 5)
