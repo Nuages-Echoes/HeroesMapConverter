@@ -128,6 +128,39 @@ Based on the fheroes2 engine source code: https://github.com/ihhub/fheroes2/tree
            │       14 MAP_EXTRAS
            └─ 4   Object index within its group
 
+   ROADS and STREAMS object indices (both groups store one object per
+   affected tile; the index selects the sprite segment):
+
+   ROADS (group 01): the index is a bitfield of the directions in which
+   the road continues on neighboring tiles (bit 0 top-left, bit 1 top,
+   bit 2 top-right, bit 3 right, bit 4 bottom-right, bit 5 bottom,
+   bit 6 bottom-left, bit 7 left), plus 256 * visual variant. Index 512
+   marks the castle-entrance road (placed on the tile south of a
+   KINGDOM_TOWNS object). Decorative road pieces (not part of a real
+   road connection) use indices outside this scheme and are dropped at
+   format version 12+.
+
+   STREAMS (group 02, rivers): indices 0-12 are the 13 frames of the H2
+   STREAM animation, i.e. the river segment shape. Observed meaning of
+   the indices (from the neighboring STREAMS tiles):
+     0     corner connecting S and W
+     1     corner connecting E and S
+     2, 5  horizontal segment (E-W), 2 variants
+     3, 12 vertical segment (N-S), 2 variants
+     4     corner connecting N and E
+     7     corner connecting N and W
+     8     T junction (N, E, W)
+     (6, 9, 10, 11 are the remaining junction/cross variants)
+   Conversion to H3M: the h3m per-tile "River Type" comes from the tile
+   terrain (Lava -> Lava river, Snow -> Icy, Dirt -> Muddy, otherwise
+   Clear) and the "River Properties" segment from the cardinal (N,E,S,W)
+   mask of neighboring STREAMS tiles, through the river_link.json table
+   learned from the reference H3M maps (lines 9/10 vertical, 11/12
+   horizontal, corners 0-3 with the corner orientation carried by the
+   river mirror bits 0x04/0x08 of the h3m Mirroring byte, T junctions
+   5-8, cross 4). The H2 stream index is NOT reused as-is: the H2 STREAM
+   frame order differs from the H3 river def frame order.
+
    4   Number of daily events, then for each event:
        ├─ #   Event message
        ├─ 1   Human player colors (bit mask)
