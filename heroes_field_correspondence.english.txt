@@ -223,6 +223,12 @@ Values used in the unified JSON format and their equivalents in .fh2m and .h3m
      the cardinal (N,E,S,W) mask of neighboring road tiles, mapped to
      the h3m road sprite (lines 10/12, end caps 14/15, corners 0-3,
      T junctions 5-9, cross 4) learned from input/*.h3m.
+   - River Type / River Properties of river tiles: the type comes from
+     the tile terrain (Lava -> Lava, Snow -> Icy, Dirt -> Muddy, else
+     Clear) and the sprite from river_link.json, keyed by the cardinal
+     mask of neighboring river tiles (lines 9/11, end caps 9-12,
+     corners 0-3, T junctions 5-8), with the river mirror bits
+     0x04/0x08 in Mirroring.
 
 ████████████════════════════════════════════════████████████████████████
 ██ mainLanguage                                                          ██
