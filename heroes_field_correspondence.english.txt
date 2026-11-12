@@ -527,6 +527,13 @@ quest messages, garrison canTake, event players flags).
    the towns (class 98, the faction subclass through the town/race
    pairing, with the custom name, the garrison defenders and the
    built buildings mapped back through the building bit tables).
+   The fh2m town tile is the castle entrance (the gate sprite part
+   sits on it, the owner flags on the tiles x-1 and x+1), while the
+   h3m town instance sits at the bottom-right corner of its 6x6
+   footprint, its entrance cell being at instance + (-2, 0) - the
+   relation every real map's Castle X/Y follows - so the h3m town
+   instance is placed at the fh2m tile + (2, 0) and the main town
+   Castle X/Y is the fh2m tile as-is.
    The shrines map back through FH2M_TO_H3M_SHRINES (First Circle
    -> Incantation and so on) and the miscellaneous/water objects
    through FH2M_TO_H3M_MISC (windmills, lean-tos, signs, water
@@ -748,7 +755,9 @@ quest messages, garrison canTake, event players flags).
      and the built/disabled buildings converted to the fh2m building
      flags (castle, tavern, marketplace, shipyard, mage guild 1-5
      and the generic dwellings with their upgrades; town halls, fort
-     and citadel have no Heroes II equivalent)
+     and citadel have no Heroes II equivalent). The fh2m town tile is
+     the castle entrance, so the town is placed at the h3m instance
+     coords + (-2, 0).
    - ADVENTURE_POWER_UPS: shrines are translated to the matching
      shrine circle (Incantation -> First Circle, Gesture -> Second
      Circle, Thought -> Third Circle); other power-up objects are

@@ -901,15 +901,12 @@ def unified_to_h3m(unified):
             # The game locates the starting town at its entrance cell,
             # which in every real map is the town instance coords shifted
             # by (-2, 0) (bottom-right corner of the 6x6 town minus 2 in
-            # x). Pointing at the town tile itself leaves the lookup on
-            # an empty cell and crashes the game at load. Only fh2m
-            # sources need the shift: their town tiles are the town's
-            # bottom-right corner, while h3m sources already carry the
-            # entrance coords.
-            castle_x = int(main_town.get("x", 0))
-            if unified.get("sourceGame") != "h3m":
-                castle_x = max(castle_x - 2, 0)
-            player["Castle X"] = castle_x
+            # x). The fh2m town tile IS the entrance (the gate part of
+            # the castle sprite sits on it), and the encoder places the
+            # h3m town instance at entrance + (2, 0), so Castle X/Y is
+            # the unified town tile as-is. h3m sources already carry
+            # the entrance coords in their Castle X/Y.
+            player["Castle X"] = int(main_town.get("x", 0))
             player["Castle Y"] = main_town.get("y", 0)
             player["Castle Z"] = main_town.get("z", 0)
         else:
@@ -2279,7 +2276,13 @@ def unified_to_fh2m(unified):
                                                   dropped_ids,
                                                   h3m_tile_terrains.get((x, y, z)))
         if translated:
-            objects_by_tile[(x, y)] = translated
+            target = (x, y)
+            if any(o.get("group") == "KINGDOM_TOWNS" for o in translated):
+                # The h3m town instance sits at the bottom-right corner
+                # of the castle footprint; the fh2m town tile is the
+                # entrance, 2 tiles to the left (instance + (-2, 0)).
+                target = (max(x - 2, 0), y)
+            objects_by_tile[target] = translated
     if dropped_ids:
         objects_section = OrderedDict(objects_section)
         objects_section["dropped"] = dropped_ids
@@ -2767,6 +2770,7 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
     monster_meta = objects_section.get("monsterMetadata") or {}
     resource_meta = objects_section.get("resourceMetadata") or {}
     artifact_meta = objects_section.get("artifactMetadata") or {}
+    map_width = (unified.get("mapSize") or {}).get("width", 72)
 
     # --- Collect the instances to encode, in tile order ---
     instances = []
@@ -2889,7 +2893,16 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
                             break
                 if town_type is not None:
                     castle_meta = (objects_section.get("castleMetadata") or {}).get(str(obj_id)) or {}
-                    entry = ("town", (x, y, z), (98, town_type), castle_meta)
+                    # The fh2m town tile is the castle entrance (the
+                    # gate part of the sprite sits on it, the flags on
+                    # the tiles x-1 and x+1). The h3m town instance
+                    # sits at the bottom-right corner of its 6x6
+                    # footprint, its entrance cell (the actionable cell
+                    # of the def) being at instance + (-2, 0) - the
+                    # relation every real map's Castle X/Y follows.
+                    # So the instance goes at entrance + (2, 0).
+                    entry = ("town", (min(x + 2, map_width - 1), y, z),
+                             (98, town_type), castle_meta)
             elif group in ("ADVENTURE_MISCELLANEOUS", "ADVENTURE_WATER"):
                 # The miscellaneous and water objects with a
                 # confirmed h3m sprite map through the misc table.
