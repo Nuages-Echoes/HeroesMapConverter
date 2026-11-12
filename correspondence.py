@@ -901,6 +901,30 @@ for _i in range(6):
 FH2M_TO_H3M_MINES[54] = (53, 1)  # alchemist lab
 FH2M_TO_H3M_MINES[55] = (53, 1)  # alchemist lab snow
 
+# fh2m STREAMS object index (0-12, frame of the H2 STREAM animation) ->
+# h3m per-tile (River Properties, river mirror bits 0x04/0x08 of the
+# Mirroring byte). The H2 frame order differs from the H3 river def
+# frame order, so this is a real translation table, not a copy.
+# Derived from the reference H3M maps (input/*.h3m) by matching each
+# index to the cardinal mask of its neighboring STREAMS tiles.
+# Indices 6, 9, 10, 11 are not present in the sample maps; they are
+# assigned by elimination (remaining T junctions and the cross).
+FH2M_TO_H3M_STREAMS = {
+    0: (1, 0x04),    # corner S+W
+    1: (0, 0x00),    # corner E+S
+    2: (11, 0x00),   # horizontal line E-W
+    3: (9, 0x00),    # vertical line N-S
+    4: (1, 0x08),    # corner N+E
+    5: (11, 0x00),   # horizontal line E-W, variant
+    6: (5, 0x00),    # T junction E+S+W (by elimination)
+    7: (3, 0x0C),    # corner N+W
+    8: (5, 0x08),    # T junction N+E+W
+    9: (8, 0x00),    # T junction N+E+S (by elimination)
+    10: (7, 0x04),   # T junction N+S+W (by elimination)
+    11: (4, 0x00),   # cross N+E+S+W (by elimination)
+    12: (10, 0x00),  # vertical line N-S, variant
+}
+
 # fh2m dwelling object index -> h3m (class, subclass). The Heroes
 # II dwellings house a Heroes II creature; the h3m dwelling class
 # 17 carries the paired h3m creature id as its subclass (see the

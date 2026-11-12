@@ -1009,6 +1009,7 @@ def unified_to_h3m(unified):
     # h3m per-tile Road/River Type fields.
     fh2m_road_tiles = set()
     fh2m_river_tiles = set()
+    fh2m_river_index = {}
     if is_fh2m_source:
         for tile_key, obj_list in (unified.get("objects") or {}).get("tiles", {}).items():
             parts = tile_key.split("_")
@@ -1021,6 +1022,7 @@ def unified_to_h3m(unified):
                     fh2m_road_tiles.add((x, y, z))
                 elif group == "STREAMS":
                     fh2m_river_tiles.add((x, y, z))
+                    fh2m_river_index[(x, y, z)] = obj.get("index", 0)
 
     # Per-terrain h3m main-tile ranges (VCMI editor terrainViewPatterns.json,
     # pattern n1): normal terrains 49-72, dirt 21-44, sand 0-23, water 20-32.
@@ -1258,14 +1260,23 @@ def unified_to_h3m(unified):
                 if (x, y, z) in fh2m_river_tiles:
                     river = {"Lava": "Lava", "Snow": "Icy", "Dirt": "Muddy"}.get(
                         terrain_name, "Clear")
-                    fkey = "".join(d for d, dx, dy in _ROAD_DIRS
-                                   if (x + dx, y + dy, z) in fh2m_river_tiles)
-                    hit = RIVER_LINK.get(fkey) or RIVER_LINK.get("-")
-                    if hit:
-                        river_props = hit["props"]
-                        mirror_bits |= int(hit["mirror"], 16) & 0x0C
-                    elif fkey == "NESW":
-                        river_props = 4  # cross
+                    # Direct table first: the fh2m STREAMS index selects the
+                    # segment (FH2M_TO_H3M_STREAMS); fall back to the
+                    # neighbor-mask table for unknown indices.
+                    from correspondence import FH2M_TO_H3M_STREAMS
+                    direct = FH2M_TO_H3M_STREAMS.get(fh2m_river_index.get((x, y, z)))
+                    if direct is not None:
+                        river_props = direct[0]
+                        mirror_bits |= direct[1] & 0x0C
+                    else:
+                        fkey = "".join(d for d, dx, dy in _ROAD_DIRS
+                                       if (x + dx, y + dy, z) in fh2m_river_tiles)
+                        hit = RIVER_LINK.get(fkey) or RIVER_LINK.get("-")
+                        if hit:
+                            river_props = hit["props"]
+                            mirror_bits |= int(hit["mirror"], 16) & 0x0C
+                        elif fkey == "NESW":
+                            river_props = 4  # cross
                 mirroring = "0x%02x" % mirror_bits
             grid[(x, y)] = (z, terrain_name, picture, mirroring,
                             road, road_props, river, river_props)
