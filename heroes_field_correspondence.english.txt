@@ -438,9 +438,20 @@ quest messages, garrison canTake, event players flags).
    (one per terrain) and LANDSCAPE_FLAGS 14 (7 colors x 2
    sides). The FH2M_LANDSCAPE_TO_H3M table now covers them all.
    The mountains pick their h3m class from the terrain of the
-   tile (the fh2m variant index formula being undocumented):
-   Lava -> volcano (158), Desert/Sand -> dune (148), Dirt ->
-   mound (133), the others -> mountain (134); the extra rocks
+   tile: Lava -> volcano (158), Desert/Sand -> dune (148), Dirt ->
+   mound (133), the others -> mountain (134). The h3m mountain
+   classes carry one def per terrain AND per size under the same
+   subclass 0 (AVLmtgr1.def = big grass mountain, 12 blocked cells;
+   AVLmtgr3/4.def = medium, 5; AVLmtgr5/6.def = small, 4; AVLvol10..50
+   volcanoes, AVLdun10..30 dunes, AVLmd* mounds), so the def - carried
+   as the third catalog key element - follows the tile terrain and
+   the fh2m variant within its terrain block (index = block * 19 +
+   variant, blocks Generic/Grass/Snow/Swamp/Lava/Desert/Dirt/
+   Wasteland per fheroes2 populateLandscapeMountains; variants 0-1
+   big, 2-5 medium, 6+ small). The def bodies come from
+   H3M_MOUNTAIN_DEFS (extracted from the reference maps); the reverse
+   direction maps the def name back to the fh2m index through
+   H3M_MOUNTAIN_DEF_TO_FH2M_INDEX. The extra rocks
    map to rocks (147), the extra tree variants (29-62) to the h3m
    tree classes - the encoder refines by tile terrain (Swamp and
    Dirt -> dead vegetation 119, the other terrains -> trees 155;

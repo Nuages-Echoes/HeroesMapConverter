@@ -1314,6 +1314,210 @@ H3M_TREE_DEFS = {
     "avtchst0.def": ("AVTchst0.def", "ffffffffff7f000000000080ff01ff00", "050000000000000000000000000000000000"),
 }
 
+# The h3m mountain classes (133 mound, 134 mountain, 148 dune, 158
+# volcano) carry their variants as DIFFERENT DEF NAMES under subclass 0:
+# the name encodes the terrain (AVLmt + gr/sn/sw/rf/vo/ds/dr/sb prefix)
+# and the size (variant 1-2 big = 12 blocked cells, 3-4 medium = 5,
+# 5-6 small = 4; volcanoes AVLvol10..50, dunes AVLdun10..30, mounds
+# AVLmd1/2/3) - like the tree classes, the def name carries the sprite
+# size.
+H3M_MOUNTAIN_CLASSES = {133, 134, 148, 158}
+
+# fh2m LANDSCAPE_MOUNTAINS layout (fheroes2 populateLandscapeMountains):
+# index = terrain_block * 19 + variant, the 8 blocks in the order
+# Generic, Grass, Snow, Swamp, Lava, Desert, Dirt, Wasteland.
+FH2M_MOUNTAIN_BLOCKS = 19
+FH2M_MOUNTAIN_BLOCK_BY_H3_TERRAIN = {
+    "Grass": 1, "Snow": 2, "Swamp": 3, "Lava": 4,
+    "Sand": 5, "Dirt": 6, "Rough": 7,
+}
+
+# h3m class 134 def prefix per h3m tile terrain, and the variant numbers
+# available per prefix in the reference maps.
+H3M_MOUNTAIN_DEF_PREFIX = {
+    "Grass": "gr", "Water": "gr", "Snow": "sn", "Swamp": "sw",
+    "Rough": "rf", "Subterranean": "sb", "Rock": "sb",
+    "Sand": "ds", "Lava": "vo", "Dirt": "dr",
+}
+_H3M_MT_PREFIX_VARIANTS = {
+    "gr": range(1, 7), "gn": range(0, 6), "sn": range(1, 7),
+    "sw": range(1, 7), "rf": range(1, 7), "vo": range(1, 7),
+    "dr": range(1, 9), "ds": (1, 2, 4), "sb": range(0, 6),
+}
+
+# Default (generic) def of each mountain class, used when the computed
+# variant def is not in the reference data.
+H3M_MOUNTAIN_GENERIC_DEF = {
+    133: "AVLmd1g0.def", 134: "AVLmtgr3.def", 148: "AVLdun10.def",
+    158: "AVLvol40.def",
+}
+
+
+def fh2m_mountain_h3m_class(tile_terrain):
+    """h3m mountain class for a tile terrain: Lava -> volcano 158,
+    Sand -> dune 148, Dirt -> mound 133, the other terrains ->
+    mountain 134."""
+    if tile_terrain == "Lava":
+        return 158
+    if tile_terrain == "Sand":
+        return 148
+    if tile_terrain == "Dirt":
+        return 133
+    return 134
+
+
+def _h3_mountain_variant(h2_variant):
+    """Map the fh2m variant within its terrain block (0-1 big, 2-5
+    medium, 6+ small/single) to the h3m class 134 variant number
+    (1-2 big = 12 blocked cells, 3-4 medium = 5, 5-6 small = 4)."""
+    if h2_variant <= 1:
+        return h2_variant + 1
+    if h2_variant <= 5:
+        return 3 if h2_variant % 2 == 0 else 4
+    return 5 if h2_variant % 2 == 0 else 6
+
+
+def fh2m_mountain_def_name(index, h3m_class, tile_terrain):
+    """h3m mountain def for a fh2m LANDSCAPE_MOUNTAINS object: the
+    terrain comes from the tile (through the class), the size from the
+    variant within the fh2m terrain block."""
+    variant = index % FH2M_MOUNTAIN_BLOCKS
+    candidate = None
+    if h3m_class == 134:
+        prefix = H3M_MOUNTAIN_DEF_PREFIX.get(tile_terrain, "gr")
+        allowed = _H3M_MT_PREFIX_VARIANTS.get(prefix, range(1, 7))
+        v = _h3_mountain_variant(variant)
+        if v not in allowed:
+            v = min(allowed, key=lambda a: (abs(a - v), a))
+        candidate = "AVLmt%s%d.def" % (prefix, v)
+    elif h3m_class == 158:  # volcano: vol50/40 big, vol30 middle, vol10/20 small
+        if variant in (15, 16, 17, 18):
+            candidate = {15: "AVLvol50.def", 16: "AVLvol40.def",
+                         17: "AVLvol30.def", 18: "AVLvol10.def"}[variant]
+        elif variant <= 1:
+            candidate = "AVLvol50.def"
+        elif variant <= 5:
+            candidate = "AVLvol30.def"
+        else:
+            candidate = "AVLvol10.def"
+    elif h3m_class == 148:  # dune: dun30 bigger
+        candidate = "AVLdun30.def" if variant <= 1 else "AVLdun10.def"
+    elif h3m_class == 133:  # mound: md1/md2 by variant parity, per terrain
+        suffix = {"Dirt": "d", "Grass": "g"}.get(tile_terrain, "r")
+        candidate = "AVLmd%d%s0.def" % (1 if variant % 2 == 0 else 2, suffix)
+    if candidate and candidate.lower() in H3M_MOUNTAIN_DEFS:
+        return candidate
+    return H3M_MOUNTAIN_GENERIC_DEF.get(h3m_class)
+
+
+# Reverse: h3m mountain def name -> fh2m LANDSCAPE_MOUNTAINS index
+# (terrain block * 19 + variant; the h3m variant maps back to the h2
+# variant: 1-2 big -> 0-1, 3-4 medium -> 4-5, 5-6 small -> 6-7).
+H3M_MOUNTAIN_DEF_TO_FH2M_INDEX = {}
+_MT_PREFIX_BLOCK = {"gr": 19, "gn": 19, "sn": 38, "sw": 57, "vo": 76,
+                     "ds": 95, "dr": 114, "rf": 133, "sb": 114}
+_H3V_TO_H2V = {0: 0, 1: 0, 2: 1, 3: 4, 4: 5, 5: 6, 6: 7}
+for _prefix, _block in _MT_PREFIX_BLOCK.items():
+    for _n in range(0, 9):
+        H3M_MOUNTAIN_DEF_TO_FH2M_INDEX["avlmt%s%d.def" % (_prefix, _n)] = \
+            _block + _H3V_TO_H2V.get(_n, 6)
+for _name, _v in (("avlvol10.def", 18), ("avlvol20.def", 6), ("avlvol30.def", 17),
+                  ("avlvol40.def", 16), ("avlvol50.def", 15)):
+    H3M_MOUNTAIN_DEF_TO_FH2M_INDEX[_name] = 76 + _v  # Lava block
+H3M_MOUNTAIN_DEF_TO_FH2M_INDEX["avldun10.def"] = 95 + 6   # Desert block
+H3M_MOUNTAIN_DEF_TO_FH2M_INDEX["avldun20.def"] = 95 + 7
+H3M_MOUNTAIN_DEF_TO_FH2M_INDEX["avldun30.def"] = 95 + 13
+H3M_MOUNTAIN_DEF_TO_FH2M_INDEX["avlmd1d0.def"] = 114 + 13  # Dirt block
+H3M_MOUNTAIN_DEF_TO_FH2M_INDEX["avlmd2d0.def"] = 114 + 14
+H3M_MOUNTAIN_DEF_TO_FH2M_INDEX["avlmd1g0.def"] = 19 + 13   # Grass block
+H3M_MOUNTAIN_DEF_TO_FH2M_INDEX["avlmd2g0.def"] = 19 + 14
+for _name in ("avlmd1r0.def", "avlmd2r0.def", "avlmd3r0.def"):
+    H3M_MOUNTAIN_DEF_TO_FH2M_INDEX[_name] = 133 + 13  # Wasteland block
+
+
+def h3m_mountain_def_to_fh2m_index(obj_class, def_name):
+    """fh2m LANDSCAPE_MOUNTAINS index for an h3m mountain object, from
+    its def name when known (else None: the caller falls back to the
+    class-level H3M_DECORATIVE_TO_FH2M entry)."""
+    if obj_class not in H3M_MOUNTAIN_CLASSES:
+        return None
+    return H3M_MOUNTAIN_DEF_TO_FH2M_INDEX.get((def_name or "").lower())
+
+
+# Sprite catalog of the h3m mountain defs (sprite name, passability and
+# landscape masks, trailing bytes), extracted from the catalogs of the
+# reference maps (input/*.h3m), one entry per variant def.
+H3M_MOUNTAIN_DEFS = {
+    "avldun10.def": ("AVLdun10.def", "ffffffffff3f000000000000ff010200", "000000000000000000000000000000000000"),
+    "avldun20.def": ("AVLdun20.def", "ffffffffff3f000000000000ff010200", "000000000000000000000000000000000000"),
+    "avldun30.def": ("AVLdun30.def", "ffffffffff1f000000000000ff010200", "000000000000000000000000000000000000"),
+    "avlmd1d0.def": ("AVLmd1d0.def", "ffffffffff3f000000000000ff010100", "000000000000000000000000000000000000"),
+    "avlmd1g0.def": ("AVLmd1g0.def", "ffffffffff3f00000000000004000400", "000000000000000000000000000000000000"),
+    "avlmd1r0.def": ("AVLmd1r0.def", "ffffffffff3f000000000000ff012000", "000000000000000000000000000000000000"),
+    "avlmd2d0.def": ("AVLmd2d0.def", "ffffffffff3f000000000000ff010100", "000000000000000000000000000000000000"),
+    "avlmd2g0.def": ("AVLmd2g0.def", "ffffffffff3f00000000000004000400", "000000000000000000000000000000000000"),
+    "avlmd2r0.def": ("AVLmd2r0.def", "ffffffffff7f000000000000ff012000", "000000000000000000000000000000000000"),
+    "avlmd3r0.def": ("AVLmd3r0.def", "ffffffffff3f000000000000ff012000", "000000000000000000000000000000000000"),
+    "avlmtdr1.def": ("avlmtdr1.def", "ffffff87071f000000000000ff010100", "000000000000000000000000000000000000"),
+    "avlmtdr2.def": ("avlmtdr2.def", "ffffff0f07c7000000000000ff010100", "000000000000000000000000000000000000"),
+    "avlmtdr3.def": ("avlmtdr3.def", "ffffffff1f3f000000000000ff010100", "000000000000000000000000000000000000"),
+    "avlmtdr4.def": ("avlmtdr4.def", "ffffffff1f9f000000000000ff010100", "000000000000000000000000000000000000"),
+    "avlmtdr5.def": ("avlmtdr5.def", "ffffffff9f3f000000000000ff010100", "000000000000000000000000000000000000"),
+    "avlmtdr6.def": ("avlmtdr6.def", "ffffffff3f9f000000000000ff010100", "000000000000000000000000000000000000"),
+    "avlmtdr7.def": ("avlmtdr7.def", "ffffffffc71f000000000000ff010100", "000000000000000000000000000000000000"),
+    "avlmtdr8.def": ("avlmtdr8.def", "ffffffff1fc7000000000000ff010100", "000000000000000000000000000000000000"),
+    "avlmtds1.def": ("AVLmtds1.def", "ffffff87071f000000000000ff010200", "000000000000000000000000000000000000"),
+    "avlmtds2.def": ("AVLmtds2.def", "ffffff0f07c7000000000000ff010200", "000000000000000000000000000000000000"),
+    "avlmtds4.def": ("AVLmtds4.def", "ffffffff1f9f000000000000ff010200", "000000000000000000000000000000000000"),
+    "avlmtgn0.def": ("AVLmtgn0.def", "ffffff0f07c7000000000000ff010400", "000000000000000000000000000000000000"),
+    "avlmtgn1.def": ("AVLmtgn1.def", "ffffff87071f000000000000ff010400", "000000000000000000000000000000000000"),
+    "avlmtgn2.def": ("AVLmtgn2.def", "ffffffff1f9f000000000000ff010400", "000000000000000000000000000000000000"),
+    "avlmtgn3.def": ("AVLmtgn3.def", "ffffffff1f3f000000000000ff010400", "000000000000000000000000000000000000"),
+    "avlmtgn4.def": ("AVLmtgn4.def", "ffffffff3f9f000000000000ff000400", "000000000000000000000000000000000000"),
+    "avlmtgn5.def": ("AVLmtgn5.def", "ffffffff9f3f000000000000ff010400", "000000000000000000000000000000000000"),
+    "avlmtgr1.def": ("AVLmtgr1.def", "ffffff87071f000000000000ff010400", "000000000000000000000000000000000000"),
+    "avlmtgr2.def": ("AVLmtgr2.def", "ffffff0f07c7000000000000ff010400", "000000000000000000000000000000000000"),
+    "avlmtgr3.def": ("AVLmtgr3.def", "ffffffff1f3f000000000000ff010400", "000000000000000000000000000000000000"),
+    "avlmtgr4.def": ("AVLmtgr4.def", "ffffffff1f9f000000000000ff010400", "000000000000000000000000000000000000"),
+    "avlmtgr5.def": ("AVLmtgr5.def", "ffffffff9f3f000000000000ff000400", "000000000000000000000000000000000000"),
+    "avlmtgr6.def": ("AVLmtgr6.def", "ffffffff3f9f000000000000ff000400", "000000000000000000000000000000000000"),
+    "avlmtrf1.def": ("avlmtrf1.def", "ffffff87071f000000000000ff012000", "000000000000000000000000000000000000"),
+    "avlmtrf2.def": ("avlmtrf2.def", "ffffff0f07c7000000000000ff012000", "000000000000000000000000000000000000"),
+    "avlmtrf3.def": ("avlmtrf3.def", "ffffffff1f3f000000000000ff012000", "000000000000000000000000000000000000"),
+    "avlmtrf4.def": ("avlmtrf4.def", "ffffffff1f9f000000000000ff012000", "000000000000000000000000000000000000"),
+    "avlmtrf5.def": ("avlmtrf5.def", "ffffffff9f3f000000000000ff012000", "000000000000000000000000000000000000"),
+    "avlmtrf6.def": ("avlmtrf6.def", "ffffffff3f9f000000000000ff012000", "000000000000000000000000000000000000"),
+    "avlmtsb0.def": ("AVLmtsb0.def", "ffffff0f07c7000000000000ff014000", "000000000000000000000000000000000000"),
+    "avlmtsb1.def": ("AVLmtsb1.def", "ffffff87071f000000000000ff014000", "000000000000000000000000000000000000"),
+    "avlmtsb2.def": ("AVLmtsb2.def", "ffffffff1f9f000000000000ff014000", "000000000000000000000000000000000000"),
+    "avlmtsb3.def": ("AVLmtsb3.def", "ffffffff1f3f000000000000ff014000", "000000000000000000000000000000000000"),
+    "avlmtsb4.def": ("AVLmtsb4.def", "ffffffff3f9f000000000000ff014000", "000000000000000000000000000000000000"),
+    "avlmtsb5.def": ("AVLmtsb5.def", "ffffffff9f3f000000000000ff014000", "000000000000000000000000000000000000"),
+    "avlmtsn1.def": ("AVLmtsn1.def", "ffffff87071f000000000000ff010800", "000000000000000000000000000000000000"),
+    "avlmtsn2.def": ("AVLmtsn2.def", "ffffff0f07c7000000000000ff010800", "000000000000000000000000000000000000"),
+    "avlmtsn3.def": ("AVLmtsn3.def", "ffffffff1f3f000000000000ff010800", "000000000000000000000000000000000000"),
+    "avlmtsn4.def": ("AVLmtsn4.def", "ffffffff1f9f000000000000ff010800", "000000000000000000000000000000000000"),
+    "avlmtsn5.def": ("AVLmtsn5.def", "ffffffff9f3f000000000000ff010800", "000000000000000000000000000000000000"),
+    "avlmtsn6.def": ("AVLmtsn6.def", "ffffffff3f9f000000000000ff000800", "000000000000000000000000000000000000"),
+    "avlmtsw1.def": ("AVLmtsw1.def", "ffffff87071f000000000000ff011000", "000000000000000000000000000000000000"),
+    "avlmtsw2.def": ("AVLmtsw2.def", "ffffff0f07c7000000000000ff011000", "000000000000000000000000000000000000"),
+    "avlmtsw3.def": ("AVLmtsw3.def", "ffffffff1f3f000000000000ff011000", "000000000000000000000000000000000000"),
+    "avlmtsw4.def": ("AVLmtsw4.def", "ffffffff1f9f000000000000ff011000", "000000000000000000000000000000000000"),
+    "avlmtsw5.def": ("AVLmtsw5.def", "ffffffff9f3f000000000000ff001000", "000000000000000000000000000000000000"),
+    "avlmtsw6.def": ("AVLmtsw6.def", "ffffffff3f9f000000000000ff011000", "000000000000000000000000000000000000"),
+    "avlmtvo1.def": ("AVLmtvo1.def", "ffffff87071f000000000000ff018000", "000000000000000000000000000000000000"),
+    "avlmtvo2.def": ("AVLmtvo2.def", "ffffff8f07c7000000000000ff018000", "000000000000000000000000000000000000"),
+    "avlmtvo3.def": ("AVLmtvo3.def", "ffffffff1f3f000000000000ff018000", "000000000000000000000000000000000000"),
+    "avlmtvo4.def": ("AVLmtvo4.def", "ffffffff1f9f000000000000ff018000", "000000000000000000000000000000000000"),
+    "avlmtvo5.def": ("AVLmtvo5.def", "ffffffff9f3f000000000000ff008000", "000000000000000000000000000000000000"),
+    "avlmtvo6.def": ("AVLmtvo6.def", "ffffffff3f9f000000000000ff018000", "000000000000000000000000000000000000"),
+    "avlvol10.def": ("AVLvol10.def", "ffffffffff3f000000000000ff018000", "000000000000000000000000000000000000"),
+    "avlvol20.def": ("AVLvol20.def", "ffffffffff3f000000000000ff018000", "000000000000000000000000000000000000"),
+    "avlvol30.def": ("AVLvol30.def", "ffffffffff1f000000000000ff018000", "000000000000000000000000000000000000"),
+    "avlvol40.def": ("AVLvol40.def", "ffffffffbf1f000000000000ff018000", "000000000000000000000000000000000000"),
+    "avlvol50.def": ("AVLvol50.def", "ffffffff8f8f000000000000ff018000", "000000000000000000000000000000000000"),
+}
+
 
 # fh2m resource object index (ADVENTURE_TREASURES 0-6: wood,
 # mercury, ore, sulfur, crystal, gems, gold) -> h3m resource

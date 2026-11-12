@@ -1746,6 +1746,18 @@ def _translate_h3m_tile_objects(obj_list, objects_section, translated_metadata,
                                                          obj.get("sprite"))
                 if tree_index is not None:
                     fh2m_index = tree_index
+            # The mountain def name carries the terrain and the size
+            # (AVLmtgr3.def = grass medium mountain...): the fh2m
+            # mountain index is the terrain block * 19 plus a variant
+            # matching the size.
+            from correspondence import (H3M_MOUNTAIN_CLASSES,
+                                      h3m_mountain_def_to_fh2m_index)
+            if obj_class in H3M_MOUNTAIN_CLASSES:
+                mountain_index = h3m_mountain_def_to_fh2m_index(
+                    obj_class, obj.get("sprite"))
+                if mountain_index is not None:
+                    fh2m_group, fh2m_index = ("LANDSCAPE_MOUNTAINS",
+                                              mountain_index)
             translated.append(OrderedDict([
                 ("id", obj_id),
                 ("group", fh2m_group),
@@ -2956,7 +2968,7 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
                 # Dirt -> mound, others -> mountain.
                 from correspondence import FH2M_LANDSCAPE_TO_H3M
                 h3m_class = FH2M_LANDSCAPE_TO_H3M.get((group, index))
-                tree_def = None
+                variant_def = None
                 if group == "LANDSCAPE_TREES" and h3m_class is not None:
                     # The h3m tree classes carry one def per variant
                     # under the same subclass 0 and the variants have
@@ -2970,21 +2982,26 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
                                               fh2m_tree_def_name)
                     tile_terrain = (tile_terrains or {}).get((x, y), "Grass")
                     h3m_class = fh2m_tree_h3m_class(index, tile_terrain)
-                    tree_def = fh2m_tree_def_name(h3m_class, tile_terrain)
+                    variant_def = fh2m_tree_def_name(h3m_class, tile_terrain)
                 if group == "LANDSCAPE_MOUNTAINS" and h3m_class is not None:
+                    # The mountain class follows the tile terrain (Lava
+                    # -> volcano 158, Sand -> dune 148, Dirt -> mound
+                    # 133, the other terrains -> mountain 134) and the
+                    # h3m mountain classes carry one def per terrain and
+                    # per size under the same subclass 0: the def -
+                    # carried as the third catalog key element -
+                    # follows the tile terrain and the fh2m variant
+                    # within its terrain block (the sprite size).
+                    from correspondence import (fh2m_mountain_h3m_class,
+                                              fh2m_mountain_def_name)
                     tile_terrain = (tile_terrains or {}).get((x, y), "Grass")
-                    if tile_terrain == "Lava":
-                        h3m_class = 158  # volcano
-                    elif tile_terrain == "Sand":
-                        h3m_class = 148  # dune
-                    elif tile_terrain == "Dirt":
-                        h3m_class = 133  # mound
-                    else:
-                        h3m_class = 134  # mountain
+                    h3m_class = fh2m_mountain_h3m_class(tile_terrain)
+                    variant_def = fh2m_mountain_def_name(index, h3m_class,
+                                                         tile_terrain)
                 if h3m_class is not None:
-                    if tree_def is not None:
+                    if variant_def is not None:
                         entry = ("decorative", (x, y, z),
-                                 (h3m_class, 0, tree_def), None)
+                                 (h3m_class, 0, variant_def), None)
                     else:
                         entry = ("decorative", (x, y, z), (h3m_class, 0), None)
             if entry:
@@ -3007,12 +3024,15 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
         obj_class, obj_subclass = key[0], key[1]
         if key not in kind_of:
             if len(key) == 3:
-                # A variant def (mine terrain variant, tree variant):
-                # the def name is the third key element and its sprite
-                # body comes from H3M_MINE_DEFS / H3M_TREE_DEFS.
-                from correspondence import H3M_MINE_DEFS, H3M_TREE_DEFS
+                # A variant def (mine terrain variant, tree or mountain
+                # variant): the def name is the third key element and
+                # its sprite body comes from H3M_MINE_DEFS /
+                # H3M_TREE_DEFS / H3M_MOUNTAIN_DEFS.
+                from correspondence import (H3M_MINE_DEFS, H3M_TREE_DEFS,
+                                          H3M_MOUNTAIN_DEFS)
                 ref = (H3M_MINE_DEFS.get((key[2] or "").lower())
                        or H3M_TREE_DEFS.get((key[2] or "").lower())
+                       or H3M_MOUNTAIN_DEFS.get((key[2] or "").lower())
                        or FH2M_TO_H3M_CATALOG.get((key[0], key[1])))
             else:
                 ref = FH2M_TO_H3M_CATALOG.get(key)
