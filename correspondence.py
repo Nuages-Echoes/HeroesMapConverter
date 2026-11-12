@@ -877,17 +877,29 @@ FH2M_TO_H3M_SPELLS = {
 # 45-46 the sawmills, 47-48 the alchemist labs. The h3m class 53
 # subclass identifies the mine type: 0 sawmill, 1 alchemist lab,
 # 2 ore, 3 sulfur, 4 crystal, 5 gems, 6 gold, 7 abandoned.
+# fh2m mine object index -> h3m (class, subclass), derived from the H2
+# object descriptions (fheroes2 populateAdventureMines order), not from
+# index arithmetic:
+#   0-39  resource mines: appearance = index//5 (0 Generic, 1 Grass,
+#         2 Snow, 3 Swamp, 4 Lava, 5 Desert, 6 Dirt, 7 Wasteland),
+#         resource = index%5 (0 Ore, 1 Sulfur, 2 Crystal, 3 Gems, 4 Gold)
+#   40-47 abandoned mines (same 8 appearances)
+#   48-53 sawmills (Grass/Swamp, Snow, Lava, Desert, Dirt, Wasteland)
+#   54-55 alchemist lab (generic, snow)
+# h3m class 53 subclasses (from the real maps' catalogs):
+#   0 sawmill, 1 alchemist, 2 ore, 3 sulfur, 4 crystal, 5 gems, 6 gold,
+#   7 abandoned.
 FH2M_TO_H3M_MINES = {}
 _mine_resources = [2, 3, 4, 5, 6]  # ore, sulfur, crystal, gems, gold
 for _appearance in range(8):
     for _res_index, _subclass in enumerate(_mine_resources):
         FH2M_TO_H3M_MINES[_appearance * 5 + _res_index] = (53, _subclass)
-for _i in range(5):
+for _i in range(8):
     FH2M_TO_H3M_MINES[40 + _i] = (53, 7)  # abandoned mines
-FH2M_TO_H3M_MINES[45] = (53, 0)  # sawmill grass/swamp
-FH2M_TO_H3M_MINES[46] = (53, 0)  # sawmill other
-FH2M_TO_H3M_MINES[47] = (53, 1)  # alchemist lab
-FH2M_TO_H3M_MINES[48] = (53, 1)  # alchemist lab snow
+for _i in range(6):
+    FH2M_TO_H3M_MINES[48 + _i] = (53, 0)  # sawmills
+FH2M_TO_H3M_MINES[54] = (53, 1)  # alchemist lab
+FH2M_TO_H3M_MINES[55] = (53, 1)  # alchemist lab snow
 
 # fh2m dwelling object index -> h3m (class, subclass). The Heroes
 # II dwellings house a Heroes II creature; the h3m dwelling class
