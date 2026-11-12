@@ -262,3 +262,47 @@ Description of the unified JSON format produced from .h3m and .fh2m maps
    with readable names resolved from the identifier tables in
    correspondence.py. See the Objects section of
    heroes_field_correspondence.english.txt for the field mapping.
+
+
+========================================================================
+                                Objects
+========================================================================
+
+   "objects"           object:
+     "tiles"           object      Map of "x_y_z" -> list of objects on
+                                    that tile. Each object:
+       "id"            int         Unique object id on the map
+       "group"         string      Object group ("ROADS", "STREAMS",
+                                    "ADVENTURE_MINES", "KINGDOM_TOWNS",
+                                    "MONSTERS", "LANDSCAPE_*", ...)
+       "index"         int         Object index within its group
+     ... plus the metadata maps (castleMetadata, heroMetadata, ...)
+     keyed by object id (see above).
+
+   STREAMS objects (rivers): the "index" (0-12) is the frame of the H2
+   STREAM animation, i.e. the river segment shape. Conversion to H3M
+   goes through the direct table FH2M_TO_H3M_STREAMS in
+   correspondence.py (the H2 frame order differs from the H3 river def
+   frame order, so the index is translated, not copied):
+
+     fh2m index   H2 segment            h3m River Properties   river mirror bits
+     ----------   ------------------    -------------------    -----------------
+     0            corner S+W            1                      0x04
+     1            corner E+S            0                      0x00
+     2            horizontal line E-W   11                     0x00
+     3            vertical line N-S     9                      0x00
+     4            corner N+E            1                      0x08
+     5            horizontal E-W (var)  11                     0x00
+     6            T junction E+S+W      5                      0x00
+     7            corner N+W            3                      0x0C
+     8            T junction N+E+W      5                      0x08
+     9            T junction N+E+S      8                      0x00
+     10           T junction N+S+W      7                      0x04
+     11           cross N+E+S+W         4                      0x00
+     12           vertical N-S (var)    10                     0x00
+
+   (indices 6, 9, 10, 11 do not occur in the sample maps; they are
+   assigned by elimination). The h3m River Type comes from the tile
+   terrain: Lava -> Lava river, Snow -> Icy, Dirt -> Muddy, otherwise
+   Clear. If an index is missing from the table, the segment falls back
+   to the cardinal neighbor mask via river_link.json.
