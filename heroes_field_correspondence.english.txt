@@ -205,6 +205,25 @@ Values used in the unified JSON format and their equivalents in .fh2m and .h3m
 | sourceRiver / sourceRiverProperties | UNDEFINE (rivers are   | River Type / River Properties       |
 |                                | objects of the STREAMS group)|                                    |
 
+   For FH2M sources the per-tile h3m fields are computed from the
+   neighbors, not copied:
+   - Mirroring keeps the fh2m terrainFlags mirror bits (0x01/0x02) and
+     adds the coast bit 0x40 on non-water tiles adjacent to water (every
+     such tile has it in the real maps); road tiles also get the road
+     mirror bits 0x10/0x20.
+   - Terrain Picture of coastal tiles comes from coastal_link.json:
+     each coastal tile is keyed by the mask of its neighbors on the
+     other side of the coast (N,NE,E,SE,S,SW,W,NW, '+'-joined) and mapped
+     to the h3m (picture, mirroring) used in the reference maps, for
+     water tiles (border sprites 0-19), Sand tiles and normal land
+     tiles (coast sprites 24-39). The table was learned from
+     input/*.h3m; see coastal_tiles_h2_h3.md (Tableau 3) for the H2->H3
+     link per tile type.
+   - Road Properties of road tiles comes from road_link.json: keyed by
+     the cardinal (N,E,S,W) mask of neighboring road tiles, mapped to
+     the h3m road sprite (lines 10/12, end caps 14/15, corners 0-3,
+     T junctions 5-9, cross 4) learned from input/*.h3m.
+
 ████████████════════════════════════════════════████████████████████████
 ██ mainLanguage                                                          ██
 ████████══════════════════════════════════████████████████████████████
@@ -469,9 +488,14 @@ quest messages, garrison canTake, event players flags).
    decorative objects through the FH2M_LANDSCAPE_TO_H3M table (209
    entries: the trees, mountains, rocks, water and miscellaneous
    sprite variants map to the closest h3m decorative class), the
-   mines through FH2M_TO_H3M_MINES (49 entries: the 5 resources x 8
-   appearances, the abandoned mines, sawmills and alchemist labs
-   map to the h3m class 53 subclasses), the dwellings through
+   mines through FH2M_TO_H3M_MINES (56 entries, derived from the H2
+   object descriptions in fheroes2 populateAdventureMines, not from
+   index arithmetic: indices 0-39 are the resource mines with
+   appearance = index//5 over Generic, Grass, Snow, Swamp, Lava,
+   Desert, Dirt, Wasteland and resource = index%5 over Ore, Sulfur,
+   Crystal, Gems, Gold -> h3m class 53 subs 2,3,4,5,6; indices 40-47
+   are the 8 abandoned mines -> sub 7; 48-53 the sawmills -> sub 0;
+   54-55 the alchemist labs -> sub 1), the dwellings through
    FH2M_TO_H3M_DWELLINGS (25 entries: the dwelling creature pairs
    to the h3m creature of the FH2M_TO_H3M_MONSTERS table), the
    heroes (class 34, the hero type being the first h3m hero of the
