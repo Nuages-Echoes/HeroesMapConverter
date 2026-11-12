@@ -8,57 +8,59 @@ Masque voisins = directions (N,NE,E,SE,S,SW,W,NW) des voisins de l'autre côté 
 
 ## Tableau 1 — tuiles côtières H2 (fh2m), source `My map.fh2m`
 
-| id H2 | terrain | fh2m index | offset | flags | masques voisins possibles | nb tuiles | ex (x,y) |
-|---|---|---|---|---|---|---|---|
-| H2-01 | Beach | 415 | 0 | 0 | NEESE / NNEESENW / NNENW / NNEWNW / SE / SW / SWWNW | 9 | 15,2 |
-| H2-02 | Beach | 416 | 1 | 0 | NEESE / NNENW / NNEWNW / SESSW / SW | 7 | 12,2 |
-| H2-03 | Beach | 417 | 2 | 0 | ESESSW / NE / NNEESENW / NNENW / SESSWW / SWWNW | 10 | 13,2 |
-| H2-04 | Beach | 418 | 3 | 0 | NEESE / NNENW / SSW | 3 | 21,2 |
-| H2-05 | Beach | 419 | 4 | 0 | ESESSW / NEESES / NEESESSW / NNW / SES / SESSW / SSWWNW | 7 | 11,3 |
-| H2-06 | Beach | 420 | 5 | 0 | NNE / NNENW / NW / SESSW / SWW / SWWNW | 7 | 20,2 |
-| H2-07 | Beach | 421 | 6 | 0 | NEESE / NNENW / SES / SESSWWNW / SW / SWWNW | 8 | 16,2 |
-| H2-08 | Beach | 422 | 7 | 0 | ESE / NEESE / NNW / SE / SSWWNW | 5 | 9,4 |
-| H2-09 | Beach | 423 | 8 | 0 | NEESE | 1 | 24,3 |
-| H2-10 | Beach | 424 | 9 | 0 | SESSW | 1 | 20,16 |
-| H2-11 | Beach | 425 | 10 | 0 | NW | 1 | 10,4 |
-| H2-12 | Beach | 426 | 11 | 0 | NEE / SESSW | 2 | 24,10 |
-| H2-13 | Beach | 427 | 12 | 0 | NNENW / SESSW | 2 | 23,2 |
-| H2-14 | Beach | 428 | 13 | 0 | NNENW | 1 | 17,2 |
-| H2-15 | Beach | 430 | 15 | 0 | NNESWWNW | 1 | 8,4 |
-| H2-16 | Beach | 431 | 16 | 0 | SESSW | 1 | 17,16 |
-| H2-17 | WATER | 0 | 0 | 0 | NNE | 1 | 10,16 |
-| H2-18 | WATER | 0 | 0 | 1 | SES | 1 | 8,3 |
-| H2-19 | WATER | 1 | 1 | 0 | NNENW | 2 | 17,17 |
-| H2-20 | WATER | 1 | 1 | 1 | SES / SESSW / SSW | 7 | 12,1 |
-| H2-21 | WATER | 2 | 2 | 0 | NNENW / NNW | 6 | 24,16 |
-| H2-22 | WATER | 2 | 2 | 1 | SES / SESSW | 4 | 17,1 |
-| H2-23 | WATER | 3 | 3 | 0 | NNE / NNENW / NNW | 4 | 23,16 |
-| H2-24 | WATER | 3 | 3 | 1 | SESSW / SSW | 4 | 13,1 |
-| H2-25 | WATER | 4 | 4 | 0 | NNEESENW | 1 | 11,16 |
-| H2-26 | WATER | 4 | 4 | 1 | ESESSW | 1 | 9,3 |
-| H2-27 | WATER | 5 | 5 | 0 | NNEESE | 1 | 8,7 |
-| H2-28 | WATER | 5 | 5 | 2 | NNEWNW | 1 | 22,16 |
-| H2-29 | WATER | 6 | 6 | 0 | NNEE | 1 | 9,15 |
-| H2-30 | WATER | 6 | 6 | 2 | NNEWNW | 1 | 16,17 |
-| H2-31 | WATER | 7 | 7 | 1 | ESESSW | 1 | 11,2 |
-| H2-32 | WATER | 7 | 7 | 2 | NSWWNW | 1 | 26,13 |
-| H2-33 | WATER | 7 | 7 | 3 | SESSWWNW | 1 | 25,10 |
-| H2-34 | WATER | 8 | 8 | 0 | NEE / NEESE | 3 | 8,10 |
-| H2-35 | WATER | 8 | 8 | 2 | SWW / SWWNW | 5 | 25,2 |
-| H2-36 | WATER | 9 | 9 | 0 | NEE / NEESE | 2 | 7,5 |
-| H2-37 | WATER | 9 | 9 | 2 | SWWNW / WNW | 2 | 25,8 |
-| H2-38 | WATER | 10 | 10 | 0 | ESE / NEESE | 3 | 7,4 |
-| H2-39 | WATER | 10 | 10 | 2 | SWWNW | 2 | 25,7 |
-| H2-40 | WATER | 11 | 11 | 0 | NEE / NEESE | 3 | 8,8 |
-| H2-41 | WATER | 11 | 11 | 2 | SWW / SWWNW / WNW | 3 | 25,6 |
-| H2-42 | WATER | 12 | 12 | 1 | SE | 2 | 9,2 |
-| H2-43 | WATER | 13 | 13 | 0 | NE | 1 | 9,16 |
-| H2-44 | WATER | 13 | 13 | 2 | NW | 2 | 27,13 |
-| H2-45 | WATER | 14 | 14 | 0 | NE | 3 | 7,7 |
-| H2-46 | WATER | 14 | 14 | 3 | SW | 1 | 25,1 |
-| H2-47 | WATER | 15 | 15 | 1 | SE | 1 | 11,1 |
-| H2-48 | WATER | 15 | 15 | 2 | NW | 2 | 22,17 |
-| H2-49 | WATER | 15 | 15 | 3 | SW | 1 | 27,10 |
+`kind` et `masque` viennent de `coastal_h2/labels.csv` (étiquetage manuel, vérifié contre les données).
+
+| id H2 | kind | fh2m terrain | fh2m index | offset | flags | masque (labels.csv) | autres masques observés | nb tuiles | ex (x,y) |
+|---|---|---|---|---|---|---|---|---|---|
+| H2-01 | SAND | Beach | 415 | 0 | 0 | N+NE+NW | NEESE / NNEESENW / NNEWNW / SE / SW / SWWNW | 9 | 15,2 |
+| H2-02 | SAND | Beach | 416 | 1 | 0 | N+NE+W+NW | NEESE / NNENW / SESSW / SW | 7 | 12,2 |
+| H2-03 | SAND | Beach | 417 | 2 | 0 | N+NE+NW | ESESSW / NE / NNEESENW / SESSWW / SWWNW | 10 | 13,2 |
+| H2-04 | SAND | Beach | 418 | 3 | 0 | N+NE+NW | NEESE / SSW | 3 | 21,2 |
+| H2-05 | SAND | Beach | 419 | 4 | 0 | N+NW | ESESSW / NEESES / NEESESSW / SES / SESSW / SSWWNW | 7 | 11,3 |
+| H2-06 | SAND | Beach | 420 | 5 | 0 | N+NE+NW | NNE / NW / SESSW / SWW / SWWNW | 7 | 20,2 |
+| H2-07 | SAND | Beach | 421 | 6 | 0 | N+NE+NW | NEESE / SES / SESSWWNW / SW / SWWNW | 8 | 16,2 |
+| H2-08 | SAND | Beach | 422 | 7 | 0 | N+NW | ESE / NEESE / SE / SSWWNW | 5 | 9,4 |
+| H2-09 | SAND | Beach | 423 | 8 | 0 | NE+E+SE | - | 1 | 24,3 |
+| H2-10 | SAND | Beach | 424 | 9 | 0 | SE+S+SW | - | 1 | 20,16 |
+| H2-11 | SAND | Beach | 425 | 10 | 0 | NW | - | 1 | 10,4 |
+| H2-12 | SAND | Beach | 426 | 11 | 0 | NE+E | SESSW | 2 | 24,10 |
+| H2-13 | SAND | Beach | 427 | 12 | 0 | N+NE+NW | SESSW | 2 | 23,2 |
+| H2-14 | SAND | Beach | 428 | 13 | 0 | N+NE+NW | - | 1 | 17,2 |
+| H2-15 | SAND | Beach | 430 | 15 | 0 | N+NE+SW+W+NW | - | 1 | 8,4 |
+| H2-16 | SAND | Beach | 431 | 16 | 0 | SE+S+SW | - | 1 | 17,16 |
+| H2-17 | WATER | Water | 0 | 0 | 0 | N+NE | - | 1 | 10,16 |
+| H2-18 | WATER | Water | 0 | 0 | 1 | SE+S | - | 1 | 8,3 |
+| H2-19 | WATER | Water | 1 | 1 | 0 | N+NE+NW | - | 2 | 17,17 |
+| H2-20 | WATER | Water | 1 | 1 | 1 | SE+S | SESSW / SSW | 7 | 12,1 |
+| H2-21 | WATER | Water | 2 | 2 | 0 | N+NE+NW | NNW | 6 | 24,16 |
+| H2-22 | WATER | Water | 2 | 2 | 1 | SE+S+SW | SES | 4 | 17,1 |
+| H2-23 | WATER | Water | 3 | 3 | 0 | N+NE+NW | NNE / NNW | 4 | 23,16 |
+| H2-24 | WATER | Water | 3 | 3 | 1 | SE+S+SW | SSW | 4 | 13,1 |
+| H2-25 | WATER | Water | 4 | 4 | 0 | N+NE+E+SE+NW | - | 1 | 11,16 |
+| H2-26 | WATER | Water | 4 | 4 | 1 | E+SE+S+SW | - | 1 | 9,3 |
+| H2-27 | WATER | Water | 5 | 5 | 0 | N+NE+E+SE | - | 1 | 8,7 |
+| H2-28 | WATER | Water | 5 | 5 | 2 | N+NE+W+NW | - | 1 | 22,16 |
+| H2-29 | WATER | Water | 6 | 6 | 0 | N+NE+E | - | 1 | 9,15 |
+| H2-30 | WATER | Water | 6 | 6 | 2 | N+NE+W+NW | - | 1 | 16,17 |
+| H2-31 | WATER | Water | 7 | 7 | 1 | E+SE+S+SW | - | 1 | 11,2 |
+| H2-32 | WATER | Water | 7 | 7 | 2 | N+SW+W+NW | - | 1 | 26,13 |
+| H2-33 | WATER | Water | 7 | 7 | 3 | SE+S+SW+W+NW | - | 1 | 25,10 |
+| H2-34 | WATER | Water | 8 | 8 | 0 | NE+E+SE | NEE | 3 | 8,10 |
+| H2-35 | WATER | Water | 8 | 8 | 2 | SW+W | SWWNW | 5 | 25,2 |
+| H2-36 | WATER | Water | 9 | 9 | 0 | NE+E+SE | NEE | 2 | 7,5 |
+| H2-37 | WATER | Water | 9 | 9 | 2 | SW+W+NW | WNW | 2 | 25,8 |
+| H2-38 | WATER | Water | 10 | 10 | 0 | E+SE | NEESE | 3 | 7,4 |
+| H2-39 | WATER | Water | 10 | 10 | 2 | SW+W+NW | - | 2 | 25,7 |
+| H2-40 | WATER | Water | 11 | 11 | 0 | NE+E+SE | NEE | 3 | 8,8 |
+| H2-41 | WATER | Water | 11 | 11 | 2 | SW+W+NW | SWW / WNW | 3 | 25,6 |
+| H2-42 | WATER | Water | 12 | 12 | 1 | SE | - | 2 | 9,2 |
+| H2-43 | WATER | Water | 13 | 13 | 0 | NE | - | 1 | 9,16 |
+| H2-44 | WATER | Water | 13 | 13 | 2 | NW | - | 2 | 27,13 |
+| H2-45 | WATER | Water | 14 | 14 | 0 | NE | - | 3 | 7,7 |
+| H2-46 | WATER | Water | 14 | 14 | 3 | SW | - | 1 | 25,1 |
+| H2-47 | WATER | Water | 15 | 15 | 1 | SE | - | 1 | 11,1 |
+| H2-48 | WATER | Water | 15 | 15 | 2 | NW | - | 2 | 22,17 |
+| H2-49 | WATER | Water | 15 | 15 | 3 | SW | - | 1 | 27,10 |
 
 ## Tableau 2 — tuiles côtières H3 (h3m), cartes de référence
 
