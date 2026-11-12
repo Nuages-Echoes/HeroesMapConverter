@@ -1032,6 +1032,20 @@ def unified_to_h3m(unified):
     }
     H3M_MAIN_RANGE_DEFAULT = (49, 72)
 
+    # Neighbor direction order used for coastal masks (N,NE,E,SE,S,SW,W,NW).
+    _COAST_DIRS = (("N", 0, -1), ("NE", 1, -1), ("E", 1, 0), ("SE", 1, 1),
+                   ("S", 0, 1), ("SW", -1, 1), ("W", -1, 0), ("NW", -1, -1))
+
+    # Coastal link table H2 -> H3, learned from the reference maps
+    # (input/*.h3m): for each neighbor mask (directions of the other side of
+    # the coast, '+'-joined), the h3m (picture, mirroring) actually used.
+    # See coastal_tiles_h2_h3.md (Tableau 3) and coastal_h2/labels.csv.
+    import json as _json
+    import os as _os
+    with open(_os.path.join(_os.path.dirname(_os.path.abspath(__file__)),
+                            "coastal_link.json")) as _f:
+        COAST_LINK = _json.load(_f)
+
     def _fh2m_offset(cell):
         source_terrain = cell.get("sourceTerrain", "")
         if not source_terrain.startswith("terrain:"):
@@ -1139,48 +1153,65 @@ def unified_to_h3m(unified):
                     _, ncell = entry
                     return UNIFIED_TO_H3M_TERRAINS.get(ncell.get("terrain", "Grass"), "Dirt") == "Water"
 
-                # Sea borders: every water tile touching land gets a water
-                # border sprite (h3m pictures 0-19) chosen from the land
-                # directions, and every land tile touching water gets the
-                # coast bit (0x40) plus a coast-range border sprite (24-39
-                # for normal terrains) - this is what the real maps store.
+                # Sea borders: driven by the coastal link table learned
+                # from the reference maps (coastal_link.json, see Tableau 3
+                # in coastal_tiles_h2_h3.md). Each coastal tile is keyed by
+                # the mask of its neighbors on the other side of the coast.
                 mirror_bits = int(cell.get("flags", 0) or 0) & 0x03
                 if terrain_name == "Water":
-                    has_n = neighbor_land(0, -1)
-                    has_s = neighbor_land(0, 1)
-                    has_w = neighbor_land(-1, 0)
-                    has_e = neighbor_land(1, 0)
-                    any_diag = any(neighbor_land(dx, dy) for dx, dy in
-                                   ((-1, -1), (1, -1), (-1, 1), (1, 1)))
-                    has_corner = any_diag and not (has_n or has_e or has_s or has_w)
-                    if has_n or has_e or has_s or has_w or any_diag:
-                        picture = _h3m_water_border_picture(has_n, has_e, has_s, has_w,
-                                                            has_corner,
-                                                            mirror=bool(mirror_bits & 1))
+                    lmask = frozenset(d for d, dx, dy in _COAST_DIRS
+                                      if neighbor_land(dx, dy))
+                    if lmask:
+                        hit = COAST_LINK.get("water", {}).get("+".join(sorted(lmask)))
+                        if hit:
+                            picture = hit["picture"]
+                            mirror_bits = int(hit["mirror"], 16) & 0x03
+                        else:
+                            has_n = neighbor_land(0, -1)
+                            has_s = neighbor_land(0, 1)
+                            has_w = neighbor_land(-1, 0)
+                            has_e = neighbor_land(1, 0)
+                            any_diag = any(neighbor_land(dx, dy) for dx, dy in
+                                           ((-1, -1), (1, -1), (-1, 1), (1, 1)))
+                            has_corner = any_diag and not (has_n or has_e or has_s or has_w)
+                            picture = _h3m_water_border_picture(
+                                has_n, has_e, has_s, has_w, has_corner,
+                                mirror=bool(mirror_bits & 1))
                 elif any(neighbor_water(dx, dy) for dx in (-1, 0, 1) for dy in (-1, 0, 1)
                          if (dx, dy) != (0, 0)):
-                    # land tile touching water: coast bit + coast border sprite.
-                    # Normal terrains (main range 49+): coast sprites are
-                    # horizontal 24-27, vertical 28-31, corners 36-39
-                    # (learned from the real maps).
-                    mirror_bits |= 0x40
-                    if lo == H3M_MAIN_RANGE_DEFAULT[0]:
-                        w_horiz = neighbor_water(-1, 0) or neighbor_water(1, 0)
-                        w_vert = neighbor_water(0, -1) or neighbor_water(0, 1)
-                        w_diag = (not (w_horiz or w_vert)) and any(
-                            neighbor_water(dx, dy) for dx, dy in
-                            ((-1, -1), (1, -1), (-1, 1), (1, 1)))
-                        if w_diag:
-                            base = 38
-                        elif w_horiz and w_vert:
-                            base = 36
-                        elif w_horiz:
-                            base = 24
-                        elif w_vert:
-                            base = 28
-                        else:
-                            base = 24
-                        picture = base + (mirror_bits & 1)
+                    # land tile touching water: coast bit (0x40) + border
+                    # sprite from the link table (sand / normal terrains).
+                    wmask = frozenset(d for d, dx, dy in _COAST_DIRS
+                                      if neighbor_water(dx, dy))
+                    wkey = "+".join(sorted(wmask))
+                    if terrain_name == "Sand":
+                        hit = COAST_LINK.get("sand", {}).get(wkey)
+                    elif lo == H3M_MAIN_RANGE_DEFAULT[0]:
+                        hit = COAST_LINK.get("landnorm", {}).get(wkey)
+                    else:
+                        hit = None
+                    if hit:
+                        picture = hit["picture"]
+                        mirror_bits = int(hit["mirror"], 16) | 0x40
+                    else:
+                        mirror_bits |= 0x40
+                        if lo == H3M_MAIN_RANGE_DEFAULT[0]:
+                            w_horiz = neighbor_water(-1, 0) or neighbor_water(1, 0)
+                            w_vert = neighbor_water(0, -1) or neighbor_water(0, 1)
+                            w_diag = (not (w_horiz or w_vert)) and any(
+                                neighbor_water(dx, dy) for dx, dy in
+                                ((-1, -1), (1, -1), (-1, 1), (1, 1)))
+                            if w_diag:
+                                base = 38
+                            elif w_horiz and w_vert:
+                                base = 36
+                            elif w_horiz:
+                                base = 24
+                            elif w_vert:
+                                base = 28
+                            else:
+                                base = 24
+                            picture = base + (mirror_bits & 1)
                 mirroring = "0x%02x" % mirror_bits
                 road = "Dirt" if (x, y, z) in fh2m_road_tiles else "None"
                 road_props = 0
