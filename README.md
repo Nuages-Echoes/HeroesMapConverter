@@ -8,12 +8,23 @@ I decided to not reuse the project directly as I intend to use python and not ph
 Also, I am also using this project as test for vibe coding, so bug may abound.
 
 How it works :
-- project reads the files in /input directory
-- files are converted to json format and stored in /outputjson directory
-- file from /outputjson are read and converted to heroes file format
+- the project reads the files in the `input/` directory (`.h3m`, `.fh2m`, `.mp2`)
+- each file is parsed to a detailed JSON stored in the `outputjson/` directory
+- the detailed JSON is converted to a common unified JSON stored in the `outputunified/` directory
+- the unified JSON is then converted to each target format and written to the `output/` directory (both `.h3m` and `.fh2m` by default; use `--target h3m|fh2m` to pick a single one)
 
 Why all the bother ?
-Because by using the json format, I hope we will be able to convert heroes maps to any heroes using the common json file. In the long run it will save time to convert any file to json and then to whichever heroes format you want then to convert directly from heroesX to hereosY
+Because by using the unified JSON format, a map from any supported Heroes game can be converted to any other through the common JSON file, instead of writing a direct converter for every pair of formats (heroesX -> heroesY).
+
+## Usage
+
+```bash
+python main.py                  # convert every map in input/ to both .h3m and .fh2m
+python main.py --target fh2m    # convert only to fheroes2 (.fh2m) maps
+python verify_roundtrip.py      # check that each output/ file round-trips with its input/
+```
+
+See [Progress.md](Progress.md) for a description of the current inputs, outputs and pipeline, and the `*_description.english.txt` files for the binary and JSON format specifications.
 
 Can I help ?
 Yes you can, it's a pet project feel free to modify or clone it. Just don't sell it or make money out of it.
