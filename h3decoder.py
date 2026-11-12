@@ -1059,6 +1059,12 @@ def parse_h3m_objects(raw_objects, level_ab, level_sod, artifact_id_bytes,
         obj['id'] = object_id
         obj['group'] = group if group else 'UNDEFINED_{}'.format(obj_class)
         obj['index'] = kind
+        # The catalog entry of the instance: the sprite name carries the
+        # terrain variant of the multi-def classes (the class 53 mines)
+        # and the subclass is the object subtype within the class.
+        obj['sprite'] = catalog[kind]['sprite name'].decode('latin1')
+        obj['class'] = obj_class
+        obj['subclass'] = obj_subclass
 
         # Every object carries 5 unknown bytes before its details.
         safe_read(buffer, 5)
