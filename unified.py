@@ -1046,6 +1046,16 @@ def unified_to_h3m(unified):
                             "coastal_link.json")) as _f:
         COAST_LINK = _json.load(_f)
 
+    # Cardinal direction order used for road masks (N,E,S,W).
+    _ROAD_DIRS = (("N", 0, -1), ("E", 1, 0), ("S", 0, 1), ("W", -1, 0))
+
+    # Road link table H2 -> H3, learned from the reference maps
+    # (input/*.h3m): for each cardinal road-neighbor mask, the h3m Road
+    # Properties (sprite) and road mirror bits actually used.
+    with open(_os.path.join(_os.path.dirname(_os.path.abspath(__file__)),
+                            "road_link.json")) as _f:
+        ROAD_LINK = _json.load(_f)
+
     def _fh2m_offset(cell):
         source_terrain = cell.get("sourceTerrain", "")
         if not source_terrain.startswith("terrain:"):
@@ -1212,9 +1222,25 @@ def unified_to_h3m(unified):
                             else:
                                 base = 24
                             picture = base + (mirror_bits & 1)
-                mirroring = "0x%02x" % mirror_bits
-                road = "Dirt" if (x, y, z) in fh2m_road_tiles else "None"
+                # Roads (fh2m ROADS objects): the h3m Road Properties sprite
+                # is chosen from the cardinal mask of neighboring road tiles
+                # via the empirical road_link.json table; the road mirror
+                # bits (0x10/0x20) carry the corner orientation.
+                road = "None"
                 road_props = 0
+                if (x, y, z) in fh2m_road_tiles:
+                    road = "Dirt"
+                    rkey = "".join(d for d, dx, dy in _ROAD_DIRS
+                                   if (x + dx, y + dy, z) in fh2m_road_tiles)
+                    hit = ROAD_LINK.get(rkey)
+                    if hit is None:
+                        hit = ROAD_LINK.get("-")
+                    if hit:
+                        road_props = hit["props"]
+                        mirror_bits |= int(hit["mirror"], 16) & 0x30
+                    elif rkey == "NESW":
+                        road_props = 4  # cross
+                mirroring = "0x%02x" % mirror_bits
                 river = "Clear" if (x, y, z) in fh2m_river_tiles else "None"
                 river_props = 0
             grid[(x, y)] = (z, terrain_name, picture, mirroring,
