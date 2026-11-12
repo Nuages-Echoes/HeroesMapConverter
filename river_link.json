@@ -1,0 +1,82 @@
+{
+ "-": {
+  "mirror": "0x00",
+  "nb": 0,
+  "props": 11
+ },
+ "E": {
+  "mirror": "0x00",
+  "nb": 16,
+  "props": 12
+ },
+ "ES": {
+  "mirror": "0x00",
+  "nb": 33,
+  "props": 0
+ },
+ "ESW": {
+  "mirror": "0x00",
+  "nb": 4,
+  "props": 5
+ },
+ "EW": {
+  "mirror": "0x00",
+  "nb": 74,
+  "props": 11
+ },
+ "N": {
+  "mirror": "0x00",
+  "nb": 14,
+  "props": 9
+ },
+ "NE": {
+  "mirror": "0x08",
+  "nb": 29,
+  "props": 1
+ },
+ "NES": {
+  "mirror": "0x00",
+  "nb": 2,
+  "props": 8
+ },
+ "NESW": {
+  "mirror": "0x00",
+  "nb": 0,
+  "props": 4
+ },
+ "NEW": {
+  "mirror": "0x08",
+  "nb": 5,
+  "props": 5
+ },
+ "NS": {
+  "mirror": "0x00",
+  "nb": 65,
+  "props": 9
+ },
+ "NSW": {
+  "mirror": "0x04",
+  "nb": 1,
+  "props": 7
+ },
+ "NW": {
+  "mirror": "0x0C",
+  "nb": 31,
+  "props": 3
+ },
+ "S": {
+  "mirror": "0x00",
+  "nb": 12,
+  "props": 10
+ },
+ "SW": {
+  "mirror": "0x04",
+  "nb": 33,
+  "props": 1
+ },
+ "W": {
+  "mirror": "0x00",
+  "nb": 11,
+  "props": 11
+ }
+}

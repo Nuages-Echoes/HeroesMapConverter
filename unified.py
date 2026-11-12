@@ -1056,6 +1056,13 @@ def unified_to_h3m(unified):
                             "road_link.json")) as _f:
         ROAD_LINK = _json.load(_f)
 
+    # River link table H2 -> H3, learned from the reference maps
+    # (input/*.h3m): for each cardinal river-neighbor mask, the h3m River
+    # Properties (sprite) and river mirror bits (0x04/0x08) used.
+    with open(_os.path.join(_os.path.dirname(_os.path.abspath(__file__)),
+                            "river_link.json")) as _f:
+        RIVER_LINK = _json.load(_f)
+
     def _fh2m_offset(cell):
         source_terrain = cell.get("sourceTerrain", "")
         if not source_terrain.startswith("terrain:"):
@@ -1240,9 +1247,26 @@ def unified_to_h3m(unified):
                         mirror_bits |= int(hit["mirror"], 16) & 0x30
                     elif rkey == "NESW":
                         road_props = 4  # cross
-                mirroring = "0x%02x" % mirror_bits
-                river = "Clear" if (x, y, z) in fh2m_river_tiles else "None"
+                # Rivers (fh2m STREAMS objects): h3m River Type from the
+                # tile terrain (Lava -> Lava, Snow -> Icy, Dirt -> Muddy,
+                # else Clear), River Properties sprite from the cardinal
+                # mask of neighboring river tiles via river_link.json, and
+                # the river mirror bits 0x04/0x08 carry the corner
+                # orientation.
+                river = "None"
                 river_props = 0
+                if (x, y, z) in fh2m_river_tiles:
+                    river = {"Lava": "Lava", "Snow": "Icy", "Dirt": "Muddy"}.get(
+                        terrain_name, "Clear")
+                    fkey = "".join(d for d, dx, dy in _ROAD_DIRS
+                                   if (x + dx, y + dy, z) in fh2m_river_tiles)
+                    hit = RIVER_LINK.get(fkey) or RIVER_LINK.get("-")
+                    if hit:
+                        river_props = hit["props"]
+                        mirror_bits |= int(hit["mirror"], 16) & 0x0C
+                    elif fkey == "NESW":
+                        river_props = 4  # cross
+                mirroring = "0x%02x" % mirror_bits
             grid[(x, y)] = (z, terrain_name, picture, mirroring,
                             road, road_props, river, river_props)
         terrain_by_level.append(grid)
