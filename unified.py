@@ -1740,6 +1740,15 @@ def _translate_h3m_tile_objects(obj_list, objects_section, translated_metadata,
                 dropped_ids.append(obj_id)
                 continue
             fh2m_group, fh2m_index = decorative
+            if fh2m_group == "LANDSCAPE_TREES":
+                # The tree def name carries the variant (forest, palm,
+                # dead tree, log, stump...): use it for the fh2m index
+                # when known, else keep the class-level index.
+                from correspondence import h3m_tree_def_to_fh2m_index
+                tree_index = h3m_tree_def_to_fh2m_index(obj_class,
+                                                         obj.get("sprite"))
+                if tree_index is not None:
+                    fh2m_index = tree_index
             translated.append(OrderedDict([
                 ("id", obj_id),
                 ("group", fh2m_group),
@@ -2934,13 +2943,21 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
                 # Dirt -> mound, others -> mountain.
                 from correspondence import FH2M_LANDSCAPE_TO_H3M
                 h3m_class = FH2M_LANDSCAPE_TO_H3M.get((group, index))
+                tree_def = None
                 if group == "LANDSCAPE_TREES" and h3m_class is not None:
-                    # The tree variants pick their h3m class from
-                    # the tile terrain: Swamps and Dirt -> dead
-                    # vegetation (119 - the bare/dead trees), the
-                    # other terrains -> trees (155).
+                    # The h3m tree classes carry one def per variant
+                    # under the same subclass 0 and the variants have
+                    # different sprite sizes: the class follows the
+                    # fh2m tree variant (log 130, stumps 153) and the
+                    # tile terrain (Swamp and Dirt -> dead vegetation
+                    # 119, the other terrains -> trees 155), and the def - carried
+                    # as the third catalog key element - follows the
+                    # terrain of the tile.
+                    from correspondence import (fh2m_tree_h3m_class,
+                                              fh2m_tree_def_name)
                     tile_terrain = (tile_terrains or {}).get((x, y), "Grass")
-                    h3m_class = 119 if tile_terrain in ("Swamp", "Dirt") else 155
+                    h3m_class = fh2m_tree_h3m_class(index, tile_terrain)
+                    tree_def = fh2m_tree_def_name(h3m_class, tile_terrain)
                 if group == "LANDSCAPE_MOUNTAINS" and h3m_class is not None:
                     tile_terrain = (tile_terrains or {}).get((x, y), "Grass")
                     if tile_terrain == "Lava":
@@ -2952,7 +2969,11 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
                     else:
                         h3m_class = 134  # mountain
                 if h3m_class is not None:
-                    entry = ("decorative", (x, y, z), (h3m_class, 0), None)
+                    if tree_def is not None:
+                        entry = ("decorative", (x, y, z),
+                                 (h3m_class, 0, tree_def), None)
+                    else:
+                        entry = ("decorative", (x, y, z), (h3m_class, 0), None)
             if entry:
                 instances.append(entry)
 
@@ -2973,10 +2994,13 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
         obj_class, obj_subclass = key[0], key[1]
         if key not in kind_of:
             if len(key) == 3:
-                # A mine terrain variant: the def name is the third key
-                # element and its sprite body comes from H3M_MINE_DEFS.
-                from correspondence import H3M_MINE_DEFS
-                ref = H3M_MINE_DEFS.get((key[2] or "").lower())
+                # A variant def (mine terrain variant, tree variant):
+                # the def name is the third key element and its sprite
+                # body comes from H3M_MINE_DEFS / H3M_TREE_DEFS.
+                from correspondence import H3M_MINE_DEFS, H3M_TREE_DEFS
+                ref = (H3M_MINE_DEFS.get((key[2] or "").lower())
+                       or H3M_TREE_DEFS.get((key[2] or "").lower())
+                       or FH2M_TO_H3M_CATALOG.get((key[0], key[1])))
             else:
                 ref = FH2M_TO_H3M_CATALOG.get(key)
             if ref is None and obj_class == 34:

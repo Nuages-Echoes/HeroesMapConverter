@@ -443,8 +443,16 @@ quest messages, garrison canTake, event players flags).
    mound (133), the others -> mountain (134); the extra rocks
    map to rocks (147), the extra tree variants (29-62) to the h3m
    tree classes - the encoder refines by tile terrain (Swamp and
-   Dirt -> dead vegetation 119, the other terrains -> trees 155)
-   - and the loop-generated misc variants (116-146) to cracks
+   Dirt -> dead vegetation 119, the other terrains -> trees 155;
+   the log index 25 -> 130 and the stump index 26 -> 153 keep their
+   own class). The h3m tree classes carry their variants as different
+   DEF names under the same subclass 0 (AVLtr1d0.def, AVLswmp3.def,
+   AVLdead6.def...) with different footprints (1 to 7 blocked cells),
+   so the sprite size is carried by the def name: the tree def also
+   follows the tile terrain through FH2M_TREE_DEF_BY_TERRAIN with
+   the def bodies of H3M_TREE_DEFS (def names matched with the tile
+   terrain of their instances in the reference maps; unobserved
+   terrains fall back to the class's generic def) - and the loop-generated misc variants (116-146) to cracks
    (118). The flags, the town basements and the Barrel
    (ADVENTURE_WATER 12, an fheroes2-specific object with no h3m
    counterpart) stay dropped: the h3m towns carry their own
@@ -669,7 +677,11 @@ quest messages, garrison canTake, event players flags).
    convert to representative Heroes II landscape objects through
    the H3M_DECORATIVE_TO_FH2M table (a shrub becomes a grass shrub,
    a mountain a medium mountain, a cactus a desert cactus, a dead
-   tree a generic dead tree...). The classes without a mapping stay
+   tree a generic dead tree...). The tree classes refine the index
+   through the def name (H3M_TREE_DEF_TO_FH2M_INDEX: palms -> 17,
+   dead trees -> 24, log -> 25, stumps -> 26, single trees/conifers
+   -> 7) so the variant, hence the sprite size, is
+   preserved. The classes without a mapping stay
    dropped. The UNDEFINED_<class> objects stay in the unified JSON
    so future mappings can extend the coverage.
 

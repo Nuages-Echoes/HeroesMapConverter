@@ -1167,6 +1167,153 @@ FH2M_LANDSCAPE_TO_H3M = {
     **{("LANDSCAPE_MISCELLANEOUS", i): 118 for i in range(116, 147)},
 }
 
+# The h3m tree classes (101 conifers, 119 dead trees, 125 palms,
+# 130 log, 153 stumps, 155 deciduous trees; the class 57 is the
+# obelisk, not a tree) carry their sprite variants as DIFFERENT DEF
+# NAMES under the same subclass 0 (AVLtr1d0.def = deciduous tree,
+# AVLdead6.def = big dead tree, AVLswmp3.def = swamp tree, ...), and
+# the variants have different footprints (the 6-byte passability mask
+# ranges from 1 to 7 blocked cells) - so the def name, not the
+# subclass, carries the sprite size.
+H3M_TREE_CLASSES = {101, 119, 125, 130, 153, 155}
+
+# fh2m tree indices with a dedicated shape class, overriding the
+# family ranges of FH2M_LANDSCAPE_TO_H3M (from the inverse
+# H3M_DECORATIVE_TO_FH2M table): 25 log -> 130, 26 stumps -> 153.
+FH2M_TREE_SHAPE_CLASS = {25: 130, 26: 153}
+
+
+def fh2m_tree_h3m_class(index, tile_terrain):
+    """h3m class for a fh2m LANDSCAPE_TREES object: the shape class
+    from the index when there is one, else the family class refined by
+    the tile terrain (Swamp/Dirt -> dead trees 119, else trees 155)."""
+    h3m_class = FH2M_LANDSCAPE_TO_H3M.get(("LANDSCAPE_TREES", index))
+    if h3m_class is None:
+        return None
+    h3m_class = FH2M_TREE_SHAPE_CLASS.get(index, h3m_class)
+    if h3m_class in (155, 119):
+        h3m_class = 119 if tile_terrain in ("Swamp", "Dirt") else 155
+    return h3m_class
+
+
+# h3m tree def per (class, tile terrain), matched against the terrain
+# of the tile each def instance stands on in the reference maps
+# (input/*.h3m). Terrains with no observed def fall back to the
+# class's generic def below.
+FH2M_TREE_DEF_BY_TERRAIN = {
+    101: {},  # conifers: a single def for every terrain
+    119: {"Swamp": "AVLswp70.def", "Water": "AVLswp60.def", "Snow": "AVLd3sn0.def"},
+    125: {},  # palms: AVLklp10/20.def
+    130: {},  # log: AvLdlog.def
+    153: {"Snow": "AVLp1sn0.def"},
+    155: {"Grass": "AVLtr1d0.def", "Dirt": "AVLtr1d0.def", "Swamp": "AVLswmp0.def",
+          "Rough": "AVLroug0.def", "Sand": "AVLyuc30.def"},
+}
+
+# Default (generic) def of each tree class, matching the
+# FH2M_TO_H3M_CATALOG entries: used when the terrain has no observed
+# variant def.
+H3M_TREE_GENERIC_DEF = {
+    101: "AVTchst0.def", 119: "AVLswp70.def",
+    125: "AVLklp10.def", 130: "AvLdlog.def", 153: "AvLStm2.def",
+    155: "AVLroug0.def",
+}
+
+
+def fh2m_tree_def_name(h3m_class, tile_terrain):
+    """h3m tree def (sprite name) for a tree class on a given h3m tile
+    terrain, so the converted tree keeps a terrain variant of the same
+    size family."""
+    return (FH2M_TREE_DEF_BY_TERRAIN.get(h3m_class, {}).get(tile_terrain)
+            or H3M_TREE_GENERIC_DEF.get(h3m_class))
+
+
+# Reverse: h3m tree def name -> fh2m LANDSCAPE_TREES index (the shape
+# anchors: forest -> 5, palms -> 17, dead trees -> 24, log -> 25,
+# stumps -> 26, single trees/conifers -> 7). Unknown defs fall back to
+# the class-level index of H3M_DECORATIVE_TO_FH2M.
+H3M_TREE_DEF_TO_FH2M_INDEX = {}
+for _name in ("avlklp10.def", "avlklp20.def"):
+    H3M_TREE_DEF_TO_FH2M_INDEX[_name] = 17  # palms
+H3M_TREE_DEF_TO_FH2M_INDEX["avldlog.def"] = 25  # log
+for _name in ("avlstm1.def", "avlstm2.def", "avlstm3.def",
+              "avlp1sn0.def", "avlp2sn0.def"):
+    H3M_TREE_DEF_TO_FH2M_INDEX[_name] = 26  # stumps
+for _name in ("avldead0.def", "avldead1.def", "avldead2.def", "avldead3.def",
+              "avldead4.def", "avldead5.def", "avldead6.def", "avldead7.def",
+              "avldt1s0.def", "avldt2s0.def", "avldt3s0.def",
+              "avlswp60.def", "avlswp70.def", "avld3sn0.def"):
+    H3M_TREE_DEF_TO_FH2M_INDEX[_name] = 24  # dead trees
+for _name in ("avltr1d0.def", "avltr2d0.def", "avltr3d0.def",
+              "avlroug0.def", "avlroug1.def", "avlroug2.def", "avlr04r0.def",
+              "avlswmp0.def", "avlswmp1.def", "avlswmp2.def",
+              "avlswmp3.def", "avlswmp4.def", "avlswmp5.def",
+              "avlwlw10.def", "avlwlw20.def", "avlwlw30.def",
+              "avlplm30.def", "avlplm50.def",
+              "avlyuc10.def", "avlyuc20.def", "avlyuc30.def",
+              "avtchst0.def"):
+    H3M_TREE_DEF_TO_FH2M_INDEX[_name] = 7  # single trees / conifers
+
+
+def h3m_tree_def_to_fh2m_index(obj_class, def_name):
+    """fh2m LANDSCAPE_TREES index for an h3m tree object, from its def
+    name when known (else None: the caller falls back to the
+    class-level H3M_DECORATIVE_TO_FH2M index)."""
+    if obj_class not in H3M_TREE_CLASSES:
+        return None
+    return H3M_TREE_DEF_TO_FH2M_INDEX.get((def_name or "").lower())
+
+
+# Sprite catalog of the h3m tree defs (sprite name, passability and
+# landscape masks, trailing bytes), extracted from the catalogs of the
+# reference maps (input/*.h3m), one entry per variant def.
+H3M_TREE_DEFS = {
+    "avld3sn0.def": ("AVLd3sn0.def", "ffffffffff7f000000000000ff010800", "000000000000000000000000000000000000"),
+    "avldead0.def": ("AVLdead0.def", "ffffffffff7f000000000000ff01d000", "000000000000000000000000000000000000"),
+    "avldead1.def": ("AVLdead1.def", "ffffffffff7f000000000000ff01d000", "000000000000000000000000000000000000"),
+    "avldead2.def": ("AVLdead2.def", "ffffffff9f3f000000000000ff01d000", "000000000000000000000000000000000000"),
+    "avldead3.def": ("AVLdead3.def", "ffffffff3f9f000000000000ff01d000", "000000000000000000000000000000000000"),
+    "avldead4.def": ("AVLdead4.def", "ffffffff9f3f000000000000ff01d000", "000000000000000000000000000000000000"),
+    "avldead5.def": ("AVLdead5.def", "ffffffff3f9f000000000000ff01d000", "000000000000000000000000000000000000"),
+    "avldead6.def": ("AVLdead6.def", "ffffff9f1f3f000000000000ff00d000", "000000000000000000000000000000000000"),
+    "avldead7.def": ("AVLdead7.def", "ffffff3f1f9f000000000000ff00d000", "000000000000000000000000000000000000"),
+    "avldlog.def": ("AvLdlog.def", "ffffffffff7f000000000000ff012500", "000000000000000000000000000000000000"),
+    "avldt1s0.def": ("AVLdt1s0.def", "ffffffffff3f000000000000ff011000", "000000000000000000000000000000000000"),
+    "avldt2s0.def": ("AVLdt2s0.def", "ffffffffff3f000000000000ff011000", "000000000000000000000000000000000000"),
+    "avldt3s0.def": ("AVLdt3s0.def", "ffffffff3f3f000000000000ff011000", "000000000000000000000000000000000000"),
+    "avlklp10.def": ("AVLklp10.def", "ffffffffffff000000000000ff010001", "000100000000000000000000000000000000"),
+    "avlklp20.def": ("AVLklp20.def", "ffffffffffff000000000000ff010001", "000100000000000000000000000000000000"),
+    "avlp1sn0.def": ("AVLp1sn0.def", "ffffffffff7f000000000000ff010800", "000000000000000000000000000000000000"),
+    "avlp2sn0.def": ("AVLp2sn0.def", "ffffffffff7f000000000000ff010800", "000000000000000000000000000000000000"),
+    "avlplm30.def": ("AVLplm30.def", "ffffffffff7f000000000000ff010200", "000000000000000000000000000000000000"),
+    "avlplm50.def": ("AVLplm50.def", "ffffffffffbf000000000000ff010200", "000000000000000000000000000000000000"),
+    "avlr04r0.def": ("AVLr04r0.def", "ffffffffff3f000000000000ff002000", "000000000000000000000000000000000000"),
+    "avlroug0.def": ("AVLroug0.def", "ffffffffff7f000000000000ff012000", "000000000000000000000000000000000000"),
+    "avlroug1.def": ("AVLroug1.def", "ffffffffff7f000000000000ff012000", "000000000000000000000000000000000000"),
+    "avlroug2.def": ("AVLroug2.def", "ffffffffff7f000000000000ff012000", "000000000000000000000000000000000000"),
+    "avlstm1.def": ("AvLStm1.def", "ffffffffff7f000000000000ff002500", "000000000000000000000000000000000000"),
+    "avlstm2.def": ("AvLStm2.def", "ffffffffff7f000000000000ff012500", "000000000000000000000000000000000000"),
+    "avlstm3.def": ("AvLStm3.def", "ffffffffff7f000000000000ff002500", "000000000000000000000000000000000000"),
+    "avlswmp0.def": ("AVLswmp0.def", "ffffffffff7f000000000000ff001400", "000000000000000000000000000000000000"),
+    "avlswmp1.def": ("AVLswmp1.def", "ffffffffff7f000000000000ff001400", "000000000000000000000000000000000000"),
+    "avlswmp2.def": ("AVLswmp2.def", "ffffffff9f3f000000000000ff001400", "000000000000000000000000000000000000"),
+    "avlswmp3.def": ("AVLswmp3.def", "ffffffff3f9f000000000000ff001400", "000000000000000000000000000000000000"),
+    "avlswmp4.def": ("AVLswmp4.def", "ffffffff9f3f000000000000ff011400", "000000000000000000000000000000000000"),
+    "avlswmp5.def": ("AVLswmp5.def", "ffffffff3f9f000000000000ff011400", "000000000000000000000000000000000000"),
+    "avlswp60.def": ("AVLswp60.def", "ffffffffff3f000000000000ff011000", "000100000000000000000000000000000000"),
+    "avlswp70.def": ("AVLswp70.def", "ffffffffff7f000000000000ff011000", "000100000000000000000000000000000000"),
+    "avltr1d0.def": ("AVLtr1d0.def", "ffffffffffbf000000000000ff011500", "000000000000000000000000000000000000"),
+    "avltr2d0.def": ("AVLtr2d0.def", "ffffffffffbf000000000000ff011500", "000000000000000000000000000000000000"),
+    "avltr3d0.def": ("AVLtr3d0.def", "ffffffffff7f000000000000ff011500", "000000000000000000000000000000000000"),
+    "avlwlw10.def": ("AVLwlw10.def", "ffffffffff1f000000000000ff001400", "000000000000000000000000000000000000"),
+    "avlwlw20.def": ("AVLwlw20.def", "ffffffffff3f000000000000ff001400", "000000000000000000000000000000000000"),
+    "avlwlw30.def": ("AVLwlw30.def", "ffffffffff7f000000000000ff001400", "000000000000000000000000000000000000"),
+    "avlyuc10.def": ("AVLyuc10.def", "ffffffffff7f000000000000ff012200", "000000000000000000000000000000000000"),
+    "avlyuc20.def": ("AVLyuc20.def", "ffffffffff7f000000000000ff012200", "000000000000000000000000000000000000"),
+    "avlyuc30.def": ("AVLyuc30.def", "ffffffffff7f000000000000ff012200", "000000000000000000000000000000000000"),
+    "avtchst0.def": ("AVTchst0.def", "ffffffffff7f000000000080ff01ff00", "050000000000000000000000000000000000"),
+}
+
 
 # fh2m resource object index (ADVENTURE_TREASURES 0-6: wood,
 # mercury, ore, sulfur, crystal, gems, gold) -> h3m resource
