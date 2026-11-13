@@ -121,7 +121,7 @@ UNIFIED_TO_FH2M_RACE_CODES = {
     "Necromancer": 6,
 }
 
-# h3m terrain -> unified terrain. The h3m Sand terrain converts
+# h3m terrain -> unified terrain. The h3m Rough terrain converts
 # to the Heroes II Desert terrain (and back); the unified Beach
 # terrain converts back to the h3m Sand terrain.
 H3M_TERRAINS = {
@@ -130,7 +130,7 @@ H3M_TERRAINS = {
     "Grass": "Grass",
     "Snow": "Snow",
     "Swamp": "Swamp",
-    "Rough": "Wasteland",
+    "Rough": "Desert",
     "Subterranean": "Subterranean",
     "Lava": "Lava",
     "Water": "Water",
@@ -725,7 +725,7 @@ UNIFIED_TO_H3M_TERRAINS = {
     "Snow": "Snow",
     "Swamp": "Swamp",
     "Lava": "Lava",
-    "Desert": "Sand",
+    "Desert": "Rough",
     "Dirt": "Dirt",
     "Wasteland": "Rough",
     "Beach": "Sand",
