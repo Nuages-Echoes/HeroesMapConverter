@@ -1902,6 +1902,17 @@ def _h3m_def_body(h3m_class, h3m_subclass, def_name):
             or FH2M_TO_H3M_CATALOG.get((h3m_class, h3m_subclass)))
 
 
+# In-game validated corrections to the computed anchor shifts:
+# the alchemist lab def (AVMalch0/AVMalcs0) is drawn one tile
+# further west than its deduced footprint alignment, so the h3m
+# instance goes one tile further east than the symmetric-difference
+# minimum.
+FH2M_TO_H3M_SHIFT_OVERRIDE = {
+    ("ADVENTURE_MINES", 54): (1, 0),  # alchemist lab, generic
+    ("ADVENTURE_MINES", 55): (1, 0),  # alchemist lab, snow
+}
+
+
 def fh2m_to_h3m_anchor_shift(group, index, tile_terrain=None):
     """Anchor shift (dx, dy) applied when writing an fh2m object to
     h3m: the h3m instance goes at fh2m anchor + shift so that its
@@ -1937,7 +1948,8 @@ def fh2m_to_h3m_anchor_shift(group, index, tile_terrain=None):
     h3_cells = h3m_passability_cells(body[1][:12])
     if not h3_cells:
         return None
-    return fh2m_h3m_anchor_shift(h2_cells, h3_cells)
+    return FH2M_TO_H3M_SHIFT_OVERRIDE.get(
+        (group, index), fh2m_h3m_anchor_shift(h2_cells, h3_cells))
 
 # fh2m hero race id (the KINGDOM_HEROES object index modulo 7:
 # 0 Knight, 1 Barbarian, 2 Sorceress, 3 Warlock, 4 Wizard,
