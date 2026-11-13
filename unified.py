@@ -2957,10 +2957,18 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
                     shrine_meta = (objects_section.get("shrineMetadata") or {}).get(str(obj_id)) or {}
                     entry = ("shrine", (x, y, z), (h3m_shrine, 0), shrine_meta)
                 else:
-                    from correspondence import FH2M_TO_H3M_MISC
+                    from correspondence import (FH2M_TO_H3M_MISC,
+                                              fh2m_to_h3m_anchor_shift)
                     h3m_target = FH2M_TO_H3M_MISC.get("POWER_%d" % index)
                     if h3m_target is not None:
-                        entry = ("generic", (x, y, z), h3m_target, None)
+                        # The mercenary camp (POWER_13) carries an
+                        # in-game validated anchor shift.
+                        shift = fh2m_to_h3m_anchor_shift(
+                            "ADVENTURE_POWER_UPS", index) or (0, 0)
+                        entry = ("generic",
+                                 (min(max(x + shift[0], 0), map_width - 1),
+                                  min(max(y + shift[1], 0), map_width - 1),
+                                  z), h3m_target, None)
             elif group == "ADVENTURE_MINES":
                 # The fh2m mine index maps to the h3m ownable mine
                 # (class 53, subclass per mine type). The h3m class 53
