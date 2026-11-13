@@ -1021,6 +1021,7 @@ def unified_to_h3m(unified):
     # ROADS and STREAMS objects on tiles; convert them back to the
     # h3m per-tile Road/River Type fields.
     fh2m_road_tiles = set()
+    fh2m_road_index = {}
     fh2m_river_tiles = set()
     fh2m_river_index = {}
     if is_fh2m_source:
@@ -1033,6 +1034,7 @@ def unified_to_h3m(unified):
                 group = obj.get("group")
                 if group == "ROADS":
                     fh2m_road_tiles.add((x, y, z))
+                    fh2m_road_index[(x, y, z)] = obj.get("index", 0)
                 elif group == "STREAMS":
                     fh2m_river_tiles.add((x, y, z))
                     fh2m_river_index[(x, y, z)] = obj.get("index", 0)
@@ -1244,24 +1246,48 @@ def unified_to_h3m(unified):
                             else:
                                 base = 24
                             picture = base + (mirror_bits & 1)
-                # Roads (fh2m ROADS objects): the h3m Road Properties sprite
-                # is chosen from the cardinal mask of neighboring road tiles
-                # via the empirical road_link.json table; the road mirror
-                # bits (0x10/0x20) carry the corner orientation.
+                # Roads (fh2m ROADS objects): the h3m Road Properties
+                # sprite is chosen from the road's own connection
+                # bitfield (the object index: cardinal edges and
+                # diagonal corners). The cardinal connections use the
+                # empirical road_link.json table; the diagonal
+                # connections use the h3m diagonal pieces: 0x00-0x01
+                # are diagonal ends (base SE), 0x02-0x05 diagonal
+                # bands (base SW<->NE), and the road mirror bits
+                # 0x10/0x20 (E<->W / N<->S) rotate the diagonal.
                 road = "None"
                 road_props = 0
                 if (x, y, z) in fh2m_road_tiles:
                     road = "Dirt"
                     rkey = "".join(d for d, dx, dy in _ROAD_DIRS
                                    if (x + dx, y + dy, z) in fh2m_road_tiles)
-                    hit = ROAD_LINK.get(rkey)
-                    if hit is None:
-                        hit = ROAD_LINK.get("-")
-                    if hit:
-                        road_props = hit["props"]
-                        mirror_bits |= int(hit["mirror"], 16) & 0x30
-                    elif rkey == "NESW":
-                        road_props = 4  # cross
+                    road_bits = fh2m_road_index.get((x, y, z), 0) & 0xFF
+                    diagonals = {d for d, bit in (("NW", 1), ("NE", 4),
+                                                 ("SE", 16), ("SW", 64))
+                                 if road_bits & bit}
+                    if diagonals:
+                        if len(diagonals) == 1 and not road_bits & 0xAA:
+                            # A single diagonal connection: a road end
+                            # through the corner (base SE).
+                            road_props = 0
+                            mirror_bits |= {"SE": 0x00, "SW": 0x10,
+                                            "NE": 0x20,
+                                            "NW": 0x30}[next(iter(diagonals))]
+                        else:
+                            # A diagonal band through the tile: SW<->NE
+                            # (base) or SE<->NW (E<->W flip).
+                            road_props = 2
+                            if not diagonals & {"NE", "SW"}:
+                                mirror_bits |= 0x10
+                    else:
+                        hit = ROAD_LINK.get(rkey)
+                        if hit is None:
+                            hit = ROAD_LINK.get("-")
+                        if hit:
+                            road_props = hit["props"]
+                            mirror_bits |= int(hit["mirror"], 16) & 0x30
+                        elif rkey == "NESW":
+                            road_props = 4  # cross
                 # Rivers (fh2m STREAMS objects): h3m River Type from the
                 # tile terrain (Lava -> Lava, Snow -> Icy, Dirt -> Muddy,
                 # else Clear), River Properties sprite from the cardinal
@@ -2375,6 +2401,7 @@ def unified_to_fh2m(unified):
     # (TOP_LEFT=1, TOP=2, TOP_RIGHT=4, RIGHT=8, BOTTOM_RIGHT=16,
     # BOTTOM=32, BOTTOM_LEFT=64, LEFT=128).
     road_tiles = {}
+    road_props_tiles = {}
     river_tiles = {}
     if is_h3m_source:
         _h3m_direction_bits = [(-1, -1, 1), (0, -1, 2), (1, -1, 4),
@@ -2387,6 +2414,7 @@ def unified_to_fh2m(unified):
                 pos = (cell.get("x", 0), cell.get("y", 0))
                 if cell.get("sourceRoad") and cell.get("sourceRoad") != "None":
                     road_tiles[pos] = cell.get("sourceRoad")
+                    road_props_tiles[pos] = cell.get("sourceRoadProperties", 0)
                 if cell.get("sourceRiver") and cell.get("sourceRiver") != "None":
                     river_tiles[pos] = cell.get("sourceRiver")
 
@@ -2400,6 +2428,14 @@ def unified_to_fh2m(unified):
         next_road_id = 100000
         for (x, y) in road_tiles:
             bits = _direction_bitfield(road_tiles, x, y)
+            if road_props_tiles.get((x, y), 0) < 6:
+                # A diagonal road piece (ends 0x00-0x01, bands
+                # 0x02-0x05): the road continues through the tile
+                # corners, so the diagonal neighbors carry
+                # continuation bits too.
+                for dx, dy, bit in _h3m_direction_bits:
+                    if bit in (1, 4, 16, 64) and (x + dx, y + dy) in road_tiles:
+                        bits |= bit
             obj = OrderedDict([
                 ("id", next_road_id),
                 ("group", "ROADS"),
