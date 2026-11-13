@@ -48,6 +48,25 @@ content for `.h3m`).
 - use files in input directory for tests and checks. If information or cases are 
   missing, inform user.
 
+## Map-object terminology
+
+When discussing object placement, use these terms consistently:
+
+- **Anchor tile** (or **object position**): the single coordinate stored in
+  the map file that identifies where the whole item sits (h3m object
+  `x,y,z`; fh2m tile the object is attached to).
+- **Footprint**: the full set of tiles the item occupies/blocks
+  (impassable). In h3m this is the 6-byte passability mask relative to the
+  anchor; in fh2m it is implicit in the object definition.
+- **Activation tiles** (or **interaction tiles**): the 1-2 visitable tiles
+  where a hero triggers the object (enter a mine, pick up a resource,
+  read a sign). In h3m this is the actionability/visitable mask; in fh2m
+  it is the object's action cell(s).
+
+The conversion translates only the anchor. Footprints and activation tiles
+  are implicit per game, so an anchor mismatch shifts the footprint and the
+  activation tiles together (see the town `x-2` shift in `unified.py`).
+
 ## Code conventions
 
 - Keep parsers **lossless**: when normalizing to the unified format, retain the
