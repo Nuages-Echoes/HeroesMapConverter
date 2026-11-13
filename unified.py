@@ -889,10 +889,17 @@ def unified_to_h3m(unified):
         main_town = detail.get("mainTown")
         if not main_town and fallback_town_tile:
             parts = fallback_town_tile.split("_")
+            fallback_x, fallback_y = int(parts[0]), int(parts[1])
+            if unified.get("sourceGame") != "h3m":
+                # fh2m source: the unified town tile stores the h3m
+                # instance position; Castle X/Y is the castle
+                # entrance, instance + (-2, -1).
+                fallback_x -= 2
+                fallback_y -= 1
             main_town = OrderedDict([
                 ("generateHero", True),
-                ("x", int(parts[0])),
-                ("y", int(parts[1])),
+                ("x", fallback_x),
+                ("y", fallback_y),
                 ("z", int(parts[2]) if len(parts) > 2 else 0),
             ])
         if main_town:
@@ -2241,6 +2248,7 @@ def unified_to_fh2m(unified):
     objects_by_tile = {}
     objects_section = unified.get("objects") or {}
     is_h3m_source = unified.get("sourceGame") == "h3m"
+    restored_objects = []
 
     # The h3m terrain overlays (cursed ground, magic plains) are
     # passive battlefield zones with no Heroes II mechanic: their
@@ -2273,6 +2281,12 @@ def unified_to_fh2m(unified):
             for cell in level.get("grid", []):
                 h3m_tile_terrains[(cell.get("x", 0), cell.get("y", 0), cell.get("z", 0))] = \
                     cell.get("sourceTerrain") or cell.get("terrain")
+    fh2m_tile_terrains = {}
+    if not is_h3m_source:
+        for level in unified.get("terrain", {}).get("levels", []):
+            for cell in level.get("grid", []):
+                fh2m_tile_terrains[(cell.get("x", 0), cell.get("y", 0), cell.get("z", 0))] = \
+                    cell.get("terrain")
     for tile_key, obj_list in objects_section.get("tiles", {}).items():
         parts = tile_key.split("_")
         if len(parts) != 3:
@@ -2281,7 +2295,36 @@ def unified_to_fh2m(unified):
         if z != 0:
             continue
         if not is_h3m_source:
-            objects_by_tile[(x, y)] = [OrderedDict(obj) for obj in obj_list]
+            # fh2m source: the unified tiles hold the shifted (h3m
+            # convention) anchors; restore the original fh2m
+            # anchors with the stored anchorShift (the inverse of the
+            # shift applied by the fh2m -> unified conversion, kept
+            # per object so the same-format round-trip restores the
+            # exact original tile). The objects of one original tile
+            # may live on several unified tiles, so the original
+            # order is restored globally through the sourceOrder.
+            from correspondence import fh2m_to_h3m_anchor_shift
+            for obj in obj_list:
+                obj_group = obj.get("group", "")
+                stored = obj.get("anchorShift")
+                if stored:
+                    shift = (int(stored[0]), int(stored[1]))
+                elif obj_group == "KINGDOM_TOWNS":
+                    shift = (2, 1)
+                else:
+                    shift = fh2m_to_h3m_anchor_shift(
+                        obj_group, obj.get("index"),
+                        fh2m_tile_terrains.get((x, y, z)))
+                restored = OrderedDict((k, v) for k, v in obj.items()
+                                       if k not in ("anchorShift",
+                                                    "sourceOrder"))
+                if shift:
+                    target = (x - shift[0], y - shift[1])
+                else:
+                    target = (x, y)
+                order = obj.get("sourceOrder")
+                restored_objects.append(
+                    (order if order is not None else 0, target, restored))
             continue
         translated = _translate_h3m_tile_objects(obj_list, objects_section,
                                                   translated_metadata,
@@ -2314,6 +2357,12 @@ def unified_to_fh2m(unified):
                     else:
                         target = (x, y)
                 objects_by_tile.setdefault(target, []).append(obj)
+    if restored_objects:
+        # fh2m source: flush the restored objects globally sorted by
+        # their original tile-major order.
+        for _, target, restored in sorted(restored_objects,
+                                          key=lambda e: e[0]):
+            objects_by_tile.setdefault(target, []).append(restored)
     if dropped_ids:
         objects_section = OrderedDict(objects_section)
         objects_section["dropped"] = dropped_ids
@@ -2772,6 +2821,44 @@ def _fh2m_objects_to_unified(map_data):
                             entries[entry_id]["ownerColor"] = owner_color
             result[key] = entries
 
+    # Anchor alignment: the unified objects follow the h3m anchor
+    # convention (the south-east corner of the footprint), so the
+    # fh2m -> unified conversion applies the anchor shifts here -
+    # the h3m writer places the instances at the unified positions
+    # as-is and the fh2m writer restores the original anchors with
+    # the stored anchorShift (the inverse of the applied shift). The
+    # castle flags keep their original tile: their position rule
+    # (one tile left of the castle entrance) is fh2m-specific and
+    # the owner decoding above runs on the unshifted positions.
+    from correspondence import fh2m_to_h3m_anchor_shift
+    terrain_names = {}
+    for tile_index, tile in enumerate(map_data.get("tiles", [])):
+        terrain_names[(tile_index % width, tile_index // width)] = \
+            _fh2m_terrain_name(tile.get("terrainIndex", 0))
+    shifted_tiles = OrderedDict()
+    source_order = 0
+    for tile_key, obj_list in tiles.items():
+        parts = tile_key.split("_")
+        x, y, z = int(parts[0]), int(parts[1]), int(parts[2])
+        for obj in obj_list:
+            group, index = obj.get("group"), obj.get("index")
+            # The source order (tile-major, then within-tile) lets the
+            # fh2m writer restore the exact original object order.
+            obj["sourceOrder"] = source_order
+            source_order += 1
+            if group == "KINGDOM_TOWNS":
+                shift = (2, 1)
+            else:
+                shift = fh2m_to_h3m_anchor_shift(
+                    group, index, terrain_names.get((x, y)))
+            if shift:
+                obj["anchorShift"] = [shift[0], shift[1]]
+                target = "{}_{}_{}".format(x + shift[0], y + shift[1], z)
+            else:
+                target = tile_key
+            shifted_tiles.setdefault(target, []).append(obj)
+    result["tiles"] = shifted_tiles
+
     return result
 
 
@@ -2804,17 +2891,33 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
     map_width = (unified.get("mapSize") or {}).get("width", 72)
 
     # --- Collect the instances to encode, in tile order ---
+    # The unified anchors already follow the h3m convention (the
+    # fh2m -> unified conversion applied the anchor shifts), so the
+    # instances are placed at the unified positions as-is; only
+    # out-of-map anchors (a shifted object on the map edge) are
+    # clamped to the map bounds.
     instances = []
     for tile_key, obj_list in tiles.items():
         parts = tile_key.split("_")
         if len(parts) != 3:
             continue
-        x, y, z = int(parts[0]), int(parts[1]), int(parts[2])
+        raw_x, raw_y, z = int(parts[0]), int(parts[1]), int(parts[2])
+        x = min(max(raw_x, 0), map_width - 1)
+        y = min(max(raw_y, 0), map_width - 1)
         for obj in obj_list:
             group = obj.get("group")
             index = obj.get("index", 0)
             obj_id = obj.get("id", 0)
             meta = None
+            # Terrain lookup position: the original fh2m tile (the
+            # anchor shift may have moved the unified anchor to a
+            # neighboring tile of another terrain).
+            stored_shift = obj.get("anchorShift")
+            if stored_shift:
+                terrain_pos = (raw_x - int(stored_shift[0]),
+                               raw_y - int(stored_shift[1]))
+            else:
+                terrain_pos = (raw_x, raw_y)
             entry = None
             if group == "MONSTERS":
                 creature = index + 1
@@ -2926,33 +3029,22 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
                     castle_meta = (objects_section.get("castleMetadata") or {}).get(str(obj_id)) or {}
                     # The fh2m town tile is the castle entrance (the
                     # gate part of the sprite sits on it, the flags on
-                    # the tiles x-1 and x+1). The h3m town instance
-                    # sits at the bottom-right corner of its 6x6
-                    # footprint, its entrance cell (the actionable cell
-                    # of the def) being at instance + (-2, 0) - the
-                    # relation every real map's Castle X/Y follows.
-                    # In-game validation adds one tile south: the
-                    # instance goes at entrance + (2, +1).
-                    entry = ("town", (min(x + 2, map_width - 1),
-                                       min(y + 1, map_width - 1), z),
+                    # the tiles x-1 and x+1). The unified conversion
+                    # shifts it to the h3m instance position
+                    # (entrance + (2, +1)), so the instance is placed
+                    # at the unified position as-is.
+                    entry = ("town", (x, y, z),
                              (98, town_type), castle_meta)
             elif group in ("ADVENTURE_MISCELLANEOUS", "ADVENTURE_WATER"):
                 # The miscellaneous and water objects with a
                 # confirmed h3m sprite map through the misc table.
-                from correspondence import (FH2M_TO_H3M_MISC,
-                                          fh2m_to_h3m_anchor_shift)
+                from correspondence import FH2M_TO_H3M_MISC
                 h3m_key = ("MISC_%d" % index) if group == "ADVENTURE_MISCELLANEOUS" else "WATER_%d" % index
                 h3m_target = FH2M_TO_H3M_MISC.get(h3m_key)
                 if h3m_target is not None:
                     obj_class, obj_subclass = h3m_target
                     meta = (objects_section.get("signMetadata") or {}).get(str(obj_id)) or {}
-                    # The windmills (MISC_4-6) and the witch's hut
-                    # (MISC_26) carry in-game validated anchor shifts.
-                    shift = fh2m_to_h3m_anchor_shift(group, index) or (0, 0)
-                    entry = ("generic",
-                             (min(max(x + shift[0], 0), map_width - 1),
-                              min(max(y + shift[1], 0), map_width - 1),
-                              z), (obj_class, obj_subclass), meta)
+                    entry = ("generic", (x, y, z), (obj_class, obj_subclass), meta)
             elif group == "ADVENTURE_POWER_UPS":
                 # The shrine circles (index 14-16) map back to the
                 # h3m shrine classes 88-90; the Gazebo (11) maps to
@@ -2964,39 +3056,21 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
                     shrine_meta = (objects_section.get("shrineMetadata") or {}).get(str(obj_id)) or {}
                     entry = ("shrine", (x, y, z), (h3m_shrine, 0), shrine_meta)
                 else:
-                    from correspondence import (FH2M_TO_H3M_MISC,
-                                              fh2m_to_h3m_anchor_shift)
+                    from correspondence import FH2M_TO_H3M_MISC
                     h3m_target = FH2M_TO_H3M_MISC.get("POWER_%d" % index)
                     if h3m_target is not None:
-                        # The mercenary camp (POWER_13) carries an
-                        # in-game validated anchor shift.
-                        shift = fh2m_to_h3m_anchor_shift(
-                            "ADVENTURE_POWER_UPS", index) or (0, 0)
-                        entry = ("generic",
-                                 (min(max(x + shift[0], 0), map_width - 1),
-                                  min(max(y + shift[1], 0), map_width - 1),
-                                  z), h3m_target, None)
+                        entry = ("generic", (x, y, z), h3m_target, None)
             elif group == "ADVENTURE_MINES":
                 # The fh2m mine index maps to the h3m ownable mine
                 # (class 53, subclass per mine type). The h3m class 53
                 # has one def per terrain variant, so the def follows
                 # the mine's appearance: the catalog key carries the
                 # def name as a third element.
-                from correspondence import (FH2M_TO_H3M_MINES,
-                                          fh2m_mine_def_name,
-                                          fh2m_to_h3m_anchor_shift)
+                from correspondence import FH2M_TO_H3M_MINES, fh2m_mine_def_name
                 h3m_mine = FH2M_TO_H3M_MINES.get(index)
                 if h3m_mine is not None:
                     def_name = fh2m_mine_def_name(index)
-                    # The h3m anchor (south-east corner of the
-                    # footprint) is shifted so the h3m footprint
-                    # covers the deduced fh2m footprint.
-                    shift = fh2m_to_h3m_anchor_shift("ADVENTURE_MINES",
-                                                    index)
-                    ox, oy = shift if shift else (0, 0)
-                    entry = ("ownable",
-                             (min(max(x + ox, 0), map_width - 1),
-                              min(max(y + oy, 0), map_width - 1), z),
+                    entry = ("ownable", (x, y, z),
                              (h3m_mine[0], h3m_mine[1], def_name), None)
             elif group == "ADVENTURE_DWELLINGS":
                 # The fh2m dwelling index maps to the h3m ownable
@@ -3027,7 +3101,7 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
                     # terrain of the tile.
                     from correspondence import (fh2m_tree_h3m_class,
                                               fh2m_tree_def_name)
-                    tile_terrain = (tile_terrains or {}).get((x, y), "Grass")
+                    tile_terrain = (tile_terrains or {}).get(terrain_pos, "Grass")
                     h3m_class = fh2m_tree_h3m_class(index, tile_terrain)
                     variant_def = fh2m_tree_def_name(h3m_class, tile_terrain)
                 if group == "LANDSCAPE_MOUNTAINS" and h3m_class is not None:
@@ -3041,27 +3115,16 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
                     # within its terrain block (the sprite size).
                     from correspondence import (fh2m_mountain_h3m_class,
                                               fh2m_mountain_def_name)
-                    tile_terrain = (tile_terrains or {}).get((x, y), "Grass")
+                    tile_terrain = (tile_terrains or {}).get(terrain_pos, "Grass")
                     h3m_class = fh2m_mountain_h3m_class(tile_terrain)
                     variant_def = fh2m_mountain_def_name(index, h3m_class,
                                                          tile_terrain)
                 if h3m_class is not None:
-                    # The h3m anchor (south-east corner of the
-                    # footprint) is shifted so the h3m footprint
-                    # covers the deduced fh2m footprint (mountains
-                    # and trees; the other landscape families have no
-                    # known footprint).
-                    from correspondence import fh2m_to_h3m_anchor_shift
-                    shift = fh2m_to_h3m_anchor_shift(group, index,
-                                                    tile_terrain)
-                    ox, oy = shift if shift else (0, 0)
-                    anchor = (min(max(x + ox, 0), map_width - 1),
-                              min(max(y + oy, 0), map_width - 1), z)
                     if variant_def is not None:
-                        entry = ("decorative", anchor,
+                        entry = ("decorative", (x, y, z),
                                  (h3m_class, 0, variant_def), None)
                     else:
-                        entry = ("decorative", anchor, (h3m_class, 0), None)
+                        entry = ("decorative", (x, y, z), (h3m_class, 0), None)
             if entry:
                 instances.append(entry)
 

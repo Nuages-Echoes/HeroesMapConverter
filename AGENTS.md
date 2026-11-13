@@ -64,9 +64,13 @@ When discussing object placement, use these terms consistently:
   read a sign). In h3m this is the actionability/visitable mask; in fh2m
   it is the object's action cell(s).
 
-The conversion translates only the anchor. Footprints and activation tiles
-  are implicit per game, so an anchor mismatch shifts the footprint and the
-  activation tiles together (see the town `x-2` shift in `unified.py`).
+The conversion translates only the anchor. For fh2m sources the
+  fh2m -> unified step applies the anchor shifts (the unified JSON stores
+  h3m-convention anchors plus an `anchorShift` field per shifted object);
+  the h3m writer places instances at the unified positions as-is and the
+  fh2m writer restores the original anchors with the stored shift.
+  Footprints and activation tiles are implicit per game, so an anchor
+  mismatch shifts the footprint and the activation tiles together.
 
 ## Code conventions
 
