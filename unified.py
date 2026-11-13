@@ -1765,6 +1765,25 @@ def _translate_h3m_tile_objects(obj_list, objects_section, translated_metadata,
                     ("index", interactive[1]),
                 ]))
                 continue
+            # The unmatchable defs (no single footprint-exact fh2m
+            # object) fan out into several fh2m objects whose
+            # footprints tile the def's blocked cells exactly.
+            from correspondence import H3M_DEF_TO_FH2M_SUBSTITUTION
+            substitution = H3M_DEF_TO_FH2M_SUBSTITUTION.get(
+                (obj.get("sprite") or "").lower())
+            if substitution is not None:
+                for part, (sub_group, sub_index, sub_offset) in \
+                        enumerate(substitution):
+                    # Unique id per map: the parts beyond the first
+                    # are offset above the h3m id range.
+                    translated.append(OrderedDict([
+                        ("id", obj_id if part == 0
+                         else obj_id + part * 100000),
+                        ("group", sub_group),
+                        ("index", sub_index),
+                        ("substOffset", [sub_offset[0], sub_offset[1]]),
+                    ]))
+                continue
             decorative = H3M_DECORATIVE_TO_FH2M.get(obj_class)
             if decorative is None:
                 dropped_ids.append(obj_id)
@@ -2380,6 +2399,15 @@ def unified_to_fh2m(unified):
             tile_terrain = h3m_tile_terrains.get((x, y, z))
             for obj in translated:
                 obj_group = obj.get("group", "")
+                subst_offset = obj.get("substOffset")
+                if subst_offset is not None:
+                    # A substitution part: its offset from the h3m
+                    # anchor already places the fh2m footprint.
+                    obj.pop("substOffset", None)
+                    target = (min(max(x + int(subst_offset[0]), 0), width - 1),
+                              min(max(y + int(subst_offset[1]), 0), width - 1))
+                    objects_by_tile.setdefault(target, []).append(obj)
+                    continue
                 if obj_group == "KINGDOM_TOWNS":
                     # The h3m town instance sits at the bottom-right
                     # corner of the castle footprint; the fh2m town
@@ -2387,22 +2415,22 @@ def unified_to_fh2m(unified):
                     # one tile north (instance + (-2, -1), the inverse
                     # of the fh2m -> h3m shift).
                     target = (max(x - 2, 0), max(y - 1, 0))
-                elif (obj_group in ("LANDSCAPE_TREES", "LANDSCAPE_MOUNTAINS")
-                      and obj.get("sprite")):
-                    # The h3m def of the instance carries its real
-                    # blocked cells: align on it, not on the def the
-                    # fh2m -> h3m direction would pick.
-                    from correspondence import h3m_def_anchor_shift
-                    shift = h3m_def_anchor_shift(
-                        obj_group, obj.get("index"), obj.get("sprite"))
-                    if shift is None:
+                else:
+                    if (obj_group in ("LANDSCAPE_TREES", "LANDSCAPE_MOUNTAINS")
+                            and obj.get("sprite")):
+                        # The h3m def of the instance carries its real
+                        # blocked cells: align on it, not on the def
+                        # the fh2m -> h3m direction would pick.
+                        from correspondence import h3m_def_anchor_shift
+                        shift = h3m_def_anchor_shift(
+                            obj_group, obj.get("index"), obj.get("sprite"))
+                        if shift is None:
+                            shift = fh2m_to_h3m_anchor_shift(
+                                obj_group, obj.get("index"), tile_terrain)
+                    else:
                         shift = fh2m_to_h3m_anchor_shift(obj_group,
                                                         obj.get("index"),
                                                         tile_terrain)
-                else:
-                    shift = fh2m_to_h3m_anchor_shift(obj_group,
-                                                    obj.get("index"),
-                                                    tile_terrain)
                     if shift:
                         target = (min(max(x - shift[0], 0), width - 1),
                                   min(max(y - shift[1], 0), width - 1))
