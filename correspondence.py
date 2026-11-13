@@ -1913,10 +1913,10 @@ FH2M_TO_H3M_SHIFT_OVERRIDE = {
     ("ADVENTURE_MINES", 54): (1, 0),  # alchemist lab, generic
     ("ADVENTURE_MINES", 55): (1, 0),  # alchemist lab, snow
     ("ADVENTURE_POWER_UPS", 13): (1, 0),  # mercenary camp
-    ("ADVENTURE_MISCELLANEOUS", 4): (-1, 0),   # windmill, grass
-    ("ADVENTURE_MISCELLANEOUS", 5): (-1, 0),   # windmill, snow
-    ("ADVENTURE_MISCELLANEOUS", 6): (-1, 0),   # windmill, dirt
-    ("ADVENTURE_MISCELLANEOUS", 26): (-1, 0),  # witch's hut
+    ("ADVENTURE_MISCELLANEOUS", 4): (1, 0),   # windmill, grass
+    ("ADVENTURE_MISCELLANEOUS", 5): (1, 0),   # windmill, snow
+    ("ADVENTURE_MISCELLANEOUS", 6): (1, 0),   # windmill, dirt
+    ("ADVENTURE_MISCELLANEOUS", 26): (1, 0),  # witch's hut
 }
 
 
