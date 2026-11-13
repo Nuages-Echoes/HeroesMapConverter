@@ -83,8 +83,8 @@ input/*.{h3m,fh2m,mp2}
 ## Points de fonctionnement notables
 
 - Conversion fh2m → h3m des tuiles côtières : calcul des sprites de bordure de
-  mer selon l'orientation des voisins (bit de côte + flags miroir), inventorié
-  dans `coastal_tiles_h2_h3.md` avec les planches SVG de `coastal_h2/`.
+  mer selon l'orientation des voisins (bit de côte + flags miroir), illustré
+  par les planches SVG de `coastal_h2/`.
 - Pour les sources fh2m, la ville principale d'un joueur est pointée sur la
   case d'entrée de la ville.
 - Limites connues (README) : une carte H3 avec souterrain ne peut pas être
@@ -103,4 +103,4 @@ input/*.{h3m,fh2m,mp2}
 | `verify_roundtrip.py` | vérification aller-retour parse → convert → write → parse |
 | `make_variant.py` | génération de variantes de test |
 | `*_description.english.txt`, `heroes_field_correspondence.english.txt` | spécifications des formats binaires, des JSON et des équivalences de valeurs |
-| `coastal_tiles_h2_h3.md`, `coastal_h2/` | inventaire des tuiles côtières H2/H3 |
+| `coastal_h2/` | planches SVG des tuiles côtières H2 |
