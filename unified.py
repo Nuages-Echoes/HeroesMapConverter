@@ -893,9 +893,8 @@ def unified_to_h3m(unified):
             if unified.get("sourceGame") != "h3m":
                 # fh2m source: the unified town tile stores the h3m
                 # instance position; Castle X/Y is the castle
-                # entrance, instance + (-2, -1).
+                # entrance, instance + (-2, 0).
                 fallback_x -= 2
-                fallback_y -= 1
             main_town = OrderedDict([
                 ("generateHero", True),
                 ("x", fallback_x),
@@ -2369,7 +2368,7 @@ def unified_to_fh2m(unified):
                 if stored:
                     shift = (int(stored[0]), int(stored[1]))
                 elif obj_group == "KINGDOM_TOWNS":
-                    shift = (2, 1)
+                    shift = (2, 0)
                 else:
                     shift = fh2m_to_h3m_anchor_shift(
                         obj_group, obj.get("index"),
@@ -2411,10 +2410,10 @@ def unified_to_fh2m(unified):
                 if obj_group == "KINGDOM_TOWNS":
                     # The h3m town instance sits at the bottom-right
                     # corner of the castle footprint; the fh2m town
-                    # tile is the entrance, 2 tiles to the left and
-                    # one tile north (instance + (-2, -1), the inverse
+                    # tile is the entrance, 2 tiles to the left on
+                    # the same row (instance + (-2, 0), the inverse
                     # of the fh2m -> h3m shift).
-                    target = (max(x - 2, 0), max(y - 1, 0))
+                    target = (max(x - 2, 0), y)
                 else:
                     if (obj_group in ("LANDSCAPE_TREES", "LANDSCAPE_MOUNTAINS")
                             and obj.get("sprite")):
@@ -2937,7 +2936,7 @@ def _fh2m_objects_to_unified(map_data):
             obj["sourceOrder"] = source_order
             source_order += 1
             if group == "KINGDOM_TOWNS":
-                shift = (2, 1)
+                shift = (2, 0)
             else:
                 shift = fh2m_to_h3m_anchor_shift(
                     group, index, terrain_names.get((x, y)),
