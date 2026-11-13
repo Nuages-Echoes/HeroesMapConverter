@@ -3039,14 +3039,16 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
             if ref is None and obj_class == 34:
                 # The hero template subclass is the hero CLASS and
                 # the sprite is the class sprite AH<class>_E.DEF (the
-                # official heroClasses animation names). The trigger
-                # cell must be (0,0) - the bottom-right cell, bit 47 of
-                # the packed mask (0x80 in the last mask byte) - like the
-                # prison/monster templates of the real maps; (1,0) would
-                # offset every placed hero's trigger by one cell and
-                # leave m_location pointing at the adjacent town.
+                # official heroClasses animation names). Both mask
+                # cells must be (0,0) - the bottom-right cell, bit 47 of
+                # the packed mask (0x80 in the last mask byte) - exactly
+                # like the real game's hero template (Objects.txt,
+                # ah00_e.def: passable ffffffffff7f, action ...80): the
+                # passable last byte 0x7f blocks the hero's own cell,
+                # while 0xbf would block the cell one to the left and
+                # shift every placed hero one cell west.
                 ref = ('ah%02d_e.def' % (obj_subclass or 0),
-                       'ffffffffffbf000000000080ff00ff00',
+                       'ffffffffff7f000000000080ff010100',
                        '000000000000000000000000000000000000')
             if ref is None:
                 continue
