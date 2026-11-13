@@ -2939,13 +2939,20 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
             elif group in ("ADVENTURE_MISCELLANEOUS", "ADVENTURE_WATER"):
                 # The miscellaneous and water objects with a
                 # confirmed h3m sprite map through the misc table.
-                from correspondence import FH2M_TO_H3M_MISC
+                from correspondence import (FH2M_TO_H3M_MISC,
+                                          fh2m_to_h3m_anchor_shift)
                 h3m_key = ("MISC_%d" % index) if group == "ADVENTURE_MISCELLANEOUS" else "WATER_%d" % index
                 h3m_target = FH2M_TO_H3M_MISC.get(h3m_key)
                 if h3m_target is not None:
                     obj_class, obj_subclass = h3m_target
                     meta = (objects_section.get("signMetadata") or {}).get(str(obj_id)) or {}
-                    entry = ("generic", (x, y, z), (obj_class, obj_subclass), meta)
+                    # The windmills (MISC_4-6) and the witch's hut
+                    # (MISC_26) carry in-game validated anchor shifts.
+                    shift = fh2m_to_h3m_anchor_shift(group, index) or (0, 0)
+                    entry = ("generic",
+                             (min(max(x + shift[0], 0), map_width - 1),
+                              min(max(y + shift[1], 0), map_width - 1),
+                              z), (obj_class, obj_subclass), meta)
             elif group == "ADVENTURE_POWER_UPS":
                 # The shrine circles (index 14-16) map back to the
                 # h3m shrine classes 88-90; the Gazebo (11) maps to
