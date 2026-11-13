@@ -1,6 +1,6 @@
 # Progress.md — Fonctionnement actuel de HeroesMapConverter
 
-Document décrivant l'état actuel du projet (branche `main`, commit `0c157e3`) :
+Document décrivant l'état actuel du projet (branche `main`, commit `a3880e8`) :
 quelles sont les entrées, les sorties, et ce qui se passe entre les deux.
 
 ## Objectif
@@ -22,9 +22,9 @@ sont supportés :
   de format 2 à 13 ; entiers en big-endian ; paramètres de base en clair, puis
   une unique section compressée zlib. Parsing : `h2decoder.parse_fh2m()`.
 
-Cartes de test embarquées dans `input/` : 4 cartes `.h3m` (`all for one`,
-`ascension`, `divided loyalties`, `free for all`) et 4 cartes H2
-(`BROKENA.MP2`, `Good,_Bad,_Magne.fh2m`, `My map.fh2m`, `Tetra_conflict.fh2m`).
+Cartes de référence embarquées dans `input/` : 1 carte `.h3m` (`all for one`)
+et 4 cartes H2 (`4_dimensions.fh2m`, `5Kings1Ring.fh2m`, `Full Backpack.fh2m`,
+`Tetra_conflict.fh2m`).
 
 ## Fonctionnement entre les deux (pipeline)
 
@@ -65,13 +65,14 @@ input/*.{h3m,fh2m,mp2}
   (dossier créé à l'exécution, non versionné).
 - `outputunified/<nom>.json` — format unifié commun (idem).
 - `output/<nom>.h3m` et `output/<nom>.fh2m` — cartes produites dans les deux
-  formats, versionnées et utilisées comme référence de vérification.
+  formats, régénérées à chaque exécution (le dossier n'est plus versionné :
+  seul `.gitkeep` y est suivi).
 
 ## Vérification
 
-- CI (`.github/workflows/ci.yml`) : `python -m compileall` sur les modules,
-  `python main.py`, contrôle de la présence de chaque JSON dans `outputjson/`,
-  puis `python verify_roundtrip.py`.
+- Plus de CI (le workflow GitHub Actions a été retiré) : vérifications manuelles —
+  `python -m compileall` sur les modules, `python main.py`, contrôle de la
+  présence de chaque JSON dans `outputjson/`, puis `python verify_roundtrip.py`.
 - `verify_roundtrip.py` : pour chaque carte, compare `parse(input)` et
   `parse(output)` de la même extension — égalité binaire quand c'est possible,
   sinon égalité du contenu logique (section zlib décompressée pour fh2m,
@@ -82,9 +83,12 @@ input/*.{h3m,fh2m,mp2}
 
 ## Points de fonctionnement notables
 
-- Conversion fh2m → h3m des tuiles côtières : calcul des sprites de bordure de
-  mer selon l'orientation des voisins (bit de côte + flags miroir), illustré
-  par les planches SVG de `coastal_h2/`.
+- Conversion fh2m → h3m des tuiles côtières, routes et rivières : les sprites
+  (bordures de mer, routes, rivières) sont choisis via les tables
+  `coastal_link.json`, `road_link.json` et `river_link.json`, apprises des
+  cartes de référence `input/*.h3m` et documentées dans
+  `coastal_tiles_h2_h3.md` (Tableau 3, référencé par les commentaires
+  de `unified.py`).
 - Pour les sources fh2m, la ville principale d'un joueur est pointée sur la
   case d'entrée de la ville.
 - Limites connues (README) : une carte H3 avec souterrain ne peut pas être
@@ -103,4 +107,5 @@ input/*.{h3m,fh2m,mp2}
 | `verify_roundtrip.py` | vérification aller-retour parse → convert → write → parse |
 | `make_variant.py` | génération de variantes de test |
 | `*_description.english.txt`, `heroes_field_correspondence.english.txt` | spécifications des formats binaires, des JSON et des équivalences de valeurs |
-| `coastal_h2/` | planches SVG des tuiles côtières H2 |
+| `coastal_link.json`, `road_link.json`, `river_link.json` | tables de lien H2→H3 apprises des cartes de référence (côtes, routes, rivières) |
+| `coastal_tiles_h2_h3.md` | doc du lien tuiles côtières H2→H3 (Tableau 3) |
