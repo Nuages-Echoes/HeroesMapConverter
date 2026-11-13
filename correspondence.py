@@ -1551,6 +1551,49 @@ def fh2m_mountain_def_name(index, h3m_class, tile_terrain=None):
 H3M_MOUNTAIN_DEF_TO_FH2M_INDEX = {}
 
 
+# Multi-object substitutions of the h3m defs with no single
+# footprint-exact fh2m counterpart (the unmatchable elements of the
+# landscape inventory): def name -> list of (fh2m group, index,
+# offset from the h3m anchor). The union of the fh2m footprints
+# placed at the offsets reproduces the def's blocked cells exactly.
+# AVLmtvo2 (11 cells) = 2 lava medium A + 1 lava medium B + 1 lava
+# small A; AVLvol50 (2x3) = 2 volcano wides; AVLvol40 (a 3-row plus
+# an isolated cell) = 1 volcano wide + 1 small tree (no mountain
+# footprint fits a single cell); AVLdt3s0 (2x2) = 2 dead-tree pairs;
+# AVLmd2r0 (1 cell) = 1 stump (no mountain blocks a single cell);
+# the passable kelp = 1 passable fh2m aquatic plant (0 blocked
+# cells).
+H3M_DEF_TO_FH2M_SUBSTITUTION = {
+    "avlmtvo2.def": [
+        ("LANDSCAPE_MOUNTAINS", 26, (-3, -1)),
+        ("LANDSCAPE_MOUNTAINS", 26, (-2, -2)),
+        ("LANDSCAPE_MOUNTAINS", 27, (-3, -1)),
+        ("LANDSCAPE_MOUNTAINS", 28, (-1, -1)),
+    ],
+    "avlvol50.def": [
+        ("LANDSCAPE_MOUNTAINS", 54, (-2, -1)),
+        ("LANDSCAPE_MOUNTAINS", 54, (-2, 0)),
+    ],
+    "avlvol40.def": [
+        ("LANDSCAPE_MOUNTAINS", 54, (-1, 0)),
+        ("LANDSCAPE_TREES", 4, (-1, -1)),
+    ],
+    "avldt3s0.def": [
+        ("LANDSCAPE_TREES", 41, (-1, -1)),
+        ("LANDSCAPE_TREES", 41, (-1, 0)),
+    ],
+    "avlmd2r0.def": [
+        ("LANDSCAPE_TREES", 39, (0, 0)),
+    ],
+    "avlklp10.def": [
+        ("LANDSCAPE_WATER", 4, (0, 0)),
+    ],
+    "avlklp20.def": [
+        ("LANDSCAPE_WATER", 4, (0, 0)),
+    ],
+}
+
+
 def h3m_mountain_def_to_fh2m_index(obj_class, def_name):
     """fh2m LANDSCAPE_MOUNTAINS index for an h3m mountain object, from
     its def name when known (else None: the caller falls back to the
@@ -1995,6 +2038,19 @@ FH2M_FOOTPRINTS = {
 }
 
 
+# The fh2m LANDSCAPE_WATER aquatic plants (fheroes2
+# populateLandscapeWater): the indices 4-5 (OBJ_NONE plants) block no
+# cell - the passable counterparts of the h3m kelp.
+FH2M_WATER_PASSABLE_INDICES = {4, 5}
+
+
+def fh2m_water_shape(index):
+    """True fh2m LANDSCAPE_WATER footprint: empty (passable) for the
+    aquatic plants, None for the other water objects (rocks and
+    reefs, no shift model)."""
+    return [] if index in FH2M_WATER_PASSABLE_INDICES else None
+
+
 def fh2m_footprint(group, index):
     """fh2m footprint cells (map offsets from the anchor) of an
     object family - the true fheroes2 catalog footprints for the
@@ -2006,6 +2062,8 @@ def fh2m_footprint(group, index):
         return fh2m_mountain_shape(index)
     if group == "LANDSCAPE_TREES":
         return fh2m_tree_shape(index)
+    if group == "LANDSCAPE_WATER":
+        return fh2m_water_shape(index)
     return None
 
 
