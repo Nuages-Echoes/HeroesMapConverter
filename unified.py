@@ -2300,9 +2300,10 @@ def unified_to_fh2m(unified):
                 if obj_group == "KINGDOM_TOWNS":
                     # The h3m town instance sits at the bottom-right
                     # corner of the castle footprint; the fh2m town
-                    # tile is the entrance, 2 tiles to the left
-                    # (instance + (-2, 0)).
-                    target = (max(x - 2, 0), y)
+                    # tile is the entrance, 2 tiles to the left and
+                    # one tile north (instance + (-2, -1), the inverse
+                    # of the fh2m -> h3m shift).
+                    target = (max(x - 2, 0), max(y - 1, 0))
                 else:
                     shift = fh2m_to_h3m_anchor_shift(obj_group,
                                                     obj.get("index"),
@@ -2930,8 +2931,10 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
                     # footprint, its entrance cell (the actionable cell
                     # of the def) being at instance + (-2, 0) - the
                     # relation every real map's Castle X/Y follows.
-                    # So the instance goes at entrance + (2, 0).
-                    entry = ("town", (min(x + 2, map_width - 1), y, z),
+                    # In-game validation adds one tile south: the
+                    # instance goes at entrance + (2, +1).
+                    entry = ("town", (min(x + 2, map_width - 1),
+                                       min(y + 1, map_width - 1), z),
                              (98, town_type), castle_meta)
             elif group in ("ADVENTURE_MISCELLANEOUS", "ADVENTURE_WATER"):
                 # The miscellaneous and water objects with a
