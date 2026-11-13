@@ -1779,6 +1779,14 @@ def _translate_h3m_tile_objects(obj_list, objects_section, translated_metadata,
                                                          obj.get("sprite"))
                 if tree_index is not None:
                     fh2m_index = tree_index
+                else:
+                    from correspondence import \
+                        H3M_TREE_DEF_TO_FH2M_MOUNTAIN_INDEX
+                    mountain_tree = H3M_TREE_DEF_TO_FH2M_MOUNTAIN_INDEX.get(
+                        (obj.get("sprite") or "").lower())
+                    if mountain_tree is not None:
+                        fh2m_group, fh2m_index = ("LANDSCAPE_MOUNTAINS",
+                                                  mountain_tree)
             # The mountain def name carries the terrain and the size
             # (AVLmtgr3.def = grass medium mountain...): the fh2m
             # mountain index is the terrain block * 19 plus a variant
@@ -1791,11 +1799,17 @@ def _translate_h3m_tile_objects(obj_list, objects_section, translated_metadata,
                 if mountain_index is not None:
                     fh2m_group, fh2m_index = ("LANDSCAPE_MOUNTAINS",
                                               mountain_index)
-            translated.append(OrderedDict([
+            translated_obj = OrderedDict([
                 ("id", obj_id),
                 ("group", fh2m_group),
                 ("index", fh2m_index),
-            ]))
+            ])
+            if obj.get("sprite"):
+                # The sprite carries the h3m footprint variant (the
+                # blocked cells of the def): the fh2m restore uses it
+                # to align the anchors exactly.
+                translated_obj["sprite"] = obj.get("sprite")
+            translated.append(translated_obj)
         else:
             dropped_ids.append(obj_id)
     return translated
@@ -2373,6 +2387,18 @@ def unified_to_fh2m(unified):
                     # one tile north (instance + (-2, -1), the inverse
                     # of the fh2m -> h3m shift).
                     target = (max(x - 2, 0), max(y - 1, 0))
+                elif (obj_group in ("LANDSCAPE_TREES", "LANDSCAPE_MOUNTAINS")
+                      and obj.get("sprite")):
+                    # The h3m def of the instance carries its real
+                    # blocked cells: align on it, not on the def the
+                    # fh2m -> h3m direction would pick.
+                    from correspondence import h3m_def_anchor_shift
+                    shift = h3m_def_anchor_shift(
+                        obj_group, obj.get("index"), obj.get("sprite"))
+                    if shift is None:
+                        shift = fh2m_to_h3m_anchor_shift(obj_group,
+                                                        obj.get("index"),
+                                                        tile_terrain)
                 else:
                     shift = fh2m_to_h3m_anchor_shift(obj_group,
                                                     obj.get("index"),
@@ -2886,7 +2912,8 @@ def _fh2m_objects_to_unified(map_data):
                 shift = (2, 1)
             else:
                 shift = fh2m_to_h3m_anchor_shift(
-                    group, index, terrain_names.get((x, y)))
+                    group, index, terrain_names.get((x, y)),
+                    (x, y), width)
             if shift:
                 obj["anchorShift"] = [shift[0], shift[1]]
                 target = "{}_{}_{}".format(x + shift[0], y + shift[1], z)
@@ -3115,52 +3142,30 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
                 h3m_dwelling = FH2M_TO_H3M_DWELLINGS.get(index)
                 if h3m_dwelling is not None:
                     entry = ("ownable", (x, y, z), h3m_dwelling, None)
+            elif group in ("LANDSCAPE_TREES", "LANDSCAPE_MOUNTAINS"):
+                # Decorative trees and mountains: the def is the
+                # footprint-exact conversion of the true fh2m
+                # footprint (the terrain variant first), picked again
+                # with the original fh2m anchor so an edge object
+                # gets the same on-map def the fh2m -> unified shift
+                # selected.
+                from correspondence import (FH2M_LANDSCAPE_TO_H3M,
+                                            fh2m_landscape_def)
+                tile_terrain = (tile_terrains or {}).get(terrain_pos, "Grass")
+                chosen = fh2m_landscape_def(group, index, tile_terrain,
+                                            terrain_pos, map_width)
+                if chosen is not None:
+                    entry = ("decorative", (x, y, z),
+                             (chosen[0], 0, chosen[1]), None)
+                elif FH2M_LANDSCAPE_TO_H3M.get((group, index)) is not None:
+                    entry = ("decorative", (x, y, z),
+                             (FH2M_LANDSCAPE_TO_H3M[(group, index)], 0),
+                             None)
             elif group.startswith("LANDSCAPE"):
-                # Decorative objects: the landscape index maps back
-                # to the h3m decorative class (subclass 0). The
-                # mountains pick their h3m class from the terrain of
-                # the tile (the fh2m variant index formula is
-                # undocumented): Lava -> volcano, Desert -> dune,
-                # Dirt -> mound, others -> mountain.
                 from correspondence import FH2M_LANDSCAPE_TO_H3M
                 h3m_class = FH2M_LANDSCAPE_TO_H3M.get((group, index))
-                variant_def = None
-                tile_terrain = None
-                if group == "LANDSCAPE_TREES" and h3m_class is not None:
-                    # The h3m tree classes carry one def per variant
-                    # under the same subclass 0 and the variants have
-                    # different sprite sizes: the class follows the
-                    # fh2m tree variant (log 130, stumps 153) and the
-                    # tile terrain (Swamp and Dirt -> dead vegetation
-                    # 119, the other terrains -> trees 155), and the def - carried
-                    # as the third catalog key element - follows the
-                    # terrain of the tile.
-                    from correspondence import (fh2m_tree_h3m_class,
-                                              fh2m_tree_def_name)
-                    tile_terrain = (tile_terrains or {}).get(terrain_pos, "Grass")
-                    h3m_class = fh2m_tree_h3m_class(index, tile_terrain)
-                    variant_def = fh2m_tree_def_name(h3m_class, tile_terrain)
-                if group == "LANDSCAPE_MOUNTAINS" and h3m_class is not None:
-                    # The mountain class follows the tile terrain (Lava
-                    # -> volcano 158, Sand -> dune 148, Dirt -> mound
-                    # 133, the other terrains -> mountain 134) and the
-                    # h3m mountain classes carry one def per terrain and
-                    # per size under the same subclass 0: the def -
-                    # carried as the third catalog key element -
-                    # follows the tile terrain and the fh2m variant
-                    # within its terrain block (the sprite size).
-                    from correspondence import (fh2m_mountain_h3m_class,
-                                              fh2m_mountain_def_name)
-                    tile_terrain = (tile_terrains or {}).get(terrain_pos, "Grass")
-                    h3m_class = fh2m_mountain_h3m_class(tile_terrain)
-                    variant_def = fh2m_mountain_def_name(index, h3m_class,
-                                                         tile_terrain)
                 if h3m_class is not None:
-                    if variant_def is not None:
-                        entry = ("decorative", (x, y, z),
-                                 (h3m_class, 0, variant_def), None)
-                    else:
-                        entry = ("decorative", (x, y, z), (h3m_class, 0), None)
+                    entry = ("decorative", (x, y, z), (h3m_class, 0), None)
             if entry:
                 instances.append(entry)
 

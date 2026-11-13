@@ -1113,21 +1113,16 @@ FH2M_TO_H3M_DWELLINGS = {
 # to the closest h3m decorative family class (the h3m encoder writes
 # the representative sprite of the class).
 FH2M_LANDSCAPE_TO_H3M = {
-    # TREES: forests and grass/dirt trees -> deciduous trees (155),
-    # snow/swamp stumps and dead trees -> dead trees (119), palms ->
-    # palm trees (125).
-    **{("LANDSCAPE_TREES", i): 155 for i in (0, 1, 2, 3, 4, 5, 6, 7, 21, 22, 23)},
-    **{("LANDSCAPE_TREES", i): 119 for i in (8, 9, 10, 11, 12, 13, 14, 15, 16, 24, 25, 26, 27, 28)},
-    **{("LANDSCAPE_TREES", i): 125 for i in (17, 18, 19, 20)},
-    # The additional tree variants (the loop-generated entries
-    # 29-62: more dead trees, palms, dirt trees and stumps) -> the
-    # h3m tree classes; the encoder refines by tile terrain.
-    **{("LANDSCAPE_TREES", i): 155 for i in range(29, 63)},
-    # MOUNTAINS: 8 terrains x 19 variants (index = terrain * 19 +
-    # variant); all map to the h3m mountains (134) - the exact
-    # variant index formula is not documented, so a generic
-    # mountain is the safe visual choice.
-    **{("LANDSCAPE_MOUNTAINS", i): 134 for i in range(152)},
+    # TREES (fheroes2 populateLandscapeTrees): 6 forest types x 6
+    # objects (big, big, medium, medium, small, small), then 33
+    # singles (three trees, stumps, dead trees, logs...). The tree
+    # and mountain writers refine the class and the def per index;
+    # these entries are the class-level fallback.
+    **{("LANDSCAPE_TREES", i): 155 for i in range(69)},
+    # MOUNTAINS (fheroes2 populateLandscapeMountains): 8 terrain
+    # blocks of 6-8 objects, then 11 singles (mounds, volcanoes,
+    # dunes).
+    **{("LANDSCAPE_MOUNTAINS", i): 134 for i in range(63)},
     # ROCKS: all the 40 entries (33 + the loop variants) -> rocks
     # (147).
     **{("LANDSCAPE_ROCKS", i): 147 for i in range(40)},
@@ -1177,23 +1172,73 @@ FH2M_LANDSCAPE_TO_H3M = {
 # subclass, carries the sprite size.
 H3M_TREE_CLASSES = {101, 119, 125, 130, 153, 155}
 
-# fh2m tree indices with a dedicated shape class, overriding the
-# family ranges of FH2M_LANDSCAPE_TO_H3M (from the inverse
-# H3M_DECORATIVE_TO_FH2M table): 25 log -> 130, 26 stumps -> 153.
-FH2M_TREE_SHAPE_CLASS = {25: 130, 26: 153}
+
+def h3m_passability_cells(mask_hex):
+    """Blocked cells (dx, dy) of a 6-byte h3m passability mask, as
+    map offsets from the object anchor (tile = anchor + (dx, dy), y
+    grows southward): a clear bit blocks; bit 47 (byte 5, MSB) is
+    the anchor cell, the columns run west from it (MSB-first) and
+    the rows north."""
+    b = bytes.fromhex(mask_hex)
+    return [(-c, r - 5) for r in range(6) for c in range(8)
+            if not (b[r] >> (7 - c)) & 1]
 
 
-def fh2m_tree_h3m_class(index, tile_terrain):
-    """h3m class for a fh2m LANDSCAPE_TREES object: the shape class
-    from the index when there is one, else the family class refined by
-    the tile terrain (Swamp/Dirt -> dead trees 119, else trees 155)."""
-    h3m_class = FH2M_LANDSCAPE_TO_H3M.get(("LANDSCAPE_TREES", index))
-    if h3m_class is None:
+def _normalized_cells(cells):
+    """Shape of footprint cells, invariant by translation: the cells
+    re-based on their north-west corner, sorted."""
+    cells = list(cells)
+    if not cells:
+        return ()
+    mx = min(x for x, _ in cells)
+    my = min(y for _, y in cells)
+    return tuple(sorted((x - mx, y - my) for x, y in cells))
+
+# True footprints of the fh2m LANDSCAPE_TREES objects, from the
+# fheroes2 object catalog (src/fheroes2/maps/map_object_info.cpp,
+# populateLandscapeTrees): the groundLevelParts offsets on the
+# OBJECT_LAYER/BACKGROUND_LAYER layers, as map offsets from the
+# object anchor tile.
+FH2M_TREE_SHAPES = {
+    "forest_a": [(-1, 0), (0, 0), (0, 1), (1, 1)],
+    "forest_b": [(-1, 1), (0, 0), (0, 1), (1, 0)],
+    "forest_c": [(-1, -1), (0, -1), (0, 0), (1, 0)],
+    "forest_d": [(-1, 0), (0, -1), (0, 0), (1, -1)],
+    "wide": [(-1, 0), (0, 0), (1, 0)],
+    "pair": [(0, 0), (1, 0)],
+    "west_pair": [(-1, 0), (0, 0)],
+    "single": [(0, 0)],
+}
+
+
+def fh2m_tree_shape(index):
+    """True fh2m LANDSCAPE_TREES footprint (map offsets from the
+    anchor), or None for an unknown index."""
+    if 0 <= index < 36:
+        pos = index % 6
+        if pos < 4:
+            return FH2M_TREE_SHAPES["forest_" + "abcd"[pos]]
+        return FH2M_TREE_SHAPES["single"]
+    singles = {36: "wide", 37: "pair", 41: "pair", 42: "wide",
+               50: "west_pair", 51: "pair", 52: "pair"}
+    key = singles.get(index, "single")
+    return FH2M_TREE_SHAPES[key] if 36 <= index <= 68 else None
+
+
+def fh2m_tree_h3m_class(index, tile_terrain=None):
+    """h3m class for a fh2m LANDSCAPE_TREES object, chosen so a def
+    with the same footprint exists: the 4-cell forests map to the
+    dead-tree defs (the only 4-cell h3m trees), the stumps to 153,
+    the dead trees to 119 and the other singles to 155."""
+    if not 0 <= index <= 68:
         return None
-    h3m_class = FH2M_TREE_SHAPE_CLASS.get(index, h3m_class)
-    if h3m_class in (155, 119):
-        h3m_class = 119 if tile_terrain in ("Swamp", "Dirt") else 155
-    return h3m_class
+    if index < 36:
+        return 119 if index % 6 < 4 else 155
+    if index in (39, 40, 66, 67, 68):
+        return 153
+    if index in (36, 37, 38, 42) or 53 <= index <= 63:
+        return 155
+    return 119
 
 
 # h3m tree def per (class, tile terrain), matched against the terrain
@@ -1222,39 +1267,80 @@ H3M_TREE_GENERIC_DEF = {
 }
 
 
-def fh2m_tree_def_name(h3m_class, tile_terrain):
+# Footprint-exact h3m defs of the fh2m tree objects whose shape has
+# no terrain-variant def: the 4-cell forests -> the 4-cell dead
+# trees, the 3-cell singles -> the winter willow, the 2-cell dead
+# trees -> the small dead trees. The 1-cell objects use the terrain
+# variant tables above.
+FH2M_TREE_EXACT_DEF = {}
+for _i in range(0, 36):
+    if _i % 6 < 4:
+        FH2M_TREE_EXACT_DEF[_i] = ("AVLdead2.def" if _i % 6 in (0, 2)
+                                   else "AVLdead3.def")
+FH2M_TREE_EXACT_DEF.update({
+    36: "AVLwlw10.def", 37: "AVLwlw20.def",
+    41: "AVLdt1s0.def", 42: "AVLwlw10.def",
+    50: "AVLdt2s0.def", 51: "AVLdt1s0.def", 52: "AVLdt2s0.def",
+})
+
+
+def fh2m_tree_def_name(h3m_class, tile_terrain, index=None):
     """h3m tree def (sprite name) for a tree class on a given h3m tile
     terrain, so the converted tree keeps a terrain variant of the same
-    size family."""
-    return (FH2M_TREE_DEF_BY_TERRAIN.get(h3m_class, {}).get(tile_terrain)
+    footprint. The multi-cell shapes have a footprint-exact def; the
+    1-cell objects use the terrain variant of their class."""
+    shape = fh2m_tree_shape(index) if index is not None else None
+    if shape is not None and len(shape) > 1:
+        exact = FH2M_TREE_EXACT_DEF.get(index)
+        if exact is not None:
+            return exact
+    name = (FH2M_TREE_DEF_BY_TERRAIN.get(h3m_class, {}).get(tile_terrain)
             or H3M_TREE_GENERIC_DEF.get(h3m_class))
+    if shape is not None and name is not None:
+        body = H3M_TREE_DEFS.get(name.lower())
+        if body is None or _normalized_cells(
+                h3m_passability_cells(body[1][:12])) != _normalized_cells(shape):
+            name = H3M_TREE_GENERIC_DEF.get(h3m_class)
+    return name
 
 
-# Reverse: h3m tree def name -> fh2m LANDSCAPE_TREES index (the shape
-# anchors: forest -> 5, palms -> 17, dead trees -> 24, log -> 25,
-# stumps -> 26, single trees/conifers -> 7). Unknown defs fall back to
-# the class-level index of H3M_DECORATIVE_TO_FH2M.
-H3M_TREE_DEF_TO_FH2M_INDEX = {}
-for _name in ("avlklp10.def", "avlklp20.def"):
-    H3M_TREE_DEF_TO_FH2M_INDEX[_name] = 17  # palms
-H3M_TREE_DEF_TO_FH2M_INDEX["avldlog.def"] = 25  # log
-for _name in ("avlstm1.def", "avlstm2.def", "avlstm3.def",
-              "avlp1sn0.def", "avlp2sn0.def"):
-    H3M_TREE_DEF_TO_FH2M_INDEX[_name] = 26  # stumps
-for _name in ("avldead0.def", "avldead1.def", "avldead2.def", "avldead3.def",
-              "avldead4.def", "avldead5.def", "avldead6.def", "avldead7.def",
-              "avldt1s0.def", "avldt2s0.def", "avldt3s0.def",
-              "avlswp60.def", "avlswp70.def", "avld3sn0.def"):
-    H3M_TREE_DEF_TO_FH2M_INDEX[_name] = 24  # dead trees
-for _name in ("avltr1d0.def", "avltr2d0.def", "avltr3d0.def",
-              "avlroug0.def", "avlroug1.def", "avlroug2.def", "avlr04r0.def",
-              "avlswmp0.def", "avlswmp1.def", "avlswmp2.def",
-              "avlswmp3.def", "avlswmp4.def", "avlswmp5.def",
-              "avlwlw10.def", "avlwlw20.def", "avlwlw30.def",
-              "avlplm30.def", "avlplm50.def",
-              "avlyuc10.def", "avlyuc20.def", "avlyuc30.def",
-              "avtchst0.def"):
-    H3M_TREE_DEF_TO_FH2M_INDEX[_name] = 7  # single trees / conifers
+# Reverse: h3m tree def name -> fh2m LANDSCAPE_TREES index with the
+# same footprint (the shape anchors: 4-cell forests -> 0-3, grass
+# medium mountains aside, dead trees -> 43, stumps -> 66, single
+# trees -> 53). The kelp defs (passable, no blocked cell) and the
+# 2x2 dead tree have no fh2m counterpart: they fall back to the
+# class-level index of H3M_DECORATIVE_TO_FH2M.
+H3M_TREE_DEF_TO_FH2M_INDEX = {
+    # 4-cell forests (diagonal shapes)
+    "avldead2.def": 0, "avldead4.def": 0,
+    "avlswmp2.def": 0, "avlswmp4.def": 0,
+    "avldead3.def": 1, "avldead5.def": 1,
+    "avlswmp3.def": 1, "avlswmp5.def": 1,
+    # 1-cell dead trees / swamp trees
+    "avldead0.def": 43, "avldead1.def": 43,
+    "avld3sn0.def": 43, "avlswp70.def": 43,
+    # 2-cell dead trees
+    "avldt1s0.def": 41, "avldt2s0.def": 50, "avlswp60.def": 41,
+    # wide (3-cell) and pair (2-cell) trees
+    "avlwlw10.def": 36, "avlwlw20.def": 37, "avlr04r0.def": 37,
+    # single trees / conifers (1 cell)
+    "avlswmp0.def": 53, "avlswmp1.def": 53, "avlwlw30.def": 53,
+    "avltr1d0.def": 53, "avltr2d0.def": 53, "avltr3d0.def": 53,
+    "avlroug0.def": 53, "avlroug1.def": 53, "avlroug2.def": 53,
+    "avlyuc10.def": 53, "avlyuc20.def": 53, "avlyuc30.def": 53,
+    "avtchst0.def": 53,
+    # stumps (1 cell)
+    "avlstm1.def": 66, "avlstm2.def": 66, "avlstm3.def": 66,
+    "avlp1sn0.def": 66, "avlp2sn0.def": 66,
+    # log and palms (1 cell): closest single-cell objects
+    "avldlog.def": 39, "avlplm30.def": 38, "avlplm50.def": 38,
+}
+
+
+# The 7-cell big dead trees (AVLdead6/7) are the footprint-exact
+# h3m counterparts of the fh2m grass medium mountains: they map back
+# to the LANDSCAPE_MOUNTAINS group, not to a tree index.
+H3M_TREE_DEF_TO_FH2M_MOUNTAIN_INDEX = {"avldead6.def": 8, "avldead7.def": 9}
 
 
 def h3m_tree_def_to_fh2m_index(obj_class, def_name):
@@ -1325,116 +1411,144 @@ H3M_TREE_DEFS = {
 # size.
 H3M_MOUNTAIN_CLASSES = {133, 134, 148, 158}
 
-# fh2m LANDSCAPE_MOUNTAINS layout (fheroes2 populateLandscapeMountains):
-# index = terrain_block * 19 + variant, the 8 blocks in the order
-# Generic, Grass, Snow, Swamp, Lava, Desert, Dirt, Wasteland.
-FH2M_MOUNTAIN_BLOCKS = 19
-FH2M_MOUNTAIN_BLOCK_BY_H3_TERRAIN = {
-    "Grass": 1, "Snow": 2, "Swamp": 3, "Lava": 4,
-    "Sand": 5, "Dirt": 6, "Rough": 7,
-}
-
-# h3m class 134 def prefix per h3m tile terrain, and the variant numbers
-# available per prefix in the reference maps.
-H3M_MOUNTAIN_DEF_PREFIX = {
-    "Grass": "gr", "Water": "gr", "Snow": "sn", "Swamp": "sw",
-    "Rough": "rf", "Subterranean": "sb", "Rock": "sb",
-    "Sand": "ds", "Lava": "vo", "Dirt": "dr",
-}
-_H3M_MT_PREFIX_VARIANTS = {
-    "gr": range(1, 7), "gn": range(0, 6), "sn": range(1, 7),
-    "sw": range(1, 7), "rf": range(1, 7), "vo": range(1, 7),
-    "dr": range(1, 9), "ds": (1, 2, 4), "sb": range(0, 6),
-}
-
-# Default (generic) def of each mountain class, used when the computed
-# variant def is not in the reference data.
+# Default (generic) def of each mountain class, used when no
+# footprint-exact def exists in the reference data.
 H3M_MOUNTAIN_GENERIC_DEF = {
     133: "AVLmd1g0.def", 134: "AVLmtgr3.def", 148: "AVLdun10.def",
     158: "AVLvol40.def",
 }
 
+# fh2m LANDSCAPE_MOUNTAINS layout (fheroes2 populateLandscapeMountains):
+# 8 terrain blocks in the order Generic, Grass, Snow, Swamp, Lava,
+# Desert, Dirt, Wasteland - 6 objects each (big, big, medium, medium,
+# small, small), the Dirt and Wasteland blocks carry 2 extra 6-cell
+# mountains between the bigs and the mediums - then 11 singles
+# (mounds, volcanoes, dunes).
+FH2M_MOUNTAIN_TERRAIN_BLOCKS = [
+    ("gn", 0, 6),    # generic
+    ("gr", 6, 6),    # grass
+    ("sn", 12, 6),   # snow
+    ("sw", 18, 6),   # swamp
+    ("vo", 24, 6),   # lava
+    ("ds", 30, 6),   # desert
+    ("dr", 36, 8),   # dirt
+    ("rf", 44, 8),   # wasteland
+]
 
-def fh2m_mountain_h3m_class(tile_terrain):
-    """h3m mountain class for a tile terrain: Lava -> volcano 158,
-    Sand -> dune 148, Dirt -> mound 133, the other terrains ->
-    mountain 134."""
-    if tile_terrain == "Lava":
+# True footprints of the fh2m LANDSCAPE_MOUNTAINS objects, from the
+# fheroes2 object catalog (src/fheroes2/maps/map_object_info.cpp):
+# the groundLevelParts offsets on the OBJECT_LAYER/BACKGROUND_LAYER
+# layers, as map offsets from the object anchor tile.
+FH2M_MOUNTAIN_SHAPES = {
+    "big_a": [(-2, -1), (-2, 0), (-1, -1), (-1, 0), (0, -1), (0, 0),
+              (0, 1), (1, -1), (1, 0), (1, 1), (2, 0), (2, 1)],
+    "big_b": [(-2, 0), (-2, 1), (-1, -1), (-1, 0), (-1, 1), (0, -1),
+              (0, 0), (0, 1), (1, -1), (1, 0), (2, -1), (2, 0)],
+    "medium_a": [(-1, 0), (0, 0), (0, 1), (1, 0), (1, 1)],
+    "medium_b": [(-1, 0), (-1, 1), (0, 0), (0, 1), (1, 0)],
+    "grass_medium_a": [(-1, -1), (-1, 0), (0, -1), (0, 0), (0, 1),
+                        (1, 0), (1, 1)],
+    "grass_medium_b": [(-1, 0), (-1, 1), (0, -1), (0, 0), (0, 1),
+                        (1, -1), (1, 0)],
+    "extra_a": [(-2, 0), (-1, 0), (0, 0), (0, 1), (1, 1), (2, 1)],
+    "extra_b": [(-2, 1), (-1, 1), (0, 0), (0, 1), (1, 0), (2, 0)],
+    "small_a": [(-1, -1), (0, -1), (0, 0), (1, 0)],
+    "small_b": [(-1, 0), (0, -1), (0, 0), (1, -1)],
+    "crack_medium_b": [(-1, 1), (0, 0), (0, 1), (1, 0)],
+    "wide": [(-1, 0), (0, 0), (1, 0)],
+    "pair": [(0, 0), (1, 0)],
+}
+
+
+def fh2m_mountain_shape(index):
+    """True fh2m LANDSCAPE_MOUNTAINS footprint (map offsets from the
+    anchor), or None for an unknown index."""
+    if 0 <= index <= 51:
+        for prefix, start, count in FH2M_MOUNTAIN_TERRAIN_BLOCKS:
+            if start <= index < start + count:
+                pos = index - start
+                if prefix == "gr" and count == 6 and pos in (2, 3):
+                    return FH2M_MOUNTAIN_SHAPES[
+                        "grass_medium_a" if pos == 2 else "grass_medium_b"]
+                if count == 8:
+                    keys = ("big_a", "big_b", "extra_a", "extra_b",
+                            "medium_a",
+                            "medium_b" if prefix == "dr" else "crack_medium_b",
+                            "small_a", "small_b")
+                else:
+                    keys = ("big_a", "big_b", "medium_a", "medium_b",
+                            "small_a", "small_b")
+                return FH2M_MOUNTAIN_SHAPES[keys[pos]]
+    singles = {52: "pair", 53: "pair", 54: "wide", 55: "wide",
+               56: "wide", 57: "pair", 58: "pair", 59: "pair",
+               60: "wide", 61: "pair", 62: "pair"}
+    key = singles.get(index)
+    return FH2M_MOUNTAIN_SHAPES[key] if key else None
+
+
+def _fh2m_mountain_block_prefix(index):
+    """h3m class 134 def prefix of the fh2m terrain block an index
+    belongs to (None for the singles)."""
+    for prefix, start, count in FH2M_MOUNTAIN_TERRAIN_BLOCKS:
+        if start <= index < start + count:
+            return prefix
+    return None
+
+
+def fh2m_mountain_h3m_class(index, tile_terrain=None):
+    """h3m mountain class for a fh2m LANDSCAPE_MOUNTAINS object:
+    the grass mediums (7 blocked cells) only match the big dead
+    trees (119); the singles keep their identity - volcanoes 158,
+    dunes 148, mounds 133; the grouped mountains are 134."""
+    if index in (8, 9):
+        return 119
+    if index in (54, 55, 56, 57):
         return 158
-    if tile_terrain == "Sand":
+    if index in (58, 59, 60):
         return 148
-    if tile_terrain == "Dirt":
+    if 52 <= index <= 62:
         return 133
-    return 134
+    if 0 <= index <= 51:
+        return 134
+    return None
 
 
-def _h3_mountain_variant(h2_variant):
-    """Map the fh2m variant within its terrain block (0-1 big, 2-5
-    medium, 6+ small/single) to the h3m class 134 variant number
-    (1-2 big = 12 blocked cells, 3-4 medium = 5, 5-6 small = 4)."""
-    if h2_variant <= 1:
-        return h2_variant + 1
-    if h2_variant <= 5:
-        return 3 if h2_variant % 2 == 0 else 4
-    return 5 if h2_variant % 2 == 0 else 6
-
-
-def fh2m_mountain_def_name(index, h3m_class, tile_terrain):
-    """h3m mountain def for a fh2m LANDSCAPE_MOUNTAINS object: the
-    terrain comes from the tile (through the class), the size from the
-    variant within the fh2m terrain block."""
-    variant = index % FH2M_MOUNTAIN_BLOCKS
-    candidate = None
-    if h3m_class == 134:
-        prefix = H3M_MOUNTAIN_DEF_PREFIX.get(tile_terrain, "gr")
-        allowed = _H3M_MT_PREFIX_VARIANTS.get(prefix, range(1, 7))
-        v = _h3_mountain_variant(variant)
-        if v not in allowed:
-            v = min(allowed, key=lambda a: (abs(a - v), a))
-        candidate = "AVLmt%s%d.def" % (prefix, v)
-    elif h3m_class == 158:  # volcano: vol50/40 big, vol30 middle, vol10/20 small
-        if variant in (15, 16, 17, 18):
-            candidate = {15: "AVLvol50.def", 16: "AVLvol40.def",
-                         17: "AVLvol30.def", 18: "AVLvol10.def"}[variant]
-        elif variant <= 1:
-            candidate = "AVLvol50.def"
-        elif variant <= 5:
-            candidate = "AVLvol30.def"
-        else:
-            candidate = "AVLvol10.def"
-    elif h3m_class == 148:  # dune: dun30 bigger
-        candidate = "AVLdun30.def" if variant <= 1 else "AVLdun10.def"
-    elif h3m_class == 133:  # mound: md1/md2 by variant parity, per terrain
+def fh2m_mountain_def_name(index, h3m_class, tile_terrain=None):
+    """h3m mountain def for a fh2m LANDSCAPE_MOUNTAINS object, chosen
+    so its blocked cells reproduce the true fh2m footprint: the
+    terrain prefix of the object's block first, then the other
+    prefixes; the singles use their own def families."""
+    shape = fh2m_mountain_shape(index)
+    if h3m_class == 119:  # grass mediums: the 7-cell dead trees
+        return "AVLdead6.def" if index == 8 else "AVLdead7.def"
+    if shape is None:
+        return H3M_MOUNTAIN_GENERIC_DEF.get(h3m_class)
+    if h3m_class == 158:  # volcanoes
+        return "AVLvol30.def" if len(shape) == 3 else "AVLvol10.def"
+    if h3m_class == 148:  # dunes
+        return "AVLdun30.def" if len(shape) == 3 else "AVLdun10.def"
+    if h3m_class == 133:  # mounds
         suffix = {"Dirt": "d", "Grass": "g"}.get(tile_terrain, "r")
-        candidate = "AVLmd%d%s0.def" % (1 if variant % 2 == 0 else 2, suffix)
-    if candidate and candidate.lower() in H3M_MOUNTAIN_DEFS:
-        return candidate
+        return "AVLmd1%s0.def" % suffix
+    # grouped mountains (class 134): footprint-exact terrain def
+    target = _normalized_cells(shape)
+    own = _fh2m_mountain_block_prefix(index)
+    candidates = []
+    for name, body in H3M_MOUNTAIN_DEFS.items():
+        if not name.startswith("avlmt"):
+            continue
+        if _normalized_cells(h3m_passability_cells(body[1][:12])) == target:
+            candidates.append(name)
+    if candidates:
+        candidates.sort(key=lambda n: (not n.startswith("avlmt%s" % own), n))
+        return H3M_MOUNTAIN_DEFS[candidates[0]][0]
     return H3M_MOUNTAIN_GENERIC_DEF.get(h3m_class)
 
 
-# Reverse: h3m mountain def name -> fh2m LANDSCAPE_MOUNTAINS index
-# (terrain block * 19 + variant; the h3m variant maps back to the h2
-# variant: 1-2 big -> 0-1, 3-4 medium -> 4-5, 5-6 small -> 6-7).
+# Reverse: h3m mountain def name -> fh2m LANDSCAPE_MOUNTAINS index,
+# built after the def catalog below by footprint equality (the
+# terrain block of the def prefix first, then the generic block).
 H3M_MOUNTAIN_DEF_TO_FH2M_INDEX = {}
-_MT_PREFIX_BLOCK = {"gr": 19, "gn": 19, "sn": 38, "sw": 57, "vo": 76,
-                     "ds": 95, "dr": 114, "rf": 133, "sb": 114}
-_H3V_TO_H2V = {0: 0, 1: 0, 2: 1, 3: 4, 4: 5, 5: 6, 6: 7}
-for _prefix, _block in _MT_PREFIX_BLOCK.items():
-    for _n in range(0, 9):
-        H3M_MOUNTAIN_DEF_TO_FH2M_INDEX["avlmt%s%d.def" % (_prefix, _n)] = \
-            _block + _H3V_TO_H2V.get(_n, 6)
-for _name, _v in (("avlvol10.def", 18), ("avlvol20.def", 6), ("avlvol30.def", 17),
-                  ("avlvol40.def", 16), ("avlvol50.def", 15)):
-    H3M_MOUNTAIN_DEF_TO_FH2M_INDEX[_name] = 76 + _v  # Lava block
-H3M_MOUNTAIN_DEF_TO_FH2M_INDEX["avldun10.def"] = 95 + 6   # Desert block
-H3M_MOUNTAIN_DEF_TO_FH2M_INDEX["avldun20.def"] = 95 + 7
-H3M_MOUNTAIN_DEF_TO_FH2M_INDEX["avldun30.def"] = 95 + 13
-H3M_MOUNTAIN_DEF_TO_FH2M_INDEX["avlmd1d0.def"] = 114 + 13  # Dirt block
-H3M_MOUNTAIN_DEF_TO_FH2M_INDEX["avlmd2d0.def"] = 114 + 14
-H3M_MOUNTAIN_DEF_TO_FH2M_INDEX["avlmd1g0.def"] = 19 + 13   # Grass block
-H3M_MOUNTAIN_DEF_TO_FH2M_INDEX["avlmd2g0.def"] = 19 + 14
-for _name in ("avlmd1r0.def", "avlmd2r0.def", "avlmd3r0.def"):
-    H3M_MOUNTAIN_DEF_TO_FH2M_INDEX[_name] = 133 + 13  # Wasteland block
 
 
 def h3m_mountain_def_to_fh2m_index(obj_class, def_name):
@@ -1519,6 +1633,40 @@ H3M_MOUNTAIN_DEFS = {
     "avlvol40.def": ("AVLvol40.def", "ffffffffbf1f000000000000ff018000", "000000000000000000000000000000000000"),
     "avlvol50.def": ("AVLvol50.def", "ffffffff8f8f000000000000ff018000", "000000000000000000000000000000000000"),
 }
+
+
+def _fh2m_mountain_category(index):
+    """Landscape family of a mountain index: the grouped blocks, the
+    volcanoes, the dunes or the mounds."""
+    if index <= 51:
+        return "grouped"
+    if 54 <= index <= 57:
+        return "volcano"
+    if 58 <= index <= 60:
+        return "dune"
+    return "mound"
+
+
+for _name, _body in H3M_MOUNTAIN_DEFS.items():
+    _target = _normalized_cells(h3m_passability_cells(_body[1][:12]))
+    _own = _name[5:7] if _name.startswith("avlmt") else None
+    _family = ("volcano" if _name.startswith("avlvol")
+               else "dune" if _name.startswith("avldun")
+               else "mound" if _name.startswith("avlmd") else None)
+    _matches = [(_idx, fh2m_mountain_shape(_idx))
+                for _idx in range(63)
+                if fh2m_mountain_shape(_idx)
+                and _normalized_cells(fh2m_mountain_shape(_idx)) == _target]
+    if _family:
+        _matches = [(i, s) for i, s in _matches
+                    if _fh2m_mountain_category(i) == _family]
+    elif _own:
+        _matches.sort(key=lambda i_s: (
+            _fh2m_mountain_block_prefix(i_s[0]) != _own,
+            _fh2m_mountain_category(i_s[0]) != "grouped",
+            i_s[0]))
+    if _matches:
+        H3M_MOUNTAIN_DEF_TO_FH2M_INDEX[_name] = _matches[0][0]
 
 
 # fh2m resource object index (ADVENTURE_TREASURES 0-6: wood,
@@ -1834,46 +1982,30 @@ FH2M_TO_H3M_CATALOG = {
 # (entrance = instance + (-2, 0)), stronger evidence than the
 # statistical deduction.
 
-def h3m_passability_cells(mask_hex):
-    """Blocked cells (dx, dy) of a 6-byte h3m passability mask, as
-    map offsets from the object anchor (tile = anchor + (dx, dy), y
-    grows southward): a clear bit blocks; bit 47 (byte 5, MSB) is
-    the anchor cell, the columns run west from it (MSB-first) and
-    the rows north."""
-    b = bytes.fromhex(mask_hex)
-    return [(-c, r - 5) for r in range(6) for c in range(8)
-            if not (b[r] >> (7 - c)) & 1]
-
-
 def _footprint_rect(dx0, dx1, dy0, dy1):
     return [(dx, dy) for dx in range(dx0, dx1 + 1)
             for dy in range(dy0, dy1 + 1)]
 
 
+# Deduced footprints of the fh2m adventure objects (the landscape
+# objects use the true fheroes2 catalog shapes above).
 FH2M_FOOTPRINTS = {
     "mine": _footprint_rect(-1, 1, -2, 0),
     "sawmill": _footprint_rect(-2, 2, -3, 1),
-    "mountain_big": _footprint_rect(-1, 1, -2, 1),
-    "mountain_medium": _footprint_rect(-1, 1, 0, 0),
-    "mountain_small": _footprint_rect(-1, 1, -1, 1),
-    "tree": [(0, 0)],
 }
 
 
 def fh2m_footprint(group, index):
-    """Deduced fh2m footprint cells (map offsets from the anchor) of
-    an object family, or None when unknown (no shift applied)."""
+    """fh2m footprint cells (map offsets from the anchor) of an
+    object family - the true fheroes2 catalog footprints for the
+    landscape objects, the deduced ones for the mines - or None
+    when unknown (no shift applied)."""
     if group == "ADVENTURE_MINES":
         return FH2M_FOOTPRINTS["sawmill" if index >= 48 else "mine"]
     if group == "LANDSCAPE_MOUNTAINS":
-        variant = index % FH2M_MOUNTAIN_BLOCKS
-        if variant <= 1:
-            return FH2M_FOOTPRINTS["mountain_big"]
-        if variant <= 5:
-            return FH2M_FOOTPRINTS["mountain_medium"]
-        return FH2M_FOOTPRINTS["mountain_small"]
+        return fh2m_mountain_shape(index)
     if group == "LANDSCAPE_TREES":
-        return FH2M_FOOTPRINTS["tree"]
+        return fh2m_tree_shape(index)
     return None
 
 
@@ -1923,7 +2055,111 @@ FH2M_TO_H3M_SHIFT_OVERRIDE = {
 }
 
 
-def fh2m_to_h3m_anchor_shift(group, index, tile_terrain=None):
+def _fh2m_landscape_def_candidates(group, index, tile_terrain):
+    """Footprint-exact h3m defs of a landscape object, best first:
+    the terrain variant, then the class generic def (trees), or the
+    terrain-block prefix then the other prefixes (mountains)."""
+    if group == "LANDSCAPE_TREES":
+        h3m_class = fh2m_tree_h3m_class(index)
+        if h3m_class is None:
+            return []
+        names = []
+        terrain_def = (FH2M_TREE_DEF_BY_TERRAIN.get(h3m_class, {})
+                       .get(tile_terrain or "Grass"))
+        for name in (terrain_def, H3M_TREE_GENERIC_DEF.get(h3m_class)):
+            if name and name not in names:
+                names.append(name)
+        exact = FH2M_TREE_EXACT_DEF.get(index)
+        if exact:
+            names = [exact] + [n for n in names if n != exact]
+        shape = fh2m_tree_shape(index)
+        return [n for n in names
+                if shape is not None and n.lower() in H3M_TREE_DEFS
+                and _normalized_cells(h3m_passability_cells(
+                    H3M_TREE_DEFS[n.lower()][1][:12]))
+                == _normalized_cells(shape)]
+    if group == "LANDSCAPE_MOUNTAINS":
+        h3m_class = fh2m_mountain_h3m_class(index)
+        if h3m_class is None:
+            return []
+        if h3m_class != 134:
+            name = fh2m_mountain_def_name(index, h3m_class,
+                                          tile_terrain or "Grass")
+            return [name] if name else []
+        shape = fh2m_mountain_shape(index)
+        if shape is None:
+            return []
+        target = _normalized_cells(shape)
+        own = _fh2m_mountain_block_prefix(index)
+        candidates = [name for name, body in H3M_MOUNTAIN_DEFS.items()
+                      if name.startswith("avlmt")
+                      and _normalized_cells(h3m_passability_cells(
+                          body[1][:12])) == target]
+        candidates.sort(key=lambda n: (not n.startswith("avlmt%s" % own), n))
+        return [H3M_MOUNTAIN_DEFS[n][0] for n in candidates]
+    return []
+
+
+def fh2m_landscape_def(group, index, tile_terrain, anchor=None,
+                      map_width=None):
+    """(h3m class, def name, anchor shift) of the footprint-exact
+    h3m conversion of a landscape object: the def whose blocked
+    cells reproduce the true fh2m footprint, the terrain variant
+    first. With the anchor and the map width, an edge object whose
+    shifted anchor would leave the map picks the first def whose
+    alignment keeps the anchor on the map. None when no def of the
+    object's classes matches."""
+    if group == "LANDSCAPE_TREES":
+        h3m_class = fh2m_tree_h3m_class(index)
+    elif group == "LANDSCAPE_MOUNTAINS":
+        h3m_class = fh2m_mountain_h3m_class(index)
+    else:
+        return None
+    if h3m_class is None:
+        return None
+    h2_cells = fh2m_footprint(group, index)
+    if not h2_cells:
+        return None
+    best = None
+    for def_name in _fh2m_landscape_def_candidates(group, index,
+                                                  tile_terrain):
+        body = _h3m_def_body(None, 0, def_name)
+        if body is None:
+            continue
+        h3_cells = h3m_passability_cells(body[1][:12])
+        if not h3_cells:
+            continue
+        shift = fh2m_h3m_anchor_shift(h2_cells, h3_cells)
+        if best is None:
+            best = (h3m_class, def_name, shift)
+        if anchor is None or map_width is None:
+            break
+        ax, ay = anchor[0] + shift[0], anchor[1] + shift[1]
+        if 0 <= ax < map_width and 0 <= ay < map_width:
+            best = (h3m_class, def_name, shift)
+            break
+        # The alignment leaves the map: keep the first def as the
+        # fallback and try the next one.
+    return best
+
+
+def h3m_def_anchor_shift(group, index, def_name):
+    """Anchor shift of the h3m -> fh2m direction, computed from the
+    actual h3m def of the instance (its blocked cells), so the
+    restored fh2m anchor realigns the footprints exactly. None when
+    the def or the fh2m footprint is unknown."""
+    h2_cells = fh2m_footprint(group, index)
+    body = _h3m_def_body(None, 0, def_name)
+    if not h2_cells or body is None:
+        return None
+    h3_cells = h3m_passability_cells(body[1][:12])
+    if not h3_cells:
+        return None
+    return fh2m_h3m_anchor_shift(h2_cells, h3_cells)
+
+
+def fh2m_to_h3m_anchor_shift(group, index, tile_terrain=None,
+                             anchor=None, map_width=None):
     """Anchor shift (dx, dy) applied when writing an fh2m object to
     h3m: the h3m instance goes at fh2m anchor + shift so that its
     footprint covers the deduced fh2m footprint. The h3m -> fh2m
@@ -1941,27 +2177,21 @@ def fh2m_to_h3m_anchor_shift(group, index, tile_terrain=None):
             return None
         h3m_class, h3m_subclass = h3m_mine
         def_name = fh2m_mine_def_name(index)
-    elif group == "LANDSCAPE_TREES":
-        h3m_class = fh2m_tree_h3m_class(index, tile_terrain or "Grass")
-        if h3m_class is None:
+        body = _h3m_def_body(h3m_class, h3m_subclass, def_name)
+        if body is None:
             return None
-        h3m_subclass = 0
-        def_name = fh2m_tree_def_name(h3m_class, tile_terrain or "Grass")
-    elif group == "LANDSCAPE_MOUNTAINS":
-        h3m_class = fh2m_mountain_h3m_class(tile_terrain or "Grass")
-        h3m_subclass = 0
-        def_name = fh2m_mountain_def_name(index, h3m_class,
-                                         tile_terrain or "Grass")
-    else:
-        return None
-    body = _h3m_def_body(h3m_class, h3m_subclass, def_name)
-    if body is None:
-        return None
-    h3_cells = h3m_passability_cells(body[1][:12])
-    if not h3_cells:
-        return None
-    return FH2M_TO_H3M_SHIFT_OVERRIDE.get(
-        (group, index), fh2m_h3m_anchor_shift(h2_cells, h3_cells))
+        h3_cells = h3m_passability_cells(body[1][:12])
+        if not h3_cells:
+            return None
+        return FH2M_TO_H3M_SHIFT_OVERRIDE.get(
+            (group, index), fh2m_h3m_anchor_shift(h2_cells, h3_cells))
+    if group in ("LANDSCAPE_TREES", "LANDSCAPE_MOUNTAINS"):
+        chosen = fh2m_landscape_def(group, index, tile_terrain,
+                                    anchor, map_width)
+        if chosen is None:
+            return FH2M_TO_H3M_SHIFT_OVERRIDE.get((group, index))
+        return FH2M_TO_H3M_SHIFT_OVERRIDE.get((group, index), chosen[2])
+    return None
 
 # fh2m hero race id (the KINGDOM_HEROES object index modulo 7:
 # 0 Knight, 1 Barbarian, 2 Sorceress, 3 Warlock, 4 Wizard,
@@ -2166,37 +2396,37 @@ H3M_TO_FH2M_INTERACTIVE = {
 # not listed here stay dropped.
 H3M_DECORATIVE_TO_FH2M = {
     150: ("LANDSCAPE_MISCELLANEOUS", 10),  # shrubs -> small shrub, grass
-    134: ("LANDSCAPE_MOUNTAINS", 4),        # mountains -> medium mountain
+    134: ("LANDSCAPE_MOUNTAINS", 2),        # mountains -> medium mountain, generic
     137: ("LANDSCAPE_MISCELLANEOUS", 11),  # plants -> pink flowers, grass
-    119: ("LANDSCAPE_TREES", 24),           # dead trees -> dead tree, generic
+    119: ("LANDSCAPE_TREES", 43),           # dead trees -> dead tree, generic
     147: ("LANDSCAPE_ROCKS", 2),            # rocks -> single medium rock, grass
     120: ("LANDSCAPE_MISCELLANEOUS", 18),  # flowers -> small flowers, grass
     116: ("LANDSCAPE_MISCELLANEOUS", 73),  # cacti -> small cactus, desert
     131: ("LANDSCAPE_MISCELLANEOUS", 7),   # mandrakes -> wide shrub, grass
-    155: ("LANDSCAPE_TREES", 7),            # deciduous trees -> single tree, grass
+    155: ("LANDSCAPE_TREES", 53),           # deciduous trees -> single tree, grass
     129: ("LANDSCAPE_MISCELLANEOUS", 30),  # mosses -> shrub, swamp
     118: ("LANDSCAPE_MISCELLANEOUS", 0),   # cracks -> crack, grass
     127: ("LANDSCAPE_MISCELLANEOUS", 56),  # lava lakes -> small lava pool
     161: ("LANDSCAPE_MISCELLANEOUS", 19),  # debris -> dug hole, grass
-    135: ("LANDSCAPE_MOUNTAINS", 4),      # mountains (snow) -> medium mountain
-    136: ("LANDSCAPE_MOUNTAINS", 4),      # mountains (dirt) -> medium mountain
-    101: ("LANDSCAPE_TREES", 7),           # conifers -> single tree, grass
+    135: ("LANDSCAPE_MOUNTAINS", 2),      # mountains (snow) -> medium mountain
+    136: ("LANDSCAPE_MOUNTAINS", 2),      # mountains (dirt) -> medium mountain
+    101: ("LANDSCAPE_TREES", 53),          # conifers -> single tree, grass
     126: ("LANDSCAPE_MISCELLANEOUS", 11), # flowers (tall) -> pink flowers
     128: ("LANDSCAPE_MISCELLANEOUS", 12), # flowers (wide) -> wide flowers
-    125: ("LANDSCAPE_TREES", 17),          # palms -> two tall palms, desert
-    133: ("LANDSCAPE_ROCKS", 2),            # rocks (dirt) -> medium rock
+    125: ("LANDSCAPE_TREES", 38),          # palms -> single tree, grass
+    133: ("LANDSCAPE_MOUNTAINS", 52),     # mounds -> mound, grass
     22:  ("LANDSCAPE_MISCELLANEOUS", 20), # small cliffs -> small cliff, grass
     29:  ("LANDSCAPE_WATER", 4),            # water plants -> aquatic plants
-    148: ("LANDSCAPE_MISCELLANEOUS", 25), # shrubs (snow) -> small shrub, snow
+    148: ("LANDSCAPE_MOUNTAINS", 58),     # dunes -> dune
     57:  ("LANDSCAPE_TREES", 5),           # forest -> three trees, grass
     12:  ("LANDSCAPE_MISCELLANEOUS", 69), # cactus -> tiny cactus
     124: ("LANDSCAPE_MISCELLANEOUS", 19), # hole -> dug hole, grass
-    130: ("LANDSCAPE_TREES", 25),          # log -> log, generic
+    130: ("LANDSCAPE_TREES", 39),          # log -> stump, generic
     132: ("LANDSCAPE_ROCKS", 13),          # moss -> medium mossy rock
     143: ("LANDSCAPE_MISCELLANEOUS", 112), # river delta -> river delta
     151: ("LANDSCAPE_MISCELLANEOUS", 102), # skull -> cow skull
-    153: ("LANDSCAPE_TREES", 26),          # stump -> three stumps, generic
-    158: ("LANDSCAPE_MISCELLANEOUS", 67), # volcano -> smoking volcano crater
+    153: ("LANDSCAPE_TREES", 66),          # stump -> stump, generic
+    158: ("LANDSCAPE_MOUNTAINS", 54),     # volcano -> volcano
     121: ("LANDSCAPE_MISCELLANEOUS", 26), # frozen lake -> frozen water lake, snow
     149: ("LANDSCAPE_MISCELLANEOUS", 79), # sand pit -> dug hole, desert
     117: ("LANDSCAPE_MISCELLANEOUS", 104), # canyon -> big crack, wasteland
