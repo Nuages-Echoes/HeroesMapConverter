@@ -179,7 +179,7 @@ Values used in the unified JSON format and their equivalents in .fh2m and .h3m
 | "Snow"           | SNOW (92-145)                        | "Snow"     |
 | "Swamp"          | SWAMP (146-207)                      | "Swamp"    |
 | "Lava"           | LAVA (208-261)                       | "Lava"     |
-| "Desert"         | DESERT (262-320)                     | "Sand"     |
+| "Desert"         | DESERT (262-320)                     | "Rough"     |
 | "Dirt"           | DIRT (321-360)                       | "Dirt"     |
 | "Wasteland"      | WASTELAND (361-414)                 | "Rough"    |
 | "Beach"          | BEACH (415-431)                      | "Sand"     |
