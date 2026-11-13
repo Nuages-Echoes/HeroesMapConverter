@@ -45,6 +45,8 @@ content for `.h3m`).
 - Commit messages: conventional style, short, English — `fix:`, `docs:`,
   `test:`, `chore:`, `feat:`.
 - One logical change per commit.
+- use files in input directory for tests and checks. If information or cases are 
+  missing, inform user.
 
 ## Code conventions
 

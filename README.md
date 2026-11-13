@@ -34,5 +34,5 @@ No, not yet. I'd like to make it work first and then think about UI. Also, I don
 
 Known Limitations
 Converting maps with subterranean map to H2 ends in failure (no underground in H2)
-
 Neutral heroes from H3 disappear in H2 maps (no neutral heroes in the game)
+More info on limitations in the `*_description.english.txt` files.
