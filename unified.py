@@ -2288,13 +2288,31 @@ def unified_to_fh2m(unified):
                                                   dropped_ids,
                                                   h3m_tile_terrains.get((x, y, z)))
         if translated:
-            target = (x, y)
-            if any(o.get("group") == "KINGDOM_TOWNS" for o in translated):
-                # The h3m town instance sits at the bottom-right corner
-                # of the castle footprint; the fh2m town tile is the
-                # entrance, 2 tiles to the left (instance + (-2, 0)).
-                target = (max(x - 2, 0), y)
-            objects_by_tile[target] = translated
+            # Per-object anchor shift, the opposite of the fh2m -> h3m
+            # shift: the h3m anchor is the south-east corner of the
+            # footprint, the fh2m anchor sits inside its deduced
+            # footprint. Objects of one tile may shift to different
+            # fh2m tiles, so they are redistributed per object.
+            from correspondence import fh2m_to_h3m_anchor_shift
+            tile_terrain = h3m_tile_terrains.get((x, y, z))
+            for obj in translated:
+                obj_group = obj.get("group", "")
+                if obj_group == "KINGDOM_TOWNS":
+                    # The h3m town instance sits at the bottom-right
+                    # corner of the castle footprint; the fh2m town
+                    # tile is the entrance, 2 tiles to the left
+                    # (instance + (-2, 0)).
+                    target = (max(x - 2, 0), y)
+                else:
+                    shift = fh2m_to_h3m_anchor_shift(obj_group,
+                                                    obj.get("index"),
+                                                    tile_terrain)
+                    if shift:
+                        target = (min(max(x - shift[0], 0), width - 1),
+                                  min(max(y - shift[1], 0), width - 1))
+                    else:
+                        target = (x, y)
+                objects_by_tile.setdefault(target, []).append(obj)
     if dropped_ids:
         objects_section = OrderedDict(objects_section)
         objects_section["dropped"] = dropped_ids
@@ -2946,11 +2964,21 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
                 # has one def per terrain variant, so the def follows
                 # the mine's appearance: the catalog key carries the
                 # def name as a third element.
-                from correspondence import FH2M_TO_H3M_MINES, fh2m_mine_def_name
+                from correspondence import (FH2M_TO_H3M_MINES,
+                                          fh2m_mine_def_name,
+                                          fh2m_to_h3m_anchor_shift)
                 h3m_mine = FH2M_TO_H3M_MINES.get(index)
                 if h3m_mine is not None:
                     def_name = fh2m_mine_def_name(index)
-                    entry = ("ownable", (x, y, z),
+                    # The h3m anchor (south-east corner of the
+                    # footprint) is shifted so the h3m footprint
+                    # covers the deduced fh2m footprint.
+                    shift = fh2m_to_h3m_anchor_shift("ADVENTURE_MINES",
+                                                    index)
+                    ox, oy = shift if shift else (0, 0)
+                    entry = ("ownable",
+                             (min(max(x + ox, 0), map_width - 1),
+                              min(max(y + oy, 0), map_width - 1), z),
                              (h3m_mine[0], h3m_mine[1], def_name), None)
             elif group == "ADVENTURE_DWELLINGS":
                 # The fh2m dwelling index maps to the h3m ownable
@@ -2969,6 +2997,7 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
                 from correspondence import FH2M_LANDSCAPE_TO_H3M
                 h3m_class = FH2M_LANDSCAPE_TO_H3M.get((group, index))
                 variant_def = None
+                tile_terrain = None
                 if group == "LANDSCAPE_TREES" and h3m_class is not None:
                     # The h3m tree classes carry one def per variant
                     # under the same subclass 0 and the variants have
@@ -2999,11 +3028,22 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
                     variant_def = fh2m_mountain_def_name(index, h3m_class,
                                                          tile_terrain)
                 if h3m_class is not None:
+                    # The h3m anchor (south-east corner of the
+                    # footprint) is shifted so the h3m footprint
+                    # covers the deduced fh2m footprint (mountains
+                    # and trees; the other landscape families have no
+                    # known footprint).
+                    from correspondence import fh2m_to_h3m_anchor_shift
+                    shift = fh2m_to_h3m_anchor_shift(group, index,
+                                                    tile_terrain)
+                    ox, oy = shift if shift else (0, 0)
+                    anchor = (min(max(x + ox, 0), map_width - 1),
+                              min(max(y + oy, 0), map_width - 1), z)
                     if variant_def is not None:
-                        entry = ("decorative", (x, y, z),
+                        entry = ("decorative", anchor,
                                  (h3m_class, 0, variant_def), None)
                     else:
-                        entry = ("decorative", (x, y, z), (h3m_class, 0), None)
+                        entry = ("decorative", anchor, (h3m_class, 0), None)
             if entry:
                 instances.append(entry)
 

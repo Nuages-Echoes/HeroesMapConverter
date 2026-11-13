@@ -1808,6 +1808,137 @@ FH2M_TO_H3M_CATALOG = {
     (56, 0): ("AVXosis0.def", "ffffffffff7f000000000080ff01ff00", "000000000000000000000000000000000000"),  # Oasis
 }
 
+
+# --- H2/H3 anchor alignment ---------------------------------------------
+# The h3m object anchor is the south-east corner of the object's
+# footprint (bit 47 of the passability mask, the bottom-right cell:
+# see the hero template note in unified.py), so the blocked cells of
+# an h3m def extend west (dx < 0) and north (dy < 0, the map y grows
+# southward) of the anchor. The fh2m anchor semantics differ per
+# family; the footprints below were deduced from the input maps by
+# road-frequency analysis (map makers never paint roads on footprint
+# tiles; the town calibration reproduces the documented
+# castle-entrance road one tile south of the town):
+#   - resource mines (0-47): dx -1..+1, dy -2..0 - the body extends
+#     north of the anchor (the gate tile), roads pass at dy +1/+2;
+#   - sawmills and alchemist labs (48-55): dx -2..+2, dy -3..+1;
+#   - mountains: big variants 0-1 dx -1..+1 dy -2..+1, medium
+#     variants 2-5 dx -1..+1 dy 0, small variants 6+ dx -1..+1
+#     dy -1..+1 (the anchor sits at the center/south of the
+#     footprint);
+#   - trees: the anchor cell only.
+# The towns keep their dedicated (+-2, 0) shift in unified.py: it
+# follows the Castle X/Y relation observed in every real map
+# (entrance = instance + (-2, 0)), stronger evidence than the
+# statistical deduction.
+
+def h3m_passability_cells(mask_hex):
+    """Blocked cells (dx, dy) of a 6-byte h3m passability mask, as
+    map offsets from the object anchor (tile = anchor + (dx, dy), y
+    grows southward): a clear bit blocks; bit 47 (byte 5, MSB) is
+    the anchor cell, the columns run west from it (MSB-first) and
+    the rows north."""
+    b = bytes.fromhex(mask_hex)
+    return [(-c, r - 5) for r in range(6) for c in range(8)
+            if not (b[r] >> (7 - c)) & 1]
+
+
+def _footprint_rect(dx0, dx1, dy0, dy1):
+    return [(dx, dy) for dx in range(dx0, dx1 + 1)
+            for dy in range(dy0, dy1 + 1)]
+
+
+FH2M_FOOTPRINTS = {
+    "mine": _footprint_rect(-1, 1, -2, 0),
+    "sawmill": _footprint_rect(-2, 2, -3, 1),
+    "mountain_big": _footprint_rect(-1, 1, -2, 1),
+    "mountain_medium": _footprint_rect(-1, 1, 0, 0),
+    "mountain_small": _footprint_rect(-1, 1, -1, 1),
+    "tree": [(0, 0)],
+}
+
+
+def fh2m_footprint(group, index):
+    """Deduced fh2m footprint cells (map offsets from the anchor) of
+    an object family, or None when unknown (no shift applied)."""
+    if group == "ADVENTURE_MINES":
+        return FH2M_FOOTPRINTS["sawmill" if index >= 48 else "mine"]
+    if group == "LANDSCAPE_MOUNTAINS":
+        variant = index % FH2M_MOUNTAIN_BLOCKS
+        if variant <= 1:
+            return FH2M_FOOTPRINTS["mountain_big"]
+        if variant <= 5:
+            return FH2M_FOOTPRINTS["mountain_medium"]
+        return FH2M_FOOTPRINTS["mountain_small"]
+    if group == "LANDSCAPE_TREES":
+        return FH2M_FOOTPRINTS["tree"]
+    return None
+
+
+def fh2m_h3m_anchor_shift(h2_cells, h3_cells):
+    """(dx, dy) to add to an fh2m anchor so that the h3m footprint
+    (the blocked cells of its def) covers the fh2m footprint:
+    minimizes the symmetric difference between the h3m cells
+    translated by the shift and the fh2m cells, preferring the
+    smallest shift on ties, then the western/southern one."""
+    best_key, best_shift = None, None
+    h2_set = set(h2_cells)
+    for dx in range(-7, 8):
+        for dy in range(-5, 6):
+            shifted = {(x + dx, y + dy) for x, y in h3_cells}
+            key = (len(shifted ^ h2_set), abs(dx) + abs(dy), -dx, -dy)
+            if best_key is None or key < best_key:
+                best_key, best_shift = key, (dx, dy)
+    return best_shift
+
+
+def _h3m_def_body(h3m_class, h3m_subclass, def_name):
+    """Catalog body (sprite, 16 passability/actionability bytes hex,
+    trailing bytes hex) of an h3m def: the variant def tables first,
+    then the class catalog."""
+    return (H3M_MINE_DEFS.get((def_name or "").lower())
+            or H3M_TREE_DEFS.get((def_name or "").lower())
+            or H3M_MOUNTAIN_DEFS.get((def_name or "").lower())
+            or FH2M_TO_H3M_CATALOG.get((h3m_class, h3m_subclass)))
+
+
+def fh2m_to_h3m_anchor_shift(group, index, tile_terrain=None):
+    """Anchor shift (dx, dy) applied when writing an fh2m object to
+    h3m: the h3m instance goes at fh2m anchor + shift so that its
+    footprint covers the deduced fh2m footprint. The h3m -> fh2m
+    direction applies the opposite shift, so a cross-format
+    round-trip restores the original anchor. None when the family
+    has no known footprint (the anchor is copied as is)."""
+    h2_cells = fh2m_footprint(group, index)
+    if not h2_cells:
+        return None
+    if group == "ADVENTURE_MINES":
+        h3m_mine = FH2M_TO_H3M_MINES.get(index)
+        if h3m_mine is None:
+            return None
+        h3m_class, h3m_subclass = h3m_mine
+        def_name = fh2m_mine_def_name(index)
+    elif group == "LANDSCAPE_TREES":
+        h3m_class = fh2m_tree_h3m_class(index, tile_terrain or "Grass")
+        if h3m_class is None:
+            return None
+        h3m_subclass = 0
+        def_name = fh2m_tree_def_name(h3m_class, tile_terrain or "Grass")
+    elif group == "LANDSCAPE_MOUNTAINS":
+        h3m_class = fh2m_mountain_h3m_class(tile_terrain or "Grass")
+        h3m_subclass = 0
+        def_name = fh2m_mountain_def_name(index, h3m_class,
+                                         tile_terrain or "Grass")
+    else:
+        return None
+    body = _h3m_def_body(h3m_class, h3m_subclass, def_name)
+    if body is None:
+        return None
+    h3_cells = h3m_passability_cells(body[1][:12])
+    if not h3_cells:
+        return None
+    return fh2m_h3m_anchor_shift(h2_cells, h3_cells)
+
 # fh2m hero race id (the KINGDOM_HEROES object index modulo 7:
 # 0 Knight, 1 Barbarian, 2 Sorceress, 3 Warlock, 4 Wizard,
 # 5 Necromancer, 6 random) -> the first h3m hero id of the paired
