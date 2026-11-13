@@ -47,6 +47,7 @@ content for `.h3m`).
 - One logical change per commit.
 - use files in input directory for tests and checks. If information or cases are 
   missing, inform user.
+- Unless specified otherwise, merge directly into main and do not create branch
 
 ## Map-object terminology
 
