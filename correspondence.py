@@ -1203,7 +1203,9 @@ def fh2m_tree_h3m_class(index, tile_terrain):
 FH2M_TREE_DEF_BY_TERRAIN = {
     101: {},  # conifers: a single def for every terrain
     119: {"Swamp": "AVLswp70.def", "Water": "AVLswp60.def", "Snow": "AVLd3sn0.def"},
-    125: {},  # palms: AVLklp10/20.def
+    # palms: the land palms block their tile (AVLplm30.def); the
+    # passable kelp (AVLklp10.def) is the water variant only.
+    125: {"Water": "AVLklp10.def"},
     130: {},  # log: AvLdlog.def
     153: {"Snow": "AVLp1sn0.def"},
     155: {"Grass": "AVLtr1d0.def", "Dirt": "AVLtr1d0.def", "Swamp": "AVLswmp0.def",
@@ -1215,7 +1217,7 @@ FH2M_TREE_DEF_BY_TERRAIN = {
 # variant def.
 H3M_TREE_GENERIC_DEF = {
     101: "AVTchst0.def", 119: "AVLswp70.def",
-    125: "AVLklp10.def", 130: "AvLdlog.def", 153: "AvLStm2.def",
+    125: "AVLplm30.def", 130: "AvLdlog.def", 153: "AvLStm2.def",
     155: "AVLroug0.def",
 }
 
