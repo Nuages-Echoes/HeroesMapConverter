@@ -1902,14 +1902,17 @@ def _h3m_def_body(h3m_class, h3m_subclass, def_name):
             or FH2M_TO_H3M_CATALOG.get((h3m_class, h3m_subclass)))
 
 
-# In-game validated corrections to the computed anchor shifts:
-# the alchemist lab def (AVMalch0/AVMalcs0) is drawn one tile
-# further west than its deduced footprint alignment, so the h3m
-# instance goes one tile further east than the symmetric-difference
-# minimum.
+# In-game validated corrections to the computed anchor shifts,
+# checked before the footprint alignment: the alchemist lab def
+# (AVMalch0/AVMalcs0) is drawn one tile further west than its deduced
+# footprint alignment, so the h3m instance goes one tile further east
+# than the symmetric-difference minimum; the mercenary camp def
+# (AVXmercn0.def) is drawn one tile further west than the fh2m
+# Mercenary Camp anchor.
 FH2M_TO_H3M_SHIFT_OVERRIDE = {
     ("ADVENTURE_MINES", 54): (1, 0),  # alchemist lab, generic
     ("ADVENTURE_MINES", 55): (1, 0),  # alchemist lab, snow
+    ("ADVENTURE_POWER_UPS", 13): (1, 0),  # mercenary camp
 }
 
 
@@ -1922,7 +1925,9 @@ def fh2m_to_h3m_anchor_shift(group, index, tile_terrain=None):
     has no known footprint (the anchor is copied as is)."""
     h2_cells = fh2m_footprint(group, index)
     if not h2_cells:
-        return None
+        # Families without a deduced footprint still honour the
+        # in-game validated overrides.
+        return FH2M_TO_H3M_SHIFT_OVERRIDE.get((group, index))
     if group == "ADVENTURE_MINES":
         h3m_mine = FH2M_TO_H3M_MINES.get(index)
         if h3m_mine is None:
