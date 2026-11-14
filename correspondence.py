@@ -1346,21 +1346,57 @@ def _fh2m_forest_shape_offset(cells, shape):
     return None
 
 
-def fh2m_forest_h3m_cover(index, tile_terrain, anchor=None,
-                          map_width=None):
-    """h3m instances covering a 4-cell fh2m forest with same-terrain
-    trees: a list of (class, def name, anchor offset from the fh2m
-    anchor) whose blocked cells tile the forest footprint exactly.
-    A terrain with a 4-cell tree matching the forest shape covers it
-    with one exact instance; the other terrains overlap their 2-cell
-    pair trees (two per forest, one per horizontal cell pair) and
-    the single-cell trees only cover the cells the pairs cannot (no
+# Same-terrain 2-cell pair trees used to convert the 3-cell fh2m
+# wide trees (idx 36 and 42) on the terrains without a 3-cell def:
+# two overlapping pairs, the west pair anchoring on the fh2m anchor
+# and the east pair one tile further east (they share the middle
+# cell). Grass keeps its exact 3-cell willow; Sand and Snow have no
+# pair tree and keep the exact def until their fallback is decided.
+FH2M_WIDE_TREE_TERRAIN_PAIR = {
+    "Dirt": (119, "AVLdt1s0.def"),
+    "Swamp": (119, "AVLswp60.def"),
+    "Rough": (155, "AVLr04r0.def"),
+}
+
+
+def _fh2m_wide_tree_h3m_cover(tile_terrain, anchor, map_width):
+    """Instances covering the 3-cell wide fh2m tree with two
+    overlapping same-terrain pair trees, or None when the terrain
+    has no pair tree (the caller keeps the single footprint-exact
+    def)."""
+    pair = FH2M_WIDE_TREE_TERRAIN_PAIR.get(tile_terrain)
+    if pair is None:
+        return None
+    cells = _fh2m_forest_tree_cells(pair[1])
+    if not cells or sorted(cells) != [(-1, 0), (0, 0)]:
+        return None
+    cover = [(pair[0], pair[1], (0, 0))]
+    if (anchor is None or map_width is None
+            or 0 <= anchor[0] + 1 < map_width):
+        cover.append((pair[0], pair[1], (1, 0)))
+    return cover
+
+
+def fh2m_tree_h3m_cover(index, tile_terrain, anchor=None,
+                         map_width=None):
+    """h3m instances covering a multi-cell fh2m tree with
+    same-terrain trees: a list of (class, def name, anchor offset
+    from the fh2m anchor) whose blocked cells tile the tree
+    footprint exactly. The 3-cell wide trees (idx 36, 42) use two
+    overlapping same-terrain pairs on the terrains that have one.
+    A 4-cell forest with a same-terrain 4-cell tree of the forest
+    shape uses one exact instance; the other forests overlap their
+    2-cell pair trees (one per horizontal cell pair), the
+    single-cell trees covering only the cells the pairs cannot (no
     pair def for the terrain, or a pair cell outside the map). A
     single-cell tree anchors so that its blocked cell is the
     footprint cell; when that anchor would leave the map, the
     terrain fallback tree blocks its own anchor cell instead.
-    None when the index is not a forest or the terrain has no tree
-    model (the caller keeps the single footprint-exact def)."""
+    None for any other tree or a terrain without a tree model (the
+    caller keeps the single footprint-exact def)."""
+    if index in (36, 42):
+        return _fh2m_wide_tree_h3m_cover(tile_terrain, anchor,
+                                         map_width)
     if not (0 <= index < 36 and index % 6 < 4):
         return None
     tree = FH2M_FOREST_TERRAIN_TREE.get(tile_terrain)
