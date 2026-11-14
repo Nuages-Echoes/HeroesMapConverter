@@ -1286,40 +1286,79 @@ FH2M_TREE_EXACT_DEF.update({
 })
 
 
-# Same-terrain tree defs used to convert the 4-cell H2 forests: the
-# h3m tree families have no 4-cell def outside the dead and swamp
-# trees, so a forest becomes one same-terrain tree per blocked cell
-# (overlapping allowed), placed so the union of the blocked cells is
-# exactly the forest footprint. Terrains without an entry keep the
-# single footprint-exact swamp-tree model.
+# Same-terrain tree defs used to convert the 4-cell H2 forests: a
+# forest converts to same-terrain trees whose blocked cells tile the
+# forest footprint exactly. The terrains with a 4-cell tree whose
+# blocked cells match the forest shape (the dead trees on Dirt, the
+# swamp trees on Swamp) use one exact instance per forest; the other
+# terrains overlap their 2-cell pair trees - two per forest, one per
+# horizontal cell pair - and the terrains without one (Sand, Snow)
+# fall back to one single-cell tree per footprint cell. Terrains
+# without an entry keep the single footprint-exact swamp-tree model.
 FH2M_FOREST_TERRAIN_TREE = {
-    "Grass": (155, "AVLtr1d0.def"),
-    "Dirt": (155, "AVLtr1d0.def"),
-    "Swamp": (155, "AVLswmp0.def"),
-    "Rough": (155, "AVLroug0.def"),
-    "Sand": (155, "AVLyuc30.def"),
-    "Snow": (153, "AVLp2sn0.def"),
+    # terrain: (2-cell pair def or None, 1-cell def)
+    "Grass": ((155, "AVLwlw20.def"), (155, "AVLtr1d0.def")),
+    "Dirt": ((119, "AVLdt1s0.def"), (119, "AVLdead0.def")),
+    "Swamp": ((119, "AVLswp60.def"), (155, "AVLswmp0.def")),
+    "Rough": ((155, "AVLr04r0.def"), (155, "AVLroug0.def")),
+    "Sand": (None, (155, "AVLyuc30.def")),
+    "Snow": (None, (153, "AVLp2sn0.def")),
 }
 
+# 4-cell h3m trees whose blocked cells tile a 4-cell fh2m forest
+# footprint exactly (one instance covers the whole forest): the
+# first candidate whose shape aligns with the forest footprint wins
+# (AVLdead2/AVLswmp2 match the forest_a/forest_c shapes,
+# AVLdead3/AVLswmp3 the forest_b/forest_d ones). Dirt uses the dead
+# trees.
+FH2M_FOREST_TERRAIN_TREE_EXACT = {
+    "Dirt": [(119, "AVLdead2.def"), (119, "AVLdead3.def")],
+    "Swamp": [(155, "AVLswmp2.def"), (155, "AVLswmp3.def")],
+}
 
-# Fallback tree of the terrains whose forest tree blocks the cell
-# west of its anchor (AVLtr1d0): a same-class tree blocking its own
-# anchor cell, so a footprint cell on the eastern map edge still
+# Fallback tree of the terrains whose 1-cell forest tree blocks the
+# cell west of its anchor (AVLtr1d0): a same-class tree blocking its
+# own anchor cell, so a footprint cell on the eastern map edge still
 # gets its tree.
 FH2M_FOREST_TERRAIN_TREE_ALT = {
     "Grass": (155, "AVLwlw30.def"),
-    "Dirt": (155, "AVLwlw30.def"),
 }
+
+
+def _fh2m_forest_tree_cells(def_name):
+    """Blocked cells of an h3m tree def, or None when the def is
+    unknown."""
+    body = _h3m_def_body(None, 0, def_name)
+    if not body:
+        return None
+    return h3m_passability_cells(body[1][:12])
+
+
+def _fh2m_forest_shape_offset(cells, shape):
+    """Translation aligning the def blocked cells onto the forest
+    footprint cells, or None when the shapes differ."""
+    if not cells:
+        return None
+    ox = min(x for x, _ in shape) - min(x for x, _ in cells)
+    oy = min(y for _, y in shape) - min(y for _, y in cells)
+    if sorted((x + ox, y + oy) for x, y in cells) == sorted(shape):
+        return (ox, oy)
+    return None
 
 
 def fh2m_forest_h3m_cover(index, tile_terrain, anchor=None,
                           map_width=None):
     """h3m instances covering a 4-cell fh2m forest with same-terrain
     trees: a list of (class, def name, anchor offset from the fh2m
-    anchor) whose blocked cells tile the forest footprint exactly -
-    one single-cell tree per footprint cell. With the anchor and the
-    map width, the cells outside the map are skipped and a cell
-    whose tree anchor would leave the map uses the fallback tree.
+    anchor) whose blocked cells tile the forest footprint exactly.
+    A terrain with a 4-cell tree matching the forest shape covers it
+    with one exact instance; the other terrains overlap their 2-cell
+    pair trees (two per forest, one per horizontal cell pair) and
+    the single-cell trees only cover the cells the pairs cannot (no
+    pair def for the terrain, or a pair cell outside the map). A
+    single-cell tree anchors so that its blocked cell is the
+    footprint cell; when that anchor would leave the map, the
+    terrain fallback tree blocks its own anchor cell instead.
     None when the index is not a forest or the terrain has no tree
     model (the caller keeps the single footprint-exact def)."""
     if not (0 <= index < 36 and index % 6 < 4):
@@ -1327,31 +1366,69 @@ def fh2m_forest_h3m_cover(index, tile_terrain, anchor=None,
     tree = FH2M_FOREST_TERRAIN_TREE.get(tile_terrain)
     if tree is None:
         return None
-    h3m_class, def_name = tree
-    body = _h3m_def_body(None, 0, def_name)
-    if body is None:
-        return None
-    cells = h3m_passability_cells(body[1][:12])
-    if len(cells) != 1:
-        return None
-    bx, by = cells[0]
+    pair_tree, single_tree = tree
+    shape = fh2m_tree_shape(index)
+
+    def on_map(dx, dy):
+        if anchor is None or map_width is None:
+            return True
+        return (0 <= anchor[0] + dx < map_width
+                and 0 <= anchor[1] + dy < map_width)
+
+    def single_cover(dx, dy):
+        """Instances blocking the on-map footprint cell (dx, dy)."""
+        cells = _fh2m_forest_tree_cells(single_tree[1])
+        if not cells or len(cells) != 1:
+            return []
+        bx, by = cells[0]
+        ax, ay = dx - bx, dy - by
+        if on_map(ax, ay):
+            return [(single_tree[0], single_tree[1], (ax, ay))]
+        if (bx, by) != (0, 0):
+            alt = FH2M_FOREST_TERRAIN_TREE_ALT.get(tile_terrain)
+            if alt is not None and on_map(dx, dy):
+                return [(alt[0], alt[1], (dx, dy))]
+        return []
+
+    # One exact 4-cell tree covers the whole footprint.
+    for exact in FH2M_FOREST_TERRAIN_TREE_EXACT.get(tile_terrain, []):
+        cells = _fh2m_forest_tree_cells(exact[1])
+        offset = _fh2m_forest_shape_offset(cells, shape) \
+            if cells else None
+        if offset is not None and on_map(*offset):
+            return [(exact[0], exact[1], offset)]
+
     cover = []
-    for dx, dy in fh2m_tree_shape(index):
-        cell_class, cell_def, tx, ty = h3m_class, def_name, dx - bx, dy - by
-        if anchor is not None and map_width is not None:
-            if not (0 <= anchor[0] + dx < map_width
-                    and 0 <= anchor[1] + dy < map_width):
-                # The footprint cell is outside the map.
-                continue
-            if not (0 <= anchor[0] + tx < map_width
-                    and 0 <= anchor[1] + ty < map_width):
-                # The tree anchor would leave the map: the fallback
-                # tree blocks its own anchor cell.
-                alt = FH2M_FOREST_TERRAIN_TREE_ALT.get(tile_terrain)
-                if alt is None:
-                    continue
-                cell_class, cell_def, tx, ty = alt[0], alt[1], dx, dy
-        cover.append((cell_class, cell_def, (tx, ty)))
+    if pair_tree is not None:
+        cells = _fh2m_forest_tree_cells(pair_tree[1])
+        if cells and len(cells) == 2 and cells[0] == (0, 0) \
+                and cells[1] == (-1, 0):
+            # Group the footprint cells into horizontal (west, east)
+            # pairs; the pair tree anchors on the east cell.
+            rows = {}
+            for dx, dy in shape:
+                rows.setdefault(dy, []).append(dx)
+            paired = []
+            for dy, xs in rows.items():
+                xs = sorted(xs)
+                if len(xs) == 2 and xs[1] == xs[0] + 1:
+                    paired.append((dy, xs[0], xs[1]))
+            if len(paired) == len(rows):
+                for dy, wx, ex in paired:
+                    if on_map(ex, dy):
+                        cover.append((pair_tree[0], pair_tree[1],
+                                       (ex, dy)))
+                    elif on_map(wx, dy):
+                        # Only the west cell is on the map: a single
+                        # tree covers it.
+                        cover.extend(single_cover(wx, dy))
+                # The pairs cover every footprint cell.
+                return cover
+    # No pair def (or the shape is not pairable): one single-cell
+    # tree per footprint cell.
+    for dx, dy in shape:
+        if on_map(dx, dy):
+            cover.extend(single_cover(dx, dy))
     return cover
 
 
