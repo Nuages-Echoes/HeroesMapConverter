@@ -434,7 +434,10 @@ def _h3m_h3m_metadata_to_unified(kind, metadata):
         if entry.get("skills") is not None:
             entry["skillsNamed"] = [
                 OrderedDict([
-                    ("skill", H3M_SECONDARY_SKILL_NAMES.get(sk.get("id"), str(sk.get("id")))),
+                    ("skill", (H3M_SECONDARY_SKILL_NAMES[sk.get("id")]
+                               if sk.get("id") is not None
+                               and sk.get("id") < len(H3M_SECONDARY_SKILL_NAMES)
+                               else str(sk.get("id")))),
                     ("sourceSkillId", sk.get("id")),
                     ("level", sk.get("level")),
                 ])
@@ -1544,15 +1547,27 @@ def _translate_h3m_tile_objects(obj_list, objects_section, translated_metadata,
             # type maps to the fh2m race through the faction pairings.
             town_type = town_meta.get("type")
             race_name = H3M_TOWN_TYPE_TO_FH2M_RACE.get(town_type)
-            if race_name is None:
-                # Random town or unknown type: Knight castle.
-                race_id = 0
+            if town_type == 255:
+                # The h3m random town: the H2 random town, with the
+                # castle built when the h3m castle building is there
+                # (byte 0 bit 5 of the built bitfield, the H3
+                # counterpart of the fh2m BUILD_CASTLE flag; without
+                # custom buildings, the fort byte carries it).
+                built_hex = town_meta.get("builtBuildings")
+                if built_hex:
+                    has_castle = bool(bytes.fromhex(built_hex)[0] & 0x20)
+                else:
+                    has_castle = bool(town_meta.get("hasFort"))
+                town_index = 12 if has_castle else 13
+            elif race_name is None:
+                # Unknown type: Knight castle.
+                town_index = 0
             else:
-                race_id = FH2M_TOWN_RACE_ORDER.index(race_name)
+                town_index = FH2M_TOWN_RACE_ORDER.index(race_name) * 2
             translated.append(OrderedDict([
                 ("id", obj_id),
                 ("group", "KINGDOM_TOWNS"),
-                ("index", race_id * 2),
+                ("index", town_index),
             ]))
             translated_metadata.setdefault("castleMetadata", OrderedDict())[str(obj_id)] = _h3m_town_to_fh2m_castle(town_meta)
         elif group == "KINGDOM_HEROES":
@@ -3104,17 +3119,24 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
                 entry = ("hero", (x, y, z), (34, hero_class), hero_payload)
             elif group == "KINGDOM_TOWNS":
                 # A town: the object index encodes the race (race * 2
-                # for a castle); the castleMetadata carries the
-                # defenders.
-                from correspondence import FH2M_TOWN_RACE_ORDER
-                race_id = index // 2
+                # for a castle); the indices 12/13 are the H2 random
+                # town (12 with the castle built); the castleMetadata
+                # carries the defenders.
                 town_type = None
-                if 0 <= race_id < len(FH2M_TOWN_RACE_ORDER):
-                    from correspondence import H3M_TOWN_TYPE_TO_FH2M_RACE
-                    for tt, race in H3M_TOWN_TYPE_TO_FH2M_RACE.items():
-                        if race == FH2M_TOWN_RACE_ORDER[race_id]:
-                            town_type = tt
-                            break
+                if index in (12, 13):
+                    # The h3m random town, type FF: the castle status
+                    # converts through the building flags like for
+                    # the regular towns.
+                    town_type = 255
+                else:
+                    from correspondence import FH2M_TOWN_RACE_ORDER
+                    race_id = index // 2
+                    if 0 <= race_id < len(FH2M_TOWN_RACE_ORDER):
+                        from correspondence import H3M_TOWN_TYPE_TO_FH2M_RACE
+                        for tt, race in H3M_TOWN_TYPE_TO_FH2M_RACE.items():
+                            if race == FH2M_TOWN_RACE_ORDER[race_id]:
+                                town_type = tt
+                                break
                 if town_type is not None:
                     castle_meta = (objects_section.get("castleMetadata") or {}).get(str(obj_id)) or {}
                     # The fh2m town tile is the castle entrance (the
@@ -3504,7 +3526,15 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
             # not map onto the h3m building bitfield, and a custom
             # bitfield without the town hall crashes the game at load.
             buffer.write(struct.pack("<B", 0))  # no custom buildings
-            buffer.write(struct.pack("<B", 1))  # hasFort: yes
+            # hasFort: always built, except the random town without
+            # its castle (the fh2m BUILD_CASTLE flag 0x0800 missing
+            # from the built buildings).
+            if obj_subclass == 255:
+                built_flags = meta.get("builtBuildings") or []
+                has_fort = 1 if 0x0800 in built_flags else 0
+            else:
+                has_fort = 1
+            buffer.write(struct.pack("<B", has_fort))
             buffer.write(b"\x00" * 9)  # impossible spells: all allowed
             buffer.write(struct.pack("<I", 0))  # no events
             buffer.write(b"\x00\x00\x00")  # trailing 3 bytes
