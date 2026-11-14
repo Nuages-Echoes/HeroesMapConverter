@@ -1253,7 +1253,9 @@ FH2M_TREE_DEF_BY_TERRAIN = {
     # passable kelp (AVLklp10.def) is the water variant only.
     125: {"Water": "AVLklp10.def"},
     130: {},  # log: AvLdlog.def
-    153: {"Snow": "AVLp1sn0.def"},
+    # stumps (153): the stump defs are used on every terrain,
+    # including Snow (no terrain variant).
+    153: {},
     155: {"Grass": "AVLtr1d0.def", "Dirt": "AVLtr1d0.def", "Swamp": "AVLswmp0.def",
           "Rough": "AVLroug0.def", "Sand": "AVLyuc30.def"},
 }
