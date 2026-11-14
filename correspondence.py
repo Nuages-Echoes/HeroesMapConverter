@@ -1228,12 +1228,13 @@ def fh2m_tree_shape(index):
 def fh2m_tree_h3m_class(index, tile_terrain=None):
     """h3m class for a fh2m LANDSCAPE_TREES object, chosen so a def
     with the same footprint exists: the 4-cell forests map to the
-    dead-tree defs (the only 4-cell h3m trees), the stumps to 153,
-    the dead trees to 119 and the other singles to 155."""
+    4-cell swamp-tree defs (class 155, the lush counterpart of the
+    equally 4-cell dead trees), the stumps to 153, the dead trees to
+    119 and the other singles to 155."""
     if not 0 <= index <= 68:
         return None
     if index < 36:
-        return 119 if index % 6 < 4 else 155
+        return 155
     if index in (39, 40, 66, 67, 68):
         return 153
     if index in (36, 37, 38, 42) or 53 <= index <= 63:
@@ -1268,15 +1269,16 @@ H3M_TREE_GENERIC_DEF = {
 
 
 # Footprint-exact h3m defs of the fh2m tree objects whose shape has
-# no terrain-variant def: the 4-cell forests -> the 4-cell dead
-# trees, the 3-cell singles -> the winter willow, the 2-cell dead
-# trees -> the small dead trees. The 1-cell objects use the terrain
-# variant tables above.
+# no terrain-variant def: the 4-cell forests -> the 4-cell swamp
+# trees (the lush counterpart of the equally 4-cell dead trees), the
+# 3-cell singles -> the winter willow, the 2-cell dead trees -> the
+# small dead trees. The 1-cell objects use the terrain variant
+# tables above.
 FH2M_TREE_EXACT_DEF = {}
 for _i in range(0, 36):
     if _i % 6 < 4:
-        FH2M_TREE_EXACT_DEF[_i] = ("AVLdead2.def" if _i % 6 in (0, 2)
-                                   else "AVLdead3.def")
+        FH2M_TREE_EXACT_DEF[_i] = ("AVLswmp2.def" if _i % 6 in (0, 2)
+                                   else "AVLswmp3.def")
 FH2M_TREE_EXACT_DEF.update({
     36: "AVLwlw10.def", 37: "AVLwlw20.def",
     41: "AVLdt1s0.def", 42: "AVLwlw10.def",
