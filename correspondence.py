@@ -1248,7 +1248,12 @@ def fh2m_tree_h3m_class(index, tile_terrain=None):
 # class's generic def below.
 FH2M_TREE_DEF_BY_TERRAIN = {
     101: {},  # conifers: a single def for every terrain
-    119: {"Swamp": "AVLswp70.def", "Water": "AVLswp60.def", "Snow": "AVLd3sn0.def"},
+    # the H2 swamp trees (1-cell class 119 singles) use the
+    # same-terrain 1-cell tree on the other lands; the H2 dead
+    # trees keep their dirt pairs through the exact/pair tables.
+    119: {"Grass": "AVLtr1d0.def", "Dirt": "AVLdead0.def", "Swamp": "AVLswp70.def",
+          "Rough": "AVLroug0.def", "Sand": "AVLyuc30.def",
+          "Water": "AVLswp60.def", "Snow": "AVLd3sn0.def"},
     # palms: the land palms block their tile (AVLplm30.def); the
     # passable kelp (AVLklp10.def) is the water variant only.
     125: {"Water": "AVLklp10.def"},
@@ -1256,8 +1261,28 @@ FH2M_TREE_DEF_BY_TERRAIN = {
     # stumps (153): the stump defs are used on every terrain,
     # including Snow (no terrain variant).
     153: {},
-    155: {"Grass": "AVLtr1d0.def", "Dirt": "AVLtr1d0.def", "Swamp": "AVLswmp0.def",
-          "Rough": "AVLroug0.def", "Sand": "AVLyuc30.def"},
+    # deciduous singles: the same-terrain 1-cell tree everywhere -
+    # the dead tree on Dirt, the pine on Snow.
+    155: {"Grass": "AVLtr1d0.def", "Dirt": "AVLdead0.def", "Swamp": "AVLswmp0.def",
+          "Rough": "AVLroug0.def", "Sand": "AVLyuc30.def",
+          "Snow": "AVLp1sn0.def"},
+}
+
+# Same-terrain 2-cell pair defs of the fh2m pair trees: the lush
+# pair (idx 37) and the dead pairs (idx 41, 50, 51, 52) use the
+# terrain's pair tree on Grass/Dirt/Swamp/Rough; Sand and Snow have
+# no pair def and keep the foreign exact def.
+FH2M_PAIR_TREE_TERRAIN_DEF = {
+    37: {"Grass": "AVLwlw20.def", "Dirt": "AVLdt1s0.def",
+         "Swamp": "AVLswp60.def", "Rough": "AVLr04r0.def"},
+    41: {"Grass": "AVLwlw20.def", "Dirt": "AVLdt1s0.def",
+         "Swamp": "AVLswp60.def", "Rough": "AVLr04r0.def"},
+    50: {"Grass": "AVLwlw20.def", "Dirt": "AVLdt2s0.def",
+         "Swamp": "AVLswp60.def", "Rough": "AVLr04r0.def"},
+    51: {"Grass": "AVLwlw20.def", "Dirt": "AVLdt1s0.def",
+         "Swamp": "AVLswp60.def", "Rough": "AVLr04r0.def"},
+    52: {"Grass": "AVLwlw20.def", "Dirt": "AVLdt2s0.def",
+         "Swamp": "AVLswp60.def", "Rough": "AVLr04r0.def"},
 }
 
 # Default (generic) def of each tree class, matching the
@@ -1304,7 +1329,7 @@ FH2M_FOREST_TERRAIN_TREE = {
     "Swamp": ((119, "AVLswp60.def"), (155, "AVLswmp0.def")),
     "Rough": ((155, "AVLr04r0.def"), (155, "AVLroug0.def")),
     "Sand": (None, (155, "AVLyuc30.def")),
-    "Snow": (None, (153, "AVLp2sn0.def")),
+    "Snow": (None, (153, "AVLp1sn0.def")),
 }
 
 # 4-cell h3m trees whose blocked cells tile a 4-cell fh2m forest
@@ -2322,6 +2347,10 @@ def _fh2m_landscape_def_candidates(group, index, tile_terrain):
         exact = FH2M_TREE_EXACT_DEF.get(index)
         if exact:
             names = [exact] + [n for n in names if n != exact]
+        pair_def = (FH2M_PAIR_TREE_TERRAIN_DEF.get(index, {})
+                    .get(tile_terrain or "Grass"))
+        if pair_def:
+            names = [pair_def] + [n for n in names if n != pair_def]
         shape = fh2m_tree_shape(index)
         return [n for n in names
                 if shape is not None and n.lower() in H3M_TREE_DEFS
