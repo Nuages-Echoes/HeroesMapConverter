@@ -1286,6 +1286,75 @@ FH2M_TREE_EXACT_DEF.update({
 })
 
 
+# Same-terrain tree defs used to convert the 4-cell H2 forests: the
+# h3m tree families have no 4-cell def outside the dead and swamp
+# trees, so a forest becomes one same-terrain tree per blocked cell
+# (overlapping allowed), placed so the union of the blocked cells is
+# exactly the forest footprint. Terrains without an entry keep the
+# single footprint-exact swamp-tree model.
+FH2M_FOREST_TERRAIN_TREE = {
+    "Grass": (155, "AVLtr1d0.def"),
+    "Dirt": (155, "AVLtr1d0.def"),
+    "Swamp": (155, "AVLswmp0.def"),
+    "Rough": (155, "AVLroug0.def"),
+    "Sand": (155, "AVLyuc30.def"),
+    "Snow": (153, "AVLp2sn0.def"),
+}
+
+
+# Fallback tree of the terrains whose forest tree blocks the cell
+# west of its anchor (AVLtr1d0): a same-class tree blocking its own
+# anchor cell, so a footprint cell on the eastern map edge still
+# gets its tree.
+FH2M_FOREST_TERRAIN_TREE_ALT = {
+    "Grass": (155, "AVLwlw30.def"),
+    "Dirt": (155, "AVLwlw30.def"),
+}
+
+
+def fh2m_forest_h3m_cover(index, tile_terrain, anchor=None,
+                          map_width=None):
+    """h3m instances covering a 4-cell fh2m forest with same-terrain
+    trees: a list of (class, def name, anchor offset from the fh2m
+    anchor) whose blocked cells tile the forest footprint exactly -
+    one single-cell tree per footprint cell. With the anchor and the
+    map width, the cells outside the map are skipped and a cell
+    whose tree anchor would leave the map uses the fallback tree.
+    None when the index is not a forest or the terrain has no tree
+    model (the caller keeps the single footprint-exact def)."""
+    if not (0 <= index < 36 and index % 6 < 4):
+        return None
+    tree = FH2M_FOREST_TERRAIN_TREE.get(tile_terrain)
+    if tree is None:
+        return None
+    h3m_class, def_name = tree
+    body = _h3m_def_body(None, 0, def_name)
+    if body is None:
+        return None
+    cells = h3m_passability_cells(body[1][:12])
+    if len(cells) != 1:
+        return None
+    bx, by = cells[0]
+    cover = []
+    for dx, dy in fh2m_tree_shape(index):
+        cell_class, cell_def, tx, ty = h3m_class, def_name, dx - bx, dy - by
+        if anchor is not None and map_width is not None:
+            if not (0 <= anchor[0] + dx < map_width
+                    and 0 <= anchor[1] + dy < map_width):
+                # The footprint cell is outside the map.
+                continue
+            if not (0 <= anchor[0] + tx < map_width
+                    and 0 <= anchor[1] + ty < map_width):
+                # The tree anchor would leave the map: the fallback
+                # tree blocks its own anchor cell.
+                alt = FH2M_FOREST_TERRAIN_TREE_ALT.get(tile_terrain)
+                if alt is None:
+                    continue
+                cell_class, cell_def, tx, ty = alt[0], alt[1], dx, dy
+        cover.append((cell_class, cell_def, (tx, ty)))
+    return cover
+
+
 def fh2m_tree_def_name(h3m_class, tile_terrain, index=None):
     """h3m tree def (sprite name) for a tree class on a given h3m tile
     terrain, so the converted tree keeps a terrain variant of the same
