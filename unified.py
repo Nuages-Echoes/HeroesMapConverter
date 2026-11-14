@@ -2934,7 +2934,7 @@ def _fh2m_objects_to_unified(map_data):
     # castle flags keep their original tile: their position rule
     # (one tile left of the castle entrance) is fh2m-specific and
     # the owner decoding above runs on the unshifted positions.
-    from correspondence import (fh2m_forest_h3m_cover,
+    from correspondence import (fh2m_tree_h3m_cover,
                                 fh2m_to_h3m_anchor_shift)
     terrain_names = {}
     for tile_index, tile in enumerate(map_data.get("tiles", [])):
@@ -2954,10 +2954,11 @@ def _fh2m_objects_to_unified(map_data):
             if group == "KINGDOM_TOWNS":
                 shift = (2, 0)
             elif (group == "LANDSCAPE_TREES"
-                  and fh2m_forest_h3m_cover(
+                  and fh2m_tree_h3m_cover(
                       index, terrain_names.get((x, y))) is not None):
-                # A forest converts to several same-terrain trees
-                # that position themselves from the fh2m anchor.
+                # A forest or wide tree converts to several
+                # same-terrain trees that position themselves from
+                # the fh2m anchor.
                 shift = (0, 0)
             else:
                 shift = fh2m_to_h3m_anchor_shift(
@@ -3204,16 +3205,17 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
                 # footprint (the terrain variant first), picked again
                 # with the original fh2m anchor so an edge object
                 # gets the same on-map def the fh2m -> unified shift
-                # selected. The 4-cell forests fan out into
-                # same-terrain trees (one per blocked cell, the
-                # anchor offset from the unshifted fh2m anchor).
+                # selected. The multi-cell trees (forests, wide
+                # trees) fan out into same-terrain trees (one per
+                # blocked cell, the anchor offset from the unshifted
+                # fh2m anchor).
                 from correspondence import (FH2M_LANDSCAPE_TO_H3M,
-                                            fh2m_forest_h3m_cover,
+                                            fh2m_tree_h3m_cover,
                                             fh2m_landscape_def)
                 tile_terrain = (tile_terrains or {}).get(terrain_pos, "Grass")
                 forest_cover = None
                 if group == "LANDSCAPE_TREES":
-                    forest_cover = fh2m_forest_h3m_cover(
+                    forest_cover = fh2m_tree_h3m_cover(
                         index, tile_terrain, terrain_pos, map_width)
                 if forest_cover is not None:
                     for fc_class, fc_def, fc_offset in forest_cover:
