@@ -1173,6 +1173,25 @@ FH2M_LANDSCAPE_TO_H3M = {
 H3M_TREE_CLASSES = {101, 119, 125, 130, 153, 155}
 
 
+# The terrain-variant tables of the landscape objects are keyed by
+# h3m terrain names, while the fh2m -> unified step works with the
+# unified (Heroes II) names: normalize at the entry points below
+# (Desert/Wasteland -> Rough, Beach -> Sand).
+FH2M_UNIFIED_TO_H3M_TERRAIN = {
+    "Water": "Water", "Grass": "Grass", "Snow": "Snow",
+    "Swamp": "Swamp", "Lava": "Lava", "Desert": "Rough",
+    "Dirt": "Dirt", "Wasteland": "Rough", "Beach": "Sand",
+    "Subterranean": "Subterranean", "Rock": "Rock",
+}
+
+
+def _h3_tile_terrain(tile_terrain):
+    """h3m terrain name for a unified (fh2m) or h3m terrain name."""
+    if tile_terrain is None:
+        return None
+    return FH2M_UNIFIED_TO_H3M_TERRAIN.get(tile_terrain, tile_terrain)
+
+
 def h3m_passability_cells(mask_hex):
     """Blocked cells (dx, dy) of a 6-byte h3m passability mask, as
     map offsets from the object anchor (tile = anchor + (dx, dy), y
@@ -1271,7 +1290,8 @@ FH2M_TREE_DEF_BY_TERRAIN = {
 # Same-terrain 2-cell pair defs of the fh2m pair trees: the lush
 # pair (idx 37) and the dead pairs (idx 41, 50, 51, 52) use the
 # terrain's pair tree on Grass/Dirt/Swamp/Rough; Sand and Snow have
-# no pair def and keep the foreign exact def.
+# no pair def and fall back to same-terrain single trees (see
+# fh2m_tree_h3m_cover).
 FH2M_PAIR_TREE_TERRAIN_DEF = {
     37: {"Grass": "AVLwlw20.def", "Dirt": "AVLdt1s0.def",
          "Swamp": "AVLswp60.def", "Rough": "AVLr04r0.def"},
@@ -1378,7 +1398,8 @@ def _fh2m_forest_shape_offset(cells, shape):
 # two overlapping pairs, the west pair anchoring on the fh2m anchor
 # and the east pair one tile further east (they share the middle
 # cell). Grass keeps its exact 3-cell willow; Sand and Snow have no
-# pair tree and keep the exact def until their fallback is decided.
+# pair tree and fall back to same-terrain single trees (see
+# fh2m_tree_h3m_cover).
 FH2M_WIDE_TREE_TERRAIN_PAIR = {
     "Dirt": (119, "AVLdt1s0.def"),
     "Swamp": (119, "AVLswp60.def"),
@@ -1404,26 +1425,94 @@ def _fh2m_wide_tree_h3m_cover(tile_terrain, anchor, map_width):
     return cover
 
 
+def _fh2m_class_single_tree(index, tile_terrain):
+    """Same-terrain 1-cell tree (h3m class, def name) of a fh2m tree
+    object's class, on a terrain with a single-tree model - or None
+    when the terrain has none (Lava, Water...) or the class has no
+    1-cell def."""
+    if tile_terrain not in FH2M_FOREST_TERRAIN_TREE:
+        return None
+    h3m_class = fh2m_tree_h3m_class(index)
+    if h3m_class is None:
+        return None
+    name = (FH2M_TREE_DEF_BY_TERRAIN.get(h3m_class, {})
+            .get(tile_terrain) or H3M_TREE_GENERIC_DEF.get(h3m_class))
+    cells = _fh2m_forest_tree_cells(name) if name else None
+    if not cells or len(cells) != 1:
+        return None
+    return (h3m_class, name)
+
+
+def _fh2m_singles_cover(shape, single_tree, tile_terrain, anchor,
+                        map_width):
+    """Instances of one same-terrain single-cell tree per footprint
+    cell of a multi-cell fh2m tree: each single anchors so that its
+    blocked cell is the footprint cell; when that anchor would leave
+    the map, the terrain fallback tree blocks its own anchor cell.
+    None when no instance could be placed."""
+    def on_map(dx, dy):
+        if anchor is None or map_width is None:
+            return True
+        return (0 <= anchor[0] + dx < map_width
+                and 0 <= anchor[1] + dy < map_width)
+
+    cells = _fh2m_forest_tree_cells(single_tree[1])
+    if not cells or len(cells) != 1:
+        return None
+    bx, by = cells[0]
+    cover = []
+    for dx, dy in shape:
+        ax, ay = dx - bx, dy - by
+        if on_map(ax, ay):
+            cover.append((single_tree[0], single_tree[1], (ax, ay)))
+        elif (bx, by) != (0, 0):
+            alt = FH2M_FOREST_TERRAIN_TREE_ALT.get(tile_terrain)
+            if alt is not None and on_map(dx, dy):
+                cover.append((alt[0], alt[1], (dx, dy)))
+    return cover or None
+
+
 def fh2m_tree_h3m_cover(index, tile_terrain, anchor=None,
                          map_width=None):
     """h3m instances covering a multi-cell fh2m tree with
     same-terrain trees: a list of (class, def name, anchor offset
     from the fh2m anchor) whose blocked cells tile the tree
     footprint exactly. The 3-cell wide trees (idx 36, 42) use two
-    overlapping same-terrain pairs on the terrains that have one.
-    A 4-cell forest with a same-terrain 4-cell tree of the forest
-    shape uses one exact instance; the other forests overlap their
-    2-cell pair trees (one per horizontal cell pair), the
-    single-cell trees covering only the cells the pairs cannot (no
-    pair def for the terrain, or a pair cell outside the map). A
-    single-cell tree anchors so that its blocked cell is the
-    footprint cell; when that anchor would leave the map, the
-    terrain fallback tree blocks its own anchor cell instead.
-    None for any other tree or a terrain without a tree model (the
-    caller keeps the single footprint-exact def)."""
+    overlapping same-terrain pairs on the terrains that have one
+    (Grass keeps its exact willow, Sand/Snow fall back to single
+    trees). The 2-cell pair trees (idx 37, 41, 50, 51, 52) keep the
+    terrain pair def when there is one, else fall back to single
+    trees on Sand/Snow. A 4-cell forest with a same-terrain 4-cell
+    tree of the forest shape uses one exact instance; the other
+    forests overlap their 2-cell pair trees (one per horizontal
+    cell pair), the single-cell trees covering only the cells the
+    pairs cannot (no pair def for the terrain, or a pair cell
+    outside the map). A single-cell tree anchors so that its blocked
+    cell is the footprint cell; when that anchor would leave the
+    map, the terrain fallback tree blocks its own anchor cell
+    instead. None for any other tree or a terrain without a tree
+    model (the caller keeps the single footprint-exact def)."""
+    tile_terrain = _h3_tile_terrain(tile_terrain)
     if index in (36, 42):
-        return _fh2m_wide_tree_h3m_cover(tile_terrain, anchor,
-                                         map_width)
+        cover = _fh2m_wide_tree_h3m_cover(tile_terrain, anchor,
+                                          map_width)
+        if cover is not None:
+            return cover
+        if tile_terrain != "Grass":
+            single = _fh2m_class_single_tree(index, tile_terrain)
+            if single is not None:
+                return _fh2m_singles_cover(fh2m_tree_shape(index),
+                                            single, tile_terrain,
+                                            anchor, map_width)
+        return None
+    if index in (37, 41, 50, 51, 52):
+        if FH2M_PAIR_TREE_TERRAIN_DEF.get(index, {}).get(tile_terrain):
+            return None
+        single = _fh2m_class_single_tree(index, tile_terrain)
+        if single is not None:
+            return _fh2m_singles_cover(fh2m_tree_shape(index), single,
+                                        tile_terrain, anchor, map_width)
+        return None
     if not (0 <= index < 36 and index % 6 < 4):
         return None
     tree = FH2M_FOREST_TERRAIN_TREE.get(tile_terrain)
@@ -2388,6 +2477,7 @@ def fh2m_landscape_def(group, index, tile_terrain, anchor=None,
     shifted anchor would leave the map picks the first def whose
     alignment keeps the anchor on the map. None when no def of the
     object's classes matches."""
+    tile_terrain = _h3_tile_terrain(tile_terrain)
     if group == "LANDSCAPE_TREES":
         h3m_class = fh2m_tree_h3m_class(index)
     elif group == "LANDSCAPE_MOUNTAINS":
