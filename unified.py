@@ -2537,7 +2537,9 @@ def unified_to_fh2m(unified):
     # populateKingdomHeroes function of the fheroes2 engine: 6 colors x 7
     # races, race 6 being a random race). When the unified map already
     # carries a KINGDOM_HEROES object for the color (converted from an
-    # fh2m map), it is kept as is; only missing ones are generated.
+    # fh2m map), it is kept as is. Missing ones are only generated for
+    # h3m sources, so an fh2m source round-trips its own heroes - or
+    # their absence - faithfully.
     existing_hero_colors = set()
     existing_ids = set()
     for tile in tiles:
@@ -2549,7 +2551,8 @@ def unified_to_fh2m(unified):
                     existing_hero_colors.add(FH2M_PLAYER_COLORS[hero_color_id])
 
     next_object_id = (max(existing_ids) + 1) if existing_ids else 1
-    for detail in unified.get("playerDetails", []):
+    for detail in (unified.get("playerDetails", [])
+                   if is_h3m_source else []):
         color = detail.get("color")
         if color not in FH2M_PLAYER_COLORS:
             continue
