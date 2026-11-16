@@ -2635,10 +2635,15 @@ FH2M_TO_H3M_MISC = {
     # The Observation Tower converts to the h3m Redwood Observatory
     # (class 58, AvXRedW.def) - the inverse of the h3m -> fh2m
     # pairing; the class 99 is the Trading Post, not a lookout tower.
-    "MISC_41": (58, 0),   # Observation Tower, grass -> redwood observatory
-    "MISC_42": (58, 0),   # Observation Tower, generic
-    "MISC_43": (58, 0),   # Observation Tower, desert
-    "MISC_44": (58, 0),   # Observation Tower, snow
+    # The fh2m indices of the 4 tower variants differ between the
+    # fheroes2 catalog versions: the open-source catalog puts them
+    # at 41-44, the Olden Era editor at 42-45 (one extra object
+    # before the family), so the whole 41-45 range converts.
+    "MISC_41": (58, 0),   # Observation Tower, grass (open-source catalog)
+    "MISC_42": (58, 0),   # Observation Tower, generic (open) / grass (Olden Era)
+    "MISC_43": (58, 0),   # Observation Tower, desert (open) / generic (Olden Era)
+    "MISC_44": (58, 0),   # Observation Tower, snow (open) / desert (Olden Era)
+    "MISC_45": (58, 0),   # Observation Tower, snow (Olden Era catalog)
     # POWER_UPS: the Gazebo (index 11) maps to the h3m learning
     # stone (100 - the inverse pairing: the h3m learning stone
     # converts to the Heroes II Gazebo); the other power-ups stay
@@ -2703,7 +2708,7 @@ H3M_TO_FH2M_INTERACTIVE = {
     45: ("ADVENTURE_MISCELLANEOUS", 35),   # two-way monolith -> Stone Liths
     49: ("ADVENTURE_POWER_UPS", 7),        # magic well -> Magic Well
     55: ("ADVENTURE_MISCELLANEOUS", 40),   # mystical garden -> Magic Garden
-    58: ("ADVENTURE_MISCELLANEOUS", 41),   # redwood observatory -> Observation Tower
+    58: ("ADVENTURE_MISCELLANEOUS", 43),   # redwood observatory -> Observation Tower (generic variant)
     100: ("ADVENTURE_POWER_UPS", 11),      # learning stone -> Gazebo
     109: ("ADVENTURE_MISCELLANEOUS", 24),  # water wheel -> Water Wheel
     112: ("ADVENTURE_MISCELLANEOUS", 4),   # windmill -> Windmill
@@ -2735,7 +2740,7 @@ H3M_TO_FH2M_INTERACTIVE = {
     41: ("ADVENTURE_POWER_UPS", 21),         # library of enlightenment -> Xanadu
     104: ("ADVENTURE_POWER_UPS", 21),        # university -> Xanadu
     7: ("ADVENTURE_MISCELLANEOUS", 32),      # black market -> Trading Post
-    60: ("ADVENTURE_MISCELLANEOUS", 41),     # pillar of fire -> Observation Tower
+    60: ("ADVENTURE_MISCELLANEOUS", 43),     # pillar of fire -> Observation Tower (generic variant)
     4: ("ADVENTURE_POWER_UPS", 22),           # arena -> Arena
     94: ("ADVENTURE_MISCELLANEOUS", 46),     # stables -> Stables
     106: ("ADVENTURE_MISCELLANEOUS", 39),    # war machine factory -> Freeman's Foundry
@@ -2744,7 +2749,7 @@ H3M_TO_FH2M_INTERACTIVE = {
     14: ("ADVENTURE_POWER_UPS", 17),          # swan pond -> Idol
     52: ("ADVENTURE_WATER", 10),              # mermaid -> Mermaid
     107: ("ADVENTURE_POWER_UPS", 22),         # school of war -> Arena
-    13: ("ADVENTURE_MISCELLANEOUS", 41),      # cartographer -> Observation Tower
+    13: ("ADVENTURE_MISCELLANEOUS", 43),      # cartographer -> Observation Tower (generic variant)
     95: ("ADVENTURE_MISCELLANEOUS", 7),       # tavern -> Oracle
     35: ("ADVENTURE_MISCELLANEOUS", 2),       # hill fort -> Hill Fort
     48: ("ADVENTURE_POWER_UPS", 0),           # magic spring -> Artesian Spring
