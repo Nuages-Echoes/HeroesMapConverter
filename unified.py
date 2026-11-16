@@ -1547,12 +1547,13 @@ def _translate_h3m_tile_objects(obj_list, objects_section, translated_metadata,
             # type maps to the fh2m race through the faction pairings.
             town_type = town_meta.get("type")
             race_name = H3M_TOWN_TYPE_TO_FH2M_RACE.get(town_type)
-            if town_type == 255:
-                # The h3m random town: the H2 random town, with the
-                # castle built when the h3m castle building is there
-                # (byte 0 bit 5 of the built bitfield, the H3
-                # counterpart of the fh2m BUILD_CASTLE flag; without
-                # custom buildings, the fort byte carries it).
+            if obj.get("class") == 77 or town_type == 255:
+                # The h3m random town (its own class 77 in the real
+                # maps): the H2 random town, with the castle built
+                # when the h3m castle building is there (byte 0 bit 5
+                # of the built bitfield, the H3 counterpart of the
+                # fh2m BUILD_CASTLE flag; without custom buildings,
+                # the fort byte carries it).
                 built_hex = town_meta.get("builtBuildings")
                 if built_hex:
                     has_castle = bool(bytes.fromhex(built_hex)[0] & 0x20)
@@ -3134,11 +3135,13 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
                 # town (12 with the castle built); the castleMetadata
                 # carries the defenders.
                 town_type = None
+                random_key = None
                 if index in (12, 13):
-                    # The h3m random town, type FF: the castle status
-                    # converts through the building flags like for
-                    # the regular towns.
-                    town_type = 255
+                    # The h3m random town: its own class 77 (subclass
+                    # 0, the AVCranx0.def sprite of the real maps);
+                    # the castle status converts through the building
+                    # flags like for the regular towns.
+                    random_key = (77, 0)
                 else:
                     from correspondence import FH2M_TOWN_RACE_ORDER
                     race_id = index // 2
@@ -3148,7 +3151,7 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
                             if race == FH2M_TOWN_RACE_ORDER[race_id]:
                                 town_type = tt
                                 break
-                if town_type is not None:
+                if town_type is not None or random_key is not None:
                     castle_meta = (objects_section.get("castleMetadata") or {}).get(str(obj_id)) or {}
                     # The fh2m town tile is the castle entrance (the
                     # gate part of the sprite sits on it, the flags on
@@ -3157,7 +3160,7 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
                     # (entrance + (2, +1)), so the instance is placed
                     # at the unified position as-is.
                     entry = ("town", (x, y, z),
-                             (98, town_type), castle_meta)
+                             random_key or (98, town_type), castle_meta)
             elif group in ("ADVENTURE_MISCELLANEOUS", "ADVENTURE_WATER"):
                 # The miscellaneous and water objects with a
                 # confirmed h3m sprite map through the misc table.
@@ -3560,7 +3563,7 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
             # hasFort: always built, except the random town without
             # its castle (the fh2m BUILD_CASTLE flag 0x0800 missing
             # from the built buildings).
-            if obj_subclass == 255:
+            if obj_class == 77:
                 built_flags = meta.get("builtBuildings") or []
                 has_fort = 1 if 0x0800 in built_flags else 0
             else:
