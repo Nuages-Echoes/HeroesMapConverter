@@ -1171,7 +1171,7 @@ FH2M_LANDSCAPE_TO_H3M = {
 # footprints (the 6-byte passability mask ranges from 1 to 7 blocked
 # cells) - so the def name, not the subclass, carries the sprite
 # size.
-H3M_TREE_CLASSES = {101, 119, 125, 130, 135, 147, 153, 155}
+H3M_TREE_CLASSES = {101, 119, 125, 130, 135, 137, 147, 153, 155}
 
 
 # True game object class of the tree defs, from the game's own
@@ -1195,6 +1195,12 @@ H3M_DEF_OBJECT_CLASS = {
     "avlautr0.def": 135, "avlautr1.def": 135,
     "avlautr2.def": 135, "avlautr3.def": 135,
     "avlautr4.def": 135, "avlautr5.def": 135,
+    "avlpntr0.def": 137, "avlpntr1.def": 137,
+    "avlpntr2.def": 137, "avlpntr3.def": 137,
+    "avlpntr4.def": 137, "avlpntr5.def": 137,
+    "avlsntr0.def": 137, "avlsntr1.def": 137,
+    "avlsntr2.def": 137, "avlsntr3.def": 137,
+    "avlsntr4.def": 137, "avlsntr5.def": 137,
     "avlstm1.def": 153, "avlstm2.def": 153, "avlstm3.def": 153,
     "avlswmp0.def": 155, "avlswmp1.def": 155, "avlswmp2.def": 155,
     "avlswmp3.def": 155, "avlswmp4.def": 155, "avlswmp5.def": 155,
@@ -1412,10 +1418,13 @@ FH2M_TREE_EXACT_DEF.update({
 
 # Species-faithful per-index conversions: the H2 autumn trees (12-17,
 # the Grass family with the autumn look) become the H3 autumn trees
-# (class 135) on Grass - the 4-cell forests 12-15 use the
-# footprint-exact autumn trees (AVLAUTR4/5 match the a/c forest
-# shapes, AVLAUTR2/3 the b/d ones), the singles 16-17 the 1-cell
-# autumn trees. A list holds equivalent models, one picked at
+# (class 135) on Grass, the H2 fir trees (18-23, the Grass family
+# with the fir look) the H3 pines (class 137), and the H2 snow fir
+# trees (30-35, the Snow family) the H3 snow pines (class 137) -
+# the 4-cell forests use the footprint-exact 4-cell trees
+# (AVLAUTR4/5, AVLPNTR4/5, AVLSNTR4/5 match the a/c forest shapes,
+# AVLAUTR2/3, AVLPNTR2/3, AVLSNTR2/3 the b/d ones), the singles the
+# 1-cell trees. A list holds equivalent models, one picked at
 # random. Other terrains keep the same-terrain cover.
 FH2M_TREE_INDEX_TERRAIN_DEF = {
     (12, "Grass"): (135, ["AVLAUTR4.def", "AVLAUTR5.def"]),
@@ -1424,6 +1433,24 @@ FH2M_TREE_INDEX_TERRAIN_DEF = {
     (15, "Grass"): (135, ["AVLAUTR2.def", "AVLAUTR3.def"]),
     (16, "Grass"): (135, ["avlautr0.def", "avlautr1.def"]),
     (17, "Grass"): (135, ["avlautr0.def", "avlautr1.def"]),
+    # The H2 fir trees (18-23, the Grass family with the fir look)
+    # become the H3 pines (class 137) on Grass: AVLPNTR4/5 (a/c
+    # shapes), AVLPNTR2/3 (b/d), the 1-cell AVLPNTR0/1.
+    (18, "Grass"): (137, ["AVLPNTR4.def", "AVLPNTR5.def"]),
+    (19, "Grass"): (137, ["AVLPNTR2.def", "AVLPNTR3.def"]),
+    (20, "Grass"): (137, ["AVLPNTR4.def", "AVLPNTR5.def"]),
+    (21, "Grass"): (137, ["AVLPNTR2.def", "AVLPNTR3.def"]),
+    (22, "Grass"): (137, ["AVLPNTR0.def", "AVLPNTR1.def"]),
+    (23, "Grass"): (137, ["AVLPNTR0.def", "AVLPNTR1.def"]),
+    # The H2 snow fir trees (30-35, the Snow family) become the H3
+    # snow pines (class 137) on Snow: AVLSNTR4/5 (a/c shapes),
+    # AVLSNTR2/3 (b/d), the 1-cell AVLSNTR0/1.
+    (30, "Snow"): (137, ["AVLSNTR4.def", "AVLSNTR5.def"]),
+    (31, "Snow"): (137, ["AVLSNTR2.def", "AVLSNTR3.def"]),
+    (32, "Snow"): (137, ["AVLSNTR4.def", "AVLSNTR5.def"]),
+    (33, "Snow"): (137, ["AVLSNTR2.def", "AVLSNTR3.def"]),
+    (34, "Snow"): (137, ["AVLSNTR0.def", "AVLSNTR1.def"]),
+    (35, "Snow"): (137, ["AVLSNTR0.def", "AVLSNTR1.def"]),
 }
 
 
@@ -1761,6 +1788,10 @@ H3M_TREE_DEF_TO_FH2M_INDEX = {
     "avldead3.def": 1, "avldead5.def": 1,
     "avlswmp3.def": 1, "avlswmp5.def": 1,
     "avlautr2.def": 1, "avlautr3.def": 1,
+    "avlpntr2.def": 1, "avlpntr3.def": 1,
+    "avlsntr2.def": 1, "avlsntr3.def": 1,
+    "avlpntr4.def": 0, "avlpntr5.def": 0,
+    "avlsntr4.def": 0, "avlsntr5.def": 0,
     # 1-cell dead trees / swamp trees
     "avldead0.def": 43, "avldead1.def": 43,
     "avld3sn0.def": 43, "avlswp70.def": 43,
@@ -1776,6 +1807,9 @@ H3M_TREE_DEF_TO_FH2M_INDEX = {
     "avtchst0.def": 53,
     # autumn trees (1 cell)
     "avlautr0.def": 53, "avlautr1.def": 53,
+    # pines and snow pines (1 cell)
+    "avlpntr0.def": 53, "avlpntr1.def": 53,
+    "avlsntr0.def": 53, "avlsntr1.def": 53,
     # stumps (1 cell)
     "avlstm1.def": 66, "avlstm2.def": 66, "avlstm3.def": 66,
     "avlp1sn0.def": 66, "avlp2sn0.def": 66,
@@ -1853,6 +1887,21 @@ H3M_TREE_DEFS = {
     "avlautr3.def": ("AVLAUTR3.def", "ffffffff3f9f000000000000ff010500", "000000000000000000000000000000000000"),
     "avlautr4.def": ("AVLAUTR4.def", "ffffffff9f3f000000000000ff010500", "000000000000000000000000000000000000"),
     "avlautr5.def": ("AVLAUTR5.def", "ffffffff9f3f000000000000ff010500", "000000000000000000000000000000000000"),
+    # pine trees (class 137), from the game's Objects.txt: the 1-cell
+    # AVLPNTR0/1, the 4-cell AVLPNTR2/3 (shapes b/d) and AVLPNTR4/5
+    # (shapes a/c); the snow variants AVLSNTR0-5 with the same shapes.
+    "avlpntr0.def": ("AVLPNTR0.def", "ffffffffff7f000000000000ff010500", "000000000000000000000000000000000000"),
+    "avlpntr1.def": ("AVLPNTR1.def", "ffffffffff7f000000000000ff010500", "000000000000000000000000000000000000"),
+    "avlpntr2.def": ("AVLPNTR2.def", "ffffffff3f9f000000000000ff010500", "000000000000000000000000000000000000"),
+    "avlpntr3.def": ("AVLPNTR3.def", "ffffffff3f9f000000000000ff010500", "000000000000000000000000000000000000"),
+    "avlpntr4.def": ("AVLPNTR4.def", "ffffffff9f3f000000000000ff010500", "000000000000000000000000000000000000"),
+    "avlpntr5.def": ("AVLPNTR5.def", "ffffffff9f3f000000000000ff010500", "000000000000000000000000000000000000"),
+    "avlsntr0.def": ("AVLSNTR0.def", "ffffffffff7f000000000000ff010800", "000000000000000000000000000000000000"),
+    "avlsntr1.def": ("AVLSNTR1.def", "ffffffffff7f000000000000ff010800", "000000000000000000000000000000000000"),
+    "avlsntr2.def": ("AVLSNTR2.def", "ffffffff3f9f000000000000ff010800", "000000000000000000000000000000000000"),
+    "avlsntr3.def": ("AVLSNTR3.def", "ffffffff3f9f000000000000ff010800", "000000000000000000000000000000000000"),
+    "avlsntr4.def": ("AVLSNTR4.def", "ffffffff9f3f000000000000ff010800", "000000000000000000000000000000000000"),
+    "avlsntr5.def": ("AVLSNTR5.def", "ffffffff9f3f000000000000ff010800", "000000000000000000000000000000000000"),
     "avlroug0.def": ("AVLroug0.def", "ffffffffff7f000000000000ff012000", "000000000000000000000000000000000000"),
     "avlroug1.def": ("AVLroug1.def", "ffffffffff7f000000000000ff012000", "000000000000000000000000000000000000"),
     "avlroug2.def": ("AVLroug2.def", "ffffffffff7f000000000000ff012000", "000000000000000000000000000000000000"),
