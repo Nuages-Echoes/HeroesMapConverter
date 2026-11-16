@@ -1163,14 +1163,75 @@ FH2M_LANDSCAPE_TO_H3M = {
 }
 
 # The h3m tree classes (101 conifers, 119 dead trees, 125 palms,
-# 130 log, 153 stumps, 155 deciduous trees; the class 57 is the
-# obelisk, not a tree) carry their sprite variants as DIFFERENT DEF
-# NAMES under the same subclass 0 (AVLtr1d0.def = deciduous tree,
-# AVLdead6.def = big dead tree, AVLswmp3.def = swamp tree, ...), and
-# the variants have different footprints (the 6-byte passability mask
-# ranges from 1 to 7 blocked cells) - so the def name, not the
-# subclass, carries the sprite size.
-H3M_TREE_CLASSES = {101, 119, 125, 130, 153, 155}
+# 130 log, 147 rough/subterra/snow trees, 153 stumps, 155 deciduous
+# trees; the class 57 is the obelisk, not a tree) carry their sprite
+# variants as DIFFERENT DEF NAMES under the same subclass 0
+# (AVLtr1d0.def = deciduous tree, AVLdead6.def = big dead tree,
+# AVLswmp3.def = swamp tree, ...), and the variants have different
+# footprints (the 6-byte passability mask ranges from 1 to 7 blocked
+# cells) - so the def name, not the subclass, carries the sprite
+# size.
+H3M_TREE_CLASSES = {101, 119, 125, 130, 147, 153, 155}
+
+
+# True game object class of the tree defs, from the game's own
+# Objects.txt: an emitted tree instance carries the class of its
+# DEF, not the class key of the conversion tables (AVLr04r0 is a
+# class 147 tree even when the pair table stores it under the
+# deciduous class key, AVLtr1d0 a class 155 one, ...). Unknown defs
+# keep the class the table gave.
+H3M_DEF_OBJECT_CLASS = {
+    "avld3sn0.def": 119,
+    "avldead0.def": 119, "avldead1.def": 119, "avldead2.def": 119,
+    "avldead3.def": 119, "avldead4.def": 119, "avldead5.def": 119,
+    "avldead6.def": 119, "avldead7.def": 119,
+    "avldlog.def": 130,
+    "avldt1s0.def": 119, "avldt2s0.def": 119, "avldt3s0.def": 119,
+    "avlklp10.def": 125, "avlklp20.def": 125,
+    "avlp1sn0.def": 153, "avlp2sn0.def": 153,
+    "avlplm30.def": 155, "avlplm50.def": 155,
+    "avlr04r0.def": 147,
+    "avlroug0.def": 155, "avlroug1.def": 155, "avlroug2.def": 155,
+    "avlstm1.def": 153, "avlstm2.def": 153, "avlstm3.def": 153,
+    "avlswmp0.def": 155, "avlswmp1.def": 155, "avlswmp2.def": 155,
+    "avlswmp3.def": 155, "avlswmp4.def": 155, "avlswmp5.def": 155,
+    "avlswp60.def": 119, "avlswp70.def": 119,
+    "avltr1d0.def": 155, "avltr2d0.def": 155, "avltr3d0.def": 155,
+    "avlwlw10.def": 155, "avlwlw20.def": 155, "avlwlw30.def": 155,
+    "avlyuc10.def": 155, "avlyuc20.def": 155, "avlyuc30.def": 155,
+    "avtchst0.def": 101,
+}
+
+
+def h3m_def_object_class(def_name, default_class):
+    """True game object class of a tree def (see
+    H3M_DEF_OBJECT_CLASS), or the table class when unknown."""
+    return H3M_DEF_OBJECT_CLASS.get((def_name or "").lower(),
+                                    default_class)
+
+
+# A tree conversion entry may list several equivalent H3 defs (same
+# footprint, same land): one of them is chosen at random when the
+# H3 map is written, so repeated conversions vary the tree models.
+import random as _random
+
+
+def _h3m_tree_def_pick(value):
+    """One def name out of a conversion table entry: a plain string
+    passes through; a list of alternatives picks one at random - an
+    alternative whose footprint differs from the first def is
+    dropped, so the random choice never changes the blocked cells."""
+    if not isinstance(value, (list, tuple)):
+        return value
+    names = [n for n in value if isinstance(n, str)]
+    if not names:
+        return None
+    if len(names) == 1:
+        return names[0]
+    base = _fh2m_forest_tree_cells(names[0])
+    same = [n for n in names
+            if _fh2m_forest_tree_cells(n) == base]
+    return _random.choice(same or [names[0]])
 
 
 # The terrain-variant tables of the landscape objects are keyed by
@@ -1270,10 +1331,13 @@ FH2M_TREE_DEF_BY_TERRAIN = {
     # the H2 swamp trees (1-cell class 119 singles) use the
     # same-terrain 1-cell tree on the other lands; the H2 dead
     # trees keep their dirt pairs through the exact/pair tables.
-    119: {"Grass": "AVLtr1d0.def", "Dirt": "AVLdead0.def", "Swamp": "AVLswp70.def",
-          "Rough": "AVLroug0.def", "Sand": "AVLyuc30.def",
+    119: {"Grass": ["AVLtr1d0.def", "AVLtr2d0.def", "AVLtr3d0.def"],
+          "Dirt": ["AVLdead0.def", "AVLdead1.def"],
+          "Swamp": "AVLswp70.def",
+          "Rough": ["AVLroug0.def", "AVLroug1.def", "AVLroug2.def"],
+          "Sand": ["AVLyuc10.def", "AVLyuc20.def", "AVLyuc30.def"],
           "Water": "AVLswp60.def", "Snow": "AVLd3sn0.def",
-          "Lava": "AVLdead0.def"},
+          "Lava": ["AVLdead0.def", "AVLdead1.def"]},
     # palms: the land palms block their tile (AVLplm30.def); the
     # passable kelp (AVLklp10.def) is the water variant only.
     125: {"Water": "AVLklp10.def"},
@@ -1284,9 +1348,13 @@ FH2M_TREE_DEF_BY_TERRAIN = {
     # deciduous singles: the same-terrain 1-cell tree everywhere -
     # the dead tree on Dirt and on Lava (no lava-native tree family:
     # the burnt dead trees), the pine on Snow.
-    155: {"Grass": "AVLtr1d0.def", "Dirt": "AVLdead0.def", "Swamp": "AVLswmp0.def",
-          "Rough": "AVLroug0.def", "Sand": "AVLyuc30.def",
-          "Snow": "AVLp1sn0.def", "Lava": "AVLdead0.def"},
+    155: {"Grass": ["AVLtr1d0.def", "AVLtr2d0.def", "AVLtr3d0.def"],
+          "Dirt": ["AVLdead0.def", "AVLdead1.def"],
+          "Swamp": ["AVLswmp0.def", "AVLswmp1.def"],
+          "Rough": ["AVLroug0.def", "AVLroug1.def", "AVLroug2.def"],
+          "Sand": ["AVLyuc10.def", "AVLyuc20.def", "AVLyuc30.def"],
+          "Snow": ["AVLp1sn0.def", "AVLp2sn0.def"],
+          "Lava": ["AVLdead0.def", "AVLdead1.def"]},
 }
 
 # Same-terrain 2-cell pair defs of the fh2m pair trees: the lush
@@ -1295,21 +1363,21 @@ FH2M_TREE_DEF_BY_TERRAIN = {
 # no pair def and fall back to same-terrain single trees (see
 # fh2m_tree_h3m_cover).
 FH2M_PAIR_TREE_TERRAIN_DEF = {
-    37: {"Grass": "AVLwlw20.def", "Dirt": "AVLdt1s0.def",
+    37: {"Grass": "AVLwlw20.def", "Dirt": ["AVLdt1s0.def", "AVLdt2s0.def"],
          "Swamp": "AVLswp60.def", "Rough": "AVLr04r0.def",
-         "Lava": "AVLdt1s0.def"},
-    41: {"Grass": "AVLwlw20.def", "Dirt": "AVLdt1s0.def",
+         "Lava": ["AVLdt1s0.def", "AVLdt2s0.def"]},
+    41: {"Grass": "AVLwlw20.def", "Dirt": ["AVLdt1s0.def", "AVLdt2s0.def"],
          "Swamp": "AVLswp60.def", "Rough": "AVLr04r0.def",
-         "Lava": "AVLdt1s0.def"},
-    50: {"Grass": "AVLwlw20.def", "Dirt": "AVLdt2s0.def",
+         "Lava": ["AVLdt1s0.def", "AVLdt2s0.def"]},
+    50: {"Grass": "AVLwlw20.def", "Dirt": ["AVLdt1s0.def", "AVLdt2s0.def"],
          "Swamp": "AVLswp60.def", "Rough": "AVLr04r0.def",
-         "Lava": "AVLdt2s0.def"},
-    51: {"Grass": "AVLwlw20.def", "Dirt": "AVLdt1s0.def",
+         "Lava": ["AVLdt1s0.def", "AVLdt2s0.def"]},
+    51: {"Grass": "AVLwlw20.def", "Dirt": ["AVLdt1s0.def", "AVLdt2s0.def"],
          "Swamp": "AVLswp60.def", "Rough": "AVLr04r0.def",
-         "Lava": "AVLdt1s0.def"},
-    52: {"Grass": "AVLwlw20.def", "Dirt": "AVLdt2s0.def",
+         "Lava": ["AVLdt1s0.def", "AVLdt2s0.def"]},
+    52: {"Grass": "AVLwlw20.def", "Dirt": ["AVLdt1s0.def", "AVLdt2s0.def"],
          "Swamp": "AVLswp60.def", "Rough": "AVLr04r0.def",
-         "Lava": "AVLdt2s0.def"},
+         "Lava": ["AVLdt1s0.def", "AVLdt2s0.def"]},
 }
 
 # Default (generic) def of each tree class, matching the
@@ -1350,16 +1418,22 @@ FH2M_TREE_EXACT_DEF.update({
 # fall back to one single-cell tree per footprint cell. Terrains
 # without an entry keep the single footprint-exact swamp-tree model.
 FH2M_FOREST_TERRAIN_TREE = {
-    # terrain: (2-cell pair def or None, 1-cell def)
-    "Grass": ((155, "AVLwlw20.def"), (155, "AVLtr1d0.def")),
-    "Dirt": ((119, "AVLdt1s0.def"), (119, "AVLdead0.def")),
-    "Swamp": ((119, "AVLswp60.def"), (155, "AVLswmp0.def")),
-    "Rough": ((155, "AVLr04r0.def"), (155, "AVLroug0.def")),
-    "Sand": (None, (155, "AVLyuc30.def")),
-    "Snow": (None, (153, "AVLp1sn0.def")),
+    # terrain: (2-cell pair def or None, 1-cell def); a list holds
+    # equivalent same-footprint alternatives, one picked at random.
+    "Grass": ((155, "AVLwlw20.def"),
+               (155, ["AVLtr1d0.def", "AVLtr2d0.def", "AVLtr3d0.def"])),
+    "Dirt": ((119, ["AVLdt1s0.def", "AVLdt2s0.def"]),
+              (119, ["AVLdead0.def", "AVLdead1.def"])),
+    "Swamp": ((119, "AVLswp60.def"),
+              (155, ["AVLswmp0.def", "AVLswmp1.def"])),
+    "Rough": ((147, "AVLr04r0.def"),
+               (155, ["AVLroug0.def", "AVLroug1.def", "AVLroug2.def"])),
+    "Sand": (None, (155, ["AVLyuc10.def", "AVLyuc20.def", "AVLyuc30.def"])),
+    "Snow": (None, (153, ["AVLp1sn0.def", "AVLp2sn0.def"])),
     # Lava has no native tree family: the dead trees (see the exact
     # table below for the one-instance forest cover).
-    "Lava": ((119, "AVLdt1s0.def"), (119, "AVLdead0.def")),
+    "Lava": ((119, ["AVLdt1s0.def", "AVLdt2s0.def"]),
+              (119, ["AVLdead0.def", "AVLdead1.def"])),
 }
 
 # 4-cell h3m trees whose blocked cells tile a 4-cell fh2m forest
@@ -1369,9 +1443,12 @@ FH2M_FOREST_TERRAIN_TREE = {
 # AVLdead3/AVLswmp3 the forest_b/forest_d ones). Dirt uses the dead
 # trees.
 FH2M_FOREST_TERRAIN_TREE_EXACT = {
-    "Dirt": [(119, "AVLdead2.def"), (119, "AVLdead3.def")],
-    "Swamp": [(155, "AVLswmp2.def"), (155, "AVLswmp3.def")],
-    "Lava": [(119, "AVLdead2.def"), (119, "AVLdead3.def")],
+    "Dirt": [(119, "AVLdead2.def"), (119, "AVLdead4.def"),
+             (119, "AVLdead3.def"), (119, "AVLdead5.def")],
+    "Swamp": [(155, "AVLswmp2.def"), (155, "AVLswmp4.def"),
+              (155, "AVLswmp3.def"), (155, "AVLswmp5.def")],
+    "Lava": [(119, "AVLdead2.def"), (119, "AVLdead4.def"),
+             (119, "AVLdead3.def"), (119, "AVLdead5.def")],
 }
 
 # Fallback tree of the terrains whose 1-cell forest tree blocks the
@@ -1412,10 +1489,10 @@ def _fh2m_forest_shape_offset(cells, shape):
 # pair tree and fall back to same-terrain single trees (see
 # fh2m_tree_h3m_cover).
 FH2M_WIDE_TREE_TERRAIN_PAIR = {
-    "Dirt": (119, "AVLdt1s0.def"),
+    "Dirt": (119, ["AVLdt1s0.def", "AVLdt2s0.def"]),
     "Swamp": (119, "AVLswp60.def"),
-    "Rough": (155, "AVLr04r0.def"),
-    "Lava": (119, "AVLdt1s0.def"),
+    "Rough": (147, "AVLr04r0.def"),
+    "Lava": (119, ["AVLdt1s0.def", "AVLdt2s0.def"]),
 }
 
 
@@ -1427,6 +1504,7 @@ def _fh2m_wide_tree_h3m_cover(tile_terrain, anchor, map_width):
     pair = FH2M_WIDE_TREE_TERRAIN_PAIR.get(tile_terrain)
     if pair is None:
         return None
+    pair = (pair[0], _h3m_tree_def_pick(pair[1]))
     cells = _fh2m_forest_tree_cells(pair[1])
     if not cells or sorted(cells) != [(-1, 0), (0, 0)]:
         return None
@@ -1447,12 +1525,13 @@ def _fh2m_class_single_tree(index, tile_terrain):
     h3m_class = fh2m_tree_h3m_class(index)
     if h3m_class is None:
         return None
-    name = (FH2M_TREE_DEF_BY_TERRAIN.get(h3m_class, {})
-            .get(tile_terrain) or H3M_TREE_GENERIC_DEF.get(h3m_class))
+    name = _h3m_tree_def_pick(
+        (FH2M_TREE_DEF_BY_TERRAIN.get(h3m_class, {})
+         .get(tile_terrain)) or H3M_TREE_GENERIC_DEF.get(h3m_class))
     cells = _fh2m_forest_tree_cells(name) if name else None
     if not cells or len(cells) != 1:
         return None
-    return (h3m_class, name)
+    return (h3m_def_object_class(name, h3m_class), name)
 
 
 def _fh2m_singles_cover(shape, single_tree, tile_terrain, anchor,
@@ -1530,7 +1609,14 @@ def fh2m_tree_h3m_cover(index, tile_terrain, anchor=None,
     tree = FH2M_FOREST_TERRAIN_TREE.get(tile_terrain)
     if tree is None:
         return None
+    # One random pick per cover, so the instances of one forest
+    # share the same model; the classes follow the picked defs.
     pair_tree, single_tree = tree
+    if pair_tree is not None:
+        pair_tree = (pair_tree[0], _h3m_tree_def_pick(pair_tree[1]))
+    if single_tree is not None:
+        single_tree = (single_tree[0],
+                       _h3m_tree_def_pick(single_tree[1]))
     shape = fh2m_tree_shape(index)
 
     def on_map(dx, dy):
@@ -1554,15 +1640,24 @@ def fh2m_tree_h3m_cover(index, tile_terrain, anchor=None,
                 return [(alt[0], alt[1], (dx, dy))]
         return []
 
-    # One exact 4-cell tree covers the whole footprint.
+    # One exact 4-cell tree covers the whole footprint: among the
+    # candidates of the forest shape (equivalent models), one is
+    # chosen at random.
+    exact_matches = []
     for exact in FH2M_FOREST_TERRAIN_TREE_EXACT.get(tile_terrain, []):
         cells = _fh2m_forest_tree_cells(exact[1])
         offset = _fh2m_forest_shape_offset(cells, shape) \
             if cells else None
-        if offset is not None and on_map(*offset):
-            return [(exact[0], exact[1], offset)]
+        if offset is not None:
+            exact_matches.append((exact[0], exact[1], offset))
+    exact_matches = [e for e in exact_matches if on_map(*e[2])]
+    if exact_matches:
+        exact = _random.choice(exact_matches)
+        return [(h3m_def_object_class(exact[1], exact[0]),
+                 exact[1], exact[2])]
 
     cover = []
+    paired_all = False
     if pair_tree is not None:
         cells = _fh2m_forest_tree_cells(pair_tree[1])
         if cells and len(cells) == 2 and cells[0] == (0, 0) \
@@ -1587,13 +1682,17 @@ def fh2m_tree_h3m_cover(index, tile_terrain, anchor=None,
                         # tree covers it.
                         cover.extend(single_cover(wx, dy))
                 # The pairs cover every footprint cell.
-                return cover
-    # No pair def (or the shape is not pairable): one single-cell
-    # tree per footprint cell.
-    for dx, dy in shape:
-        if on_map(dx, dy):
-            cover.extend(single_cover(dx, dy))
-    return cover
+                paired_all = True
+    if not paired_all:
+        # No pair def (or the shape is not pairable): one
+        # single-cell tree per footprint cell.
+        for dx, dy in shape:
+            if on_map(dx, dy):
+                cover.extend(single_cover(dx, dy))
+    if not cover:
+        return None
+    return [(h3m_def_object_class(d, c), d, o)
+            for c, d, o in cover]
 
 
 def fh2m_tree_def_name(h3m_class, tile_terrain, index=None):
@@ -1603,11 +1702,12 @@ def fh2m_tree_def_name(h3m_class, tile_terrain, index=None):
     1-cell objects use the terrain variant of their class."""
     shape = fh2m_tree_shape(index) if index is not None else None
     if shape is not None and len(shape) > 1:
-        exact = FH2M_TREE_EXACT_DEF.get(index)
+        exact = _h3m_tree_def_pick(FH2M_TREE_EXACT_DEF.get(index))
         if exact is not None:
             return exact
-    name = (FH2M_TREE_DEF_BY_TERRAIN.get(h3m_class, {}).get(tile_terrain)
-            or H3M_TREE_GENERIC_DEF.get(h3m_class))
+    name = _h3m_tree_def_pick(
+        FH2M_TREE_DEF_BY_TERRAIN.get(h3m_class, {}).get(tile_terrain)
+        or H3M_TREE_GENERIC_DEF.get(h3m_class))
     if shape is not None and name is not None:
         body = H3M_TREE_DEFS.get(name.lower())
         if body is None or _normalized_cells(
@@ -1646,6 +1746,27 @@ H3M_TREE_DEF_TO_FH2M_INDEX = {
     "avlp1sn0.def": 66, "avlp2sn0.def": 66,
     # log and palms (1 cell): closest single-cell objects
     "avldlog.def": 39, "avlplm30.def": 38, "avlplm50.def": 38,
+    # class 147 trees (rough / subterranean / snow variants, from
+    # the game's Objects.txt footprints): 2-cell pairs -> the lush
+    # pair, 1-cell singles -> the single tree.
+    "avlr01u0.def": 37, "avlr02r0.def": 37, "avlr02u0.def": 37,
+    "avlr03r0.def": 37, "avlr03u0.def": 37, "avlr04r0.def": 37,
+    "avlr04u0.def": 37, "avlr05u0.def": 37, "avlr06r0.def": 37,
+    "avlr07r0.def": 37, "avlr08r0.def": 37, "avlr09r0.def": 37,
+    "avlr10u0.def": 37, "avlr12u0.def": 37, "avlr2sn0.def": 37,
+    "avlr6sn0.def": 37, "avlrd01.def": 37, "avlrd02.def": 37,
+    "avlrg01.def": 37, "avlrg02.def": 37, "avlrr05.def": 37,
+    "avlr06u0.def": 53, "avlr07u0.def": 53, "avlr08u0.def": 53,
+    "avlr09u0.def": 53, "avlr10r0.def": 53, "avlr11r0.def": 53,
+    "avlr11u0.def": 53, "avlr12r0.def": 53, "avlr13r0.def": 53,
+    "avlr13u0.def": 53, "avlr14r0.def": 53, "avlr14u0.def": 53,
+    "avlr15r0.def": 53, "avlr15u0.def": 53, "avlr16u0.def": 53,
+    "avlr1sn0.def": 53, "avlr3sn0.def": 53, "avlr4sn0.def": 53,
+    "avlr5sn0.def": 53, "avlr7sn0.def": 53, "avlr8sn0.def": 53,
+    "avlrd04.def": 53, "avlrg03.def": 53, "avlrg04.def": 53,
+    "avlrg05.def": 53, "avlrg06.def": 53, "avlrg07.def": 53,
+    "avlrg08.def": 53, "avlrg09.def": 53, "avlrg10.def": 53,
+    "avlrg11.def": 53, "avlrr01.def": 53,
 }
 
 
@@ -2444,16 +2565,18 @@ def _fh2m_landscape_def_candidates(group, index, tile_terrain):
         if h3m_class is None:
             return []
         names = []
-        terrain_def = (FH2M_TREE_DEF_BY_TERRAIN.get(h3m_class, {})
-                       .get(tile_terrain or "Grass"))
+        terrain_def = _h3m_tree_def_pick(
+            FH2M_TREE_DEF_BY_TERRAIN.get(h3m_class, {})
+            .get(tile_terrain or "Grass"))
         for name in (terrain_def, H3M_TREE_GENERIC_DEF.get(h3m_class)):
             if name and name not in names:
                 names.append(name)
-        exact = FH2M_TREE_EXACT_DEF.get(index)
+        exact = _h3m_tree_def_pick(FH2M_TREE_EXACT_DEF.get(index))
         if exact:
             names = [exact] + [n for n in names if n != exact]
-        pair_def = (FH2M_PAIR_TREE_TERRAIN_DEF.get(index, {})
-                    .get(tile_terrain or "Grass"))
+        pair_def = _h3m_tree_def_pick(
+            FH2M_PAIR_TREE_TERRAIN_DEF.get(index, {})
+            .get(tile_terrain or "Grass"))
         if pair_def:
             names = [pair_def] + [n for n in names if n != pair_def]
         shape = fh2m_tree_shape(index)
@@ -2516,12 +2639,14 @@ def fh2m_landscape_def(group, index, tile_terrain, anchor=None,
             continue
         shift = fh2m_h3m_anchor_shift(h2_cells, h3_cells)
         if best is None:
-            best = (h3m_class, def_name, shift)
+            best = (h3m_def_object_class(def_name, h3m_class),
+                    def_name, shift)
         if anchor is None or map_width is None:
             break
         ax, ay = anchor[0] + shift[0], anchor[1] + shift[1]
         if 0 <= ax < map_width and 0 <= ay < map_width:
-            best = (h3m_class, def_name, shift)
+            best = (h3m_def_object_class(def_name, h3m_class),
+                    def_name, shift)
             break
         # The alignment leaves the map: keep the first def as the
         # fallback and try the next one.
@@ -2792,7 +2917,9 @@ H3M_DECORATIVE_TO_FH2M = {
     134: ("LANDSCAPE_MOUNTAINS", 2),        # mountains -> medium mountain, generic
     137: ("LANDSCAPE_MISCELLANEOUS", 11),  # plants -> pink flowers, grass
     119: ("LANDSCAPE_TREES", 43),           # dead trees -> dead tree, generic
-    147: ("LANDSCAPE_ROCKS", 2),            # rocks -> single medium rock, grass
+    147: ("LANDSCAPE_ROCKS", 2),            # class 147 rocks/stalagmites
+                                           # (the AVLr**/AvLR* trees are
+                                           # reverse-mapped by def name)
     120: ("LANDSCAPE_MISCELLANEOUS", 18),  # flowers -> small flowers, grass
     116: ("LANDSCAPE_MISCELLANEOUS", 73),  # cacti -> small cactus, desert
     131: ("LANDSCAPE_MISCELLANEOUS", 7),   # mandrakes -> wide shrub, grass
