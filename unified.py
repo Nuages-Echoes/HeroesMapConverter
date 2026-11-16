@@ -1043,6 +1043,47 @@ def unified_to_h3m(unified):
                     fh2m_river_tiles.add((x, y, z))
                     fh2m_river_index[(x, y, z)] = obj.get("index", 0)
 
+        # H2 roads run diagonally (staircases of corner connections)
+        # while H3 roads only connect tile to tile orthogonally: a
+        # diagonal step converted as-is leaves a broken, disconnected
+        # H3 road. The way the game editor draws it (see the corrected
+        # Barbarian vs Wizard.h3m reference), every diagonal step
+        # becomes an orthogonal bend through the inner corner tile -
+        # the south-most of the two candidate corners, as in the
+        # reference. Add those tiles to the road set; the sprite
+        # matcher then draws the bend with the mixed angle pieces.
+        _corner_steps = ((-1, -1, 0x01), (1, -1, 0x04),
+                         (1, 1, 0x10), (-1, 1, 0x40))
+        _added_roads = set()
+        for (rx, ry, rz) in list(fh2m_road_tiles):
+            _bits = fh2m_road_index.get((rx, ry, rz), 0) & 0xFF
+            for _dx, _dy, _bit in _corner_steps:
+                if not _bits & _bit:
+                    continue
+                if (rx + _dx, ry + _dy, rz) not in fh2m_road_tiles:
+                    continue
+                # The two inner-corner tiles between the diagonal
+                # pair; keep the south-most (the reference choice).
+                _cand = [(rx + _dx, ry), (rx, ry + _dy)]
+                _cx, _cy = max(_cand, key=lambda t: t[1])
+                if (0 <= _cx < map_size and 0 <= _cy < map_size
+                        and (_cx, _cy, rz) not in fh2m_road_tiles):
+                    _added_roads.add((_cx, _cy, rz))
+        fh2m_road_tiles |= _added_roads
+        for _tile in _added_roads:
+            # The added tile carries no H2 mask: derive the fallback
+            # bitfield from the (augmented) road adjacency, the way
+            # fheroes2 computes its road object index.
+            _tx, _ty, _tz = _tile
+            _mask = 0
+            for _i in range(9):
+                if _i == 4:
+                    continue
+                if (_tx + _i % 3 - 1, _ty + _i // 3 - 1, _tz) \
+                        in fh2m_road_tiles:
+                    _mask |= 1 << _i
+            fh2m_road_index[_tile] = _mask
+
     # Per-terrain h3m main-tile ranges (VCMI editor terrainViewPatterns.json,
     # pattern n1): normal terrains 49-72, dirt 21-44, sand 0-23, water 20-32.
     # Transition/border sprites sit below those ranges and must be chosen

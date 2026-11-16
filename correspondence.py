@@ -1855,65 +1855,86 @@ def _h3m_tree_def_pick(value):
 # corner that also joins the E and S edges; the turn pieces 0-1 are
 # the cardinal corners; 6-9 the T-junctions; 10-13 the straights
 # (two visual variants each); 14-15 the end caps; 16 the X-cross.
+# Road/river sprite patterns of the SoD editor, inferred from a
+# user-corrected map (Barbarian vs Wizard.h3m) plus real H3 maps.
+# Each entry is (row1, row2, row3, (lo, hi), mirror bits): a 3x3
+# neighborhood written row-major ('+' = line, '-' = no line,
+# '?' = anything, the center is always the line tile itself), the
+# random sprite range the editor picks within, and the mirroring
+# bits (road 0x10/0x20, river 0x04/0x08) of that orientation.
+# The grid is written in its final orientation: the mirroring bits
+# are what the game applies on top of the base sprite.
+#
+# The angle pieces (sprites 2-5) are the "mixed pieces" the game
+# draws when a corner also touches a diagonal neighbor: the SoD
+# editor prefers them over the plain turn pieces whenever one of
+# the two diagonals adjacent to the corner carries a line, and
+# uses them for pure diagonal connections as well.
 H3M_LINE_PATTERNS = [
-    # single tile (fallback)
-    ("---", "-+-", "---", (14, 14), False, False),
-    # angle: a diagonal band SW corner <-> NE corner joining the
-    # E and S edges (the mixed piece)
-    ("?-+", "-++", "++?", (2, 5), True, True),
-    # turn: a cardinal corner (two edges)
-    ("?-?", "-++", "?+?", (0, 1), True, True),
-    # dead end horizontal
-    ("?-?", "-++", "?-?", (15, 15), True, False),
-    # dead end vertical
-    ("?-?", "-+-", "?+?", (14, 14), False, True),
-    # T horizontal
-    ("?+?", "-++", "?+?", (6, 7), True, False),
-    # T vertical
-    ("?-?", "+++", "?+?", (8, 9), False, True),
-    # straight horizontal
-    ("?-?", "+++", "?-?", (12, 13), False, False),
-    # straight vertical
-    ("?+?", "-+-", "?+?", (10, 11), False, False),
     # X cross
-    ("?+?", "+++", "?+?", (16, 16), False, False),
+    ("?+?", "+++", "?+?", (16, 16), 0x00),
+    # T horizontal (N+E+S), mirrored (N+W+S)
+    ("?+?", "-++", "?+?", (6, 7), 0x00),
+    ("?+?", "++-", "?+?", (6, 7), 0x10),
+    # T vertical (E+S+W), flipped (E+N+W)
+    ("?-?", "+++", "?+?", (8, 9), 0x00),
+    ("?+?", "+++", "?-?", (8, 9), 0x20),
+    # straight horizontal / vertical
+    ("?-?", "+++", "?-?", (12, 13), 0x00),
+    ("?+?", "-+-", "?+?", (10, 11), 0x00),
+    # angle, E+S corner with a line on the NE or SW corner (the
+    # diagonal the mixed piece cuts through)
+    ("??+", "?++", "?+?", (2, 5), 0x00),
+    ("???", "?++", "+??", (2, 5), 0x00),
+    # angle, W+S corner with a line on the NW or SE corner
+    ("+??", "++?", "?+?", (2, 5), 0x10),
+    ("???", "++?", "??+", (2, 5), 0x10),
+    # angle, N+E corner with a line on the NW or SE corner
+    ("++?", "?++", "???", (2, 5), 0x20),
+    ("?+?", "?++", "??+", (2, 5), 0x20),
+    # angle, N+W corner with a line on the NE or SW corner
+    ("?++", "++?", "???", (2, 5), 0x30),
+    ("?+?", "++?", "+??", (2, 5), 0x30),
+    # angle, a pure NE<->SW / NW<->SE diagonal band (no edge)
+    ("--+", "-+-", "+--", (2, 5), 0x00),
+    ("+-+", "-+-", "--+", (2, 5), 0x10),
+    # turn: a cardinal corner (two edges, no diagonal)
+    ("?-?", "-++", "?+?", (0, 1), 0x00),
+    ("?-?", "++-", "?+?", (0, 1), 0x10),
+    ("?+?", "-++", "?-?", (0, 1), 0x20),
+    ("?+?", "++-", "?-?", (0, 1), 0x30),
+    # dead end horizontal / vertical
+    ("?-?", "-++", "?-?", (15, 15), 0x00),
+    ("?-?", "++-", "?-?", (15, 15), 0x10),
+    ("?-?", "-+-", "?+?", (14, 14), 0x00),
+    ("?+?", "-+-", "?-?", (14, 14), 0x20),
+    # single tile (fallback)
+    ("?-?", "-+-", "?-?", (14, 14), 0x00),
 ]
 
 
 def h3m_line_pattern_sprite(has_line, x, y):
     """(sprite, mirror bits) the game's editor picks for a road tile at
     (x, y): the first matching neighborhood pattern of
-    H3M_LINE_PATTERNS with the first valid flip, the sprite chosen at
-    random within the pattern's range. has_line(nx, ny) tells whether
-    the neighbor tile carries the line. (None, None) when no pattern
-    matches - a bend (corner + edge) no H3 piece draws."""
-    for r1, r2, r3, (lo, hi), hflip, vflip in H3M_LINE_PATTERNS:
+    H3M_LINE_PATTERNS, the sprite chosen at random within the
+    pattern's range. has_line(nx, ny) tells whether the neighbor tile
+    carries the line. (None, None) when no pattern matches - a bend
+    (corner + edge) no H3 piece draws."""
+    for r1, r2, r3, (lo, hi), mbits in H3M_LINE_PATTERNS:
         grid = r1 + r2 + r3
-        for flip, mbits in ((0, 0x00), (1, 0x10), (2, 0x20), (3, 0x30)):
-            if flip in (1, 3) and not hflip:
+        ok = True
+        for i in range(9):
+            if i == 4:
                 continue
-            if flip in (2, 3) and not vflip:
+            rule = grid[i]
+            if rule == "?":
                 continue
-            g = list(grid)
-            if flip in (1, 3):  # E <-> W: swap the grid columns
-                for i in range(3):
-                    g[i * 3], g[i * 3 + 2] = g[i * 3 + 2], g[i * 3]
-            if flip in (2, 3):  # N <-> S: swap the grid rows
-                for i in range(3):
-                    g[i], g[6 + i] = g[6 + i], g[i]
-            ok = True
-            for i in range(9):
-                if i == 4:
-                    continue
-                rule = g[i]
-                if rule == "?":
-                    continue
-                has = has_line(x + (i % 3) - 1, y + (i // 3) - 1)
-                if (rule == "+") != has:
-                    ok = False
-                    break
-            if ok:
-                return _random.randint(lo, hi), mbits
+            has = has_line(x + (i % 3) - 1, y + (i // 3) - 1)
+            if (rule == "+") != has:
+                ok = False
+                break
+        if ok:
+            return _random.randint(lo, hi), mbits
     return None, None
 
 
