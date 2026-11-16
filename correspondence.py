@@ -2632,10 +2632,13 @@ FH2M_TO_H3M_MISC = {
     "MISC_35": (42, 0),   # Stone Liths, generic
     "MISC_36": (42, 0),   # Stone Liths, generic 2
     "MISC_37": (42, 0),   # Stone Liths, Resurrection variant
-    "MISC_41": (99, 0),   # Observation Tower, grass -> lookout tower (99)
-    "MISC_42": (99, 0),   # Observation Tower, generic
-    "MISC_43": (99, 0),   # Observation Tower, desert
-    "MISC_44": (99, 0),   # Observation Tower, snow
+    # The Observation Tower converts to the h3m Redwood Observatory
+    # (class 58, AvXRedW.def) - the inverse of the h3m -> fh2m
+    # pairing; the class 99 is the Trading Post, not a lookout tower.
+    "MISC_41": (58, 0),   # Observation Tower, grass -> redwood observatory
+    "MISC_42": (58, 0),   # Observation Tower, generic
+    "MISC_43": (58, 0),   # Observation Tower, desert
+    "MISC_44": (58, 0),   # Observation Tower, snow
     # POWER_UPS: the Gazebo (index 11) maps to the h3m learning
     # stone (100 - the inverse pairing: the h3m learning stone
     # converts to the Heroes II Gazebo); the other power-ups stay
