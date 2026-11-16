@@ -1,0 +1,145 @@
+TREES INVENTORY - Heroes II (fh2m) and Heroes III (h3m)
+==============================================================================
+
+Characteristics per tree: ID, footprint, land type, visual species.
+Footprint: blocked cells as (dx, dy) offsets from the object anchor tile
+(y grows southward; the h3m anchor is the SE corner of the footprint).
+
+------------------------------------------------------------------------------
+H2 TREES (fh2m group LANDSCAPE_TREES, indices 0-68)
+------------------------------------------------------------------------------
+
+ ID | footprint                              | land type              | species
+------------------------------------------------------------------------------
+  0 | [(-1, 0), (0, 0), (0, 1), (1, 1)]      | Grass                  | forest (deciduous look)
+  1 | [(-1, 1), (0, 0), (0, 1), (1, 0)]      | Grass                  | forest (deciduous look)
+  2 | [(-1, -1), (0, -1), (0, 0), (1, 0)]    | Grass                  | forest (deciduous look)
+  3 | [(-1, 0), (0, -1), (0, 0), (1, -1)]    | Grass                  | forest (deciduous look)
+  4 | [(0, 0)]                               | Grass                  | single tree (deciduous look)
+  5 | [(0, 0)]                               | Grass                  | single tree (deciduous look)
+  6 | [(-1, 0), (0, 0), (0, 1), (1, 1)]      | Lava                   | forest (evil/dead look)
+  7 | [(-1, 1), (0, 0), (0, 1), (1, 0)]      | Lava                   | forest (evil/dead look)
+  8 | [(-1, -1), (0, -1), (0, 0), (1, 0)]    | Lava                   | forest (evil/dead look)
+  9 | [(-1, 0), (0, -1), (0, 0), (1, -1)]    | Lava                   | forest (evil/dead look)
+ 10 | [(0, 0)]                               | Lava                   | single tree (evil/dead look)
+ 11 | [(0, 0)]                               | Lava                   | single tree (evil/dead look)
+ 12 | [(-1, 0), (0, 0), (0, 1), (1, 1)]      | Grass                  | forest (autumn look)
+ 13 | [(-1, 1), (0, 0), (0, 1), (1, 0)]      | Grass                  | forest (autumn look)
+ 14 | [(-1, -1), (0, -1), (0, 0), (1, 0)]    | Grass                  | forest (autumn look)
+ 15 | [(-1, 0), (0, -1), (0, 0), (1, -1)]    | Grass                  | forest (autumn look)
+ 16 | [(0, 0)]                               | Grass                  | single tree (autumn look)
+ 17 | [(0, 0)]                               | Grass                  | single tree (autumn look)
+ 18 | [(-1, 0), (0, 0), (0, 1), (1, 1)]      | Grass                  | forest (fir look)
+ 19 | [(-1, 1), (0, 0), (0, 1), (1, 0)]      | Grass                  | forest (fir look)
+ 20 | [(-1, -1), (0, -1), (0, 0), (1, 0)]    | Grass                  | forest (fir look)
+ 21 | [(-1, 0), (0, -1), (0, 0), (1, -1)]    | Grass                  | forest (fir look)
+ 22 | [(0, 0)]                               | Grass                  | single tree (fir look)
+ 23 | [(0, 0)]                               | Grass                  | single tree (fir look)
+ 24 | [(-1, 0), (0, 0), (0, 1), (1, 1)]      | Swamp                  | forest (jungle look)
+ 25 | [(-1, 1), (0, 0), (0, 1), (1, 0)]      | Swamp                  | forest (jungle look)
+ 26 | [(-1, -1), (0, -1), (0, 0), (1, 0)]    | Swamp                  | forest (jungle look)
+ 27 | [(-1, 0), (0, -1), (0, 0), (1, -1)]    | Swamp                  | forest (jungle look)
+ 28 | [(0, 0)]                               | Swamp                  | single tree (jungle look)
+ 29 | [(0, 0)]                               | Swamp                  | single tree (jungle look)
+ 30 | [(-1, 0), (0, 0), (0, 1), (1, 1)]      | Snow                   | forest (snowy fir look)
+ 31 | [(-1, 1), (0, 0), (0, 1), (1, 0)]      | Snow                   | forest (snowy fir look)
+ 32 | [(-1, -1), (0, -1), (0, 0), (1, 0)]    | Snow                   | forest (snowy fir look)
+ 33 | [(-1, 0), (0, -1), (0, 0), (1, -1)]    | Snow                   | forest (snowy fir look)
+ 34 | [(0, 0)]                               | Snow                   | single tree (snowy fir look)
+ 35 | [(0, 0)]                               | Snow                   | single tree (snowy fir look)
+ 36 | [(-1, 0), (0, 0), (1, 0)]              | Swamp                  | wide tree
+ 37 | [(0, 0), (1, 0)]                       | Swamp                  | tree
+ 38 | [(0, 0)]                               | Swamp                  | tree
+ 39 | [(0, 0)]                               | Snow                   | stump
+ 40 | [(0, 0)]                               | Snow                   | stump
+ 41 | [(0, 0), (1, 0)]                       | Snow                   | dead tree pair
+ 42 | [(-1, 0), (0, 0), (1, 0)]              | Snow                   | wide tree
+ 43 | [(0, 0)]                               | Snow                   | dead tree
+ 44 | [(0, 0)]                               | Snow                   | dead tree
+ 45 | [(0, 0)]                               | Snow                   | dead tree
+ 46 | [(0, 0)]                               | Grass                  | dead tree
+ 47 | [(0, 0)]                               | Grass                  | dead tree
+ 48 | [(0, 0)]                               | Snow                   | dead tree
+ 49 | [(0, 0)]                               | Snow                   | dead tree
+ 50 | [(-1, 0), (0, 0)]                      | Swamp                  | dead tree pair
+ 51 | [(0, 0), (1, 0)]                       | ?                      | dead tree pair
+ 52 | [(0, 0), (1, 0)]                       | ?                      | dead tree pair
+ 53 | [(0, 0)]                               | Beach                  | tree
+ 54 | [(0, 0)]                               | Beach                  | tree
+ 55 | [(0, 0)]                               | Beach                  | tree
+ 56 | [(0, 0)]                               | Beach                  | tree
+ 57 | [(0, 0)]                               | Beach                  | tree
+ 58 | [(0, 0)]                               | Desert, Grass          | tree
+ 59 | [(0, 0)]                               | Desert                 | tree
+ 60 | [(0, 0)]                               | Desert                 | tree
+ 61 | [(0, 0)]                               | Grass                  | tree
+ 62 | [(0, 0)]                               | Grass                  | tree
+ 63 | [(0, 0)]                               | Grass                  | tree
+ 64 | [(0, 0)]                               | Wasteland              | dead tree
+ 65 | [(0, 0)]                               | Wasteland              | dead tree
+ 66 | [(0, 0)]                               | Grass                  | stump
+ 67 | [(0, 0)]                               | Grass                  | stump
+ 68 | [(0, 0)]                               | Grass                  | stump
+
+Land type: the terrain the tree was placed on in Mymaptest.fh2m
+(the test map "all types of land and the trees that go with it").
+Indices 51-52 were not placed (same family as 50). The forest families
+(indices 0-35, six objects each: 4 forests + 2 singles) follow the six
+forest looks of the fheroes2 catalog: deciduous, evil/dead, autumn, fir,
+jungle, snowy fir.
+
+------------------------------------------------------------------------------
+H3 TREES (h3m tree defs, from the reference-map catalog)
+------------------------------------------------------------------------------
+
+def name         | class | footprint                                      | land          | species
+------------------------------------------------------------------------------
+AVLd3sn0.def     |   119 | [(0, 0)]                                       | Snow          | dead tree (snow)
+AVLdead0.def     |   119 | [(0, 0)]                                       | Dirt          | dead tree
+AVLdead1.def     |   119 | [(0, 0)]                                       | Dirt          | dead tree
+AVLdead2.def     |   119 | [(-2, -1), (-1, -1), (-1, 0), (0, 0)]          | Dirt          | dead tree
+AVLdead3.def     |   119 | [(-2, 0), (-1, -1), (-1, 0), (0, -1)]          | Dirt          | dead tree
+AVLdead4.def     |   119 | [(-2, -1), (-1, -1), (-1, 0), (0, 0)]          | Dirt          | dead tree
+AVLdead5.def     |   119 | [(-2, 0), (-1, -1), (-1, 0), (0, -1)]          | Dirt          | dead tree
+AVLdead6.def     |   119 | [(-2, -2), (-2, -1), (-1, -2), (-1, -1), (-1, 0), (0, -1), (0, 0)] | Dirt          | dead tree
+AVLdead7.def     |   119 | [(-2, -1), (-2, 0), (-1, -2), (-1, -1), (-1, 0), (0, -2), (0, -1)] | Dirt          | dead tree
+AvLdlog.def      |   130 | [(0, 0)]                                       | Dirt          | log
+AVLdt1s0.def     |   119 | [(-1, 0), (0, 0)]                              | Dirt          | dead tree
+AVLdt2s0.def     |   119 | [(-1, 0), (0, 0)]                              | Dirt          | dead tree
+AVLdt3s0.def     |   119 | [(-1, -1), (-1, 0), (0, -1), (0, 0)]           | Dirt          | dead tree
+AVLklp10.def     |   125 | []                                             | Water         | kelp (passable)
+AVLklp20.def     |   125 | []                                             | Water         | kelp (passable)
+AVLp1sn0.def     |   153 | [(0, 0)]                                       | Snow          | pine
+AVLp2sn0.def     |   153 | [(0, 0)]                                       | Snow          | pine
+AVLplm30.def     |   125 | [(0, 0)]                                       | Sand (beach)  | palm
+AVLplm50.def     |   125 | [(-1, 0)]                                      | Sand (beach)  | palm
+AVLr04r0.def     |   155 | [(-1, 0), (0, 0)]                              | Rough         | tree
+AVLroug0.def     |   155 | [(0, 0)]                                       | Rough         | tree
+AVLroug1.def     |   155 | [(0, 0)]                                       | Rough         | tree
+AVLroug2.def     |   155 | [(0, 0)]                                       | Rough         | tree
+AvLStm1.def      |   153 | [(0, 0)]                                       | Snow          | stump
+AvLStm2.def      |   153 | [(0, 0)]                                       | Snow          | stump
+AvLStm3.def      |   153 | [(0, 0)]                                       | Snow          | stump
+AVLswmp0.def     |   155 | [(0, 0)]                                       | Swamp         | swamp tree
+AVLswmp1.def     |   155 | [(0, 0)]                                       | Swamp         | swamp tree
+AVLswmp2.def     |   155 | [(-2, -1), (-1, -1), (-1, 0), (0, 0)]          | Swamp         | swamp tree
+AVLswmp3.def     |   155 | [(-2, 0), (-1, -1), (-1, 0), (0, -1)]          | Swamp         | swamp tree
+AVLswmp4.def     |   155 | [(-2, -1), (-1, -1), (-1, 0), (0, 0)]          | Swamp         | swamp tree
+AVLswmp5.def     |   155 | [(-2, 0), (-1, -1), (-1, 0), (0, -1)]          | Swamp         | swamp tree
+AVLswp60.def     |   119 | [(-1, 0), (0, 0)]                              | Swamp         | swamp tree
+AVLswp70.def     |   119 | [(0, 0)]                                       | Swamp         | swamp tree
+AVLtr1d0.def     |   155 | [(-1, 0)]                                      | Grass         | oak
+AVLtr2d0.def     |   155 | [(-1, 0)]                                      | Grass         | oak
+AVLtr3d0.def     |   155 | [(0, 0)]                                       | Grass         | oak
+AVLwlw10.def     |   155 | [(-2, 0), (-1, 0), (0, 0)]                     | Grass         | willow
+AVLwlw20.def     |   155 | [(-1, 0), (0, 0)]                              | Grass         | willow
+AVLwlw30.def     |   155 | [(0, 0)]                                       | Grass         | willow
+AVLyuc10.def     |   155 | [(0, 0)]                                       | Sand          | yucca
+AVLyuc20.def     |   155 | [(0, 0)]                                       | Sand          | yucca
+AVLyuc30.def     |   155 | [(0, 0)]                                       | Sand          | yucca
+AVTchst0.def     |   101 | [(0, 0)]                                       | any           | conifer
+
+class: the h3m object class used with the def (155 deciduous tree,
+119 dead/swamp tree, 153 stump/pine, 125 palm/kelp, 130 log, 101 conifer).
+land: the terrain family the def sprites belong to.
+AVLplm50 blocks the cell west of its anchor; AVLtr1d0/AVLtr2d0 too.
