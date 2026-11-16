@@ -2259,7 +2259,10 @@ FH2M_TO_H3M_CATALOG = {
     # against a reference map (none contains one): the sprite name
     # comes from the H3 data and the mask is the one shared by every
     # town def of the catalog.
-    (98, 255): ("AVCrndx0.def", "ffffff8f0707000000000020ff00ff00", "010000000000000000000000000000000000"),
+    # The h3m random town: AVCranx0.def, with the exact town mask
+    # of the race towns (the H3 Objects.txt gives AVCranx0.def the
+    # same passability and actionability bitmaps as AVCcasx0.def).
+    (98, 255): ("AVCranx0.def", "ffffff8f0707000000000020ff00ff00", "010000000000000000000000000000000000"),
     (99, 0): ("AVXpost0.def", "ffffffffff3f000000000080ff010500", "000000000000000000000000000000000000"),
     (100, 0): ("AVSgzbo0.def", "ffffffffff7f000000000080ff01ff00", "000000000000000000000000000000000000"),
     (101, 0): ("AVTchst0.def", "ffffffffff7f000000000080ff01ff00", "050000000000000000000000000000000000"),
