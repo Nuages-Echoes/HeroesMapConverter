@@ -1,0 +1,226 @@
+LANDSCAPE INVENTORY (non-tree): rocks, miscellaneous, water
+==============================================================================
+
+Per H2 object: species, true H2 footprint (blocked cells from the
+fheroes2 catalog), the H3 def the converter writes today (the
+class representative, no anchor shift for these groups), its
+footprint, and whether the footprints match. 'overlay' = the
+passable TERRAIN_LAYER parts of the H2 object (cracks, flowers...).
+The conversion respects the footprint only when MATCH.
+
+------------------------------------------------------------------------------
+H2 LANDSCAPE_ROCKS (indices 0-39)
+------------------------------------------------------------------------------
+  0  Small and medium rocks, grass terrain, variant H2=[(0, 0), (1, 0)]                       H3=AVLrk4w0.def [(0, 0)] MISMATCH
+  1  Medium and very small rocks, grass terrain, va H2=[(0, 0), (1, 0)]                       H3=AVLrk4w0.def [(0, 0)] MISMATCH
+  2  Single medium rock, grass terrain.             H2=[(0, 0)]                               H3=AVLrk4w0.def [(0, 0)] MATCH
+  3  Tiny rocks, grass terrain.                     H2=[(0, 0)]                               H3=AVLrk4w0.def [(0, 0)] MATCH
+  4  Small 1-tile rocks, grass terrain. 4 variants. H2=[(0, 0)]                               H3=AVLrk4w0.def [(0, 0)] MATCH
+  5  Small 1-tile rocks, grass terrain. 4 variants. H2=[(0, 0)]                               H3=AVLrk4w0.def [(0, 0)] MATCH
+  6  Small 1-tile rocks, grass terrain. 4 variants. H2=[(0, 0)]                               H3=AVLrk4w0.def [(0, 0)] MATCH
+  7  Small 1-tile rocks, grass terrain. 4 variants. H2=[(0, 0)]                               H3=AVLrk4w0.def [(0, 0)] MATCH
+  8  Small rocks, snow terrain.                     H2=[(0, 0)]                               H3=AVLrk4w0.def [(0, 0)] MATCH
+  9  Medium rocks, snow terrain.                    H2=[(0, 0), (1, 0)]                       H3=AVLrk4w0.def [(0, 0)] MISMATCH
+ 10  Tiny rocks, snow terrain.                      H2=[(0, 0)]                               H3=AVLrk4w0.def [(0, 0)] MATCH
+ 11  Small 1-tile rocks, grass terrain. 2 variants. H2=[(0, 0)]                               H3=AVLrk4w0.def [(0, 0)] MATCH
+ 12  Small 1-tile rocks, grass terrain. 2 variants. H2=[(0, 0)]                               H3=AVLrk4w0.def [(0, 0)] MATCH
+ 13  Wide small rocks, snow terrain.                H2=[(0, 0), (1, 0)]                       H3=AVLrk4w0.def [(0, 0)] MISMATCH
+ 14  Medium rock, snow terrain.                     H2=[(0, 0)]                               H3=AVLrk4w0.def [(0, 0)] MATCH
+ 15  Medium rock, snow terrain.                     H2=[(-1, 0), (0, 0)]                      H3=AVLrk4w0.def [(0, 0)] MISMATCH
+ 16  Wide and low mossy rock, swamp terrain.        H2=[(-1, 0), (0, 0)]                      H3=AVLrk4w0.def [(0, 0)] MISMATCH
+ 17  Medium mossy rock, swamp terrain.              H2=[(0, 0)]                               H3=AVLrk4w0.def [(0, 0)] MATCH
+ 18  Medium rock, swamp terrain.                    H2=[(0, 0)]                               H3=AVLrk4w0.def [(0, 0)] MATCH
+ 19  Big mossy rock, swamp terrain.                 H2=[(-1, 0), (0, 0)]                      H3=AVLrk4w0.def [(0, 0)] MISMATCH
+ 20  Very-very small rocks (1-tile), swamp terrain. H2=[(0, 0)]                               H3=AVLrk4w0.def [(0, 0)] MATCH
+ 21  Wide medium rocks, dirt terrain.               H2=[(0, 0), (1, 0)]                       H3=AVLrk4w0.def [(0, 0)] MISMATCH
+ 22  Big and three medium rocks, dirt terrain.      H2=[(0, 0), (1, 0)]                       H3=AVLrk4w0.def [(0, 0)] MISMATCH
+ 23  Medium and small rocks, dirt terrain.          H2=[(0, 0), (1, 0)]                       H3=AVLrk4w0.def [(0, 0)] MISMATCH
+ 24  Medium rock, dirt terrain.                     H2=[(0, 0)]                               H3=AVLrk4w0.def [(0, 0)] MATCH
+ 25  Small rocks, dirt terrain.                     H2=[(0, 0)]                               H3=AVLrk4w0.def [(0, 0)] MATCH
+ 26  Wide medium rock with a tree on it, wasteland  H2=[(0, 0), (1, 0)]                       H3=AVLrk4w0.def [(0, 0)] MISMATCH
+ 27  Small rock, wasteland terrain.                 H2=[(0, 0)]                               H3=AVLrk4w0.def [(0, 0)] MATCH
+ 28  Big rock and two medium around, wasteland terr H2=[(0, 0), (1, 0)]                       H3=AVLrk4w0.def [(0, 0)] MISMATCH
+ 29  Wide medium rock, wasteland terrain.           H2=[(0, 0), (1, 0)]                       H3=AVLrk4w0.def [(0, 0)] MISMATCH
+ 30  Wide big rock, wasteland terrain.              H2=[(-1, 0), (0, 0)]                      H3=AVLrk4w0.def [(0, 0)] MISMATCH
+ 31  Wide low rock, wasteland terrain.              H2=[(0, 0), (1, 0)]                       H3=AVLrk4w0.def [(0, 0)] MISMATCH
+ 32  Wide low rock, wasteland terrain.              H2=[(0, 0), (1, 0)]                       H3=AVLrk4w0.def [(0, 0)] MISMATCH
+ 33  Wide small rock and a small rock, wasteland te H2=[(-1, 0), (0, 0)]                      H3=AVLrk4w0.def [(0, 0)] MISMATCH
+ 34  Wide small rock, wasteland terrain.            H2=[(0, 0), (1, 0)]                       H3=AVLrk4w0.def [(0, 0)] MISMATCH
+ 35  Small and medium rocks, wasteland terrain.     H2=[(-1, 0), (0, 0)]                      H3=AVLrk4w0.def [(0, 0)] MISMATCH
+ 36  Tall rocks, wasteland terrain. 4 variants.     H2=[(0, 0)]                               H3=AVLrk4w0.def [(0, 0)] MATCH
+ 37  Tall rocks, wasteland terrain. 4 variants.     H2=[(0, 0)]                               H3=AVLrk4w0.def [(0, 0)] MATCH
+ 38  Tall rocks, wasteland terrain. 4 variants.     H2=[(0, 0)]                               H3=AVLrk4w0.def [(0, 0)] MATCH
+ 39  Tall rocks, wasteland terrain. 4 variants.     H2=[(0, 0)]                               H3=AVLrk4w0.def [(0, 0)] MATCH
+
+  -> 21/40 footprints respected
+
+------------------------------------------------------------------------------
+H2 LANDSCAPE_MISCELLANEOUS (indices 0-146)
+------------------------------------------------------------------------------
+  0  Crack, grass terrain.                          H2=(passable)                             H3=AVLct4l0.def [(-1, -1), (-1, 0), (0, -1)] MISMATCH
+  1  Crack, grass terrain.                          H2=(passable)                             H3=AVLct4l0.def [(-1, -1), (-1, 0), (0, -1)] MISMATCH
+  2  Crack, grass terrain.                          H2=(passable)                             H3=AVLct4l0.def [(-1, -1), (-1, 0), (0, -1)] MISMATCH
+  3  Small crack, grass terrain.                    H2=(passable)                             H3=AVLct4l0.def [(-1, -1), (-1, 0), (0, -1)] MISMATCH
+  4  Big water lake, grass terrain.                 H2=[(-2, -1), (-2, 0), (-1, -1), (-1, 0), (0, -1), (0, 0), (1, -1), (1, 0), (2, -1), (2, 0)] H3=AVAflot0.def [(0, 0)] MISMATCH
+  5  Medium water lake, grass terrain.              H2=[(-2, -1), (-2, 0), (-1, -1), (-1, 0), (0, -1), (0, 0), (1, -1), (1, 0)] H3=AVAflot0.def [(0, 0)] MISMATCH
+  6  Small water lake, grass terrain.               H2=[(-1, 0), (0, 0), (1, 0)]              H3=AVAflot0.def [(0, 0)] MISMATCH
+  7  Wide shrub, grass terrain.                     H2=[(-1, 0), (0, 0), (1, 0)]              H3=AVLsh4g0.def [(-1, 0), (0, 0)] MISMATCH
+  8  Wide shrub, grass terrain.                     H2=[(-1, 0), (0, 0), (1, 0)]              H3=AVLsh4g0.def [(-1, 0), (0, 0)] MISMATCH
+  9  Medium wide shrub, grass terrain. 3 variants.  H2=[(0, 0), (1, 0)]                       H3=AVLsh4g0.def [(-1, 0), (0, 0)] MISMATCH
+ 10  Medium wide shrub, grass terrain. 3 variants.  H2=[(0, 0), (1, 0)]                       H3=AVLsh4g0.def [(-1, 0), (0, 0)] MISMATCH
+ 11  Medium wide shrub, grass terrain. 3 variants.  H2=[(0, 0), (1, 0)]                       H3=AVLf01g0.def [(0, 0)] MISMATCH
+ 12  Small shrub, grass terrain.                    H2=[(0, 0)]                               H3=AVLf01g0.def [(0, 0)] MATCH
+ 13  Pink flowers, grass terrain.                   H2=[(0, 0)]                               H3=AVLf01g0.def [(0, 0)] MATCH
+ 14  Wide flowers, grass terrain.                   H2=[(-1, 0), (0, 0), (1, 0)]              H3=AVLf01g0.def [(0, 0)] MISMATCH
+ 15  Wide flowers (taller), grass terrain.          H2=[(-1, 0), (0, 0), (1, 0)]              H3=AVLf01g0.def [(0, 0)] MISMATCH
+ 16  Wide flowers, grass terrain. 2 variants.       H2=[(-1, 0), (0, 0), (1, 0)]              H3=AVLf01g0.def [(0, 0)] MISMATCH
+ 17  Wide flowers, grass terrain. 2 variants.       H2=[(-1, 0), (0, 0), (1, 0)]              H3=AVLf01g0.def [(0, 0)] MISMATCH
+ 18  Medium wide flowers (taller), grass terrain.   H2=[(-1, 0), (0, 0)]                      H3=AVLf01g0.def [(0, 0)] MISMATCH
+ 19  Very small flowers, grass terrain.             H2=[(0, 0)]                               H3=AVLct4l0.def [(-1, -1), (-1, 0), (0, -1)] MISMATCH
+ 20  Low medium-wide flowers, grass terrain.        H2=[(-1, 0), (0, 0)]                      H3=AVLct4l0.def [(-1, -1), (-1, 0), (0, -1)] MISMATCH
+ 21  Small (1 tile) flowers, grass terrain. 4 varia H2=[(0, 0)]                               H3=AVLct4l0.def [(-1, -1), (-1, 0), (0, -1)] MISMATCH
+ 22  Small (1 tile) flowers, grass terrain. 4 varia H2=[(0, 0)]                               H3=AVLct4l0.def [(-1, -1), (-1, 0), (0, -1)] MISMATCH
+ 23  Small (1 tile) flowers, grass terrain. 4 varia H2=[(0, 0)]                               H3=AVLct4l0.def [(-1, -1), (-1, 0), (0, -1)] MISMATCH
+ 24  Small (1 tile) flowers, grass terrain. 4 varia H2=[(0, 0)]                               H3=AVLct4l0.def [(-1, -1), (-1, 0), (0, -1)] MISMATCH
+ 25  Dug hole, grass terrain.                       H2=(passable)                             H3=AVLsh4g0.def [(-1, 0), (0, 0)] MISMATCH
+ 26  Small cliff, grass terrain. 3 variants.        H2=(passable)                             H3=AVAflot0.def [(0, 0)] MISMATCH
+ 27  Small cliff, grass terrain. 3 variants.        H2=(passable)                             H3=AVAflot0.def [(0, 0)] MISMATCH
+ 28  Small cliff, grass terrain. 3 variants.        H2=(passable)                             H3=AVAflot0.def [(0, 0)] MISMATCH
+ 29  Crack, snow terrain.                           H2=(passable)                             H3=AVLct4l0.def [(-1, -1), (-1, 0), (0, -1)] MISMATCH
+ 30  Dug hole, snow terrain.                        H2=(passable)                             H3=AVLsh4g0.def [(-1, 0), (0, 0)] MISMATCH
+ 31  Small cliff, snow terrain. 2 variants.         H2=(passable)                             H3=AVLct4l0.def [(-1, -1), (-1, 0), (0, -1)] MISMATCH
+ 32  Small cliff, snow terrain. 2 variants.         H2=(passable)                             H3=AVAflot0.def [(0, 0)] MISMATCH
+ 33  Wide small cliff, snow terrain.                H2=(passable)                             H3=AVAflot0.def [(0, 0)] MISMATCH
+ 34  Very small shrub, snow terrain. 3 variants.    H2=[(0, 0)]                               H3=AVAflot0.def [(0, 0)] MATCH
+ 35  Very small shrub, snow terrain. 3 variants.    H2=[(0, 0)]                               H3=AVLman40.def [(-2, 0), (-1, 0), (0, 0)] MISMATCH
+ 36  Very small shrub, snow terrain. 3 variants.    H2=[(0, 0)]                               H3=AVLman40.def [(-2, 0), (-1, 0), (0, 0)] MISMATCH
+ 37  Big frozen water lake, snow terrain.           H2=[(-2, -1), (-2, 0), (-1, -1), (-1, 0), (0, -1), (0, 0), (1, -1), (1, 0), (2, 0)] H3=AVLman40.def [(-2, 0), (-1, 0), (0, 0)] MISMATCH
+ 38  Medium frozen water lake, snow terrain.        H2=[(-1, 0), (0, 0), (1, 0)]              H3=AVLman40.def [(-2, 0), (-1, 0), (0, 0)] MISMATCH
+ 39  Small frozen water lake, snow terrain.         H2=[(0, 0), (1, 0)]                       H3=AVLman40.def [(-2, 0), (-1, 0), (0, 0)] MISMATCH
+ 40  Crack, swamp terrain.                          H2=(passable)                             H3=AVAflot0.def [(0, 0)] MISMATCH
+ 41  Shrub, swamp terrain.                          H2=[(-1, 0), (0, 0)]                      H3=AVAflot0.def [(0, 0)] MISMATCH
+ 42  Dug hole, swamp terrain.                       H2=(passable)                             H3=AVAflot0.def [(0, 0)] MISMATCH
+ 43  Big water lake, swamp terrain.                 H2=[(-2, -1), (-2, 0), (-2, 1), (-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 0), (0, 1), (1, -1), (1, 0), (1, 1), (2, 0), (2, 1)] H3=AVLman40.def [(-2, 0), (-1, 0), (0, 0)] MISMATCH
+ 44  Medium (wide) water lake, swamp terrain.       H2=[(-1, -1), (-1, 0), (0, -1), (0, 0), (1, -1)] H3=AVLman40.def [(-2, 0), (-1, 0), (0, 0)] MISMATCH
+ 45  Medium (tall) water lake, swamp terrain.       H2=[(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 0), (0, 1)] H3=AVLman40.def [(-2, 0), (-1, 0), (0, 0)] MISMATCH
+ 46  Single mandrake, swamp terrain.                H2=[(0, 0)]                               H3=AVLman40.def [(-2, 0), (-1, 0), (0, 0)] MISMATCH
+ 47  Medium-wide mandrake, swamp terrain.           H2=[(-1, 0), (0, 0)]                      H3=AVLman40.def [(-2, 0), (-1, 0), (0, 0)] MISMATCH
+ 48  Single mandrake, swamp terrain.                H2=[(0, 0)]                               H3=AVLsh4g0.def [(-1, 0), (0, 0)] MISMATCH
+ 49  Wide mandrakes, swamp terrain.                 H2=[(-1, 0), (0, 0), (1, 0)]              H3=AVLsh4g0.def [(-1, 0), (0, 0)] MISMATCH
+ 50  Single small mandrake, swamp terrain.          H2=[(0, 0)]                               H3=AVLsh4g0.def [(-1, 0), (0, 0)] MISMATCH
+ 51  Wide swampy water lake, swamp terrain.         H2=[(-2, 0), (-1, 0), (0, -1), (0, 0), (1, -1), (1, 0), (2, -1), (2, 0)] H3=AVLsh4g0.def [(-1, 0), (0, 0)] MISMATCH
+ 52  Small wide swampy water lake, swamp terrain. 3 H2=[(-1, 0), (0, 0), (1, 0)]              H3=AVLman40.def [(-2, 0), (-1, 0), (0, 0)] MISMATCH
+ 53  Small wide swampy water lake, swamp terrain. 3 H2=[(-1, 0), (0, 0), (1, 0)]              H3=AVLct4l0.def [(-1, -1), (-1, 0), (0, -1)] MISMATCH
+ 54  Small wide swampy water lake, swamp terrain. 3 H2=[(-1, 0), (0, 0), (1, 0)]              H3=AVLct4l0.def [(-1, -1), (-1, 0), (0, -1)] MISMATCH
+ 55  Small swampy water lake, swamp terrain. In ori H2=[(-1, 0), (0, 0)]                      H3=AVLct4l0.def [(-1, -1), (-1, 0), (0, -1)] MISMATCH
+ 56  Wide reed, swamp terrain.                      H2=[(-2, 0), (-1, 0), (0, 0), (1, 0), (2, 0)] H3=AVLlv110.def [(-1, -1), (-1, 0), (0, -1), (0, 0)] MISMATCH
+ 57  Medium-wide reed, swamp terrain.               H2=[(-1, 0), (0, 0), (1, 0)]              H3=AVLlv110.def [(-1, -1), (-1, 0), (0, -1), (0, 0)] MISMATCH
+ 58  Small reed, swamp terrain.                     H2=[(0, 0)]                               H3=AVLct4l0.def [(-1, -1), (-1, 0), (0, -1)] MISMATCH
+ 59  Rotten roots, swamp terrain. 2 variants. In or H2=[(-1, 0), (0, 0)]                      H3=AVLlv110.def [(-1, -1), (-1, 0), (0, -1), (0, 0)] MISMATCH
+ 60  Rotten roots, swamp terrain. 2 variants. In or H2=[(-1, 0), (0, 0)]                      H3=AVLlv110.def [(-1, -1), (-1, 0), (0, -1), (0, 0)] MISMATCH
+ 61  Small rotten roots, swamp terrain. 2 variants. H2=[(0, 0)]                               H3=AVLlv110.def [(-1, -1), (-1, 0), (0, -1), (0, 0)] MISMATCH
+ 62  Medium-wide shrub, swamp terrain.              H2=[(-1, 0), (0, 0)]                      H3=AVLlv110.def [(-1, -1), (-1, 0), (0, -1), (0, 0)] MISMATCH
+ 63  Small shrub, swamp terrain. 2variants.         H2=[(0, 0)]                               H3=AVLlv110.def [(-1, -1), (-1, 0), (0, -1), (0, 0)] MISMATCH
+ 64  Small shrub, swamp terrain. 2variants.         H2=[(0, 0)]                               H3=AVLlv110.def [(-1, -1), (-1, 0), (0, -1), (0, 0)] MISMATCH
+ 65  Medium-wide shrub, swamp terrain.              H2=[(-1, 0), (0, 0)]                      H3=AVLlv110.def [(-1, -1), (-1, 0), (0, -1), (0, 0)] MISMATCH
+ 66  Small shrub, swamp terrain.                    H2=[(0, 0)]                               H3=AVLlv110.def [(-1, -1), (-1, 0), (0, -1), (0, 0)] MISMATCH
+ 67  Mossy roots, swamp terrain. In original editor H2=[(-1, 0), (0, 0)]                      H3=AVLlv110.def [(-1, -1), (-1, 0), (0, -1), (0, 0)] MISMATCH
+ 68  Crack, lava terrain.                           H2=(passable)                             H3=AVLct4l0.def [(-1, -1), (-1, 0), (0, -1)] MISMATCH
+ 69  Medium crater (wide), lava terrain.            H2=[(-2, -1), (-2, 0), (-1, -1), (-1, 0), (0, -1), (0, 0), (1, -1), (1, 0)] H3=AVLca010.def [(0, 0)] MISMATCH
+ 70  Medium crater (high), lava terrain.            H2=[(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 0), (0, 1)] H3=AVLca010.def [(0, 0)] MISMATCH
+ 71  Small lava pool, lava terrain.                 H2=[(-1, 0), (0, -1), (0, 0)]             H3=AVLca010.def [(0, 0)] MISMATCH
+ 72  Passable lava, lava terrain.                   H2=(passable)                             H3=AVLca010.def [(0, 0)] MISMATCH
+ 73  Dug hole, lava terrain.                        H2=(passable)                             H3=AVLca010.def [(0, 0)] MISMATCH
+ 74  Big lava pool, lava terrain.                   H2=[(-3, -1), (-3, 0), (-2, -1), (-2, 0), (-1, -1), (-1, 0), (0, -1), (0, 0), (1, -1), (1, 0), (2, -1), (2, 0)] H3=AVLca010.def [(0, 0)] MISMATCH
+ 75  Medium lava pool, lava terrain.                H2=[(-1, -1), (-1, 0), (0, -1), (0, 0), (1, -1), (1, 0)] H3=AVLca010.def [(0, 0)] MISMATCH
+ 76  Medium (little lifted) lava pool, lava terrain H2=[(-1, -1), (-1, 0), (0, -1), (0, 0), (1, -1), (1, 0)] H3=AVLca010.def [(0, 0)] MISMATCH
+ 77  Small lava streams, lava terrain.              H2=[(-1, -1), (-1, 0), (0, -1), (0, 0)]   H3=AVLca010.def [(0, 0)] MISMATCH
+ 78  Small lava streams, lava terrain.              H2=[(-1, 0), (0, -1), (0, 0)]             H3=AVLca010.def [(0, 0)] MISMATCH
+ 79  Small lava streams, lava terrain.              H2=[(-1, -1), (-1, 0), (0, -1), (0, 0)]   H3=AVLct4l0.def [(-1, -1), (-1, 0), (0, -1)] MISMATCH
+ 80  Medium lava streams, lava terrain.             H2=[(-1, 0), (0, 0), (1, -1), (1, 0)]     H3=AVLref30.def [(-1, -1), (-1, 0), (0, -1), (0, 0)] MISMATCH
+ 81  Medium lava streams, lava terrain.             H2=[(-1, -1), (-1, 0), (0, -1), (0, 0), (1, 0)] H3=AVLct4l0.def [(-1, -1), (-1, 0), (0, -1)] MISMATCH
+ 82  Smoking volcano crater (without the mountain), H2=[(-1, 0), (0, 0)]                      H3=AVLct4l0.def [(-1, -1), (-1, 0), (0, -1)] MISMATCH
+ 83  Crack, desert terrain.                         H2=(passable)                             H3=AVAflot0.def [(0, 0)] MISMATCH
+ 84  Tiny cactus.                                   H2=[(0, 0)]                               H3=AVAflot0.def [(0, 0)] MATCH
+ 85  Tiny cactus, desert terrain. 2 variants.       H2=[(0, 0)]                               H3=AVAflot0.def [(0, 0)] MATCH
+ 86  Tiny cactus, desert terrain. 2 variants.       H2=[(0, 0)]                               H3=AVLsh4g0.def [(-1, 0), (0, 0)] MISMATCH
+ 87  Medium cactus, desert terrain. 2 variants.     H2=[(0, 0)]                               H3=AVLsh4g0.def [(-1, 0), (0, 0)] MISMATCH
+ 88  Medium cactus, desert terrain. 2 variants.     H2=[(0, 0)]                               H3=AVLf01g0.def [(0, 0)] MATCH
+ 89  Medium cactus, desert terrain.                 H2=[(0, 0)]                               H3=AVLf01g0.def [(0, 0)] MATCH
+ 90  Small cactus, desert terrain.                  H2=[(0, 0)]                               H3=AVLf01g0.def [(0, 0)] MATCH
+ 91  Medium cactus, desert terrain.                 H2=[(0, 0)]                               H3=AVLf01g0.def [(0, 0)] MATCH
+ 92  Medium cactus, desert terrain.                 H2=[(0, 0)]                               H3=AVLf01g0.def [(0, 0)] MATCH
+ 93  Medium cactus, desert terrain.                 H2=[(0, 0)]                               H3=AVLref30.def [(-1, -1), (-1, 0), (0, -1), (0, 0)] MISMATCH
+ 94  Small cactus, desert terrain.                  H2=[(0, 0)]                               H3=AVLref30.def [(-1, -1), (-1, 0), (0, -1), (0, 0)] MISMATCH
+ 95  Medium cactus, desert terrain. 2 variants.     H2=[(0, 0)]                               H3=AVLref30.def [(-1, -1), (-1, 0), (0, -1), (0, 0)] MISMATCH
+ 96  Medium cactus, desert terrain. 2 variants.     H2=[(0, 0)]                               H3=AVLref30.def [(-1, -1), (-1, 0), (0, -1), (0, 0)] MISMATCH
+ 97  Dug hole, desert terrain.                      H2=(passable)                             H3=AVLct4l0.def [(-1, -1), (-1, 0), (0, -1)] MISMATCH
+ 98  Big hole, desert terrain. In original editor i H2=[(-1, 0), (0, 0), (1, 0)]              H3=AVLct4l0.def [(-1, -1), (-1, 0), (0, -1)] MISMATCH
+ 99  Crack, dirt terrain.                           H2=(passable)                             H3=AVLct4l0.def [(-1, -1), (-1, 0), (0, -1)] MISMATCH
+100  Crack, dirt terrain. 3 variants.               H2=[(-1, 0), (0, 0)]                      H3=AVLca010.def [(0, 0)] MISMATCH
+101  Crack, dirt terrain. 3 variants.               H2=[(-1, 0), (0, 0)]                      H3=AVLca010.def [(0, 0)] MISMATCH
+102  Crack, dirt terrain. 3 variants.               H2=[(-1, 0), (0, 0)]                      H3=AVLref30.def [(-1, -1), (-1, 0), (0, -1), (0, 0)] MISMATCH
+103  Big water lake, dirt terrain.                  H2=[(-4, -1), (-4, 0), (-3, -1), (-3, 0), (-3, 1), (-2, -1), (-2, 0), (-2, 1), (-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 0), (0, 1), (1, -1), (1, 0), (1, 1), (2, -1), (2, 0), (2, 1), (3, -1), (3, 0)] H3=AVLsh4g0.def [(-1, 0), (0, 0)] MISMATCH
+104  Medium water lake, dirt terrain.               H2=[(-2, -1), (-2, 0), (-1, -1), (-1, 0), (0, -1), (0, 0), (1, -1), (1, 0)] H3=AVLct4l0.def [(-1, -1), (-1, 0), (0, -1)] MISMATCH
+105  Small water lake, dirt terrain.                H2=[(-1, 0), (0, 0)]                      H3=AVLct4l0.def [(-1, -1), (-1, 0), (0, -1)] MISMATCH
+106  Wide shrub, dirt terrain. 3 variants.          H2=[(-1, 0), (0, 0)]                      H3=AVLsh4g0.def [(-1, 0), (0, 0)] MATCH
+107  Wide shrub, dirt terrain. 3 variants.          H2=[(-1, 0), (0, 0)]                      H3=AVLref30.def [(-1, -1), (-1, 0), (0, -1), (0, 0)] MISMATCH
+108  Wide shrub, dirt terrain. 3 variants.          H2=[(-1, 0), (0, 0)]                      H3=AVLct4l0.def [(-1, -1), (-1, 0), (0, -1)] MISMATCH
+109  Shrub, dirt terrain. 2 variants.               H2=[(0, 0)]                               H3=AVLct4l0.def [(-1, -1), (-1, 0), (0, -1)] MISMATCH
+110  Shrub, dirt terrain. 2 variants.               H2=[(0, 0)]                               H3=AVLct4l0.def [(-1, -1), (-1, 0), (0, -1)] MISMATCH
+111  Wide flowers, dirt terrain. 4 variants.        H2=[(-1, 0), (0, 0)]                      H3=AVLsh4g0.def [(-1, 0), (0, 0)] MATCH
+112  Wide flowers, dirt terrain. 4 variants.        H2=[(-1, 0), (0, 0)]                      H3=AVAflot0.def [(0, 0)] MISMATCH
+113  Wide flowers, dirt terrain. 4 variants.        H2=[(-1, 0), (0, 0)]                      H3=AVAflot0.def [(0, 0)] MISMATCH
+114  Wide flowers, dirt terrain. 4 variants.        H2=[(-1, 0), (0, 0)]                      H3=AVAflot0.def [(0, 0)] MISMATCH
+115  Small flowers, dirt terrain.                   H2=[(0, 0)]                               H3=AVAflot0.def [(0, 0)] MATCH
+116  Tiny flowers, dirt terrain.                    H2=[(0, 0)]                               H3=AVLct4l0.def [(-1, -1), (-1, 0), (0, -1)] MISMATCH
+117  Small flowers, dirt terrain.                   H2=[(0, 0)]                               H3=AVLct4l0.def [(-1, -1), (-1, 0), (0, -1)] MISMATCH
+118  Tiny flowers, dirt terrain. 2 variants.        H2=[(0, 0)]                               H3=AVLct4l0.def [(-1, -1), (-1, 0), (0, -1)] MISMATCH
+119  Tiny flowers, dirt terrain. 2 variants.        H2=[(0, 0)]                               H3=AVLct4l0.def [(-1, -1), (-1, 0), (0, -1)] MISMATCH
+120  Tiny meadow, dirt terrain. In original editor  H2=[(0, 0)]                               H3=AVLct4l0.def [(-1, -1), (-1, 0), (0, -1)] MISMATCH
+121  Wide meadow, dirt terrain. 2 variants. In orig H2=[(-1, 0), (0, 0)]                      H3=AVLct4l0.def [(-1, -1), (-1, 0), (0, -1)] MISMATCH
+122  Wide meadow, dirt terrain. 2 variants. In orig H2=[(-1, 0), (0, 0)]                      H3=AVLct4l0.def [(-1, -1), (-1, 0), (0, -1)] MISMATCH
+123  Grass (high), dirt terrain. In original editor H2=[(0, 0)]                               H3=AVLct4l0.def [(-1, -1), (-1, 0), (0, -1)] MISMATCH
+124  Grass, dirt terrain. In original editor is cal H2=[(0, 0)]                               H3=AVLct4l0.def [(-1, -1), (-1, 0), (0, -1)] MISMATCH
+125  Dug hole, dirt terrain.                        H2=(passable)                             H3=AVLct4l0.def [(-1, -1), (-1, 0), (0, -1)] MISMATCH
+126  Small cliff, dirt terrain. 3 variants.         H2=(passable)                             H3=AVLct4l0.def [(-1, -1), (-1, 0), (0, -1)] MISMATCH
+127  Small cliff, dirt terrain. 3 variants.         H2=(passable)                             H3=AVLct4l0.def [(-1, -1), (-1, 0), (0, -1)] MISMATCH
+128  Small cliff, dirt terrain. 3 variants.         H2=(passable)                             H3=AVLct4l0.def [(-1, -1), (-1, 0), (0, -1)] MISMATCH
+129  Crack, wasteland terrain.                      H2=(passable)                             H3=AVLct4l0.def [(-1, -1), (-1, 0), (0, -1)] MISMATCH
+130  Cactus, wasteland terrain.                     H2=[(0, 0)]                               H3=AVLct4l0.def [(-1, -1), (-1, 0), (0, -1)] MISMATCH
+131  Cactus, wasteland terrain.                     H2=[(0, 0)]                               H3=AVLct4l0.def [(-1, -1), (-1, 0), (0, -1)] MISMATCH
+132  Cow scull, wasteland terrain.                  H2=[(0, 0)]                               H3=AVLct4l0.def [(-1, -1), (-1, 0), (0, -1)] MISMATCH
+133  Shrub, wasteland terrain.                      H2=[(0, 0)]                               H3=AVLct4l0.def [(-1, -1), (-1, 0), (0, -1)] MISMATCH
+134  Big crack, wasteland terrain.                  H2=[(-2, -1), (-2, 0), (-1, -1), (-1, 0), (0, 0), (0, 1), (1, 0), (1, 1)] H3=AVLct4l0.def [(-1, -1), (-1, 0), (0, -1)] MISMATCH
+135  Dug hole, wasteland terrain.                   H2=(passable)                             H3=AVLct4l0.def [(-1, -1), (-1, 0), (0, -1)] MISMATCH
+136  Shrub, wasteland terrain. 2 variants.          H2=[(0, 0)]                               H3=AVLct4l0.def [(-1, -1), (-1, 0), (0, -1)] MISMATCH
+137  Shrub, wasteland terrain. 2 variants.          H2=[(0, 0)]                               H3=AVLct4l0.def [(-1, -1), (-1, 0), (0, -1)] MISMATCH
+138  Tar pit, wasteland terrain.                    H2=[(-3, 0), (-3, 1), (-2, -1), (-2, 0), (-2, 1), (-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 0), (0, 1), (1, 0), (1, 1), (2, 0), (2, 1)] H3=AVLct4l0.def [(-1, -1), (-1, 0), (0, -1)] MISMATCH
+139  Crack, wasteland terrain.                      H2=[(-1, -1), (-1, 0), (0, -1), (0, 0), (1, -1)] H3=AVLct4l0.def [(-1, -1), (-1, 0), (0, -1)] MISMATCH
+140  Crack (vertical), wasteland terrain.           H2=[(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 0), (0, 1)] H3=AVLct4l0.def [(-1, -1), (-1, 0), (0, -1)] MISMATCH
+141  Crack (horizontal), wasteland terrain.         H2=[(-1, 0), (0, 0), (1, 0)]              H3=AVLct4l0.def [(-1, -1), (-1, 0), (0, -1)] MISMATCH
+142  Shrub, generic terrain.                        H2=[(-1, 0), (0, 0), (1, 0)]              H3=AVLct4l0.def [(-1, -1), (-1, 0), (0, -1)] MISMATCH
+143  River delta (ocean on bottom), generic terrain H2=(passable)                             H3=AVLct4l0.def [(-1, -1), (-1, 0), (0, -1)] MISMATCH
+144  River delta (ocean on top), generic terrain.   H2=(passable)                             H3=AVLct4l0.def [(-1, -1), (-1, 0), (0, -1)] MISMATCH
+145  River delta (ocean on right), generic terrain. H2=(passable)                             H3=AVLct4l0.def [(-1, -1), (-1, 0), (0, -1)] MISMATCH
+146  River delta (ocean on left), generic terrain.  H2=(passable)                             H3=AVLct4l0.def [(-1, -1), (-1, 0), (0, -1)] MISMATCH
+
+  -> 13/147 footprints respected
+
+------------------------------------------------------------------------------
+H2 LANDSCAPE_WATER (indices 0-11)
+------------------------------------------------------------------------------
+  0  Rock with seagulls.                            H2=[(0, 0), (1, 0)]                       H3=AVLrk4w0.def [(0, 0)] MISMATCH
+  1  Rock.                                          H2=[(0, 0)]                               H3=AVLrk4w0.def [(0, 0)] MATCH
+  2  Rock.                                          H2=[(0, 0), (1, 0)]                       H3=AVLrk4w0.def [(0, 0)] MISMATCH
+  3  Rock.                                          H2=(passable)                             H3=AVLrk4w0.def [(0, 0)] MISMATCH
+  4  Aquatic plants. Terrain object.                H2=(passable)                             H3=AVAflot0.def [(0, 0)] MISMATCH
+  5  Aquatic plants. Terrain object.                H2=(passable)                             H3=AVAflot0.def [(0, 0)] MISMATCH
+  6  Reefs.                                         H2=(passable)                             H3=AVAflot0.def [(0, 0)] MISMATCH
+  7  reef (water)                                   H2=(passable)                             H3=AVAflot0.def [(0, 0)] MISMATCH
+  8  reef (water)                                   H2=(passable)                             H3=AVAflot0.def [(0, 0)] MISMATCH
+  9  reef (water)                                   H2=(passable)                             H3=AVAflot0.def [(0, 0)] MISMATCH
+ 10  reef (water)                                   H2=(passable)                             H3=AVAflot0.def [(0, 0)] MISMATCH
+ 11  reef (water)                                   H2=(passable)                             H3=AVAflot0.def [(0, 0)] MISMATCH
+
+  -> 1/12 footprints respected
