@@ -1251,25 +1251,32 @@ def unified_to_h3m(unified):
                                 base = 24
                             picture = base + (mirror_bits & 1)
                 # Roads (fh2m ROADS objects): the h3m Road Properties
-                # sprite is chosen from the road's own connection
-                # bitfield (the object index: cardinal edges and
-                # diagonal corners). The cardinal connections use the
-                # empirical road_link.json table; the diagonal
-                # connections use the h3m diagonal pieces: 0x00-0x01
-                # are diagonal ends (base SE), 0x02-0x05 diagonal
-                # bands (base SW<->NE), and the road mirror bits
-                # 0x10/0x20 (E<->W / N<->S) rotate the diagonal.
+                # sprite is chosen the way the game's own editor picks
+                # the piece of a drawn road - the first matching 3x3
+                # neighborhood pattern (see h3m_line_pattern_sprite:
+                # the angle pieces 2-5 are the mixed corner+edge
+                # pieces, the turn pieces 0-1 the cardinal corners,
+                # 10-13 the straight variants, 16 the X-cross). A bend
+                # no H3 piece draws (a corner joined to an edge, like
+                # the H2 SW->N pieces) falls back to the fh2m
+                # connection bitfield: the diagonal band piece toward
+                # the corner.
                 road = "None"
                 road_props = 0
                 if (x, y, z) in fh2m_road_tiles:
                     road = "Dirt"
-                    rkey = "".join(d for d, dx, dy in _ROAD_DIRS
-                                   if (x + dx, y + dy, z) in fh2m_road_tiles)
+                    from correspondence import h3m_line_pattern_sprite
+                    _sprite, _mbits = h3m_line_pattern_sprite(
+                        lambda nx, ny: (nx, ny, z) in fh2m_road_tiles,
+                        x, y)
                     road_bits = fh2m_road_index.get((x, y, z), 0) & 0xFF
                     diagonals = {d for d, bit in (("NW", 1), ("NE", 4),
                                                  ("SE", 16), ("SW", 64))
                                  if road_bits & bit}
-                    if diagonals:
+                    if _sprite is not None:
+                        road_props = _sprite
+                        mirror_bits |= _mbits
+                    elif diagonals:
                         if len(diagonals) == 1 and not road_bits & 0xAA:
                             # A single diagonal connection: a road end
                             # through the corner (base SE).
@@ -1284,14 +1291,14 @@ def unified_to_h3m(unified):
                             if not diagonals & {"NE", "SW"}:
                                 mirror_bits |= 0x10
                     else:
+                        rkey = "".join(d for d, dx, dy in _ROAD_DIRS
+                                       if (x + dx, y + dy, z) in fh2m_road_tiles)
                         hit = ROAD_LINK.get(rkey)
                         if hit is None:
                             hit = ROAD_LINK.get("-")
                         if hit:
                             road_props = hit["props"]
                             mirror_bits |= int(hit["mirror"], 16) & 0x30
-                        elif rkey == "NESW":
-                            road_props = 4  # cross
                 # Rivers (fh2m STREAMS objects): h3m River Type from the
                 # tile terrain (Lava -> Lava, Snow -> Icy, Dirt -> Muddy,
                 # else Clear), River Properties sprite from the cardinal
@@ -3244,6 +3251,13 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
                 elif chosen is not None:
                     entry = ("decorative", (x, y, z),
                              (chosen[0], 0, chosen[1]), None)
+                elif group in ("LANDSCAPE_ROCKS", "LANDSCAPE_MISCELLANEOUS",
+                               "LANDSCAPE_WATER"):
+                    # No footprint-exact H3 counterpart exists for this
+                    # rock/misc/water object (see landscape_inventory.txt):
+                    # drop it instead of falling back to a class-level
+                    # def with the wrong footprint.
+                    pass
                 elif FH2M_LANDSCAPE_TO_H3M.get((group, index)) is not None:
                     entry = ("decorative", (x, y, z),
                              (FH2M_LANDSCAPE_TO_H3M[(group, index)], 0),
