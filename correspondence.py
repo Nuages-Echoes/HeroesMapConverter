@@ -1272,7 +1272,8 @@ FH2M_TREE_DEF_BY_TERRAIN = {
     # trees keep their dirt pairs through the exact/pair tables.
     119: {"Grass": "AVLtr1d0.def", "Dirt": "AVLdead0.def", "Swamp": "AVLswp70.def",
           "Rough": "AVLroug0.def", "Sand": "AVLyuc30.def",
-          "Water": "AVLswp60.def", "Snow": "AVLd3sn0.def"},
+          "Water": "AVLswp60.def", "Snow": "AVLd3sn0.def",
+          "Lava": "AVLdead0.def"},
     # palms: the land palms block their tile (AVLplm30.def); the
     # passable kelp (AVLklp10.def) is the water variant only.
     125: {"Water": "AVLklp10.def"},
@@ -1281,10 +1282,11 @@ FH2M_TREE_DEF_BY_TERRAIN = {
     # including Snow (no terrain variant).
     153: {},
     # deciduous singles: the same-terrain 1-cell tree everywhere -
-    # the dead tree on Dirt, the pine on Snow.
+    # the dead tree on Dirt and on Lava (no lava-native tree family:
+    # the burnt dead trees), the pine on Snow.
     155: {"Grass": "AVLtr1d0.def", "Dirt": "AVLdead0.def", "Swamp": "AVLswmp0.def",
           "Rough": "AVLroug0.def", "Sand": "AVLyuc30.def",
-          "Snow": "AVLp1sn0.def"},
+          "Snow": "AVLp1sn0.def", "Lava": "AVLdead0.def"},
 }
 
 # Same-terrain 2-cell pair defs of the fh2m pair trees: the lush
@@ -1294,15 +1296,20 @@ FH2M_TREE_DEF_BY_TERRAIN = {
 # fh2m_tree_h3m_cover).
 FH2M_PAIR_TREE_TERRAIN_DEF = {
     37: {"Grass": "AVLwlw20.def", "Dirt": "AVLdt1s0.def",
-         "Swamp": "AVLswp60.def", "Rough": "AVLr04r0.def"},
+         "Swamp": "AVLswp60.def", "Rough": "AVLr04r0.def",
+         "Lava": "AVLdt1s0.def"},
     41: {"Grass": "AVLwlw20.def", "Dirt": "AVLdt1s0.def",
-         "Swamp": "AVLswp60.def", "Rough": "AVLr04r0.def"},
+         "Swamp": "AVLswp60.def", "Rough": "AVLr04r0.def",
+         "Lava": "AVLdt1s0.def"},
     50: {"Grass": "AVLwlw20.def", "Dirt": "AVLdt2s0.def",
-         "Swamp": "AVLswp60.def", "Rough": "AVLr04r0.def"},
+         "Swamp": "AVLswp60.def", "Rough": "AVLr04r0.def",
+         "Lava": "AVLdt2s0.def"},
     51: {"Grass": "AVLwlw20.def", "Dirt": "AVLdt1s0.def",
-         "Swamp": "AVLswp60.def", "Rough": "AVLr04r0.def"},
+         "Swamp": "AVLswp60.def", "Rough": "AVLr04r0.def",
+         "Lava": "AVLdt1s0.def"},
     52: {"Grass": "AVLwlw20.def", "Dirt": "AVLdt2s0.def",
-         "Swamp": "AVLswp60.def", "Rough": "AVLr04r0.def"},
+         "Swamp": "AVLswp60.def", "Rough": "AVLr04r0.def",
+         "Lava": "AVLdt2s0.def"},
 }
 
 # Default (generic) def of each tree class, matching the
@@ -1350,6 +1357,9 @@ FH2M_FOREST_TERRAIN_TREE = {
     "Rough": ((155, "AVLr04r0.def"), (155, "AVLroug0.def")),
     "Sand": (None, (155, "AVLyuc30.def")),
     "Snow": (None, (153, "AVLp1sn0.def")),
+    # Lava has no native tree family: the dead trees (see the exact
+    # table below for the one-instance forest cover).
+    "Lava": ((119, "AVLdt1s0.def"), (119, "AVLdead0.def")),
 }
 
 # 4-cell h3m trees whose blocked cells tile a 4-cell fh2m forest
@@ -1361,6 +1371,7 @@ FH2M_FOREST_TERRAIN_TREE = {
 FH2M_FOREST_TERRAIN_TREE_EXACT = {
     "Dirt": [(119, "AVLdead2.def"), (119, "AVLdead3.def")],
     "Swamp": [(155, "AVLswmp2.def"), (155, "AVLswmp3.def")],
+    "Lava": [(119, "AVLdead2.def"), (119, "AVLdead3.def")],
 }
 
 # Fallback tree of the terrains whose 1-cell forest tree blocks the
@@ -1404,6 +1415,7 @@ FH2M_WIDE_TREE_TERRAIN_PAIR = {
     "Dirt": (119, "AVLdt1s0.def"),
     "Swamp": (119, "AVLswp60.def"),
     "Rough": (155, "AVLr04r0.def"),
+    "Lava": (119, "AVLdt1s0.def"),
 }
 
 
