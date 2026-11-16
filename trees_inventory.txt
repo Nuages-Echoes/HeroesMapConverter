@@ -503,6 +503,7 @@ def name       | src | footprint                                            | la
  avlxsw11.def  | ab  | [(0, 0)]                                             | Swamp          | swamp tree
 
 
+
 ------------------------------------------------------------------------------
 H2 -> H3 TREE CONVERSION (as implemented in the converter)
 ------------------------------------------------------------------------------
@@ -605,32 +606,32 @@ User-settled choices: stumps on every land, dead trees on Lava,
      Sand: AVLyuc10|AVLyuc20|AVLyuc30 * | Snow: AVLp1sn0|AVLp2sn0 *
      Lava: AVLdead0|AVLdead1 *
  18  Grass      forest (fir look)            4 cell(s)
-     Grass: AVLwlw20 x2 | Dirt: AVLdead2|AVLdead4 *
+     Grass: AVLPNTR4|AVLPNTR5 * | Dirt: AVLdead2|AVLdead4 *
      Swamp: AVLswmp2|AVLswmp4 * | Rough: AVLr04r0 x2
      Sand: AVLyuc10|AVLyuc20|AVLyuc30 * x4 | Snow: AVLp1sn0|AVLp2sn0 * x4
      Lava: AVLdead2|AVLdead4 *
  19  Grass      forest (fir look)            4 cell(s)
-     Grass: AVLwlw20 x2 | Dirt: AVLdead3|AVLdead5 *
+     Grass: AVLPNTR2|AVLPNTR3 * | Dirt: AVLdead3|AVLdead5 *
      Swamp: AVLswmp3|AVLswmp5 * | Rough: AVLr04r0 x2
      Sand: AVLyuc10|AVLyuc20|AVLyuc30 * x4 | Snow: AVLp1sn0|AVLp2sn0 * x4
      Lava: AVLdead3|AVLdead5 *
  20  Grass      forest (fir look)            4 cell(s)
-     Grass: AVLwlw20 x2 | Dirt: AVLdead2|AVLdead4 *
+     Grass: AVLPNTR4|AVLPNTR5 * | Dirt: AVLdead2|AVLdead4 *
      Swamp: AVLswmp2|AVLswmp4 * | Rough: AVLr04r0 x2
      Sand: AVLyuc10|AVLyuc20|AVLyuc30 * x4 | Snow: AVLp1sn0|AVLp2sn0 * x4
      Lava: AVLdead2|AVLdead4 *
  21  Grass      forest (fir look)            4 cell(s)
-     Grass: AVLwlw20 x2 | Dirt: AVLdead3|AVLdead5 *
+     Grass: AVLPNTR2|AVLPNTR3 * | Dirt: AVLdead3|AVLdead5 *
      Swamp: AVLswmp3|AVLswmp5 * | Rough: AVLr04r0 x2
      Sand: AVLyuc10|AVLyuc20|AVLyuc30 * x4 | Snow: AVLp1sn0|AVLp2sn0 * x4
      Lava: AVLdead3|AVLdead5 *
  22  Grass      single tree (fir look)       1 cell(s)
-     Grass: AVLtr1d0|AVLtr2d0 * | Dirt: AVLdead0|AVLdead1 *
+     Grass: AVLPNTR0|AVLPNTR1 * | Dirt: AVLdead0|AVLdead1 *
      Swamp: AVLswmp0|AVLswmp1 * | Rough: AVLroug0|AVLroug1|AVLroug2 *
      Sand: AVLyuc10|AVLyuc20|AVLyuc30 * | Snow: AVLp1sn0|AVLp2sn0 *
      Lava: AVLdead0|AVLdead1 *
  23  Grass      single tree (fir look)       1 cell(s)
-     Grass: AVLtr1d0|AVLtr2d0 * | Dirt: AVLdead0|AVLdead1 *
+     Grass: AVLPNTR0|AVLPNTR1 * | Dirt: AVLdead0|AVLdead1 *
      Swamp: AVLswmp0|AVLswmp1 * | Rough: AVLroug0|AVLroug1|AVLroug2 *
      Sand: AVLyuc10|AVLyuc20|AVLyuc30 * | Snow: AVLp1sn0|AVLp2sn0 *
      Lava: AVLdead0|AVLdead1 *
@@ -667,32 +668,32 @@ User-settled choices: stumps on every land, dead trees on Lava,
  30  Snow       forest (snowy fir look)      4 cell(s)
      Grass: AVLwlw20 x2 | Dirt: AVLdead2|AVLdead4 *
      Swamp: AVLswmp2|AVLswmp4 * | Rough: AVLr04r0 x2
-     Sand: AVLyuc10|AVLyuc20|AVLyuc30 * x4 | Snow: AVLp1sn0|AVLp2sn0 * x4
+     Sand: AVLyuc10|AVLyuc20|AVLyuc30 * x4 | Snow: AVLSNTR4|AVLSNTR5 *
      Lava: AVLdead2|AVLdead4 *
  31  Snow       forest (snowy fir look)      4 cell(s)
      Grass: AVLwlw20 x2 | Dirt: AVLdead3|AVLdead5 *
      Swamp: AVLswmp3|AVLswmp5 * | Rough: AVLr04r0 x2
-     Sand: AVLyuc10|AVLyuc20|AVLyuc30 * x4 | Snow: AVLp1sn0|AVLp2sn0 * x4
+     Sand: AVLyuc10|AVLyuc20|AVLyuc30 * x4 | Snow: AVLSNTR2|AVLSNTR3 *
      Lava: AVLdead3|AVLdead5 *
  32  Snow       forest (snowy fir look)      4 cell(s)
      Grass: AVLwlw20 x2 | Dirt: AVLdead2|AVLdead4 *
      Swamp: AVLswmp2|AVLswmp4 * | Rough: AVLr04r0 x2
-     Sand: AVLyuc10|AVLyuc20|AVLyuc30 * x4 | Snow: AVLp1sn0|AVLp2sn0 * x4
+     Sand: AVLyuc10|AVLyuc20|AVLyuc30 * x4 | Snow: AVLSNTR4|AVLSNTR5 *
      Lava: AVLdead2|AVLdead4 *
  33  Snow       forest (snowy fir look)      4 cell(s)
      Grass: AVLwlw20 x2 | Dirt: AVLdead3|AVLdead5 *
      Swamp: AVLswmp3|AVLswmp5 * | Rough: AVLr04r0 x2
-     Sand: AVLyuc10|AVLyuc20|AVLyuc30 * x4 | Snow: AVLp1sn0|AVLp2sn0 * x4
+     Sand: AVLyuc10|AVLyuc20|AVLyuc30 * x4 | Snow: AVLSNTR2|AVLSNTR3 *
      Lava: AVLdead3|AVLdead5 *
  34  Snow       single tree (snowy fir look) 1 cell(s)
      Grass: AVLtr1d0|AVLtr2d0 * | Dirt: AVLdead0|AVLdead1 *
      Swamp: AVLswmp0|AVLswmp1 * | Rough: AVLroug0|AVLroug1|AVLroug2 *
-     Sand: AVLyuc10|AVLyuc20|AVLyuc30 * | Snow: AVLp1sn0|AVLp2sn0 *
+     Sand: AVLyuc10|AVLyuc20|AVLyuc30 * | Snow: AVLSNTR0|AVLSNTR1 *
      Lava: AVLdead0|AVLdead1 *
  35  Snow       single tree (snowy fir look) 1 cell(s)
      Grass: AVLtr1d0|AVLtr2d0 * | Dirt: AVLdead0|AVLdead1 *
      Swamp: AVLswmp0|AVLswmp1 * | Rough: AVLroug0|AVLroug1|AVLroug2 *
-     Sand: AVLyuc10|AVLyuc20|AVLyuc30 * | Snow: AVLp1sn0|AVLp2sn0 *
+     Sand: AVLyuc10|AVLyuc20|AVLyuc30 * | Snow: AVLSNTR0|AVLSNTR1 *
      Lava: AVLdead0|AVLdead1 *
  36  Swamp      wide tree                    3 cell(s)
      Grass: AVLwlw10 | Dirt: AVLdt1s0|AVLdt2s0 * x2
@@ -867,32 +868,28 @@ Cases where the current conversion is a same-land fallback but a more
 faithful H3 model exists (the defs are not in the converter's catalog
 yet), and cases where no H3 match exists at all.
 
-DONE - autumn trees (12-17 -> H3 autumn trees, class 135) are wired
-in: the forests use the footprint-exact AVLAUTR2-5, the singles
+DONE - autumn trees (12-17 -> H3 autumn trees, class 135): the
+forests use the footprint-exact AVLAUTR2-5, the singles
 avlautr0/avlautr1, one model picked at random.
 
-1. H2 fir trees (18-23, Grass): currently the generic deciduous
-   trees. The H3 pines (class 137) match exactly: AVLPNTR0/AVLPNTR1
-   (1 cell) for the singles 22-23, AVLPNTR2/AVLPNTR3 (4 cells, shapes
-   b/d) and AVLPNTR4/AVLPNTR5 (4 cells, shapes a/c) for the forests
-   18-21.
+DONE - fir trees (18-23 -> H3 pines, class 137): the forests use the
+footprint-exact AVLPNTR2-5, the singles AVLPNTR0/1, one model picked
+at random.
 
-2. H2 snow fir forests (30-33) and singles (34-35, Snow): currently
-   a fan-out of the 1-cell snow pines AVLp1sn0/AVLp2sn0. The H3 snow
-   pines (class 137) AVLSNTR2/AVLSNTR3 / AVLSNTR4/AVLSNTR5 are 4-cell
-   exact covers for the forests, AVLSNTR0/AVLSNTR1 are 1-cell
-   alternatives for the singles.
+DONE - snow fir trees (30-35 -> H3 snow pines, class 137): the
+forests use the footprint-exact AVLSNTR2-5, the singles
+AVLSNTR0/1, one model picked at random.
 
-3. H2 snow dead pairs (41, 50-52 on Snow): currently two 1-cell snow
+1. H2 snow dead pairs (41, 50-52 on Snow): currently two 1-cell snow
    dead trees (AVLd3sn0). H3 has 2-cell snow trees AVLr2sn0/AVLr6sn0
    (class 147) blocking the same pair shape.
 
-4. H2 dead trees on lands without dead models (Grass, Rough, Sand,
+2. H2 dead trees on lands without dead models (Grass, Rough, Sand,
    Swamp): the local green trees stay - H3 has no dead tree family
    for those lands (only Dirt/Lava/Swamp/Subterra AVLdead* and the
    snow AVLd*sn0).
 
-5. No H3 match exists (the current fallback stays):
+3. No H3 match exists (the current fallback stays):
    - H2 dead pairs on Sand: no 2-cell sand tree in H3 (the AB sand
      trees avlxds01-12 are 2x2).
    - 4-cell Grass forests: no 4-cell grass/oak tree in H3 (the oaks
@@ -900,8 +897,8 @@ avlautr0/avlautr1, one model picked at random.
    - H2 wide trees (36, 42) on Sand/Snow: no 3-cell or pair model;
      the 1-cell fan-out stays.
 
-6. Reverse (H3 -> H2), no H2 counterpart: the passable kelp
+4. Reverse (H3 -> H2), no H2 counterpart: the passable kelp
    (AVLklp10/20), the 2x2 dead tree (avldt3s0), the AB 2x2 terrain
    trees (avlxds/dt/gr/ro/su/sw01-12), and the H3 families not wired
-   per-def (oak 136, pine 137, swamp shrubs 150, AB trees 199/206-211)
-   fall back to class-level H2 objects.
+   per-def (oak 136, swamp shrubs 150, AB trees 199/206-211) fall
+   back to class-level H2 objects.
