@@ -3207,16 +3207,18 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
                 h3m_dwelling = FH2M_TO_H3M_DWELLINGS.get(index)
                 if h3m_dwelling is not None:
                     entry = ("ownable", (x, y, z), h3m_dwelling, None)
-            elif group in ("LANDSCAPE_TREES", "LANDSCAPE_MOUNTAINS"):
-                # Decorative trees and mountains: the def is the
-                # footprint-exact conversion of the true fh2m
-                # footprint (the terrain variant first), picked again
-                # with the original fh2m anchor so an edge object
-                # gets the same on-map def the fh2m -> unified shift
-                # selected. The multi-cell trees (forests, wide
-                # trees) fan out into same-terrain trees (one per
-                # blocked cell, the anchor offset from the unshifted
-                # fh2m anchor).
+            elif group in ("LANDSCAPE_TREES", "LANDSCAPE_MOUNTAINS",
+                          "LANDSCAPE_ROCKS", "LANDSCAPE_MISCELLANEOUS",
+                          "LANDSCAPE_WATER"):
+                # Decorative trees, mountains, rocks, miscellaneous
+                # and water objects: the def is the footprint-exact
+                # conversion of the true fh2m footprint (the terrain
+                # variant first), picked again with the original
+                # fh2m anchor so an edge object gets the same on-map
+                # def the fh2m -> unified shift selected. The
+                # multi-cell trees (forests, wide trees) fan out into
+                # same-terrain trees (one per blocked cell, the
+                # anchor offset from the unshifted fh2m anchor).
                 from correspondence import (FH2M_LANDSCAPE_TO_H3M,
                                             fh2m_tree_h3m_cover,
                                             fh2m_landscape_def)
@@ -3276,10 +3278,12 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
                 # its sprite body comes from H3M_MINE_DEFS /
                 # H3M_TREE_DEFS / H3M_MOUNTAIN_DEFS.
                 from correspondence import (H3M_MINE_DEFS, H3M_TREE_DEFS,
-                                          H3M_MOUNTAIN_DEFS)
+                                          H3M_MOUNTAIN_DEFS,
+                                          H3M_LANDSCAPE_DEFS)
                 ref = (H3M_MINE_DEFS.get((key[2] or "").lower())
                        or H3M_TREE_DEFS.get((key[2] or "").lower())
                        or H3M_MOUNTAIN_DEFS.get((key[2] or "").lower())
+                       or H3M_LANDSCAPE_DEFS.get((key[2] or "").lower())
                        or FH2M_TO_H3M_CATALOG.get((key[0], key[1])))
             else:
                 ref = FH2M_TO_H3M_CATALOG.get(key)
@@ -3334,7 +3338,6 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
         kind_of[key] = len(catalog_keys)
         catalog_keys.append(key)
         catalog_entries.append((def_name, body[:16].hex(), body[24:].hex()))
-
     buffer = BytesIO()
     buffer.write(struct.pack("<I", len(catalog_entries)))
     for i, key in enumerate(catalog_keys):
@@ -3383,7 +3386,14 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
             qty, disp = payload if isinstance(payload, tuple) else (payload & 0xFFFF, 0)
             buffer.write(struct.pack("<HB", qty & 0xFFFF, disp & 0xFF))
             buffer.write(struct.pack("<B", 0))  # no treasure
-            buffer.write(b"\x00" * 4)
+            # The editor ghost objects (random monster placeholders at
+            # 0,0,0, the game writes them with no canFlee/canGrow tail
+            # - see the parser's mirror rule) end at the treasure
+            # byte; every other monster carries the 4 tail bytes.
+            if not (x == 0 and y == 0 and z == 0
+                    and obj_class in (71, 72, 73, 74, 75,
+                                       162, 163, 164)):
+                buffer.write(b"\x00" * 4)
         elif kind_name == "resource":
             buffer.write(struct.pack("<B", 0))  # not guarded
             buffer.write(struct.pack("<II", payload, 0))
@@ -3423,6 +3433,11 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
             elif obj_class == 42:
                 # The Stone Liths are ownable: an owner word.
                 buffer.write(struct.pack("<I", 0xFF))  # neutral
+            elif obj_class == 113 and version_ab:
+                # The witch hut carries its 4 skill bits in AB/SoD
+                # (the same rule as the decorative class 113) - the
+                # parser reads them for every class 113 instance.
+                buffer.write(struct.pack("<I", 0xFFFFFFFF))
         elif kind_name == "hero":
             # RoE hero layout: owner, type, then the customization
             # flags (name, experience, face, skills, creatures,
