@@ -2,8 +2,12 @@ TREES INVENTORY - Heroes II (fh2m) and Heroes III (h3m)
 ==============================================================================
 
 Characteristics per tree: ID, footprint, land type, visual species.
-Footprint: blocked cells as (dx, dy) offsets from the object anchor tile
-(y grows southward; the h3m anchor is the SE corner of the footprint).
+Footprint: blocked cells as (dx, dy), normalized to the NW corner of
+the shape ('(passable)' = no blocked cell). The h3m object list is
+the game's own Objects.txt (RoE + AB + SoD additions); footprints
+decoded from its passability bitmaps and verified against the
+reference-map catalog (44/44 match). A '*' marks the defs already
+in the converter's catalog.
 
 ------------------------------------------------------------------------------
 H2 TREES (fh2m group LANDSCAPE_TREES, indices 0-68)
@@ -83,63 +87,341 @@ H2 TREES (fh2m group LANDSCAPE_TREES, indices 0-68)
 
 Land type: the terrain the tree was placed on in Mymaptest.fh2m
 (the test map "all types of land and the trees that go with it").
-Indices 51-52 were not placed (same family as 50). The forest families
-(indices 0-35, six objects each: 4 forests + 2 singles) follow the six
-forest looks of the fheroes2 catalog: deciduous, evil/dead, autumn, fir,
-jungle, snowy fir.
+Indices 51-52 were not placed (same family as 50).
 
 ------------------------------------------------------------------------------
-H3 TREES (h3m tree defs, from the reference-map catalog)
+H3 TREES (h3m object classes of the map editor, 277 defs total)
 ------------------------------------------------------------------------------
 
-def name         | class | footprint                                      | land          | species
-------------------------------------------------------------------------------
-AVLd3sn0.def     |   119 | [(0, 0)]                                       | Snow          | dead tree (snow)
-AVLdead0.def     |   119 | [(0, 0)]                                       | Dirt          | dead tree
-AVLdead1.def     |   119 | [(0, 0)]                                       | Dirt          | dead tree
-AVLdead2.def     |   119 | [(-2, -1), (-1, -1), (-1, 0), (0, 0)]          | Dirt          | dead tree
-AVLdead3.def     |   119 | [(-2, 0), (-1, -1), (-1, 0), (0, -1)]          | Dirt          | dead tree
-AVLdead4.def     |   119 | [(-2, -1), (-1, -1), (-1, 0), (0, 0)]          | Dirt          | dead tree
-AVLdead5.def     |   119 | [(-2, 0), (-1, -1), (-1, 0), (0, -1)]          | Dirt          | dead tree
-AVLdead6.def     |   119 | [(-2, -2), (-2, -1), (-1, -2), (-1, -1), (-1, 0), (0, -1), (0, 0)] | Dirt          | dead tree
-AVLdead7.def     |   119 | [(-2, -1), (-2, 0), (-1, -2), (-1, -1), (-1, 0), (0, -2), (0, -1)] | Dirt          | dead tree
-AvLdlog.def      |   130 | [(0, 0)]                                       | Dirt          | log
-AVLdt1s0.def     |   119 | [(-1, 0), (0, 0)]                              | Dirt          | dead tree
-AVLdt2s0.def     |   119 | [(-1, 0), (0, 0)]                              | Dirt          | dead tree
-AVLdt3s0.def     |   119 | [(-1, -1), (-1, 0), (0, -1), (0, 0)]           | Dirt          | dead tree
-AVLklp10.def     |   125 | []                                             | Water         | kelp (passable)
-AVLklp20.def     |   125 | []                                             | Water         | kelp (passable)
-AVLp1sn0.def     |   153 | [(0, 0)]                                       | Snow          | pine
-AVLp2sn0.def     |   153 | [(0, 0)]                                       | Snow          | pine
-AVLplm30.def     |   125 | [(0, 0)]                                       | Sand (beach)  | palm
-AVLplm50.def     |   125 | [(-1, 0)]                                      | Sand (beach)  | palm
-AVLr04r0.def     |   155 | [(-1, 0), (0, 0)]                              | Rough         | tree
-AVLroug0.def     |   155 | [(0, 0)]                                       | Rough         | tree
-AVLroug1.def     |   155 | [(0, 0)]                                       | Rough         | tree
-AVLroug2.def     |   155 | [(0, 0)]                                       | Rough         | tree
-AvLStm1.def      |   153 | [(0, 0)]                                       | Snow          | stump
-AvLStm2.def      |   153 | [(0, 0)]                                       | Snow          | stump
-AvLStm3.def      |   153 | [(0, 0)]                                       | Snow          | stump
-AVLswmp0.def     |   155 | [(0, 0)]                                       | Swamp         | swamp tree
-AVLswmp1.def     |   155 | [(0, 0)]                                       | Swamp         | swamp tree
-AVLswmp2.def     |   155 | [(-2, -1), (-1, -1), (-1, 0), (0, 0)]          | Swamp         | swamp tree
-AVLswmp3.def     |   155 | [(-2, 0), (-1, -1), (-1, 0), (0, -1)]          | Swamp         | swamp tree
-AVLswmp4.def     |   155 | [(-2, -1), (-1, -1), (-1, 0), (0, 0)]          | Swamp         | swamp tree
-AVLswmp5.def     |   155 | [(-2, 0), (-1, -1), (-1, 0), (0, -1)]          | Swamp         | swamp tree
-AVLswp60.def     |   119 | [(-1, 0), (0, 0)]                              | Swamp         | swamp tree
-AVLswp70.def     |   119 | [(0, 0)]                                       | Swamp         | swamp tree
-AVLtr1d0.def     |   155 | [(-1, 0)]                                      | Grass         | oak
-AVLtr2d0.def     |   155 | [(-1, 0)]                                      | Grass         | oak
-AVLtr3d0.def     |   155 | [(0, 0)]                                       | Grass         | oak
-AVLwlw10.def     |   155 | [(-2, 0), (-1, 0), (0, 0)]                     | Grass         | willow
-AVLwlw20.def     |   155 | [(-1, 0), (0, 0)]                              | Grass         | willow
-AVLwlw30.def     |   155 | [(0, 0)]                                       | Grass         | willow
-AVLyuc10.def     |   155 | [(0, 0)]                                       | Sand          | yucca
-AVLyuc20.def     |   155 | [(0, 0)]                                       | Sand          | yucca
-AVLyuc30.def     |   155 | [(0, 0)]                                       | Sand          | yucca
-AVTchst0.def     |   101 | [(0, 0)]                                       | any           | conifer
+class 101 - conifer (1 defs)
+def name       | src | footprint                                            | land           | species
+*AVTchst0.def  | roe | [(0, 0)]                                             | Dirt           | conifer
 
-class: the h3m object class used with the def (155 deciduous tree,
-119 dead/swamp tree, 153 stump/pine, 125 palm/kelp, 130 log, 101 conifer).
-land: the terrain family the def sprites belong to.
-AVLplm50 blocks the cell west of its anchor; AVLtr1d0/AVLtr2d0 too.
+class 119 - dead trees (30 defs)
+def name       | src | footprint                                            | land           | species
+ AVLd1sn0.def  | roe | [(0, 0), (1, 0)]                                     | Dirt           | dead tree (snow)
+ AVLd2sn0.def  | roe | [(0, 0), (1, 0), (2, 0)]                             | Dirt           | dead tree (snow)
+*AVLd3sn0.def  | roe | [(0, 0)]                                             | Dirt           | dead tree (snow)
+ AVLd4sn0.def  | roe | [(0, 0), (1, 0)]                                     | Dirt           | dead tree (snow)
+ AVLd5sn0.def  | roe | [(0, 0)]                                             | Dirt           | dead tree (snow)
+ AVLd6sn0.def  | roe | [(0, 0)]                                             | Dirt           | dead tree (snow)
+ AVLd7sn0.def  | roe | [(0, 0)]                                             | Dirt           | dead tree (snow)
+ AVLd8sn0.def  | roe | [(0, 0)]                                             | Dirt           | dead tree (snow)
+ AVLd9sn0.def  | roe | [(0, 0)]                                             | Dirt           | dead tree (snow)
+ AVLddsn0.def  | roe | [(0, 0)]                                             | Dirt           | dead tree (snow)
+ AVLddsn1.def  | roe | [(0, 0)]                                             | Dirt           | dead tree (snow)
+ AVLddsn2.def  | roe | [(0, 0), (1, 0), (1, 1), (2, 1)]                     | Dirt           | dead tree (snow)
+ AVLddsn3.def  | roe | [(0, 1), (1, 0), (1, 1), (2, 0)]                     | Dirt           | dead tree (snow)
+ AVLddsn4.def  | roe | [(0, 0), (1, 0), (1, 1), (2, 1)]                     | Dirt           | dead tree (snow)
+ AVLddsn5.def  | roe | [(0, 1), (1, 0), (1, 1), (2, 0)]                     | Dirt           | dead tree (snow)
+ AVLddsn6.def  | roe | [(0, 0), (0, 1), (1, 0), (1, 1), (1, 2), (2, 1), (2, 2)] | Dirt           | dead tree (snow)
+ AVLddsn7.def  | roe | [(0, 1), (0, 2), (1, 0), (1, 1), (1, 2), (2, 0), (2, 1)] | Dirt           | dead tree (snow)
+*AVLdead0.def  | roe | [(0, 0)]                                             | Dirt           | dead tree
+*AVLdead1.def  | roe | [(0, 0)]                                             | Dirt           | dead tree
+*AVLdead2.def  | roe | [(0, 0), (1, 0), (1, 1), (2, 1)]                     | Dirt           | dead tree
+*AVLdead3.def  | roe | [(0, 1), (1, 0), (1, 1), (2, 0)]                     | Dirt           | dead tree
+*AVLdead4.def  | roe | [(0, 0), (1, 0), (1, 1), (2, 1)]                     | Dirt           | dead tree
+*AVLdead5.def  | roe | [(0, 1), (1, 0), (1, 1), (2, 0)]                     | Dirt           | dead tree
+*AVLdead6.def  | roe | [(0, 0), (0, 1), (1, 0), (1, 1), (1, 2), (2, 1), (2, 2)] | Dirt           | dead tree
+*AVLdead7.def  | roe | [(0, 1), (0, 2), (1, 0), (1, 1), (1, 2), (2, 0), (2, 1)] | Dirt           | dead tree
+*AVLdt1s0.def  | roe | [(0, 0), (1, 0)]                                     | Dirt           | dead tree
+*AVLdt2s0.def  | roe | [(0, 0), (1, 0)]                                     | Dirt           | dead tree
+*AVLdt3s0.def  | roe | [(0, 0), (0, 1), (1, 0), (1, 1)]                     | Dirt           | dead tree
+*AVLswp60.def  | roe | [(0, 0), (1, 0)]                                     | Dirt           | swamp tree
+*AVLswp70.def  | roe | [(0, 0)]                                             | Dirt           | swamp tree
+
+class 125 - kelp (2 defs)
+def name       | src | footprint                                            | land           | species
+*AVLklp10.def  | roe | (passable)                                           | Dirt           | kelp
+*AVLklp20.def  | roe | (passable)                                           | Dirt           | kelp
+
+class 130 - log (1 defs)
+def name       | src | footprint                                            | land           | species
+*AvLdlog.def   | roe | [(0, 0)]                                             | Dirt           | log
+
+class 135 - autumn trees (17 defs)
+def name       | src | footprint                                            | land           | species
+ avlautr0.def  | roe | [(0, 0)]                                             | Dirt           | autumn oak
+ avlautr1.def  | roe | [(0, 0)]                                             | Dirt           | autumn oak
+ AVLAUTR2.def  | roe | [(0, 1), (1, 0), (1, 1), (2, 0)]                     | Dirt           | autumn oak
+ AVLAUTR3.def  | roe | [(0, 1), (1, 0), (1, 1), (2, 0)]                     | Dirt           | autumn oak
+ AVLAUTR4.def  | roe | [(0, 0), (1, 0), (1, 1), (2, 1)]                     | Dirt           | autumn oak
+ AVLAUTR5.def  | roe | [(0, 0), (1, 0), (1, 1), (2, 1)]                     | Dirt           | autumn oak
+ AVLautr6.def  | roe | [(0, 0), (0, 1), (1, 0), (1, 1), (1, 2), (2, 1), (2, 2)] | Dirt           | autumn oak
+ AVLautr7.def  | roe | [(0, 1), (0, 2), (1, 0), (1, 1), (1, 2), (2, 0), (2, 1)] | Dirt           | autumn oak
+ AVLSPTR0.def  | roe | [(0, 0)]                                             | Dirt           | autumn tree (AVLSPTR)
+ AVLSPTR1.def  | roe | [(0, 0)]                                             | Dirt           | autumn tree (AVLSPTR)
+ AVLSPTR2.def  | roe | [(0, 0)]                                             | Dirt           | autumn tree (AVLSPTR)
+ AVLSPTR3.def  | roe | [(0, 1), (1, 0), (1, 1), (2, 0)]                     | Dirt           | autumn tree (AVLSPTR)
+ AVLSPTR4.def  | roe | [(0, 1), (1, 0), (1, 1), (2, 0)]                     | Dirt           | autumn tree (AVLSPTR)
+ AVLSPTR5.def  | roe | [(0, 0), (1, 0), (1, 1), (2, 1)]                     | Dirt           | autumn tree (AVLSPTR)
+ AVLSPTR6.def  | roe | [(0, 0), (1, 0), (1, 1), (2, 1)]                     | Dirt           | autumn tree (AVLSPTR)
+ AVLsptr7.def  | roe | [(0, 0), (0, 1), (1, 0), (1, 1), (1, 2), (2, 1), (2, 2)] | Dirt           | autumn tree (AVLSPTR)
+ AVLsptr8.def  | roe | [(0, 1), (0, 2), (1, 0), (1, 1), (1, 2), (2, 0), (2, 1)] | Dirt           | autumn tree (AVLSPTR)
+
+class 136 - oak trees (17 defs)
+def name       | src | footprint                                            | land           | species
+ AVLo1sn0.def  | roe | [(0, 0), (1, 0)]                                     | Dirt           | oak
+ AVLo2sn0.def  | roe | [(0, 0), (1, 0)]                                     | Dirt           | oak
+ AVLo3sn0.def  | roe | [(0, 0), (1, 0), (2, 0)]                             | Dirt           | oak
+ AVLoc1d0.def  | roe | [(0, 0), (1, 0)]                                     | Dirt           | oak
+ AVLoc1g0.def  | roe | [(0, 0), (1, 0)]                                     | Dirt           | oak
+ AVLoc1r0.def  | roe | [(0, 0), (1, 0)]                                     | Dirt           | oak
+ AVLoc1u0.def  | roe | [(0, 0), (1, 0)]                                     | Dirt           | oak
+ AVLoc2d0.def  | roe | [(0, 0), (1, 0)]                                     | Dirt           | oak
+ AVLoc2g0.def  | roe | [(0, 0), (1, 0)]                                     | Dirt           | oak
+ AVLoc2r0.def  | roe | [(0, 0), (1, 0)]                                     | Dirt           | oak
+ AVLoc2u0.def  | roe | [(0, 0), (1, 0)]                                     | Dirt           | oak
+ AVLoc3d0.def  | roe | [(0, 0), (1, 0)]                                     | Dirt           | oak
+ AVLoc3g0.def  | roe | [(0, 0), (1, 0)]                                     | Dirt           | oak
+ AVLoc3r0.def  | roe | [(0, 0), (1, 0)]                                     | Dirt           | oak
+ AVLoc3u0.def  | roe | [(0, 0), (1, 0)]                                     | Dirt           | oak
+ AVLoc4r0.def  | roe | [(0, 0), (1, 0)]                                     | Dirt           | oak
+ AVLoc4u0.def  | roe | [(0, 0), (1, 0)]                                     | Dirt           | oak
+
+class 137 - pine trees (16 defs)
+def name       | src | footprint                                            | land           | species
+ AVLPNTR0.def  | roe | [(0, 0)]                                             | Dirt           | pine
+ AVLPNTR1.def  | roe | [(0, 0)]                                             | Dirt           | pine
+ AVLPNTR2.def  | roe | [(0, 1), (1, 0), (1, 1), (2, 0)]                     | Dirt           | pine
+ AVLPNTR3.def  | roe | [(0, 1), (1, 0), (1, 1), (2, 0)]                     | Dirt           | pine
+ AVLPNTR4.def  | roe | [(0, 0), (1, 0), (1, 1), (2, 1)]                     | Dirt           | pine
+ AVLPNTR5.def  | roe | [(0, 0), (1, 0), (1, 1), (2, 1)]                     | Dirt           | pine
+ AVLpntr6.def  | roe | [(0, 0), (0, 1), (1, 0), (1, 1), (1, 2), (2, 1), (2, 2)] | Dirt           | pine
+ AVLpntr7.def  | roe | [(0, 1), (0, 2), (1, 0), (1, 1), (1, 2), (2, 0), (2, 1)] | Dirt           | pine
+ AVLSNTR0.def  | roe | [(0, 0)]                                             | Dirt           | pine (snow, AVLSNTR)
+ AVLSNTR1.def  | roe | [(0, 0)]                                             | Dirt           | pine (snow, AVLSNTR)
+ AVLSNTR2.def  | roe | [(0, 1), (1, 0), (1, 1), (2, 0)]                     | Dirt           | pine (snow, AVLSNTR)
+ AVLSNTR3.def  | roe | [(0, 1), (1, 0), (1, 1), (2, 0)]                     | Dirt           | pine (snow, AVLSNTR)
+ AVLSNTR4.def  | roe | [(0, 0), (1, 0), (1, 1), (2, 1)]                     | Dirt           | pine (snow, AVLSNTR)
+ AVLSNTR5.def  | roe | [(0, 0), (1, 0), (1, 1), (2, 1)]                     | Dirt           | pine (snow, AVLSNTR)
+ AVLsntr6.def  | roe | [(0, 1), (0, 2), (1, 0), (1, 1), (1, 2), (2, 0), (2, 1)] | Dirt           | pine (snow, AVLSNTR)
+ AVLsntr7.def  | roe | [(0, 0), (0, 1), (1, 0), (1, 1), (1, 2), (2, 1), (2, 2)] | Dirt           | pine (snow, AVLSNTR)
+
+class 150 - swamp trees / shrubs (41 defs)
+def name       | src | footprint                                            | land           | species
+ AVLs01s0.def  | roe | [(0, 0), (1, 0)]                                     | Dirt           | swamp tree
+ AVLs02s0.def  | roe | [(0, 0), (1, 0), (2, 0)]                             | Dirt           | swamp tree
+ AVLs03s0.def  | roe | [(0, 0), (1, 0), (2, 0), (3, 0), (4, 0)]             | Dirt           | swamp tree
+ AVLs04s0.def  | roe | [(0, 0), (1, 0), (2, 0)]                             | Dirt           | swamp tree
+ AVLs05s0.def  | roe | [(0, 0)]                                             | Dirt           | swamp tree
+ AVLs06s0.def  | roe | [(0, 0), (1, 0)]                                     | Dirt           | swamp tree
+ AVLs07s0.def  | roe | [(0, 0)]                                             | Dirt           | swamp tree
+ AVLs08s0.def  | roe | [(0, 0)]                                             | Dirt           | swamp tree
+ AVLs09s0.def  | roe | [(0, 0), (1, 0)]                                     | Dirt           | swamp tree
+ AVLs10s0.def  | roe | [(0, 0)]                                             | Dirt           | swamp tree
+ AVLs11s0.def  | roe | [(0, 0)]                                             | Dirt           | swamp tree
+ AVLs1sn0.def  | roe | [(0, 0)]                                             | Dirt           | swamp tree
+ AVLs2sn0.def  | roe | [(0, 0)]                                             | Dirt           | swamp tree
+ AVLs3sn0.def  | roe | [(0, 0), (1, 0)]                                     | Dirt           | swamp tree
+ AVLsh1d0.def  | roe | [(0, 0), (1, 0)]                                     | Dirt           | shrub
+ AVLsh1g0.def  | roe | [(0, 0), (1, 0), (2, 0)]                             | Dirt           | shrub
+ AVLsh1r0.def  | roe | [(0, 0)]                                             | Dirt           | shrub
+ AVLsh2d0.def  | roe | [(0, 0), (1, 0)]                                     | Dirt           | shrub
+ AVLsh2g0.def  | roe | [(0, 0), (1, 0), (2, 0)]                             | Dirt           | shrub
+ AVLsh2r0.def  | roe | [(0, 0)]                                             | Dirt           | shrub
+ AVLsh3d0.def  | roe | [(0, 0), (1, 0)]                                     | Dirt           | shrub
+ AVLsh3g0.def  | roe | [(0, 0), (1, 0)]                                     | Dirt           | shrub
+ AVLsh3r0.def  | roe | [(0, 0)]                                             | Dirt           | shrub
+ AVLsh4d0.def  | roe | [(0, 0), (1, 0)]                                     | Dirt           | shrub
+ AVLsh4g0.def  | roe | [(0, 0), (1, 0)]                                     | Dirt           | shrub
+ avlsh4r0.def  | roe | [(0, 0)]                                             | Dirt           | shrub
+ AVLsh5d0.def  | roe | [(0, 0)]                                             | Dirt           | shrub
+ AVLsh5g0.def  | roe | [(0, 0), (1, 0)]                                     | Dirt           | shrub
+ avlsh5r0.def  | roe | [(0, 0)]                                             | Dirt           | shrub
+ AVLsh6d0.def  | roe | [(0, 0), (1, 0), (2, 0)]                             | Dirt           | shrub
+ AVLsh6g0.def  | roe | [(0, 0), (1, 0)]                                     | Dirt           | shrub
+ avlsh6r0.def  | roe | [(0, 0), (1, 0)]                                     | Dirt           | shrub
+ AVLsh7d0.def  | roe | [(0, 0), (1, 0)]                                     | Dirt           | shrub
+ avlsh7r0.def  | roe | [(0, 0)]                                             | Dirt           | shrub
+ AVLsh8d0.def  | roe | [(0, 0)]                                             | Dirt           | shrub
+ avlsh8r0.def  | roe | [(0, 0)]                                             | Dirt           | shrub
+ avlsh9r0.def  | roe | [(0, 0), (1, 0)]                                     | Dirt           | shrub
+ AVLswp10.def  | roe | [(0, 1), (1, 0), (1, 1), (2, 0), (2, 1), (3, 0), (3, 1), (4, 0), (4, 1)] | Dirt           | swamp tree
+ AVLswp20.def  | roe | [(0, 0), (1, 0), (2, 0)]                             | Dirt           | swamp tree
+ AVLswp30.def  | roe | [(0, 0), (1, 0), (2, 0)]                             | Dirt           | swamp tree
+ AVLswp40.def  | roe | [(0, 0), (1, 0)]                                     | Dirt           | swamp tree
+
+class 153 - stumps / pines (5 defs)
+def name       | src | footprint                                            | land           | species
+*AVLp1sn0.def  | roe | [(0, 0)]                                             | Dirt           | pine
+*AVLp2sn0.def  | roe | [(0, 0)]                                             | Dirt           | pine
+*AvLStm1.def   | roe | [(0, 0)]                                             | Dirt           | stump
+*AvLStm2.def   | roe | [(0, 0)]                                             | Dirt           | stump
+*AvLStm3.def   | roe | [(0, 0)]                                             | Dirt           | stump
+
+class 155 - deciduous trees (25 defs)
+def name       | src | footprint                                            | land           | species
+ AVLplm10.def  | roe | [(0, 0)]                                             | Dirt           | palm
+ AVLplm20.def  | roe | [(0, 0)]                                             | Dirt           | palm
+*AVLplm30.def  | roe | [(0, 0)]                                             | Dirt           | palm
+ AVLplm40.def  | roe | [(0, 0)]                                             | Dirt           | palm
+*AVLplm50.def  | roe | [(0, 0)]                                             | Dirt           | palm
+*AVLroug0.def  | roe | [(0, 0)]                                             | Dirt           | rough tree
+*AVLroug1.def  | roe | [(0, 0)]                                             | Dirt           | rough tree
+*AVLroug2.def  | roe | [(0, 0)]                                             | Dirt           | rough tree
+*AVLswmp0.def  | roe | [(0, 0)]                                             | Dirt           | swamp tree
+*AVLswmp1.def  | roe | [(0, 0)]                                             | Dirt           | swamp tree
+*AVLswmp2.def  | roe | [(0, 0), (1, 0), (1, 1), (2, 1)]                     | Dirt           | swamp tree
+*AVLswmp3.def  | roe | [(0, 1), (1, 0), (1, 1), (2, 0)]                     | Dirt           | swamp tree
+*AVLswmp4.def  | roe | [(0, 0), (1, 0), (1, 1), (2, 1)]                     | Dirt           | swamp tree
+*AVLswmp5.def  | roe | [(0, 1), (1, 0), (1, 1), (2, 0)]                     | Dirt           | swamp tree
+ AVLswmp6.def  | roe | [(0, 0), (0, 1), (1, 0), (1, 1), (1, 2), (2, 1), (2, 2)] | Dirt           | swamp tree
+ AVLswmp7.def  | roe | [(0, 1), (0, 2), (1, 0), (1, 1), (1, 2), (2, 0), (2, 1)] | Dirt           | swamp tree
+*AVLtr1d0.def  | roe | [(0, 0)]                                             | Dirt           | oak
+*AVLtr2d0.def  | roe | [(0, 0)]                                             | Dirt           | oak
+*AVLtr3d0.def  | roe | [(0, 0)]                                             | Dirt           | oak
+*AVLwlw10.def  | roe | [(0, 0), (1, 0), (2, 0)]                             | Dirt           | willow
+*AVLwlw20.def  | roe | [(0, 0), (1, 0)]                                     | Dirt           | willow
+*AVLwlw30.def  | roe | [(0, 0)]                                             | Dirt           | willow
+*AVLyuc10.def  | roe | [(0, 0)]                                             | Dirt           | yucca
+*AVLyuc20.def  | roe | [(0, 0)]                                             | Dirt           | yucca
+*AVLyuc30.def  | roe | [(0, 0)]                                             | Dirt           | yucca
+
+class 199 - swamp & rough trees (AB) (51 defs)
+def name       | src | footprint                                            | land           | species
+ avlswt00.def  | ab  | [(0, 0)]                                             | Dirt           | swamp tree
+ avlswt01.def  | ab  | [(0, 0)]                                             | Dirt           | swamp tree
+ avlswt02.def  | ab  | [(0, 0)]                                             | Dirt           | swamp tree
+ avlswt03.def  | ab  | [(0, 0)]                                             | Dirt           | swamp tree
+ avlswt04.def  | ab  | [(0, 0)]                                             | Dirt           | swamp tree
+ avlswt05.def  | ab  | [(0, 0)]                                             | Dirt           | swamp tree
+ avlswt06.def  | ab  | [(0, 0)]                                             | Dirt           | swamp tree
+ avlswt07.def  | ab  | [(0, 0)]                                             | Dirt           | swamp tree
+ avlswt08.def  | ab  | [(0, 0)]                                             | Dirt           | swamp tree
+ avlswt09.def  | ab  | [(0, 0)]                                             | Dirt           | swamp tree
+ avlswt10.def  | ab  | [(0, 0)]                                             | Dirt           | swamp tree
+ avlswt11.def  | ab  | [(0, 0)]                                             | Dirt           | swamp tree
+ avlswt12.def  | ab  | [(0, 0)]                                             | Dirt           | swamp tree
+ avlswt13.def  | ab  | [(0, 0)]                                             | Dirt           | swamp tree
+ avlswt14.def  | ab  | [(0, 0)]                                             | Dirt           | swamp tree
+ avlswt15.def  | ab  | [(0, 0)]                                             | Dirt           | swamp tree
+ avlswt16.def  | ab  | [(0, 0)]                                             | Dirt           | swamp tree
+ avlswt17.def  | ab  | [(0, 0)]                                             | Dirt           | swamp tree
+ avlswt18.def  | ab  | [(0, 0)]                                             | Dirt           | swamp tree
+ avlswt19.def  | ab  | [(0, 0)]                                             | Dirt           | swamp tree
+ avlswtr0.def  | ab  | [(0, 0), (1, 0), (1, 1), (2, 1)]                     | Dirt           | swamp tree
+ avlswtr1.def  | ab  | [(0, 1), (1, 0), (1, 1), (2, 0)]                     | Dirt           | swamp tree
+ avlswtr2.def  | ab  | [(0, 0), (1, 0), (1, 1), (2, 1)]                     | Dirt           | swamp tree
+ avlswtr3.def  | ab  | [(0, 1), (1, 0), (1, 1), (2, 0)]                     | Dirt           | swamp tree
+ avlswtr4.def  | ab  | [(0, 0), (0, 1), (1, 0), (1, 1), (1, 2), (2, 1)]     | Dirt           | swamp tree
+ avlswtr5.def  | ab  | [(0, 1), (1, 0), (1, 1), (2, 0), (3, 1)]             | Dirt           | swamp tree
+ avlswtr6.def  | ab  | [(0, 0), (0, 1)]                                     | Dirt           | swamp tree
+ avlswtr7.def  | ab  | [(0, 1), (1, 0), (1, 1), (2, 1)]                     | Dirt           | swamp tree
+ avlswtr8.def  | ab  | [(0, 0), (0, 1), (1, 0), (1, 1)]                     | Dirt           | swamp tree
+ avlswtr9.def  | ab  | [(0, 0), (1, 0), (1, 1), (2, 1), (3, 0), (3, 1), (4, 0)] | Dirt           | swamp tree
+ AVLtRo00.def  | ab  | [(0, 0)]                                             | Dirt           | oak
+ AVLtRo01.def  | ab  | [(0, 0)]                                             | Dirt           | oak
+ AVLtRo02.def  | ab  | [(0, 0)]                                             | Dirt           | oak
+ AVLtRo03.def  | ab  | [(0, 0)]                                             | Dirt           | oak
+ AVLtRo04.def  | ab  | [(0, 0)]                                             | Dirt           | oak
+ AVLtRo05.def  | ab  | [(0, 0)]                                             | Dirt           | oak
+ AVLtRo06.def  | ab  | [(0, 0)]                                             | Dirt           | oak
+ AVLtRo07.def  | ab  | [(0, 0)]                                             | Dirt           | oak
+ AVLtRo08.def  | ab  | [(0, 0)]                                             | Dirt           | oak
+ AVLtRo09.def  | ab  | [(0, 0)]                                             | Dirt           | oak
+ AVLtRo10.def  | ab  | [(0, 0)]                                             | Dirt           | oak
+ AVLtRo11.def  | ab  | [(0, 0)]                                             | Dirt           | oak
+ AVLtRo12.def  | ab  | [(0, 0)]                                             | Dirt           | oak
+ AVLtrRo0.def  | ab  | [(0, 0), (1, 0), (1, 1), (2, 1)]                     | Dirt           | oak
+ AVLtrRo1.def  | ab  | [(0, 1), (1, 0), (1, 1), (2, 0)]                     | Dirt           | oak
+ AVLtrRo2.def  | ab  | [(0, 0), (1, 0), (1, 1), (2, 1)]                     | Dirt           | oak
+ AVLtrRo3.def  | ab  | [(0, 1), (1, 0), (1, 1), (2, 0)]                     | Dirt           | oak
+ AVLtrRo4.def  | ab  | [(0, 0), (1, 0), (1, 1), (2, 1)]                     | Dirt           | oak
+ AVLtrRo5.def  | ab  | [(0, 1), (1, 0), (1, 1), (2, 0)]                     | Dirt           | oak
+ AVLtrRo6.def  | ab  | [(0, 0)]                                             | Dirt           | oak
+ AVLtrRo7.def  | ab  | [(0, 0)]                                             | Dirt           | oak
+
+class 206 - trees dirt/sand (AB) (12 defs)
+def name       | src | footprint                                            | land           | species
+ avlxds01.def  | ab  | [(0, 0), (0, 1), (1, 0), (1, 1)]                     | Dirt/Sand      | tree
+ avlxds02.def  | ab  | [(0, 0), (0, 1), (1, 0), (1, 1)]                     | Dirt/Sand      | tree
+ avlxds03.def  | ab  | [(0, 0), (1, 0)]                                     | Dirt/Sand      | tree
+ avlxds04.def  | ab  | [(0, 0), (0, 1), (1, 0), (1, 1)]                     | Dirt/Sand      | tree
+ avlxds05.def  | ab  | [(0, 0), (0, 1), (1, 1)]                             | Dirt/Sand      | tree
+ avlxds06.def  | ab  | [(0, 0), (0, 1), (1, 0), (1, 1)]                     | Dirt/Sand      | tree
+ avlxds07.def  | ab  | [(0, 0), (1, 0), (2, 0)]                             | Dirt/Sand      | tree
+ avlxds08.def  | ab  | [(0, 0), (1, 0), (2, 0)]                             | Dirt/Sand      | tree
+ avlxds09.def  | ab  | [(0, 0), (1, 0), (2, 0)]                             | Dirt/Sand      | tree
+ avlxds10.def  | ab  | [(0, 0)]                                             | Dirt/Sand      | tree
+ avlxds11.def  | ab  | [(0, 0)]                                             | Dirt/Sand      | tree
+ avlxds12.def  | ab  | [(0, 0)]                                             | Dirt/Sand      | tree
+
+class 207 - trees dirt (AB) (12 defs)
+def name       | src | footprint                                            | land           | species
+ avlxdt00.def  | ab  | [(0, 0), (1, 0)]                                     | Dirt           | tree
+ avlxdt01.def  | ab  | [(0, 0), (1, 0)]                                     | Dirt           | tree
+ avlxdt02.def  | ab  | [(0, 0), (1, 0)]                                     | Dirt           | tree
+ avlxdt03.def  | ab  | [(0, 0), (1, 0)]                                     | Dirt           | tree
+ avlxdt04.def  | ab  | [(0, 0), (1, 0)]                                     | Dirt           | tree
+ avlxdt05.def  | ab  | [(0, 0), (1, 0)]                                     | Dirt           | tree
+ avlxdt06.def  | ab  | [(0, 0), (1, 0), (2, 0)]                             | Dirt           | tree
+ avlxdt07.def  | ab  | [(0, 0), (1, 0), (2, 0)]                             | Dirt           | tree
+ avlxdt08.def  | ab  | [(0, 0), (1, 0), (2, 0)]                             | Dirt           | tree
+ avlxdt09.def  | ab  | [(0, 0), (1, 0), (2, 0)]                             | Dirt           | tree
+ avlxdt10.def  | ab  | [(0, 0), (1, 0), (2, 0)]                             | Dirt           | tree
+ avlxdt11.def  | ab  | [(0, 0), (1, 0), (2, 0)]                             | Dirt           | tree
+
+class 208 - trees grass (AB) (12 defs)
+def name       | src | footprint                                            | land           | species
+ avlxgr01.def  | ab  | [(0, 0), (1, 0)]                                     | Grass          | tree
+ avlxgr02.def  | ab  | [(0, 0), (1, 0)]                                     | Grass          | tree
+ avlxgr03.def  | ab  | [(0, 0), (1, 0)]                                     | Grass          | tree
+ avlxgr04.def  | ab  | [(0, 0), (0, 1), (1, 0), (1, 1)]                     | Grass          | tree
+ avlxgr05.def  | ab  | [(0, 0), (1, 0)]                                     | Grass          | tree
+ avlxgr06.def  | ab  | [(0, 0), (0, 1), (1, 0), (1, 1)]                     | Grass          | tree
+ avlxgr07.def  | ab  | [(0, 0), (1, 0), (2, 0)]                             | Grass          | tree
+ avlxgr08.def  | ab  | [(0, 0), (1, 0), (2, 0)]                             | Grass          | tree
+ avlxgr09.def  | ab  | [(0, 0), (1, 0), (2, 0)]                             | Grass          | tree
+ avlxgr10.def  | ab  | [(0, 0)]                                             | Grass          | tree
+ avlxgr11.def  | ab  | [(0, 0)]                                             | Grass          | tree
+ avlxgr12.def  | ab  | [(0, 0)]                                             | Grass          | tree
+
+class 209 - trees rough (AB) (12 defs)
+def name       | src | footprint                                            | land           | species
+ avlxro01.def  | ab  | [(0, 0), (1, 0)]                                     | Rough          | tree
+ avlxro02.def  | ab  | [(0, 0), (0, 1), (1, 0), (1, 1)]                     | Rough          | tree
+ avlxro03.def  | ab  | [(0, 1), (1, 0), (1, 1)]                             | Rough          | tree
+ avlxro04.def  | ab  | [(0, 0), (0, 1), (1, 0), (1, 1)]                     | Rough          | tree
+ avlxro05.def  | ab  | [(0, 0), (1, 0)]                                     | Rough          | tree
+ avlxro06.def  | ab  | [(0, 0), (0, 1), (1, 0), (1, 1)]                     | Rough          | tree
+ avlxro07.def  | ab  | [(0, 0), (1, 0), (2, 0)]                             | Rough          | tree
+ avlxro08.def  | ab  | [(0, 0), (1, 0), (2, 0)]                             | Rough          | tree
+ avlxro09.def  | ab  | [(0, 0), (1, 0), (2, 0)]                             | Rough          | tree
+ avlxro10.def  | ab  | [(0, 0)]                                             | Rough          | tree
+ avlxro11.def  | ab  | [(0, 0)]                                             | Rough          | tree
+ avlxro12.def  | ab  | [(0, 0)]                                             | Rough          | tree
+
+class 210 - trees subterranean (AB) (12 defs)
+def name       | src | footprint                                            | land           | species
+ avlxsu01.def  | ab  | [(0, 0), (0, 1), (1, 0), (1, 1)]                     | Subterranean   | tree
+ avlxsu02.def  | ab  | [(0, 0), (0, 1), (1, 0), (1, 1)]                     | Subterranean   | tree
+ avlxsu03.def  | ab  | [(0, 0), (0, 1), (1, 0), (1, 1)]                     | Subterranean   | tree
+ avlxsu04.def  | ab  | [(0, 0), (0, 1), (1, 0), (1, 1)]                     | Subterranean   | tree
+ avlxsu05.def  | ab  | [(0, 0), (1, 0)]                                     | Subterranean   | tree
+ avlxsu06.def  | ab  | [(0, 1), (1, 0), (1, 1)]                             | Subterranean   | tree
+ avlxsu07.def  | ab  | [(0, 0), (1, 0), (2, 0)]                             | Subterranean   | tree
+ avlxsu08.def  | ab  | [(0, 0), (1, 0), (2, 0)]                             | Subterranean   | tree
+ avlxsu09.def  | ab  | [(0, 0), (1, 0), (2, 0)]                             | Subterranean   | tree
+ avlxsu10.def  | ab  | [(0, 0)]                                             | Subterranean   | tree
+ avlxsu11.def  | ab  | [(0, 0)]                                             | Subterranean   | tree
+ avlxsu12.def  | ab  | [(0, 0)]                                             | Subterranean   | tree
+
+class 211 - trees swamp (AB) (11 defs)
+def name       | src | footprint                                            | land           | species
+ avlxsw01.def  | ab  | [(0, 0), (0, 1), (1, 0), (1, 1)]                     | Swamp          | tree
+ avlxsw02.def  | ab  | [(0, 0), (0, 1), (1, 0), (1, 1)]                     | Swamp          | tree
+ avlxsw03.def  | ab  | [(0, 0), (0, 1), (1, 0), (1, 1)]                     | Swamp          | tree
+ avlxsw04.def  | ab  | [(0, 0), (0, 1), (1, 0), (1, 1)]                     | Swamp          | tree
+ avlxsw05.def  | ab  | [(0, 0), (0, 1), (1, 0), (1, 1)]                     | Swamp          | tree
+ avlxsw06.def  | ab  | [(0, 0), (0, 1), (1, 0), (1, 1)]                     | Swamp          | tree
+ avlxsw07.def  | ab  | [(0, 0), (1, 0), (2, 0)]                             | Swamp          | tree
+ avlxsw08.def  | ab  | [(0, 0), (1, 0), (2, 0)]                             | Swamp          | tree
+ avlxsw09.def  | ab  | [(0, 0), (1, 0), (2, 0)]                             | Swamp          | tree
+ avlxsw10.def  | ab  | [(0, 0)]                                             | Swamp          | tree
+ avlxsw11.def  | ab  | [(0, 0)]                                             | Swamp          | tree
+
+src: roe = base game, ab/sod = expansion additions.
+land: the terrain family of the sprite (from the def name suffix:
+d=dirt, g=grass, r=rough, l=lava, sn=snow, sw=swamp; the game's
+landscape bits allow placing any tree on any terrain).
