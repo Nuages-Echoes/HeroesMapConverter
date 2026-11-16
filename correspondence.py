@@ -1841,6 +1841,82 @@ def _h3m_tree_def_pick(value):
     return _random.choice(same or [names[0]])
 
 
+# The H3 line (road / river) sprite patterns of the game's own editor
+# (VCMI CDrawRoadsOperation.cpp, the rules the H3 map editor uses to
+# pick the piece of a drawn road). Per pattern: the 3x3 neighborhood
+# grid in map order (NW, N, NE / W, center, E / SW, S, SE; '+' = the
+# neighbor carries the line, '-' = it does not, '?' = anything), the
+# sprite range the editor picks from at random, and the allowed
+# flips. The FIRST matching pattern wins; the flip becomes the
+# mirror bits 0x10 (E<->W) / 0x20 (N<->S).
+#
+# The piece inventory this encodes: the angle pieces 2-5 are the
+# "mixed" pieces - a diagonal band from the SW corner to the NE
+# corner that also joins the E and S edges; the turn pieces 0-1 are
+# the cardinal corners; 6-9 the T-junctions; 10-13 the straights
+# (two visual variants each); 14-15 the end caps; 16 the X-cross.
+H3M_LINE_PATTERNS = [
+    # single tile (fallback)
+    ("---", "-+-", "---", (14, 14), False, False),
+    # angle: a diagonal band SW corner <-> NE corner joining the
+    # E and S edges (the mixed piece)
+    ("?-+", "-++", "++?", (2, 5), True, True),
+    # turn: a cardinal corner (two edges)
+    ("?-?", "-++", "?+?", (0, 1), True, True),
+    # dead end horizontal
+    ("?-?", "-++", "?-?", (15, 15), True, False),
+    # dead end vertical
+    ("?-?", "-+-", "?+?", (14, 14), False, True),
+    # T horizontal
+    ("?+?", "-++", "?+?", (6, 7), True, False),
+    # T vertical
+    ("?-?", "+++", "?+?", (8, 9), False, True),
+    # straight horizontal
+    ("?-?", "+++", "?-?", (12, 13), False, False),
+    # straight vertical
+    ("?+?", "-+-", "?+?", (10, 11), False, False),
+    # X cross
+    ("?+?", "+++", "?+?", (16, 16), False, False),
+]
+
+
+def h3m_line_pattern_sprite(has_line, x, y):
+    """(sprite, mirror bits) the game's editor picks for a road tile at
+    (x, y): the first matching neighborhood pattern of
+    H3M_LINE_PATTERNS with the first valid flip, the sprite chosen at
+    random within the pattern's range. has_line(nx, ny) tells whether
+    the neighbor tile carries the line. (None, None) when no pattern
+    matches - a bend (corner + edge) no H3 piece draws."""
+    for r1, r2, r3, (lo, hi), hflip, vflip in H3M_LINE_PATTERNS:
+        grid = r1 + r2 + r3
+        for flip, mbits in ((0, 0x00), (1, 0x10), (2, 0x20), (3, 0x30)):
+            if flip in (1, 3) and not hflip:
+                continue
+            if flip in (2, 3) and not vflip:
+                continue
+            g = list(grid)
+            if flip in (1, 3):  # E <-> W: swap the grid columns
+                for i in range(3):
+                    g[i * 3], g[i * 3 + 2] = g[i * 3 + 2], g[i * 3]
+            if flip in (2, 3):  # N <-> S: swap the grid rows
+                for i in range(3):
+                    g[i], g[6 + i] = g[6 + i], g[i]
+            ok = True
+            for i in range(9):
+                if i == 4:
+                    continue
+                rule = g[i]
+                if rule == "?":
+                    continue
+                has = has_line(x + (i % 3) - 1, y + (i // 3) - 1)
+                if (rule == "+") != has:
+                    ok = False
+                    break
+            if ok:
+                return _random.randint(lo, hi), mbits
+    return None, None
+
+
 # The terrain-variant tables of the landscape objects are keyed by
 # h3m terrain names, while the fh2m -> unified step works with the
 # unified (Heroes II) names: normalize at the entry points below
