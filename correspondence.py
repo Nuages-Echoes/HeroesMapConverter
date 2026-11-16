@@ -1201,6 +1201,7 @@ H3M_DEF_OBJECT_CLASS = {
     "avlsntr0.def": 137, "avlsntr1.def": 137,
     "avlsntr2.def": 137, "avlsntr3.def": 137,
     "avlsntr4.def": 137, "avlsntr5.def": 137,
+    "avlr2sn0.def": 147, "avlr6sn0.def": 147,
     "avlstm1.def": 153, "avlstm2.def": 153, "avlstm3.def": 153,
     "avlswmp0.def": 155, "avlswmp1.def": 155, "avlswmp2.def": 155,
     "avlswmp3.def": 155, "avlswmp4.def": 155, "avlswmp5.def": 155,
@@ -1337,14 +1338,15 @@ def fh2m_tree_h3m_class(index, tile_terrain=None):
 # class's generic def below.
 FH2M_TREE_DEF_BY_TERRAIN = {
     101: {},  # conifers: a single def for every terrain
-    # the H2 swamp trees (1-cell class 119 singles) use the
-    # same-terrain 1-cell tree on the other lands; the H2 dead
-    # trees keep their dirt pairs through the exact/pair tables.
-    119: {"Grass": ["AVLtr1d0.def", "AVLtr2d0.def", "AVLtr3d0.def"],
+    # the H2 dead trees (1-cell class 119 singles) keep the dead
+    # species on every land: the dead tree models (AVLdead0/1) where
+    # H3 has no land-specific dead tree, the snow dead tree on Snow
+    # (the H2 wasteland dead trees have no rough dead model).
+    119: {"Grass": ["AVLdead0.def", "AVLdead1.def"],
           "Dirt": ["AVLdead0.def", "AVLdead1.def"],
-          "Swamp": "AVLswp70.def",
-          "Rough": ["AVLroug0.def", "AVLroug1.def", "AVLroug2.def"],
-          "Sand": ["AVLyuc10.def", "AVLyuc20.def", "AVLyuc30.def"],
+          "Swamp": ["AVLdead0.def", "AVLdead1.def"],
+          "Rough": ["AVLdead0.def", "AVLdead1.def"],
+          "Sand": ["AVLdead0.def", "AVLdead1.def"],
           "Water": "AVLswp60.def", "Snow": "AVLd3sn0.def",
           "Lava": ["AVLdead0.def", "AVLdead1.def"]},
     # palms: the land palms block their tile (AVLplm30.def); the
@@ -1368,8 +1370,9 @@ FH2M_TREE_DEF_BY_TERRAIN = {
 
 # Same-terrain 2-cell pair defs of the fh2m pair trees: the lush
 # pair (idx 37) and the dead pairs (idx 41, 50, 51, 52) use the
-# terrain's pair tree on Grass/Dirt/Swamp/Rough; Sand and Snow have
-# no pair def and fall back to same-terrain single trees (see
+# terrain's pair tree on Grass/Dirt/Swamp/Rough (the dead pairs
+# also on Snow: the 2-cell snow trees AVLr2sn0/AVLr6sn0); Sand has
+# no pair def and falls back to same-terrain single trees (see
 # fh2m_tree_h3m_cover).
 FH2M_PAIR_TREE_TERRAIN_DEF = {
     37: {"Grass": "AVLwlw20.def", "Dirt": ["AVLdt1s0.def", "AVLdt2s0.def"],
@@ -1377,15 +1380,19 @@ FH2M_PAIR_TREE_TERRAIN_DEF = {
          "Lava": ["AVLdt1s0.def", "AVLdt2s0.def"]},
     41: {"Grass": "AVLwlw20.def", "Dirt": ["AVLdt1s0.def", "AVLdt2s0.def"],
          "Swamp": "AVLswp60.def", "Rough": "AVLr04r0.def",
+         "Snow": ["AVLr2sn0.def", "AVLr6sn0.def"],
          "Lava": ["AVLdt1s0.def", "AVLdt2s0.def"]},
     50: {"Grass": "AVLwlw20.def", "Dirt": ["AVLdt1s0.def", "AVLdt2s0.def"],
          "Swamp": "AVLswp60.def", "Rough": "AVLr04r0.def",
+         "Snow": ["AVLr2sn0.def", "AVLr6sn0.def"],
          "Lava": ["AVLdt1s0.def", "AVLdt2s0.def"]},
     51: {"Grass": "AVLwlw20.def", "Dirt": ["AVLdt1s0.def", "AVLdt2s0.def"],
          "Swamp": "AVLswp60.def", "Rough": "AVLr04r0.def",
+         "Snow": ["AVLr2sn0.def", "AVLr6sn0.def"],
          "Lava": ["AVLdt1s0.def", "AVLdt2s0.def"]},
     52: {"Grass": "AVLwlw20.def", "Dirt": ["AVLdt1s0.def", "AVLdt2s0.def"],
          "Swamp": "AVLswp60.def", "Rough": "AVLr04r0.def",
+         "Snow": ["AVLr2sn0.def", "AVLr6sn0.def"],
          "Lava": ["AVLdt1s0.def", "AVLdt2s0.def"]},
 }
 
@@ -1902,6 +1909,10 @@ H3M_TREE_DEFS = {
     "avlsntr3.def": ("AVLSNTR3.def", "ffffffff3f9f000000000000ff010800", "000000000000000000000000000000000000"),
     "avlsntr4.def": ("AVLSNTR4.def", "ffffffff9f3f000000000000ff010800", "000000000000000000000000000000000000"),
     "avlsntr5.def": ("AVLSNTR5.def", "ffffffff9f3f000000000000ff010800", "000000000000000000000000000000000000"),
+    # 2-cell snow trees (class 147), from the game's Objects.txt:
+    # the same-terrain counterpart of the H2 snow dead pairs.
+    "avlr2sn0.def": ("AVLr2sn0.def", "ffffffffff3f000000000000ff010800", "000000000000000000000000000000000000"),
+    "avlr6sn0.def": ("AVLr6sn0.def", "ffffffffff3f000000000000ff010800", "000000000000000000000000000000000000"),
     "avlroug0.def": ("AVLroug0.def", "ffffffffff7f000000000000ff012000", "000000000000000000000000000000000000"),
     "avlroug1.def": ("AVLroug1.def", "ffffffffff7f000000000000ff012000", "000000000000000000000000000000000000"),
     "avlroug2.def": ("AVLroug2.def", "ffffffffff7f000000000000ff012000", "000000000000000000000000000000000000"),
