@@ -1171,7 +1171,7 @@ FH2M_LANDSCAPE_TO_H3M = {
 # footprints (the 6-byte passability mask ranges from 1 to 7 blocked
 # cells) - so the def name, not the subclass, carries the sprite
 # size.
-H3M_TREE_CLASSES = {101, 119, 125, 130, 147, 153, 155}
+H3M_TREE_CLASSES = {101, 119, 125, 130, 135, 147, 153, 155}
 
 
 # True game object class of the tree defs, from the game's own
@@ -1192,6 +1192,9 @@ H3M_DEF_OBJECT_CLASS = {
     "avlplm30.def": 155, "avlplm50.def": 155,
     "avlr04r0.def": 147,
     "avlroug0.def": 155, "avlroug1.def": 155, "avlroug2.def": 155,
+    "avlautr0.def": 135, "avlautr1.def": 135,
+    "avlautr2.def": 135, "avlautr3.def": 135,
+    "avlautr4.def": 135, "avlautr5.def": 135,
     "avlstm1.def": 153, "avlstm2.def": 153, "avlstm3.def": 153,
     "avlswmp0.def": 155, "avlswmp1.def": 155, "avlswmp2.def": 155,
     "avlswmp3.def": 155, "avlswmp4.def": 155, "avlswmp5.def": 155,
@@ -1406,6 +1409,22 @@ FH2M_TREE_EXACT_DEF.update({
     41: "AVLdt1s0.def", 42: "AVLwlw10.def",
     50: "AVLdt2s0.def", 51: "AVLdt1s0.def", 52: "AVLdt2s0.def",
 })
+
+# Species-faithful per-index conversions: the H2 autumn trees (12-17,
+# the Grass family with the autumn look) become the H3 autumn trees
+# (class 135) on Grass - the 4-cell forests 12-15 use the
+# footprint-exact autumn trees (AVLAUTR4/5 match the a/c forest
+# shapes, AVLAUTR2/3 the b/d ones), the singles 16-17 the 1-cell
+# autumn trees. A list holds equivalent models, one picked at
+# random. Other terrains keep the same-terrain cover.
+FH2M_TREE_INDEX_TERRAIN_DEF = {
+    (12, "Grass"): (135, ["AVLAUTR4.def", "AVLAUTR5.def"]),
+    (13, "Grass"): (135, ["AVLAUTR2.def", "AVLAUTR3.def"]),
+    (14, "Grass"): (135, ["AVLAUTR4.def", "AVLAUTR5.def"]),
+    (15, "Grass"): (135, ["AVLAUTR2.def", "AVLAUTR3.def"]),
+    (16, "Grass"): (135, ["avlautr0.def", "avlautr1.def"]),
+    (17, "Grass"): (135, ["avlautr0.def", "avlautr1.def"]),
+}
 
 
 # Same-terrain tree defs used to convert the 4-cell H2 forests: a
@@ -1642,8 +1661,20 @@ def fh2m_tree_h3m_cover(index, tile_terrain, anchor=None,
 
     # One exact 4-cell tree covers the whole footprint: among the
     # candidates of the forest shape (equivalent models), one is
-    # chosen at random.
+    # chosen at random. The per-index species-faithful trees (the
+    # H2 autumn forests) come first.
     exact_matches = []
+    index_def = FH2M_TREE_INDEX_TERRAIN_DEF.get(
+        (index, tile_terrain))
+    if index_def is not None:
+        alts = index_def[1] if isinstance(index_def[1], (list, tuple)) \
+            else [index_def[1]]
+        for d in alts:
+            cells = _fh2m_forest_tree_cells(d)
+            offset = _fh2m_forest_shape_offset(cells, shape) \
+                if cells else None
+            if offset is not None:
+                exact_matches.append((index_def[0], d, offset))
     for exact in FH2M_FOREST_TERRAIN_TREE_EXACT.get(tile_terrain, []):
         cells = _fh2m_forest_tree_cells(exact[1])
         offset = _fh2m_forest_shape_offset(cells, shape) \
@@ -1726,8 +1757,10 @@ H3M_TREE_DEF_TO_FH2M_INDEX = {
     # 4-cell forests (diagonal shapes)
     "avldead2.def": 0, "avldead4.def": 0,
     "avlswmp2.def": 0, "avlswmp4.def": 0,
+    "avlautr4.def": 0, "avlautr5.def": 0,
     "avldead3.def": 1, "avldead5.def": 1,
     "avlswmp3.def": 1, "avlswmp5.def": 1,
+    "avlautr2.def": 1, "avlautr3.def": 1,
     # 1-cell dead trees / swamp trees
     "avldead0.def": 43, "avldead1.def": 43,
     "avld3sn0.def": 43, "avlswp70.def": 43,
@@ -1741,6 +1774,8 @@ H3M_TREE_DEF_TO_FH2M_INDEX = {
     "avlroug0.def": 53, "avlroug1.def": 53, "avlroug2.def": 53,
     "avlyuc10.def": 53, "avlyuc20.def": 53, "avlyuc30.def": 53,
     "avtchst0.def": 53,
+    # autumn trees (1 cell)
+    "avlautr0.def": 53, "avlautr1.def": 53,
     # stumps (1 cell)
     "avlstm1.def": 66, "avlstm2.def": 66, "avlstm3.def": 66,
     "avlp1sn0.def": 66, "avlp2sn0.def": 66,
@@ -1809,6 +1844,15 @@ H3M_TREE_DEFS = {
     "avlplm30.def": ("AVLplm30.def", "ffffffffff7f000000000000ff010200", "000000000000000000000000000000000000"),
     "avlplm50.def": ("AVLplm50.def", "ffffffffffbf000000000000ff010200", "000000000000000000000000000000000000"),
     "avlr04r0.def": ("AVLr04r0.def", "ffffffffff3f000000000000ff002000", "000000000000000000000000000000000000"),
+    # autumn trees (class 135), from the game's Objects.txt: the
+    # 1-cell avlautr0/1, the 4-cell AVLAUTR2/3 (shapes b/d) and
+    # AVLAUTR4/5 (shapes a/c).
+    "avlautr0.def": ("avlautr0.def", "ffffffffff7f000000000000ff010500", "000000000000000000000000000000000000"),
+    "avlautr1.def": ("avlautr1.def", "ffffffffff7f000000000000ff010500", "000000000000000000000000000000000000"),
+    "avlautr2.def": ("AVLAUTR2.def", "ffffffff3f9f000000000000ff010500", "000000000000000000000000000000000000"),
+    "avlautr3.def": ("AVLAUTR3.def", "ffffffff3f9f000000000000ff010500", "000000000000000000000000000000000000"),
+    "avlautr4.def": ("AVLAUTR4.def", "ffffffff9f3f000000000000ff010500", "000000000000000000000000000000000000"),
+    "avlautr5.def": ("AVLAUTR5.def", "ffffffff9f3f000000000000ff010500", "000000000000000000000000000000000000"),
     "avlroug0.def": ("AVLroug0.def", "ffffffffff7f000000000000ff012000", "000000000000000000000000000000000000"),
     "avlroug1.def": ("AVLroug1.def", "ffffffffff7f000000000000ff012000", "000000000000000000000000000000000000"),
     "avlroug2.def": ("AVLroug2.def", "ffffffffff7f000000000000ff012000", "000000000000000000000000000000000000"),
@@ -2565,6 +2609,12 @@ def _fh2m_landscape_def_candidates(group, index, tile_terrain):
         if h3m_class is None:
             return []
         names = []
+        index_def = FH2M_TREE_INDEX_TERRAIN_DEF.get(
+            (index, tile_terrain or "Grass"))
+        if index_def is not None:
+            picked = _h3m_tree_def_pick(index_def[1])
+            if picked:
+                names.append(picked)
         terrain_def = _h3m_tree_def_pick(
             FH2M_TREE_DEF_BY_TERRAIN.get(h3m_class, {})
             .get(tile_terrain or "Grass"))
