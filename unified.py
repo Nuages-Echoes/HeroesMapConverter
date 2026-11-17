@@ -369,6 +369,10 @@ def convert_h3m_to_unified(map_data):
 
     # Terrain
     levels = []
+    # Original fh2m road indices carried by an h3m produced by this
+    # converter (in-memory side table; the h3m binary tile record has
+    # no room for them): "x_y_z" -> original ROADS index.
+    road_index_side = map_data.get("fh2mRoadIndex") or {}
     for section_name, z in (("Surface Map", 0), ("Underground Map", 1)):
         section = map_data.get(section_name)
         if section is None:
@@ -376,7 +380,7 @@ def convert_h3m_to_unified(map_data):
         grid = []
         for cell in section.get("Grid", []):
             source_terrain = cell.get("Terrain Type", "Dirt")
-            grid.append(OrderedDict([
+            entry = OrderedDict([
                 ("x", cell.get("X", 0)),
                 ("y", cell.get("Y", 0)),
                 ("z", z),
@@ -388,7 +392,11 @@ def convert_h3m_to_unified(map_data):
                 ("sourceRoadProperties", cell.get("Road Properties", 0)),
                 ("sourceRiver", cell.get("River Type", "None")),
                 ("sourceRiverProperties", cell.get("River Properties", 0)),
-            ]))
+            ])
+            side_key = "{}_{}_{}".format(cell.get("X", 0), cell.get("Y", 0), z)
+            if side_key in road_index_side:
+                entry["sourceRoadIndex"] = road_index_side[side_key]
+            grid.append(entry)
         levels.append(OrderedDict([("grid", grid)]))
     unified["terrain"] = OrderedDict([("levels", levels)])
 
@@ -676,15 +684,28 @@ def convert_fh2m_to_unified(map_data):
     # Terrain
     grid = []
     width = map_data.get("width", 0)
+    road_index_by_pos = {}
     for index, tile in enumerate(map_data.get("tiles", [])):
-        grid.append(OrderedDict([
+        for obj in tile.get("objects", []):
+            if obj.get("group") == "ROADS":
+                road_index_by_pos[(index % width, index // width)] = obj.get("index", 0)
+    for index, tile in enumerate(map_data.get("tiles", [])):
+        cell = OrderedDict([
             ("x", index % width),
             ("y", index // width),
             ("z", 0),
             ("terrain", _fh2m_terrain_name(tile.get("terrainIndex", 0))),
             ("sourceTerrain", "terrain:{}".format(tile.get("terrainIndex", 0))),
             ("flags", tile.get("terrainFlags", 0)),
-        ]))
+        ])
+        # The original fh2m ROADS index (connection bitfield plus the
+        # 256 * visual variant), carried on the terrain cell so the
+        # unified JSON keeps the exact H2 road segment and the h3m ->
+        # fh2m writer can restore it instead of re-deriving it.
+        road_index = road_index_by_pos.get((index % width, index // width))
+        if road_index is not None:
+            cell["sourceRoadIndex"] = road_index
+        grid.append(cell)
     unified["terrain"] = OrderedDict([
         ("levels", [OrderedDict([("grid", grid)])]),
     ])
@@ -1606,6 +1627,21 @@ def unified_to_h3m(unified):
             ])
         else:
             data["Objects"] = OrderedDict([("Number of Objects", 0), ("Raw Data", "")])
+
+    if is_fh2m_source:
+        road_index_side = OrderedDict()
+        for level in unified.get("terrain", {}).get("levels", []):
+            for cell in level.get("grid", []):
+                if cell.get("sourceRoadIndex") is not None:
+                    road_index_side["{}_{}_{}".format(
+                        cell.get("x", 0), cell.get("y", 0), cell.get("z", 0))] = \
+                        cell["sourceRoadIndex"]
+        if road_index_side:
+            # Side table for the in-memory h3m -> fh2m chain: the h3m
+            # binary tile record (7 bytes) cannot store the fh2m road
+            # bitfield, so it travels alongside the map dict instead
+            # of inside the file (write_h3m ignores this key).
+            data["fh2mRoadIndex"] = road_index_side
 
     return data
 
@@ -2692,6 +2728,7 @@ def unified_to_fh2m(unified):
     # BOTTOM=32, BOTTOM_LEFT=64, LEFT=128).
     road_tiles = {}
     road_props_tiles = {}
+    road_index_tiles = {}
     river_tiles = {}
     if is_h3m_source:
         _h3m_direction_bits = [(-1, -1, 1), (0, -1, 2), (1, -1, 4),
@@ -2705,6 +2742,8 @@ def unified_to_fh2m(unified):
                 if cell.get("sourceRoad") and cell.get("sourceRoad") != "None":
                     road_tiles[pos] = cell.get("sourceRoad")
                     road_props_tiles[pos] = cell.get("sourceRoadProperties", 0)
+                    if cell.get("sourceRoadIndex") is not None:
+                        road_index_tiles[pos] = cell.get("sourceRoadIndex")
                 if cell.get("sourceRiver") and cell.get("sourceRiver") != "None":
                     river_tiles[pos] = cell.get("sourceRiver")
 
@@ -2717,15 +2756,24 @@ def unified_to_fh2m(unified):
 
         next_road_id = 100000
         for (x, y) in road_tiles:
-            bits = _direction_bitfield(road_tiles, x, y)
-            if road_props_tiles.get((x, y), 0) < 6:
-                # A diagonal road piece (ends 0x00-0x01, bands
-                # 0x02-0x05): the road continues through the tile
-                # corners, so the diagonal neighbors carry
-                # continuation bits too.
-                for dx, dy, bit in _h3m_direction_bits:
-                    if bit in (1, 4, 16, 64) and (x + dx, y + dy) in road_tiles:
-                        bits |= bit
+            if road_index_tiles:
+                # An h3m produced by this converter from an fh2m map
+                # carries the original road indices: restore them
+                # exactly and drop the corner fills/stubs the
+                # fh2m -> h3m step added to the road graph.
+                if (x, y) not in road_index_tiles:
+                    continue
+                bits = road_index_tiles[(x, y)]
+            else:
+                bits = _direction_bitfield(road_tiles, x, y)
+                if road_props_tiles.get((x, y), 0) < 6:
+                    # A diagonal road piece (ends 0x00-0x01, bands
+                    # 0x02-0x05): the road continues through the tile
+                    # corners, so the diagonal neighbors carry
+                    # continuation bits too.
+                    for dx, dy, bit in _h3m_direction_bits:
+                        if bit in (1, 4, 16, 64) and (x + dx, y + dy) in road_tiles:
+                            bits |= bit
             obj = OrderedDict([
                 ("id", next_road_id),
                 ("group", "ROADS"),
