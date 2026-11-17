@@ -2648,21 +2648,6 @@ def unified_to_fh2m(unified):
                     bits |= bit
             return bits
 
-        # Castle-entrance roads: in fh2m the road tile directly south
-        # of a town carries the 512 marker with an empty connection
-        # bitfield. The town anchor sits at entrance + (2, 0), so in
-        # unified (h3m) coordinates the entrance road is at
-        # (town_x - 2, town_y + 1).
-        _town_anchors = set()
-        for _tk, _objs in (unified.get("objects") or {}).get("tiles", {}).items():
-            _p = _tk.split("_")
-            if len(_p) != 3:
-                continue
-            for _o in _objs:
-                if _o.get("group") == "KINGDOM_TOWNS":
-                    _town_anchors.add((int(_p[0]), int(_p[1])))
-        _entrance_roads = {(tx - 2, ty + 1) for tx, ty in _town_anchors}
-
         next_road_id = 100000
         for (x, y) in road_tiles:
             if road_index_tiles:
@@ -2683,10 +2668,6 @@ def unified_to_fh2m(unified):
                     for dx, dy, bit in _h3m_direction_bits:
                         if bit in (1, 4, 16, 64) and (x + dx, y + dy) in road_tiles:
                             bits |= bit
-                if (x, y) in _entrance_roads:
-                    # Castle-entrance road: the H2 marker is 512 with
-                    # an empty connection bitfield.
-                    bits = 0x200
             obj = OrderedDict([
                 ("id", next_road_id),
                 ("group", "ROADS"),
