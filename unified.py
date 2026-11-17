@@ -1047,11 +1047,12 @@ def unified_to_h3m(unified):
         # while H3 roads only connect tile to tile orthogonally: a
         # diagonal step converted as-is leaves a broken, disconnected
         # H3 road. The way the game editor draws it (see the corrected
-        # Barbarian vs Wizard.h3m reference), every diagonal step
-        # becomes an orthogonal bend through the inner corner tile -
-        # the south-most of the two candidate corners, as in the
-        # reference. Add those tiles to the road set; the sprite
-        # matcher then draws the bend with the mixed angle pieces.
+        # Barbarian vs Wizard.h3m and Mymaptest.h3m references), a
+        # diagonal step becomes an orthogonal bend through one of the
+        # two inner-corner tiles - the south-most, as in the
+        # Barbarian reference. A step whose corner already carries a
+        # road tile (the H2 corner with both the diagonal shortcut and
+        # the orthogonal path) needs no fill at all.
         _corner_steps = ((-1, -1, 0x01), (1, -1, 0x04),
                          (1, 1, 0x10), (-1, 1, 0x40))
         _added_roads = set()
@@ -1065,9 +1066,13 @@ def unified_to_h3m(unified):
                 # The two inner-corner tiles between the diagonal
                 # pair; keep the south-most (the reference choice).
                 _cand = [(rx + _dx, ry), (rx, ry + _dy)]
+                _cand3 = [(cx, cy, rz) for cx, cy in _cand]
+                if any(_c in fh2m_road_tiles or _c in _added_roads
+                        for _c in _cand3):
+                    # The corner already has its orthogonal path.
+                    continue
                 _cx, _cy = max(_cand, key=lambda t: t[1])
-                if (0 <= _cx < map_size and 0 <= _cy < map_size
-                        and (_cx, _cy, rz) not in fh2m_road_tiles):
+                if 0 <= _cx < map_size and 0 <= _cy < map_size:
                     _added_roads.add((_cx, _cy, rz))
         fh2m_road_tiles |= _added_roads
         for _tile in _added_roads:
