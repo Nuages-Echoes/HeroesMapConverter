@@ -1065,123 +1065,12 @@ def unified_to_h3m(unified):
                     fh2m_river_tiles.add((x, y, z))
                     fh2m_river_index[(x, y, z)] = obj.get("index", 0)
 
-        # H2 roads run diagonally (staircases of corner connections)
-        # while H3 roads only connect tile to tile orthogonally: a
-        # diagonal step converted as-is leaves a broken, disconnected
-        # H3 road. The way the game editor draws it (see the corrected
-        # Barbarian vs Wizard.h3m and Mymaptest.h3m references), a
-        # diagonal step becomes an orthogonal bend through one of the
-        # two inner-corner tiles - the south-most, as in the
-        # Barbarian reference. A step whose corner already carries a
-        # road tile (the H2 corner with both the diagonal shortcut and
-        # the orthogonal path) needs no fill at all.
-        _corner_steps = ((-1, -1, 0x01), (1, -1, 0x04),
-                         (1, 1, 0x10), (-1, 1, 0x40))
-        _added_roads = set()
-        _filled_step_cands = set()
-        for (rx, ry, rz) in list(fh2m_road_tiles):
-            _bits = fh2m_road_index.get((rx, ry, rz), 0) & 0xFF
-            for _dx, _dy, _bit in _corner_steps:
-                if not _bits & _bit:
-                    continue
-                if (rx + _dx, ry + _dy, rz) not in fh2m_road_tiles:
-                    continue
-                # The two inner-corner tiles between the diagonal
-                # pair; keep the south-most (the reference choice).
-                _cand = [(rx + _dx, ry), (rx, ry + _dy)]
-                _cand3 = [(cx, cy, rz) for cx, cy in _cand]
-                if any(_c in fh2m_road_tiles or _c in _added_roads
-                        for _c in _cand3):
-                    # The corner already has its orthogonal path.
-                    continue
-                _cx, _cy = max(_cand, key=lambda t: t[1])
-                if 0 <= _cx < map_size and 0 <= _cy < map_size:
-                    _added_roads.add((_cx, _cy, rz))
-                    _filled_step_cands.update(_cand3)
-
-        # Road-end stubs (Mymaptest.h3m reference): the H2 road
-        # visually extends one tile past a dead end, and past the end
-        # of a straight run whose last tile also carries a diagonal
-        # connection that already has its orthogonal path - the H3
-        # road then starts its bend one tile further out, so the
-        # straight run keeps the visual length it has in H2.
-        _edge_dirs = {"N": (0, -1), "E": (1, 0), "S": (0, 1), "W": (-1, 0)}
-        _edge_bits = {"N": 0x02, "E": 0x08, "S": 0x20, "W": 0x80}
-        _stub_tiles = set()
-        for (rx, ry, rz) in list(fh2m_road_tiles):
-            _bits = fh2m_road_index.get((rx, ry, rz), 0) & 0xFF
-            _edges = [d for d in _edge_bits if _bits & _edge_bits[d]]
-            if len(_edges) != 1:
-                continue
-            _ex, _ey = _edge_dirs[_edges[0]]
-            _sx, _sy = rx - _ex, ry - _ey
-            _stub = (_sx, _sy, rz)
-            if (_sx < 0 or _sx >= map_size or _sy < 0 or _sy >= map_size
-                    or _stub in fh2m_road_tiles or _stub in _added_roads
-                    or (_sx, _sy, rz) in _filled_step_cands):
-                # Off the map, already a road, or the diagonal step of
-                # this end already got its corner fill: no stub.
-                continue
-            _stub_tiles.add(_stub)
-
-        # Corner stubs: a corner tile whose south neighbor and east or
-        # west neighbor form a diagonal step (the H2 corner with its
-        # diagonal shortcut on the south side) keeps the visual width
-        # of the H2 corner - extend the horizontal one tile away from
-        # the vertical (Mymaptest.h3m reference; the corners with the
-        # shortcut on the north side get no stub).
-        for (rx, ry, rz) in list(fh2m_road_tiles):
-            if (rx, ry, rz) in _added_roads or (rx, ry, rz) in _stub_tiles:
-                continue
-            _bits = fh2m_road_index.get((rx, ry, rz), 0) & 0xFF
-            _edges = [d for d in _edge_bits if _bits & _edge_bits[d]]
-            if (len(_edges) != 2 or "S" not in _edges
-                    or ("E" in _edges) == ("W" in _edges)):
-                continue
-            _horiz = "E" if "E" in _edges else "W"
-            _s_nbr = (rx, ry + 1)
-            _h_nbr = (rx + (1 if _horiz == "E" else -1), ry)
-            if (_s_nbr[0], _s_nbr[1], rz) not in fh2m_road_tiles \
-                    or (_h_nbr[0], _h_nbr[1], rz) not in fh2m_road_tiles:
-                continue
-            _s_bits = fh2m_road_index.get(
-                (_s_nbr[0], _s_nbr[1], rz), 0) & 0xFF
-            _brace_bit = 0x04 if _horiz == "E" else 0x01
-            if not _s_bits & _brace_bit:
-                continue
-            _hx, _hy = _edge_dirs[_horiz]
-            _sx, _sy = rx - _hx, ry - _hy
-            _stub = (_sx, _sy, rz)
-            if (0 <= _sx < map_size and 0 <= _sy < map_size
-                    and _stub not in fh2m_road_tiles
-                    and _stub not in _added_roads
-                    and _stub not in _stub_tiles):
-                _stub_tiles.add(_stub)
-        fh2m_road_tiles |= _stub_tiles
-        for _tile in _stub_tiles:
-            _tx, _ty, _tz = _tile
-            _mask = 0
-            for _i in range(9):
-                if _i == 4:
-                    continue
-                if (_tx + _i % 3 - 1, _ty + _i // 3 - 1, _tz) \
-                        in fh2m_road_tiles:
-                    _mask |= 1 << _i
-            fh2m_road_index[_tile] = _mask
-        fh2m_road_tiles |= _added_roads
-        for _tile in _added_roads:
-            # The added tile carries no H2 mask: derive the fallback
-            # bitfield from the (augmented) road adjacency, the way
-            # fheroes2 computes its road object index.
-            _tx, _ty, _tz = _tile
-            _mask = 0
-            for _i in range(9):
-                if _i == 4:
-                    continue
-                if (_tx + _i % 3 - 1, _ty + _i // 3 - 1, _tz) \
-                        in fh2m_road_tiles:
-                    _mask |= 1 << _i
-            fh2m_road_index[_tile] = _mask
+        # The original H2 road graph is kept as-is: corner connections
+        # are drawn with the H3 diagonal pieces (road properties
+        # 0x00-0x05) on the original tiles instead of adding
+        # orthogonal corner fills/stubs, so the h3m file itself
+        # carries an invertible road graph and the h3m -> fh2m step
+        # rebuilds the exact original connection bitfields.
 
     # Per-terrain h3m main-tile ranges (VCMI editor terrainViewPatterns.json,
     # pattern n1): normal terrains 49-72, dirt 21-44, sand 0-23, water 20-32.
@@ -1506,7 +1395,12 @@ def unified_to_h3m(unified):
                     diagonals = {d for d, bit in (("NW", 1), ("NE", 4),
                                                  ("SE", 16), ("SW", 64))
                                  if road_bits & bit}
-                    if _sprite is not None:
+                    # Keep the piece's diagonal-ness in sync with the
+                    # original bitfield: the h3m -> fh2m step re-adds
+                    # the corner bits exactly when the props are a
+                    # diagonal piece (< 6).
+                    _has_corners = bool(road_bits & 0x55)
+                    if _sprite is not None and ((_sprite < 6) == _has_corners):
                         road_props = _sprite
                         mirror_bits |= _mbits
                     elif diagonals:
@@ -2754,6 +2648,21 @@ def unified_to_fh2m(unified):
                     bits |= bit
             return bits
 
+        # Castle-entrance roads: in fh2m the road tile directly south
+        # of a town carries the 512 marker with an empty connection
+        # bitfield. The town anchor sits at entrance + (2, 0), so in
+        # unified (h3m) coordinates the entrance road is at
+        # (town_x - 2, town_y + 1).
+        _town_anchors = set()
+        for _tk, _objs in (unified.get("objects") or {}).get("tiles", {}).items():
+            _p = _tk.split("_")
+            if len(_p) != 3:
+                continue
+            for _o in _objs:
+                if _o.get("group") == "KINGDOM_TOWNS":
+                    _town_anchors.add((int(_p[0]), int(_p[1])))
+        _entrance_roads = {(tx - 2, ty + 1) for tx, ty in _town_anchors}
+
         next_road_id = 100000
         for (x, y) in road_tiles:
             if road_index_tiles:
@@ -2774,6 +2683,10 @@ def unified_to_fh2m(unified):
                     for dx, dy, bit in _h3m_direction_bits:
                         if bit in (1, 4, 16, 64) and (x + dx, y + dy) in road_tiles:
                             bits |= bit
+                if (x, y) in _entrance_roads:
+                    # Castle-entrance road: the H2 marker is 512 with
+                    # an empty connection bitfield.
+                    bits = 0x200
             obj = OrderedDict([
                 ("id", next_road_id),
                 ("group", "ROADS"),
