@@ -12,6 +12,7 @@ normalized terrain grid. Game-specific structures without a common
 representation are dropped (see the description document).
 """
 
+import random as _random
 import struct
 from collections import OrderedDict
 
@@ -1282,15 +1283,20 @@ def unified_to_h3m(unified):
                 lo, hi = H3M_MAIN_RANGE.get(terrain_name, H3M_MAIN_RANGE_DEFAULT)
                 if offset is None:
                     picture = lo
-                elif unified_name in ("Water", "Dirt"):
+                elif unified_name == "Water":
                     picture = offset if offset < 16 else lo + (offset - 16) % (hi - lo + 1)
+                elif unified_name == "Dirt":
+                    # 16 transition images, then the main range 21-44.
+                    picture = lo + (offset if offset < 16 else offset - 16) % (hi - lo + 1)
                 elif unified_name == "Beach":
                     picture = offset % (hi + 1)
                 elif offset < 38:
-                    # Land transition tile: pick a border sprite inside the
-                    # terrain's own low range (Sand has lo == 0, so its
-                    # valid pictures are 0..hi; never emit 49 there).
-                    picture = offset % (lo if lo else hi + 1)
+                    # H2 transition image: the border sprites are drawn
+                    # from the neighboring terrain types below. A
+                    # transition image without a land border (e.g. the
+                    # H2 Desert/Wasteland pair, both Rough in H3) is a
+                    # plain main variant.
+                    picture = lo + offset % (hi - lo + 1)
                 else:
                     picture = lo + (offset - 38) % (hi - lo + 1)
                 level_grid = fh2m_level_grids[z] if z < len(fh2m_level_grids) else {}
@@ -1309,11 +1315,99 @@ def unified_to_h3m(unified):
                     _, ncell = entry
                     return UNIFIED_TO_H3M_TERRAINS.get(ncell.get("terrain", "Grass"), "Dirt") == "Water"
 
+                def neighbor_h3_terrain(dx, dy):
+                    entry = level_grid.get((x + dx, y + dy))
+                    if entry is None:
+                        return None
+                    _, ncell = entry
+                    return UNIFIED_TO_H3M_TERRAINS.get(ncell.get("terrain", "Grass"), "Dirt")
+
+                # An H2 transition image drawn as a main variant or as
+                # a border sprite carries no H2 mirroring: the H3
+                # editor picks its own (the border logic below sets
+                # the orientation bits it needs).
+                if offset is not None and offset < 38 \
+                        and unified_name not in ("Water", "Beach"):
+                    mirror_bits = 0
+                else:
+                    mirror_bits = int(cell.get("flags", 0) or 0) & 0x03
+
+                # Land <-> land borders: the H3 editor draws them from
+                # the neighboring terrain types (the corrected
+                # Mymaptest.h3m reference and VCMI's
+                # terrainViewPatterns.json). A border tile of a normal
+                # terrain uses the dirt-blend border sprites against
+                # another land terrain and the sand-blend sprites
+                # against Sand; Dirt has a single border set and Sand
+                # has no borders at all (its main sprites depict the
+                # transitions). Within a set the editor picks a random
+                # variant, and the terrain mirroring bits 0x01/0x02
+                # orient the border (E/W flip for the side, N/S flip
+                # for the row).
+                if terrain_name not in ("Water", "Rock", "Sand"):
+                    _borders = {}
+                    for _dname, _dx, _dy in (("NW", -1, -1), ("N", 0, -1),
+                                            ("NE", 1, -1), ("W", -1, 0),
+                                            ("E", 1, 0), ("SW", -1, 1),
+                                            ("S", 0, 1), ("SE", 1, 1)):
+                        _nt = neighbor_h3_terrain(_dx, _dy)
+                        if (_nt is None or _nt in ("Water", "Rock")
+                                or _nt == terrain_name):
+                            continue
+                        _borders[_dname] = (_nt == "Sand")
+                    if _borders:
+                        _vs_sand = (terrain_name != "Dirt") \
+                            and any(_borders.values())
+                        _edges = [d for d in ("N", "E", "S", "W")
+                                  if d in _borders]
+                        _pics = _mir = None
+                        if len(_edges) == 1:
+                            # A straight border on one side; the corner
+                            # neighbors do not change the sprite.
+                            _d = _edges[0]
+                            if _d in ("E", "W"):
+                                _pics = (24, 27) if _vs_sand else (4, 7)
+                                _mir = 0x01 if _d == "E" else 0x00
+                            else:
+                                _pics = (28, 31) if _vs_sand else (8, 11)
+                                _mir = 0x02 if _d == "S" else 0x00
+                        elif len(_edges) == 2 and set(_edges) in \
+                                ({"N", "E"}, {"E", "S"}, {"S", "W"}, {"W", "N"}):
+                            # Two adjacent sides: an outer corner.
+                            _corner = {frozenset(("N", "E")): "NE",
+                                       frozenset(("E", "S")): "SE",
+                                       frozenset(("S", "W")): "SW",
+                                       frozenset(("W", "N")): "NW"}[frozenset(_edges)]
+                            _pics = (20, 23) if _vs_sand else (0, 3)
+                            _mir = {"NW": 0x00, "NE": 0x01,
+                                    "SW": 0x02, "SE": 0x03}[_corner]
+                        elif not _edges and len(_borders) == 1:
+                            # A single diagonal neighbor: a corner tip.
+                            _corner = next(iter(_borders))
+                            _pics = (38, 39) if _vs_sand else (18, 19)
+                            _mir = {"SE": 0x00, "SW": 0x01,
+                                    "NE": 0x02, "NW": 0x03}[_corner]
+                        else:
+                            # A complex junction (opposite sides or a
+                            # many-sided tile): draw the most prominent
+                            # single side, south first.
+                            for _d in ("S", "N", "E", "W"):
+                                if _d in _borders:
+                                    if _d in ("E", "W"):
+                                        _pics = (24, 27) if _vs_sand else (4, 7)
+                                        _mir = 0x01 if _d == "E" else 0x00
+                                    else:
+                                        _pics = (28, 31) if _vs_sand else (8, 11)
+                                        _mir = 0x02 if _d == "S" else 0x00
+                                    break
+                        if _pics is not None:
+                            picture = _random.randint(*_pics)
+                            mirror_bits = (mirror_bits & ~0x03) | _mir
+
                 # Sea borders: driven by the coastal link table learned
                 # from the reference maps (coastal_link.json, see Tableau 3
                 # in coastal_tiles_h2_h3.md). Each coastal tile is keyed by
                 # the mask of its neighbors on the other side of the coast.
-                mirror_bits = int(cell.get("flags", 0) or 0) & 0x03
                 if terrain_name == "Water":
                     lmask = frozenset(d for d, dx, dy in _COAST_DIRS
                                       if neighbor_land(dx, dy))
