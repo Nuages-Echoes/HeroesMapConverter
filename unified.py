@@ -1056,6 +1056,7 @@ def unified_to_h3m(unified):
         _corner_steps = ((-1, -1, 0x01), (1, -1, 0x04),
                          (1, 1, 0x10), (-1, 1, 0x40))
         _added_roads = set()
+        _filled_step_cands = set()
         for (rx, ry, rz) in list(fh2m_road_tiles):
             _bits = fh2m_road_index.get((rx, ry, rz), 0) & 0xFF
             for _dx, _dy, _bit in _corner_steps:
@@ -1074,6 +1075,77 @@ def unified_to_h3m(unified):
                 _cx, _cy = max(_cand, key=lambda t: t[1])
                 if 0 <= _cx < map_size and 0 <= _cy < map_size:
                     _added_roads.add((_cx, _cy, rz))
+                    _filled_step_cands.update(_cand3)
+
+        # Road-end stubs (Mymaptest.h3m reference): the H2 road
+        # visually extends one tile past a dead end, and past the end
+        # of a straight run whose last tile also carries a diagonal
+        # connection that already has its orthogonal path - the H3
+        # road then starts its bend one tile further out, so the
+        # straight run keeps the visual length it has in H2.
+        _edge_dirs = {"N": (0, -1), "E": (1, 0), "S": (0, 1), "W": (-1, 0)}
+        _edge_bits = {"N": 0x02, "E": 0x08, "S": 0x20, "W": 0x80}
+        _stub_tiles = set()
+        for (rx, ry, rz) in list(fh2m_road_tiles):
+            _bits = fh2m_road_index.get((rx, ry, rz), 0) & 0xFF
+            _edges = [d for d in _edge_bits if _bits & _edge_bits[d]]
+            if len(_edges) != 1:
+                continue
+            _ex, _ey = _edge_dirs[_edges[0]]
+            _sx, _sy = rx - _ex, ry - _ey
+            _stub = (_sx, _sy, rz)
+            if (_sx < 0 or _sx >= map_size or _sy < 0 or _sy >= map_size
+                    or _stub in fh2m_road_tiles or _stub in _added_roads
+                    or (_sx, _sy, rz) in _filled_step_cands):
+                # Off the map, already a road, or the diagonal step of
+                # this end already got its corner fill: no stub.
+                continue
+            _stub_tiles.add(_stub)
+
+        # Corner stubs: a corner tile whose south neighbor and east or
+        # west neighbor form a diagonal step (the H2 corner with its
+        # diagonal shortcut on the south side) keeps the visual width
+        # of the H2 corner - extend the horizontal one tile away from
+        # the vertical (Mymaptest.h3m reference; the corners with the
+        # shortcut on the north side get no stub).
+        for (rx, ry, rz) in list(fh2m_road_tiles):
+            if (rx, ry, rz) in _added_roads or (rx, ry, rz) in _stub_tiles:
+                continue
+            _bits = fh2m_road_index.get((rx, ry, rz), 0) & 0xFF
+            _edges = [d for d in _edge_bits if _bits & _edge_bits[d]]
+            if (len(_edges) != 2 or "S" not in _edges
+                    or ("E" in _edges) == ("W" in _edges)):
+                continue
+            _horiz = "E" if "E" in _edges else "W"
+            _s_nbr = (rx, ry + 1)
+            _h_nbr = (rx + (1 if _horiz == "E" else -1), ry)
+            if (_s_nbr[0], _s_nbr[1], rz) not in fh2m_road_tiles \
+                    or (_h_nbr[0], _h_nbr[1], rz) not in fh2m_road_tiles:
+                continue
+            _s_bits = fh2m_road_index.get(
+                (_s_nbr[0], _s_nbr[1], rz), 0) & 0xFF
+            _brace_bit = 0x04 if _horiz == "E" else 0x01
+            if not _s_bits & _brace_bit:
+                continue
+            _hx, _hy = _edge_dirs[_horiz]
+            _sx, _sy = rx - _hx, ry - _hy
+            _stub = (_sx, _sy, rz)
+            if (0 <= _sx < map_size and 0 <= _sy < map_size
+                    and _stub not in fh2m_road_tiles
+                    and _stub not in _added_roads
+                    and _stub not in _stub_tiles):
+                _stub_tiles.add(_stub)
+        fh2m_road_tiles |= _stub_tiles
+        for _tile in _stub_tiles:
+            _tx, _ty, _tz = _tile
+            _mask = 0
+            for _i in range(9):
+                if _i == 4:
+                    continue
+                if (_tx + _i % 3 - 1, _ty + _i // 3 - 1, _tz) \
+                        in fh2m_road_tiles:
+                    _mask |= 1 << _i
+            fh2m_road_index[_tile] = _mask
         fh2m_road_tiles |= _added_roads
         for _tile in _added_roads:
             # The added tile carries no H2 mask: derive the fallback
