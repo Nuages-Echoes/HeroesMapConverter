@@ -3641,12 +3641,13 @@ FH2M_TO_H3M_MISC = {
     "MISC_14": (57, 0),   # Obelisk, wasteland
     "MISC_15": (57, 0),   # Obelisk, dirt
     # WATER: bottle -> bottle (59), buoy -> buoy (11), sea chest ->
-    # sea chest (82), flotsam -> flotsam (29), shipwreck survivor
-    # -> shipwreck survivor (86).
+    # sea chest (82), flotsam -> flotsam (29), boat -> boat (8),
+    # shipwreck survivor -> shipwreck survivor (86).
     "WATER_0": (59, 0),  # Bottle
     "WATER_1": (82, 0),  # Sea Chest
     "WATER_2": (29, 0),  # Flotsam
     "WATER_3": (11, 0),  # Buoy
+    "WATER_4": (8, 1),   # Boat
     "WATER_5": (86, 0),  # Shipwreck Survivor
     "WATER_10": (52, 0),  # Mermaid
     "WATER_11": (92, 0),  # Sirens
