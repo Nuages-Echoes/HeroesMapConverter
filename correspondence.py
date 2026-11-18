@@ -1101,10 +1101,15 @@ FH2M_TO_H3M_DWELLINGS = {
     18: (17, 70),  # Centaur -> Troglodyte
     19: (17, 70),  # Centaur -> Troglodyte
     20: (17, 0),  # Ghost -> ?
-    21: (17, 94),  # Cyclops -> Cyclops
-    22: (17, 14),  # Sprite -> Centaur
-    23: (17, 16),  # Dwarf -> Dwarf
-    24: (17, 17),  # Battle Dwarf -> Battle Dwarf
+    # Indices 21-24 are the elemental summoning altars (fheroes2
+    # populateAdventureDwellings): Earth/Air/Fire/Water Summoning
+    # Altar -> the matching H3 elemental altar dwelling (h3m class 17
+    # with the elemental creature id: 113 Earth, 112 Air, 114 Fire,
+    # 115 Water).
+    21: (17, 113),  # Earth Summoning Altar -> Earth Elemental
+    22: (17, 112),  # Air Summoning Altar -> Air Elemental
+    23: (17, 114),  # Fire Summoning Altar -> Fire Elemental
+    24: (17, 115),  # Water Summoning Altar -> Water Elemental
 }
 
 
