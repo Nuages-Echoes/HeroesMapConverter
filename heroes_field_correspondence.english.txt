@@ -1168,7 +1168,11 @@ quest messages, garrison canTake, event players flags).
    of Anduran, Broach of Shielding, Battle Garb, Crystal Ball, Heart
    of Fire, Heart of Ice, Helmet of Anduran, Holy Hammer, Legendary
    Scepter, Masthead, Sphere of Negation, Staff of Wizardry, Sword
-   Breaker, Sword of Anduran, Spade of Necromancy).
+   Breaker, Sword of Anduran, Spade of Necromancy) are not dropped
+   anymore: they convert to the h3m random artifact of the same
+   Heroes II class through FH2M_ARTIFACT_CLASSES (Treasure -> 66,
+   Minor -> 67, Major -> 68, Relic/loyalty -> 69), the inverse of the
+   h3m -> fh2m fallback above.
 
 
 ████████████████████████████████████████████████████████████████████████
