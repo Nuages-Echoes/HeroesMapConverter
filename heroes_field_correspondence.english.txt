@@ -734,7 +734,8 @@ quest messages, garrison canTake, event players flags).
      (0 wood ... 6 gold)
    - ADVENTURE_ARTIFACTS: h3m artifact -> fh2m artifact (index follows
      the fheroes2 ADVENTURE_ARTIFACTS group order); random h3m
-     artifacts become fh2m random artifacts; artifacts with no Heroes
+     artifacts (classes 65-69) become the fh2m random artifacts
+     (group indices 91-95, one per class); artifacts with no Heroes
      II equivalent become the fh2m random artifact of the same
      Heroes III class through H3M_ARTIFACT_CLASSES (Treasure ->
      Random Treasure, Minor -> Random Minor, Major -> Random Major;
