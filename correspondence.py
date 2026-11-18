@@ -4469,6 +4469,30 @@ H3M_ARTIFACT_CLASSES = {
     123: 4, 124: 4,                                 # Sea Captain's/Spellbinder's
     39: 3, 40: 4,                                   # dragon scale shield/armor
     31: 2,                                          # Armor of Wonder
+    # spell book/scroll/grail and the war machines are relic-class (the
+    # war machines are never rolled randomly; the class only serves the
+    # no-equivalent fallback); campaign uniques are relics too.
+    0: 4, 1: 4, 2: 4, 3: 4, 6: 4, 35: 4, 38: 4, 67: 4,
+    69: 2, 70: 1, 77: 2,                             # rings / gloves
+}
+
+# fh2m artifact id -> Heroes II artifact class: 1 Treasure, 2 Minor,
+# 3 Major, 4 Relic (the Price of Loyalty and "no random" uniques are
+# bucketed as relics, the class H3 uses for its unique artifacts).
+# Source: fheroes2 Artifact::Level() (src/fheroes2/resource/artifact.cpp).
+FH2M_ARTIFACT_CLASSES = {
+    # treasure
+    **{i: 1 for i in (13, 14, 15, 16, 18, 19, 20, 21, 36, 37, 38, 39, 43,
+                      46, 47, 48, 52, 56, 57, 58, 59, 60, 61, 62, 64, 65, 66)},
+    # minor
+    **{i: 2 for i in (10, 11, 23, 25, 27, 33, 41, 42, 44, 45, 49, 50, 51,
+                      53, 54, 55, 68, 69, 75, 76, 78, 80)},
+    # major
+    **{i: 3 for i in (9, 12, 22, 24, 26, 28, 29, 30, 31, 32, 34, 35, 40,
+                      63, 67, 72, 73, 74, 77, 79, 81)},
+    # relic: "no random" uniques and the Price of Loyalty artifacts (88-103)
+    **{i: 4 for i in (17, 70, 71, 82, 87)},
+    **{i: 4 for i in range(88, 104)},
 }
 
 # h3m artifact id -> fh2m artifact id (fheroes2 Artifact enum); -1

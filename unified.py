@@ -3377,8 +3377,20 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
                         artifact = index + 13
                     h3m_artifact = FH2M_TO_H3M_ARTIFACTS.get(artifact)
                     if h3m_artifact is None:
-                        continue
-                    entry = ("artifact", (x, y, z), (5, h3m_artifact), None)
+                        # No h3m equivalent: fall back to the h3m random
+                        # artifact of the same Heroes II class (Treasure ->
+                        # 66, Minor -> 67, Major -> 68, Relic -> 69), the
+                        # inverse of the h3m -> fh2m fallback.
+                        from correspondence import FH2M_ARTIFACT_CLASSES
+                        fh2m_class = FH2M_ARTIFACT_CLASSES.get(artifact)
+                        if fh2m_class is None:
+                            continue
+                        h3m_artifact = {1: 66, 2: 67, 3: 68, 4: 69}.get(fh2m_class)
+                        if h3m_artifact is None:
+                            continue
+                        entry = ("artifact", (x, y, z), (h3m_artifact, 0), None)
+                    else:
+                        entry = ("artifact", (x, y, z), (5, h3m_artifact), None)
             elif group == "ADVENTURE_MISCELLANEOUS" and index == 0:
                 entry = ("sign", (x, y, z), (91, 0), None)
             elif group == "KINGDOM_HEROES":
