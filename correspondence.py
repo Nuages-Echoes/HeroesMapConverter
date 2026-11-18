@@ -3568,7 +3568,7 @@ FH2M_TO_H3M_MISC = {
     # MISC: windmills -> windmill (112), lean-tos -> lean-to (39),
     # signs -> sign (91), water wheels -> water wheel (109),
     # witch's hut -> witch hut (113), stone liths -> two-way
-    # monolith (42), daemon caves -> subterranean gate? no: dropped,
+    # monolith (45), daemon caves -> subterranean gate? no: dropped,
     # sphinx -> seer hut (83) [the sphinx riddle], magic garden ->
     # ... dropped, trading post -> market of trading? (7) dropped.
     "MISC_4": (112, 0),   # Windmill, grass
@@ -3584,9 +3584,14 @@ FH2M_TO_H3M_MISC = {
     "MISC_23": (109, 0),  # Water wheel, snow
     "MISC_24": (109, 0),  # Water wheel, generic
     "MISC_26": (113, 0),  # Witch's Hut, swamp
-    "MISC_35": (42, 0),   # Stone Liths, generic
-    "MISC_36": (42, 0),   # Stone Liths, generic 2
-    "MISC_37": (42, 0),   # Stone Liths, Resurrection variant
+    # The Stone Liths are the Heroes II teleportation portals (two-way
+    # only in H2): they convert to the h3m two-way monolith (45), the
+    # H3 land teleporter. All variants map to the same color
+    # (subclass 0, green) so the whole family stays one monolith
+    # family, as in H2 where all liths are interlinked.
+    "MISC_35": (45, 0),   # Stone Liths, generic -> two-way monolith (green)
+    "MISC_36": (45, 0),   # Stone Liths, generic 2 -> two-way monolith (green)
+    "MISC_37": (45, 0),   # Stone Liths, Resurrection variant -> two-way monolith (green)
     # The Observation Tower converts to the h3m Redwood Observatory
     # (class 58, AvXRedW.def) - the inverse of the h3m -> fh2m
     # pairing; the class 99 is the Trading Post, not a lookout tower.
@@ -3649,6 +3654,7 @@ FH2M_TO_H3M_MISC = {
     "WATER_3": (11, 0),  # Buoy
     "WATER_4": (8, 1),   # Boat
     "WATER_5": (86, 0),  # Shipwreck Survivor
+    "WATER_7": (111, 0),  # Whirlpool -> whirlpool (the H3 water teleporter)
     "WATER_10": (52, 0),  # Mermaid
     "WATER_11": (92, 0),  # Sirens
 }
@@ -3656,8 +3662,10 @@ FH2M_TO_H3M_MISC = {
 
 # h3m interactive classes with a Heroes II object equivalent,
 # mapped in the h3m -> fh2m direction (the inverse pairs of the
-# FH2M_TO_H3M_MISC table): two-way monolith -> Stone Liths, magic
-# well -> Magic Well, mystical garden -> Magic Garden, redwood
+# FH2M_TO_H3M_MISC table): the teleportation portals stay portals -
+# two-way monolith and both one-way monoliths -> Stone Liths
+# (H2 has a single two-way lith family), whirlpool -> Whirlpool;
+# magic well -> Magic Well, mystical garden -> Magic Garden, redwood
 # observatory -> Observation Tower, learning stone -> Gazebo,
 # water wheel -> Water Wheel, windmill -> Windmill.
 H3M_TO_FH2M_INTERACTIVE = {
