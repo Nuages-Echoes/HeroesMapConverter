@@ -1074,42 +1074,140 @@ FH2M_TO_H3M_STREAMS = {
     12: (10, 0x00),  # vertical line N-S, variant
 }
 
+# h3m dwelling (class 17) sprite entries, from the original game's
+# Objects.txt: the subclass is the DWELLING id (0-79), not the
+# creature id, and the def is the adventure sprite (AVG*), with
+# the exact passability body. The elemental altars are dwellings
+# 7/13/16/47 (Air/Earth/Fire/Water altar); the AVWelm* defs are the
+# class-54 battle sprites of the elementals, not the altars.
+H3M_DWELLING_DEFS = {
+    0: ("AVGbasl0.def", "ffffffffff3f000000000080ff01ff00", "000000000000000000000000000000000000"),
+    1: ("AVGbhmt0.def", "ffffffffff3f000000000080ff01ff00", "000000000000000000000000000000000000"),
+    2: ("AVGbhld0.def", "ffffffffff3f000000000040ff01ff00", "000000000000000000000000000000000000"),
+    3: ("AVGbkni0.def", "ffffffffff3f000000000080ff01ff00", "000000000000000000000000000000000000"),
+    4: ("AVGbone0.def", "ffffffffff3f000000000040ff01ff00", "000000000000000000000000000000000000"),
+    5: ("AVGcavl0.def", "ffffffffff3f000000000080ff01ff00", "000000000000000000000000000000000000"),
+    6: ("AVGcent0.def", "ffffffffff3f000000000080ff01ff00", "000000000000000000000000000000000000"),
+    7: ("AVGair0.def", "ffffffffff1f000000000040ff01ff00", "000000000000000000000000000000000000"),
+    8: ("AVGangl0.def", "ffffffffff9f000000000040ff01ff00", "000000000000000000000000000000000000"),
+    9: ("AVGcycl0.def", "ffffffffff3f000000000080ff01ff00", "000000000000000000000000000000000000"),
+    10: ("AVGdevl0.def", "ffffffffff3f000000000080ff01ff00", "000000000000000000000000000000000000"),
+    11: ("AVGdfly0.def", "ffffffffff3f000000000080ff01ff00", "000000000000000000000000000000000000"),
+    12: ("AVGdwrf0.def", "ffffffffff3f000000000040ff01ff00", "000000000000000000000000000000000000"),
+    13: ("AVGerth0.def", "ffffffffff1f000000000040ff01ff00", "000000000000000000000000000000000000"),
+    14: ("AVGefre0.def", "ffffffffff3f000000000040ff01ff00", "000000000000000000000000000000000000"),
+    15: ("AVGelf0.def", "ffffffffff3f000000000040ff01ff00", "000000000000000000000000000000000000"),
+    16: ("AVGfire0.def", "ffffffffff1f000000000040ff01ff00", "000000000000000000000000000000000000"),
+    17: ("AVGgarg0.def", "ffffffffff3f000000000080ff01ff00", "000000000000000000000000000000000000"),
+    18: ("AVGgeni0.def", "ffffffffff3f000000000080ff01ff00", "000000000000000000000000000000000000"),
+    19: ("AVGwolf0.def", "ffffffffbf3f000000000080ff01ff00", "000000000000000000000000000000000000"),
+    20: ("AVGgnll0.def", "ffffffffff3f000000000080ff01ff00", "000000000000000000000000000000000000"),
+    21: ("AVGgobl0.def", "ffffffffff3f000000000080ff01ff00", "000000000000000000000000000000000000"),
+    22: ("AVGgogs0.def", "ffffffffff3f000000000040ff01ff00", "000000000000000000000000000000000000"),
+    23: ("AVGgorg0.def", "ffffffffff3f000000000080ff01ff00", "000000000000000000000000000000000000"),
+    24: ("AVGgdrg0.def", "ffffffffff3f000000000080ff01ff00", "000000000000000000000000000000000000"),
+    25: ("AVGgrff0.def", "ffffffffff3f000000000080ff01ff00", "000000000000000000000000000000000000"),
+    26: ("AVGharp0.def", "ffffffffff3f000000000080ff01ff00", "000000000000000000000000000000000000"),
+    27: ("AVGhell0.def", "ffffffffff3f000000000080ff01ff00", "000000000000000000000000000000000000"),
+    28: ("AVGhydr0.def", "ffffffffff3f000000000040ff01ff00", "000000000000000000000000000000000000"),
+    29: ("AVGimp0.def", "ffffffffff3f000000000080ff01ff00", "000000000000000000000000000000000000"),
+    30: ("AVGlzrd0.def", "ffffffffff3f000000000080ff01ff00", "000000000000000000000000000000000000"),
+    31: ("AVGmage0.def", "ffffffffff3f000000000080ff01ff00", "000000000000000000000000000000000000"),
+    32: ("AVGmant0.def", "ffffffffff3f000000000080ff01ff00", "000000000000000000000000000000000000"),
+    33: ("AVGmdsa0.def", "ffffffffff3f000000000080ff01ff00", "000000000000000000000000000000000000"),
+    34: ("AVGmino0.def", "ffffffffff3f000000000040ff01ff00", "000000000000000000000000000000000000"),
+    35: ("AVGmonk0.def", "ffffffffff3f000000000080ff01ff00", "000000000000000000000000000000000000"),
+    36: ("AVGnaga0.def", "ffffffff3f3f000000000080ff01ff00", "000000000000000000000000000000000000"),
+    37: ("AVGdemn0.def", "ffffffffff3f000000000080ff01ff00", "000000000000000000000000000000000000"),
+    38: ("AVGogre0.def", "ffffffff3f3f000000000080ff01ff00", "000000000000000000000000000000000000"),
+    39: ("AVGorcg0.def", "ffffffffff3f000000000080ff01ff00", "000000000000000000000000000000000000"),
+    40: ("AVGpit0.def", "ffffffffff3f000000000080ff01ff00", "000000000000000000000000000000000000"),
+    41: ("AVGrdrg0.def", "ffffffffff3f000000000040ff01ff00", "000000000000000000000000000000000000"),
+    42: ("AVGrocs0.def", "ffffffffff3f000000000080ff01ff00", "000000000000000000000000000000000000"),
+    43: ("AVGgrem0.def", "ffffffffff3f000000000080ff01ff00", "000000000000000000000000000000000000"),
+    44: ("AVGtitn0.def", "ffffffffbf3f000000000080ff01ff00", "000000000000000000000000000000000000"),
+    45: ("AVGtree0.def", "ffffffffff3f000000000080ff01ff00", "000000000000000000000000000000000000"),
+    46: ("AVGtrog0.def", "ffffffffff3f000000000080ff01ff00", "000000000000000000000000000000000000"),
+    47: ("AVGwatr0.def", "ffffffffbf1f000000000040ff01ff00", "000000000000000000000000000000000000"),
+    48: ("AVGwght0.def", "ffffffffff3f000000000040ff01ff00", "000000000000000000000000000000000000"),
+    49: ("AVGwyvn0.def", "ffffffffff3f000000000040ff01ff00", "000000000000000000000000000000000000"),
+    50: ("AVGpega0.def", "ffffffffff3f000000000080ff01ff00", "000000000000000000000000000000000000"),
+    51: ("AVGunic0.def", "ffffffff9f1f000000000040ff01ff00", "000000000000000000000000000000000000"),
+    52: ("AVGlich0.def", "ffffffffff3f000000000080ff01ff00", "000000000000000000000000000000000000"),
+    53: ("AVGvamp0.def", "ffffffffff3f000000000040ff01ff00", "000000000000000000000000000000000000"),
+    54: ("AVGskel0.def", "ffffffffff3f000000000080ff01ff00", "000000000000000000000000000000000000"),
+    55: ("AVGzomb0.def", "ffffffffff3f000000000080ff01ff00", "000000000000000000000000000000000000"),
+    56: ("AVGpike0.def", "ffffffffbf3f000000000080ff01ff00", "000000000000000000000000000000000000"),
+    57: ("AVGcros0.def", "ffffffffff3f000000000040ff01ff00", "000000000000000000000000000000000000"),
+    58: ("AVGswor0.def", "ffffffffff3f000000000080ff01ff00", "000000000000000000000000000000000000"),
+    59: ("AVGpixie.def", "ffffffffff3f000000000080ff01ff00", "000000000000000000000000000000000000"),
+    60: ("AVGelp.def", "ffffffffff3f000000000080ff01ff00", "000000000000000000000000000000000000"),
+    61: ("AVGfbrd.def", "ffffffffff3f000000000080ff01ff00", "000000000000000000000000000000000000"),
+    62: ("AVGazur.def", "ffffffffff3f000000000080ff01ff00", "000000000000000000000000000000000000"),
+    63: ("AVGcdrg.def", "ffffffffff3f000000000080ff01ff00", "000000000000000000000000000000000000"),
+    64: ("AVGfdrg.def", "ffffffffff3f000000000080ff01ff00", "000000000000000000000000000000000000"),
+    65: ("AVGrust.def", "ffffffffff3f000000000080ff01ff00", "000000000000000000000000000000000000"),
+    66: ("AVGench.def", "ffffffffff3f000000000080ff01ff00", "000000000000000000000000000000000000"),
+    67: ("AVGshrp.def", "ffffffffff3f000000000080ff01ff00", "000000000000000000000000000000000000"),
+    68: ("AVG2uni.def", "ffffffffff3f000000000080ff01ff00", "000000000000000000000000000000000000"),
+    69: ("AVG2ela.def", "ffffffffff3f000000000080ff01ff00", "000000000000000000000000000000000000"),
+    70: ("AVG2ele.def", "ffffffffff3f000000000080ff01ff00", "000000000000000000000000000000000000"),
+    71: ("AVG2elf.def", "ffffffffff3f000000000080ff01ff00", "000000000000000000000000000000000000"),
+    72: ("AVG2elw.def", "ffffffffff3f000000000080ff01ff00", "000000000000000000000000000000000000"),
+    73: ("AVGhalf.def", "ffffffffff3f000000000080ff01ff00", "000000000000000000000000000000000000"),
+    74: ("AVGpeas.def", "ffffffffff3f000000000080ff01ff00", "000000000000000000000000000000000000"),
+    75: ("AVGboar.def", "ffffffff3f3f000000000080ff01ff00", "000000000000000000000000000000000000"),
+    76: ("AVGmumy.def", "ffffffff3f3f000000000040ff01ff00", "000000000000000000000000000000000000"),
+    77: ("AVGnomd.def", "ffffffffff3f000000000080ff01ff00", "000000000000000000000000000000000000"),
+    78: ("AVGrog.def", "ffffffffff3f000000000080ff01ff00", "000000000000000000000000000000000000"),
+    79: ("AVGtrll.def", "ffffffffbf3f000000000080ff01ff00", "000000000000000000000000000000000000"),
+}
+
+
 # fh2m dwelling object index -> h3m (class, subclass). The Heroes
 # II dwellings house a Heroes II creature; the h3m dwelling class
-# 17 carries the paired h3m creature id as its subclass (see the
-# FH2M_TO_H3M_MONSTERS creature table). The dwellings whose
-# creature has no h3m pairing map to subclass 0.
+# 17 carries the DWELLING id as its subclass (see H3M_DWELLING_DEFS):
+# the paired h3m creature of the FH2M_TO_H3M_MONSTERS table is
+# translated to its dwelling id.
 FH2M_TO_H3M_DWELLINGS = {
-    0: (17, 0),  # Peasant -> Pikeman
-    1: (17, 144),  # Medusa -> Troll
-    2: (17, 14),  # Sprite -> Centaur
-    3: (17, 86),  # Orc -> Goblin Wolf Rider
-    4: (17, 86),  # Orc -> Goblin Wolf Rider
-    5: (17, 28),  # Halfling -> Gremlin
-    6: (17, 28),  # Halfling -> Gremlin
-    7: (17, 14),  # Sprite -> Centaur
-    8: (17, 14),  # Sprite -> Centaur
-    9: (17, 140),  # Nomad -> Boar
-    10: (17, 64),  # Lich -> Lich
-    11: (17, 56),  # Skeleton -> Skeleton
-    12: (17, 92),  # Troll -> Roc
-    13: (17, 2),  # Archer -> Archer
-    14: (17, 84),  # Goblin -> Goblin
-    15: (17, 16),  # Dwarf -> Dwarf
-    16: (17, 91),  # Ogre Lord -> Ogre Mage
-    17: (17, 138),  # Rogue -> Halfling
-    18: (17, 70),  # Centaur -> Troglodyte
-    19: (17, 70),  # Centaur -> Troglodyte
-    20: (17, 0),  # Ghost -> ?
+    0: (17, 56),  # Peasant -> Pikeman dwelling
+    1: (17, 79),  # Medusa -> Troll dwelling
+    2: (17, 6),   # Sprite -> Centaur dwelling
+    3: (17, 19),  # Orc -> Goblin Wolf Rider dwelling
+    4: (17, 19),  # Orc -> Goblin Wolf Rider dwelling
+    5: (17, 43),  # Halfling -> Gremlin dwelling
+    6: (17, 43),  # Halfling -> Gremlin dwelling
+    7: (17, 6),   # Sprite -> Centaur dwelling
+    8: (17, 6),   # Sprite -> Centaur dwelling
+    9: (17, 75),  # Nomad -> Boar dwelling
+    10: (17, 52), # Lich -> Lich dwelling
+    11: (17, 54), # Skeleton -> Skeleton dwelling
+    12: (17, 48), # Troll -> Roc dwelling
+    13: (17, 57), # Archer -> Crossbowman dwelling
+    14: (17, 21), # Goblin -> Goblin dwelling
+    15: (17, 12), # Dwarf -> Dwarf dwelling
+    16: (17, 38), # Ogre Lord -> Ogre dwelling
+    17: (17, 73), # Rogue -> Halfling dwelling
+    18: (17, 46), # Centaur -> Troglodyte dwelling
+    19: (17, 46), # Centaur -> Troglodyte dwelling
+    20: (17, 56), # Ghost -> Pikeman dwelling
     # Indices 21-24 are the elemental summoning altars (fheroes2
     # populateAdventureDwellings): Earth/Air/Fire/Water Summoning
-    # Altar -> the matching H3 elemental altar dwelling (h3m class 17
-    # with the elemental creature id: 113 Earth, 112 Air, 114 Fire,
-    # 115 Water).
-    21: (17, 113),  # Earth Summoning Altar -> Earth Elemental
-    22: (17, 112),  # Air Summoning Altar -> Air Elemental
-    23: (17, 114),  # Fire Summoning Altar -> Fire Elemental
-    24: (17, 115),  # Water Summoning Altar -> Water Elemental
+    # Altar -> the matching H3 elemental altar dwelling (dwelling
+    # ids 13/7/16/47, AVGerth0/AVGair0/AVGfire0/AVGwatr0.def).
+    21: (17, 13), # Earth Summoning Altar -> Altar of Earth
+    22: (17, 7),  # Air Summoning Altar -> Altar of Air
+    23: (17, 16), # Fire Summoning Altar -> Altar of Fire
+    24: (17, 47), # Water Summoning Altar -> Altar of Water
+}
+
+
+# Inverse of FH2M_TO_H3M_DWELLINGS (the first fh2m index wins on
+# shared dwellings), for the h3m -> fh2m direction.
+H3M_TO_FH2M_DWELLINGS = {
+    56: 0, 79: 1, 6: 2, 19: 3, 43: 5, 75: 9, 52: 10, 54: 11, 48: 12,
+    57: 13, 21: 14, 12: 15, 38: 16, 73: 17, 46: 18, 13: 21, 7: 22,
+    16: 23, 47: 24,
 }
 
 
