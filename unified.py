@@ -1778,15 +1778,17 @@ def _translate_h3m_tile_objects(obj_list, objects_section, translated_metadata,
                     ("selected", []),
                 ])
                 continue
-            # The fh2m ADVENTURE_ARTIFACTS group lists the artifacts
-            # from the Arcane Necklace (fheroes2 id 9) up to Magic Book,
-            # then the Price of Loyalty artifacts starting at Spell
-            # Scroll (fheroes2 id 88). The map object index follows this
-            # order (see map_object_info.cpp, populateAdventureArtifacts).
+            # The fh2m ADVENTURE_ARTIFACTS group order (see
+            # map_object_info.cpp, populateAdventureArtifacts): artifact
+            # ids 9-81 at indices 0-72, Magic Book (id 82) at index 73,
+            # the Price of Loyalty ids 87-103 at indices 74-90, then the
+            # 5 random artifacts at 91-95.
             if fh2m_artifact <= 81:
                 fh2m_index = fh2m_artifact - 9
+            elif fh2m_artifact == 82:
+                fh2m_index = 73
             else:
-                fh2m_index = 73 + (fh2m_artifact - 88)
+                fh2m_index = fh2m_artifact - 13
             if fh2m_index < 0:
                 dropped_ids.append(obj_id)
                 continue
@@ -3364,7 +3366,15 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
                              (65 + {91: 0, 92: 1, 93: 2, 94: 3, 95: 4}[index], 0),
                              None)
                 else:
-                    artifact = index + 1
+                    # Inverse of the h3m -> fh2m index computation above:
+                    # ids 9-81 at indices 0-72, Magic Book (82) at 73,
+                    # Price of Loyalty ids 87-103 at indices 74-90.
+                    if index <= 72:
+                        artifact = index + 9
+                    elif index == 73:
+                        artifact = 82
+                    else:
+                        artifact = index + 13
                     h3m_artifact = FH2M_TO_H3M_ARTIFACTS.get(artifact)
                     if h3m_artifact is None:
                         continue
@@ -3585,11 +3595,6 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
             catalog_keys.append(key)
             catalog_entries.append(ref)
 
-    # Drop the instances whose sprite is unknown.
-    instances = [e for e in instances if e[2] in kind_of]
-    if not instances:
-        return None
-
     # The game resolves random monsters against the map's own catalog
     # (NewfullMap::findObjectType in game::convertObject): a class-54 def
     # must exist for every creature id the game can roll (below
@@ -3598,7 +3603,9 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
     # body (passable FF FF FF FF FF 7F, all lands, group 2) observed in
     # the real maps. Ids 145+ are war machines or unused slots: never
     # rolled, and several have no def in the game data (the real maps
-    # only carry defs that exist), so they are skipped.
+    # only carry defs that exist), so they are skipped. This backfill
+    # runs BEFORE the unknown-sprite filter below so that fixed monsters
+    # (class 54) survive it: every rollable creature id gets a def.
     for creature_id, def_name in H3M_CREATURE_DEF_NAMES.items():
         if creature_id >= 145 or not def_name.lower().endswith(".def"):
             continue
@@ -3616,6 +3623,33 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
         kind_of[key] = len(catalog_keys)
         catalog_keys.append(key)
         catalog_entries.append((def_name, body[:16].hex(), body[24:].hex()))
+
+    # Fixed artifacts (class 5) used by the instances but absent from
+    # the reference catalog get their def backfilled as well: they all
+    # follow the AVA%04d.def naming with the standard artifact body
+    # (passable FF FF FF FF FF 7F, all lands, editor group 4) observed
+    # in the real maps' catalog.
+    for entry in instances:
+        key = entry[2]
+        if key[0] == 5 and len(key) == 2 and key not in kind_of:
+            body = bytearray(42)
+            body[0:6] = bytes.fromhex("ffffffffff7f")       # passable cells
+            body[6:12] = bytes.fromhex("000000000080")      # actionable cells
+            body[12:14] = bytes.fromhex("ff01")             # allowed landscapes
+            body[14:16] = bytes.fromhex("0100")             # landscape group
+            body[16:24] = struct.pack("<II", 5, key[1])
+            body[24] = 4                                    # editor group: artifacts
+            body[25:42] = b"\x00" * 17                      # above + 16 unknown
+            kind_of[key] = len(catalog_keys)
+            catalog_keys.append(key)
+            catalog_entries.append(("AVA%04d.def" % key[1],
+                                    body[:16].hex(), body[24:].hex()))
+
+    # Drop the instances whose sprite is unknown.
+    instances = [e for e in instances if e[2] in kind_of]
+    if not instances:
+        return None
+
     buffer = BytesIO()
     buffer.write(struct.pack("<I", len(catalog_entries)))
     for i, key in enumerate(catalog_keys):
