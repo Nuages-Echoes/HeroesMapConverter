@@ -3657,6 +3657,27 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
             catalog_entries.append(("AVA%04d.def" % key[1],
                                     body[:16].hex(), body[24:].hex()))
 
+    # Dwellings (class 17) used by the instances but absent from the
+    # reference catalog get their def backfilled too, with the
+    # creature's def name (it exists in the game data) and the standard
+    # dwelling body observed in the real maps' catalog.
+    for entry in instances:
+        key = entry[2]
+        if key[0] == 17 and len(key) == 2 and key not in kind_of:
+            def_name = H3M_CREATURE_DEF_NAMES.get(key[1])
+            if not def_name:
+                continue
+            body = bytearray(42)
+            body[0:6] = bytes.fromhex("ffffffffff3f")       # passable cells
+            body[6:12] = bytes.fromhex("000000000080")      # actionable cells
+            body[12:14] = bytes.fromhex("ff01")             # allowed landscapes
+            body[14:16] = bytes.fromhex("ff00")             # landscape group
+            body[16:24] = struct.pack("<II", 17, key[1])
+            body[25:42] = b"\x00" * 17                      # above + 16 unknown
+            kind_of[key] = len(catalog_keys)
+            catalog_keys.append(key)
+            catalog_entries.append((def_name, body[:16].hex(), body[24:].hex()))
+
     # Drop the instances whose sprite is unknown.
     instances = [e for e in instances if e[2] in kind_of]
     if not instances:
