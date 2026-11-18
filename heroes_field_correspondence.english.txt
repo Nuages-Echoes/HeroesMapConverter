@@ -529,7 +529,12 @@ quest messages, garrison canTake, event players flags).
    instances in the reference maps; appearances without a reference
    def fall back to the type's generic def), the dwellings through
    FH2M_TO_H3M_DWELLINGS (25 entries: the dwelling creature pairs
-   to the h3m creature of the FH2M_TO_H3M_MONSTERS table), the
+   to the h3m creature of the FH2M_TO_H3M_MONSTERS table, then to
+   that creature's h3m dwelling id; the sprite and passability body
+   come from H3M_DWELLING_DEFS, the original Objects.txt class-17
+   table - the elemental summoning altars 21-24 are the h3m
+   dwellings 13/7/16/47 with the AVGair0/AVGerth0/AVGfire0/
+   AVGwatr0.def altar sprites, not the AVWelm* battle sprites), the
    heroes (class 34, the hero type being the first h3m hero of the
    paired faction, sprite AH0<type>00.DEF, with the full RoE hero
    layout: the custom name, the experience, the secondary skills
@@ -761,7 +766,11 @@ quest messages, garrison canTake, event players flags).
      (read from the tile terrain when the def has no terrain variant,
      e.g. the sulfur mine), so index = appearance * 5 + resource for
      the resource mines, 40 + appearance for the abandoned mines and
-     the sawmill/alchemist slots for subs 0/1
+     the sawmill/alchemist slots for subs 0/1. The h3m class 17
+     dwellings convert back to the fh2m dwelling index through
+     H3M_TO_FH2M_DWELLINGS (subclass = dwelling id; the elemental
+     altars 7/13/16/47 go back to fh2m indices 22/21/23/24), other
+     ownables fall back to index 0
    - KINGDOM_TOWNS: translated with the fh2m race from the h3m town
      type (see the town/race table above) and a castleMetadata
      carrying the custom name, the garrison creatures as defenders

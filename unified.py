@@ -1887,6 +1887,12 @@ def _translate_h3m_tile_objects(obj_list, objects_section, translated_metadata,
                 fh2m_index = h3m_mine_to_fh2m_index(obj.get("subclass"),
                                                     obj.get("sprite"),
                                                     tile_terrain)
+            elif group == "ADVENTURE_DWELLINGS" and obj.get("class") == 17:
+                # The h3m dwelling (class 17, subclass = dwelling id)
+                # converts back to the fh2m dwelling index; dwellings
+                # with no fh2m pairing fall back to index 0.
+                from correspondence import H3M_TO_FH2M_DWELLINGS
+                fh2m_index = H3M_TO_FH2M_DWELLINGS.get(obj.get("subclass"), 0)
             else:
                 fh2m_index = 0
             translated.append(OrderedDict([
@@ -3273,7 +3279,8 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
                                   FH2M_TO_H3M_MONSTERS,
                                   FH2M_TO_H3M_ARTIFACTS,
                                   FH2M_TO_H3M_RESOURCES,
-                                  H3M_CREATURE_DEF_NAMES)
+                                  H3M_CREATURE_DEF_NAMES,
+                                  H3M_DWELLING_DEFS)
 
     objects_section = unified.get("objects") or {}
     tiles = objects_section.get("tiles") or {}
@@ -3495,7 +3502,7 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
                              (h3m_mine[0], h3m_mine[1], def_name), None)
             elif group == "ADVENTURE_DWELLINGS":
                 # The fh2m dwelling index maps to the h3m ownable
-                # dwelling (class 17, subclass = creature id).
+                # dwelling (class 17, subclass = dwelling id).
                 from correspondence import FH2M_TO_H3M_DWELLINGS
                 h3m_dwelling = FH2M_TO_H3M_DWELLINGS.get(index)
                 if h3m_dwelling is not None:
@@ -3587,6 +3594,11 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
                        or FH2M_TO_H3M_CATALOG.get((key[0], key[1])))
             else:
                 ref = FH2M_TO_H3M_CATALOG.get(key)
+                if ref is None and obj_class == 17:
+                    # Dwellings missing from the reference catalog get
+                    # their def and passability body from the original
+                    # game's Objects.txt (every dwelling id 0-79).
+                    ref = H3M_DWELLING_DEFS.get(obj_subclass)
             if ref is None and obj_class == 34:
                 # The hero template subclass is the hero CLASS and
                 # the sprite is the class sprite AH<class>_E.DEF (the
@@ -3656,27 +3668,6 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
             catalog_keys.append(key)
             catalog_entries.append(("AVA%04d.def" % key[1],
                                     body[:16].hex(), body[24:].hex()))
-
-    # Dwellings (class 17) used by the instances but absent from the
-    # reference catalog get their def backfilled too, with the
-    # creature's def name (it exists in the game data) and the standard
-    # dwelling body observed in the real maps' catalog.
-    for entry in instances:
-        key = entry[2]
-        if key[0] == 17 and len(key) == 2 and key not in kind_of:
-            def_name = H3M_CREATURE_DEF_NAMES.get(key[1])
-            if not def_name:
-                continue
-            body = bytearray(42)
-            body[0:6] = bytes.fromhex("ffffffffff3f")       # passable cells
-            body[6:12] = bytes.fromhex("000000000080")      # actionable cells
-            body[12:14] = bytes.fromhex("ff01")             # allowed landscapes
-            body[14:16] = bytes.fromhex("ff00")             # landscape group
-            body[16:24] = struct.pack("<II", 17, key[1])
-            body[25:42] = b"\x00" * 17                      # above + 16 unknown
-            kind_of[key] = len(catalog_keys)
-            catalog_keys.append(key)
-            catalog_entries.append((def_name, body[:16].hex(), body[24:].hex()))
 
     # Drop the instances whose sprite is unknown.
     instances = [e for e in instances if e[2] in kind_of]
