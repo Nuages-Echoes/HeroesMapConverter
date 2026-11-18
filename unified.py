@@ -1735,12 +1735,16 @@ def _translate_h3m_tile_objects(obj_list, objects_section, translated_metadata,
             artifact_meta = (objects_section.get("artifactMetadata") or {}).get(str(obj_id)) or {}
             artifact = artifact_meta.get("artifact")
             if artifact is None:
-                # Random artifact: fh2m random artifacts follow the
-                # regular ones in the ADVENTURE_ARTIFACTS group.
+                # Random artifact (h3m classes 65-69): the fh2m random
+                # artifacts are the last indices of the
+                # ADVENTURE_ARTIFACTS group, one per class - the exact
+                # inverse of the fh2m -> h3m mapping (91-95 -> 65-69).
+                random_index = {65: 91, 66: 92, 67: 93, 68: 94, 69: 95}.get(
+                    obj.get("class"), 74)
                 translated.append(OrderedDict([
                     ("id", obj_id),
                     ("group", "ADVENTURE_ARTIFACTS"),
-                    ("index", 74),
+                    ("index", random_index),
                 ]))
                 translated_metadata.setdefault("artifactMetadata", OrderedDict())[str(obj_id)] = OrderedDict([
                     ("radius", 0),
