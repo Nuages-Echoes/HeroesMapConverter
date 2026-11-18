@@ -1211,6 +1211,41 @@ H3M_TO_FH2M_DWELLINGS = {
 }
 
 
+# True footprints of the fh2m ADVENTURE_DWELLINGS objects, from the
+# fheroes2 object catalog (src/fheroes2/maps/map_object_info.cpp,
+# populateAdventureDwellings): the groundLevelParts offsets on the
+# OBJECT_LAYER, as map offsets from the object anchor tile. The four
+# summoning altars (21-24) block the three cells of their anchor row;
+# the troll bridge (12) blocks none.
+FH2M_DWELLING_SHAPES = {
+    0: [(0, 0)],  # Peasant Hut
+    1: [(-1, 0), (0, 0)],  # Ruins
+    2: [(0, 0)],  # Tree House
+    3: [(0, 0)],  # Watch Tower
+    4: [(0, 0)],  # Watch Tower (snow)
+    5: [(-1, 0), (0, 0), (1, 0)],  # Halfling Hole
+    6: [(-1, 0), (0, 0), (1, 0)],  # Halfling Hole (grass)
+    7: [(0, 0), (1, 0)],  # Tree City
+    8: [(0, 0), (1, 0)],  # Tree City (grass)
+    9: [(-1, 0), (0, 0)],  # Desert Tent
+    10: [(-2, -1), (-2, 0), (-1, -1), (-1, 0), (0, -1), (0, 0), (1, -1), (1, 0), (2, -1), (2, 0)],  # City of the Dead
+    11: [(-2, 0), (-1, 0), (0, 0)],  # Excavation
+    12: [],  # Troll Bridge
+    13: [(0, 0)],  # Archer House
+    14: [(0, 0)],  # Goblin Hut
+    15: [(0, 0)],  # Dwarf Cottage
+    16: [(-3, 0), (-2, 0), (-1, -1), (-1, 0), (0, 0), (1, 0)],  # Dragon City
+    17: [(-1, 0), (0, 0), (1, 0)],  # Wagon Camp
+    18: [(-1, 0), (0, 0)],  # Cave
+    19: [(-1, 0), (0, 0)],  # Cave (snow)
+    20: [(-2, 0), (-1, 0), (0, 0)],  # Barrow Mounds
+    21: [(-1, 0), (0, 0), (1, 0)],  # Earth Summoning Altar
+    22: [(-1, 0), (0, 0), (1, 0)],  # Air Summoning Altar
+    23: [(-1, 0), (0, 0), (1, 0)],  # Fire Summoning Altar
+    24: [(-1, 0), (0, 0), (1, 0)],  # Water Summoning Altar
+}
+
+
 # fh2m landscape object index -> h3m decorative class. The Heroes
 # II landscape groups carry one entry per sprite variant; each maps
 # to the closest h3m decorative family class (the h3m encoder writes
@@ -3402,6 +3437,8 @@ def fh2m_footprint(group, index):
     when unknown (no shift applied)."""
     if group == "ADVENTURE_MINES":
         return FH2M_FOOTPRINTS["sawmill" if index >= 48 else "mine"]
+    if group == "ADVENTURE_DWELLINGS":
+        return FH2M_DWELLING_SHAPES.get(index)
     if group == "LANDSCAPE_MOUNTAINS":
         return fh2m_mountain_shape(index)
     if group == "LANDSCAPE_TREES":
@@ -3619,6 +3656,19 @@ def fh2m_to_h3m_anchor_shift(group, index, tile_terrain=None,
         h3m_class, h3m_subclass = h3m_mine
         def_name = fh2m_mine_def_name(index)
         body = _h3m_def_body(h3m_class, h3m_subclass, def_name)
+        if body is None:
+            return None
+        h3_cells = h3m_passability_cells(body[1][:12])
+        if not h3_cells:
+            return None
+        return FH2M_TO_H3M_SHIFT_OVERRIDE.get(
+            (group, index), fh2m_h3m_anchor_shift(h2_cells, h3_cells))
+    if group == "ADVENTURE_DWELLINGS":
+        h3m_dwelling = FH2M_TO_H3M_DWELLINGS.get(index)
+        if h3m_dwelling is None:
+            return None
+        body = (FH2M_TO_H3M_CATALOG.get(h3m_dwelling)
+                or H3M_DWELLING_DEFS.get(h3m_dwelling[1]))
         if body is None:
             return None
         h3_cells = h3m_passability_cells(body[1][:12])

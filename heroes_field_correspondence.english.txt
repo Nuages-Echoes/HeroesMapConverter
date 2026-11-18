@@ -534,7 +534,9 @@ quest messages, garrison canTake, event players flags).
    come from H3M_DWELLING_DEFS, the original Objects.txt class-17
    table - the elemental summoning altars 21-24 are the h3m
    dwellings 13/7/16/47 with the AVGair0/AVGerth0/AVGfire0/
-   AVGwatr0.def altar sprites, not the AVWelm* battle sprites), the
+   AVGwatr0.def altar sprites, not the AVWelm* battle sprites), with
+   the anchor shifted so the h3m footprint covers the true fh2m
+   footprint (FH2M_DWELLING_SHAPES from the fheroes2 catalog), the
    heroes (class 34, the hero type being the first h3m hero of the
    paired faction, sprite AH0<type>00.DEF, with the full RoE hero
    layout: the custom name, the experience, the secondary skills
