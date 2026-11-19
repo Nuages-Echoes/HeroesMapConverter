@@ -1,0 +1,125 @@
+   ╔═══════════════════════════════════════════════════════════════╗
+   ║                                                               ║
+   ║  Description of the map format for the game                   ║
+   ║  Heroes of Might and Magic: Olden Era                         ║
+   ║  (native .map maps)                                           ║
+   ║                                                               ║
+   ╚═══════════════════════════════════════════════════════════════╝
+
+   Documented from the reference implementations (local copies kept under
+   /workspace/references/):
+   - map-editor-json-tool (https://github.com/mimiasei/map-editor-json-tool):
+     src/lib/map-parser.ts, src/lib/map-write.ts, src/lib/map-file.ts
+   - olden-era-map-vs-code-inspector
+     (https://github.com/IgorIziyoAlhasov/olden-era-map-vs-code-inspector):
+     src/parser.js, docs/map-format.md
+
+   A .map file is a single gzip stream (magic 1F 8B). All offsets and
+   lengths below refer to the DECOMPRESSED bytes. The container is a
+   sequence of length-prefixed chunks; there is no fixed chunk count:
+   chunks are read until the end of the decompressed data.
+
+   Notation:
+   The first number in a line is the length of an element in bytes.
+
+   1     { element length in bytes
+   var   { unsigned LEB128 varint: 7 bits of value per byte, least
+         | significant group first, high bit set = more bytes follow
+   #     { a length-prefixed string: varint length, then that many bytes
+
+████                          Container layout                           ████
+
+ Length Description
+
+   var   # Header hash: 1 length byte + the hash bytes. In practice a
+         32-char lowercase hex digest (e.g. "11868446b59baaea...").
+         The same digest is duplicated as block 1's "hashSum" field;
+         the algorithm producing it is unknown, so both copies are
+         preserved verbatim, never recomputed.
+   var   # Version string, format "X.Y.Z" (observed: "0.80.47" on
+         3-block maps, "0.82.08" on 4-block maps).
+   2     Separator. First byte 05 (3-block maps) or 0D (bit 0x08 set:
+         a fourth scripting block follows). Second byte always 00.
+   var   # JSON block: varint byte length, then that many bytes of UTF-8
+   *     JSON text (a leading UTF-8 BOM may be present). Repeated until
+         the end of the decompressed data; usually 3 or 4 blocks. A
+         zero-length block is an empty block. Block names below are
+         canonical, assigned by position.
+   ?     Optional opaque trailing bytes after the last block; preserved
+         as-is by the parser/writer.
+
+████                          JSON blocks                                ████
+
+ Block 1 "scenario" - lobby/scenario metadata. Known fields include:
+   title, desc, gameMode, template, campaignInfo, difficulty tables
+   (economicDifficulties, aiDifficulties, ...), spawns {
+     playersCount,
+     spawns[]: one entry per spawner object on the map (NOT one per
+       player slot): owner, spawnType (0=Player, 1=Bot, 2=open slot),
+       spawnPointType (0=City, 1=Hero), isCityDefined, factionSid,
+       isHeroDefined, heroSid, colorId, isAlive, isLocked,
+     takenHeroes
+   }, banInfoData { bannedHeroes, bannedUnits, bannedMagics,
+   bannedItems, bannedSkills }, hashSum, and more.
+
+ Block 2 "adventure" - map data. Known fields include:
+   fileMapName, mapName, mapDesc, mapNameFromLoc/mapDescFromLoc,
+   sizeX_/sizeZ_ (map dimensions), then per-tile flat arrays indexed by
+   "node" (see Grid indexing below): tilesMap (terrain type id per
+   tile), waterMap (water material id, 0 = none), levelsMap (elevation
+   tier: -1 = lowered, 0 = ground, 1 = heightened), climbsMap (ramp
+   marker: set on the LOWER side of a levelsMap height boundary),
+   roadsMap (0 = none, else road type id), customAreasPainting
+   (player-region paint, empty array when unpainted), areas (RMG zones
+   { id, nodes[] }), rivers [{ sid, randomSeed, nodes: [{ n, s,
+   isWaterfall }] }] (sparse; river tiles do not set waterMap),
+   objects[]: object groups, each { sid, ids[], nodes[], rotations[],
+   levels[] } with the columns aligned by index (sid may be a string
+   or an array of strings), squads[] (fixed squad placements, a
+   SEPARATE id namespace from objects[]): { sid, ids[], nodes[] },
+   markers[] (editor zone annotations): { node, id, sid, v },
+   objectsProperties: per-instance property tables keyed by
+   (type, id), including propEntities, propsName, propHeroes,
+   propCities, propSquads, propNoCombineGeometries, propSpawns
+   (duplicated from block 1's spawns.spawns[], matched by owner),
+   propPortals { targetIdx, isActive }, propRewardParams,
+   propRandomSquads, propRandomHires, propActivations, propOwners,
+   propMarkers, propActionsBefore, propActionsAfter.
+
+ Block 3 "dialogQuestData" - dialog/quest shell:
+   { dialogs: { lines: [] }, quests: { quests: [] } }.
+
+ Block 4 "commentAiData" - scripting layer, present when the separator
+   first byte has bit 0x08 set:
+   { comment, aiRolesId, counters[], interruptions[], quests[] }.
+   The game runs a map's quests from THIS block inside the .map, not
+   from the sidecar .json.
+
+   Field names vary slightly across game versions (e.g. 0.80.x uses
+   sizeX_/sizeZ_ in block 2); the parser is version-agnostic and keeps
+   the JSON blocks as-is.
+
+████                          Sidecar .json file                        ████
+
+   Next to a Foo.map, the map editor keeps an optional Foo.json: its own
+   copy of the scenario scripting layer (counters, triggers, dialogs,
+   localization). The game itself does not read it (quests are embedded
+   in block 4 of the .map), so a .map file alone is self-contained.
+
+████                          Grid indexing                              ████
+
+   Tiles and objects are keyed by "node", a flat row-major tile index
+   over a sizeX x sizeZ grid: X = node % sizeX, Z = node // sizeX
+   (per the STDU fork's grid code, cited in the inspector's
+   docs/map-format.md; the available samples are square, so the stride
+   axis is not confirmed by them alone).
+
+████                          Sources                                    ████
+
+   - /workspace/references/map-editor-json-tool (upstream:
+     https://github.com/mimiasei/map-editor-json-tool)
+   - /workspace/references/olden-era-map-vs-code-inspector (upstream:
+     https://github.com/IgorIziyoAlhasov/olden-era-map-vs-code-inspector)
+   - Real sample used as test input: src-tauri/resources/template.map
+     from map-editor-json-tool (version 0.80.47, separator 05 00,
+     3 blocks).
