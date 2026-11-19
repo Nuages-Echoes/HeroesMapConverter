@@ -3713,6 +3713,29 @@ FH2M_TO_H3M_SHRINES = {
 }
 
 
+# H2 player color index -> H3 color index (and back). H2 color order
+# is Blue, Green, Red, Yellow(Tan), Orange, Purple, Teal, Pink; H3 is
+# Red, Blue, Tan, Green, Orange, Purple, Teal, Pink.
+FH2M_TO_H3M_COLOR_INDEX = [1, 3, 0, 2, 4, 5, 6, 7]
+H3M_TO_FH2M_COLOR_INDEX = [2, 0, 3, 1, 4, 5, 6, 7]
+
+# h3m keymaster's tent (class 10) sprite entries, from the original
+# game's Objects.txt: the subclass is the color (0-7), the def is
+# AVXkey<c>0.def. The Heroes II Traveller's Tent (ADVENTURE_MISCELLANEOUS
+# indices 59-66, one per color, fheroes2 populateAdventureMiscellaneous)
+# converts to these; the color is carried by the subclass.
+H3M_KEYMASTER_TENT_DEFS = {
+    0: ("AVXkey00.def", "ffffffffff3f000000000080ff01ff00", "000000000000000000000000000000000000"),
+    1: ("AVXkey10.def", "ffffffffff3f000000000080ff01ff00", "000000000000000000000000000000000000"),
+    2: ("AVXkey20.def", "ffffffffff3f000000000080ff01ff00", "000000000000000000000000000000000000"),
+    3: ("AVXkey30.def", "ffffffffff3f000000000080ff01ff00", "000000000000000000000000000000000000"),
+    4: ("AVXkey40.def", "ffffffffff3f000000000080ff01ff00", "000000000000000000000000000000000000"),
+    5: ("AVXkey50.def", "ffffffffff3f000000000080ff01ff00", "000000000000000000000000000000000000"),
+    6: ("AVXkey60.def", "ffffffffff3f000000000080ff01ff00", "000000000000000000000000000000000000"),
+    7: ("AVXkey70.def", "ffffffffff3f000000000080ff01ff00", "000000000000000000000000000000000000"),
+}
+
+
 # fh2m miscellaneous/water object index -> h3m (class, subclass).
 # Only the objects with a confirmed h3m sprite in the reference
 # catalog are mapped; the others (obelisk, oracle, pyramid, PoL
@@ -3889,7 +3912,7 @@ H3M_TO_FH2M_INTERACTIVE = {
     57: ("ADVENTURE_MISCELLANEOUS", 15),   # obelisk -> Obelisk
     # Dropped (no Heroes II gameplay equivalent): cursed ground (21),
     # magic plains (46), subterranean gate (103), arena (4),
-    # black market (7), border gate (9), keymaster tent (10),
+    # black market (7), border gate (9),
     # cartographer (13), cover of darkness (15), hill fort (35),
     # hut of the magi (37), magic spring (48), resource merchant
     # (52), rally point (64), stables (94), trading post (99 - the
