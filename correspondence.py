@@ -1483,6 +1483,125 @@ FH2M_LANDSCAPE_SHAPES = {
     ("LANDSCAPE_WATER", 11): [(0, 0), (0, 1)],
 }
 
+# True fh2m footprints of the adventure objects (fheroes2
+# map_object_info.cpp, populateAdventurePowerUps/Water/Miscellaneous):
+# the groundLevelParts offsets on the OBJECT_LAYER/BACKGROUND_LAYER
+# layers, as map offsets from the object anchor tile. The loop
+# variants (barriers 51-58, traveller's tents 59-66, stone lith
+# variants...) share the shape of their loop body.
+FH2M_ADVENTURE_SHAPES = {
+    # ADVENTURE_POWER_UPS
+    ('ADVENTURE_POWER_UPS', 0): [(0, 0), (1, 0)],
+    ('ADVENTURE_POWER_UPS', 1): [(0, 0), (-1, 0), (1, 0), (2, 0)],
+    ('ADVENTURE_POWER_UPS', 2): [(0, 0), (1, 0)],
+    ('ADVENTURE_POWER_UPS', 3): [(0, 0), (1, 0)],
+    ('ADVENTURE_POWER_UPS', 4): [(0, 0), (1, 0)],
+    ('ADVENTURE_POWER_UPS', 5): [(0, 0), (1, 0)],
+    ('ADVENTURE_POWER_UPS', 6): [(0, 0)],
+    ('ADVENTURE_POWER_UPS', 7): [(0, 0)],
+    ('ADVENTURE_POWER_UPS', 8): [(0, 0)],
+    ('ADVENTURE_POWER_UPS', 9): [(0, 0)],
+    ('ADVENTURE_POWER_UPS', 10): [(0, 0), (-1, 0)],
+    ('ADVENTURE_POWER_UPS', 11): [(0, 0)],
+    ('ADVENTURE_POWER_UPS', 12): [(0, 0)],
+    ('ADVENTURE_POWER_UPS', 13): [(0, 0), (1, 0), (-1, 0)],
+    ('ADVENTURE_POWER_UPS', 14): [(0, 0)],
+    ('ADVENTURE_POWER_UPS', 15): [(0, 0)],
+    ('ADVENTURE_POWER_UPS', 16): [(0, 0)],
+    ('ADVENTURE_POWER_UPS', 17): [(0, 0)],
+    ('ADVENTURE_POWER_UPS', 18): [(0, 0), (1, 0)],
+    ('ADVENTURE_POWER_UPS', 19): [(0, 0), (1, 0)],
+    ('ADVENTURE_POWER_UPS', 20): [(0, 0)],
+    ('ADVENTURE_POWER_UPS', 21): [(0, 0), (1, 0), (-1, 0), (-2, 0)],
+    ('ADVENTURE_POWER_UPS', 22): [(0, 0), (1, 0), (-1, 0), (1, -1), (0, -1), (-1, -1)],
+    # ADVENTURE_WATER
+    ('ADVENTURE_WATER', 0): [(0, 0)],
+    ('ADVENTURE_WATER', 1): [(0, 0)],
+    ('ADVENTURE_WATER', 2): [(0, 0)],
+    ('ADVENTURE_WATER', 3): [(0, 0)],
+    ('ADVENTURE_WATER', 4): [(0, 0)],
+    ('ADVENTURE_WATER', 5): [(0, 0)],
+    ('ADVENTURE_WATER', 6): [(0, 0), (1, 0)],
+    ('ADVENTURE_WATER', 7): [(0, 0), (1, 0), (-1, 0), (0, -1), (1, -1), (-1, -1)],
+    ('ADVENTURE_WATER', 8): [(0, 0), (1, 0)],
+    ('ADVENTURE_WATER', 9): [(0, 0), (-1, 0), (1, 0), (1, -1), (0, -1)],
+    ('ADVENTURE_WATER', 10): [(0, 0), (1, 0), (-1, 0)],
+    ('ADVENTURE_WATER', 11): [(0, 0), (1, 0), (-1, 0)],
+    ('ADVENTURE_WATER', 12): [(0, 0)],
+    # ADVENTURE_MISCELLANEOUS
+    ('ADVENTURE_MISCELLANEOUS', 0): [(0, 0), (1, 0), (-1, 0)],
+    ('ADVENTURE_MISCELLANEOUS', 1): [(0, 0), (1, 0), (-1, 0)],
+    ('ADVENTURE_MISCELLANEOUS', 2): [(0, 0), (-1, 0), (-2, 0)],
+    ('ADVENTURE_MISCELLANEOUS', 3): [(0, 0), (-1, 0), (-2, 0)],
+    ('ADVENTURE_MISCELLANEOUS', 4): [(0, 0), (1, 0)],
+    ('ADVENTURE_MISCELLANEOUS', 5): [(0, 0), (1, 0)],
+    ('ADVENTURE_MISCELLANEOUS', 6): [(0, 0), (1, 0)],
+    ('ADVENTURE_MISCELLANEOUS', 7): [(0, 0), (-1, 0)],
+    ('ADVENTURE_MISCELLANEOUS', 8): [(0, 0), (-1, 0)],
+    ('ADVENTURE_MISCELLANEOUS', 9): [(0, 0)],
+    ('ADVENTURE_MISCELLANEOUS', 10): [(0, 0)],
+    ('ADVENTURE_MISCELLANEOUS', 11): [(0, 0)],
+    ('ADVENTURE_MISCELLANEOUS', 12): [(0, 0)],
+    ('ADVENTURE_MISCELLANEOUS', 13): [(0, 0)],
+    ('ADVENTURE_MISCELLANEOUS', 14): [(0, 0)],
+    ('ADVENTURE_MISCELLANEOUS', 15): [(0, 0)],
+    ('ADVENTURE_MISCELLANEOUS', 16): [(0, 0)],
+    ('ADVENTURE_MISCELLANEOUS', 17): [(0, 0)],
+    ('ADVENTURE_MISCELLANEOUS', 18): [(0, 0)],
+    ('ADVENTURE_MISCELLANEOUS', 19): [(0, 0)],
+    ('ADVENTURE_MISCELLANEOUS', 20): [(0, 0)],
+    ('ADVENTURE_MISCELLANEOUS', 21): [(0, 0)],
+    ('ADVENTURE_MISCELLANEOUS', 22): [(0, 0)],
+    ('ADVENTURE_MISCELLANEOUS', 23): [(0, 0), (-2, 0), (-1, 0)],
+    ('ADVENTURE_MISCELLANEOUS', 24): [(0, 0), (-2, 0), (-1, 0)],
+    ('ADVENTURE_MISCELLANEOUS', 25): [(0, 0)],
+    ('ADVENTURE_MISCELLANEOUS', 26): [(0, 0)],
+    ('ADVENTURE_MISCELLANEOUS', 27): [(0, 0), (-1, 0)],
+    ('ADVENTURE_MISCELLANEOUS', 28): [(0, 0), (-1, 0)],
+    ('ADVENTURE_MISCELLANEOUS', 29): [(0, 0), (-1, 0)],
+    ('ADVENTURE_MISCELLANEOUS', 30): [(0, 0), (-1, 0)],
+    ('ADVENTURE_MISCELLANEOUS', 31): [(0, 0), (1, 0)],
+    ('ADVENTURE_MISCELLANEOUS', 32): [(0, 0), (-1, 0)],
+    ('ADVENTURE_MISCELLANEOUS', 33): [(0, 0), (-1, 0)],
+    ('ADVENTURE_MISCELLANEOUS', 34): [(0, 0)],
+    ('ADVENTURE_MISCELLANEOUS', 35): [(0, 0)],
+    ('ADVENTURE_MISCELLANEOUS', 36): [(0, 0)],
+    ('ADVENTURE_MISCELLANEOUS', 37): [(0, 0)],
+    ('ADVENTURE_MISCELLANEOUS', 38): [(0, 0)],
+    ('ADVENTURE_MISCELLANEOUS', 39): [(0, 0)],
+    ('ADVENTURE_MISCELLANEOUS', 40): [(0, 0), (-1, 0)],
+    ('ADVENTURE_MISCELLANEOUS', 41): [(0, 0)],
+    ('ADVENTURE_MISCELLANEOUS', 42): [(0, 0)],
+    ('ADVENTURE_MISCELLANEOUS', 43): [(0, 0)],
+    ('ADVENTURE_MISCELLANEOUS', 44): [(0, 0)],
+    ('ADVENTURE_MISCELLANEOUS', 45): [(0, 0)],
+    ('ADVENTURE_MISCELLANEOUS', 46): [(0, 0)],
+    ('ADVENTURE_MISCELLANEOUS', 47): [(0, 0), (-1, 0)],
+    ('ADVENTURE_MISCELLANEOUS', 48): [(0, 0)],
+    ('ADVENTURE_MISCELLANEOUS', 49): [(0, 0)],
+    ('ADVENTURE_MISCELLANEOUS', 50): [(0, 0)],
+    ('ADVENTURE_MISCELLANEOUS', 51): [(0, 0)],
+    ('ADVENTURE_MISCELLANEOUS', 52): [(0, 0)],
+    ('ADVENTURE_MISCELLANEOUS', 53): [(0, 0)],
+    ('ADVENTURE_MISCELLANEOUS', 54): [(0, 0)],
+    ('ADVENTURE_MISCELLANEOUS', 55): [(0, 0)],
+    ('ADVENTURE_MISCELLANEOUS', 56): [(0, 0)],
+    ('ADVENTURE_MISCELLANEOUS', 57): [(0, 0)],
+    ('ADVENTURE_MISCELLANEOUS', 58): [(0, 0)],
+    ('ADVENTURE_MISCELLANEOUS', 59): [(0, 0)],
+    ('ADVENTURE_MISCELLANEOUS', 60): [(0, 0)],
+    ('ADVENTURE_MISCELLANEOUS', 61): [(0, 0)],
+    ('ADVENTURE_MISCELLANEOUS', 62): [(0, 0)],
+    ('ADVENTURE_MISCELLANEOUS', 63): [(0, 0)],
+    ('ADVENTURE_MISCELLANEOUS', 64): [(0, 0)],
+    ('ADVENTURE_MISCELLANEOUS', 65): [(0, 0)],
+    ('ADVENTURE_MISCELLANEOUS', 66): [(0, 0)],
+    ('ADVENTURE_MISCELLANEOUS', 67): [(0, 0), (-1, 0)],
+    ('ADVENTURE_MISCELLANEOUS', 68): [(0, 0), (-1, 0)],
+    ('ADVENTURE_MISCELLANEOUS', 69): [(0, 0), (-1, 0)],
+    ('ADVENTURE_MISCELLANEOUS', 70): [(0, 0)],
+}
+
 # Footprint-exact, terrain-faithful H3 conversion of the non-tree
 # landscape objects: (fh2m group, index) -> (h3m class, [def
 # names]). All the defs of one entry block the same cells (a
@@ -3457,7 +3576,48 @@ def fh2m_footprint(group, index):
                                          fh2m_water_shape(index))
     if group in ("LANDSCAPE_ROCKS", "LANDSCAPE_MISCELLANEOUS"):
         return FH2M_LANDSCAPE_SHAPES.get((group, index))
+    if group in ("ADVENTURE_POWER_UPS", "ADVENTURE_WATER",
+                 "ADVENTURE_MISCELLANEOUS"):
+        return FH2M_ADVENTURE_SHAPES.get((group, index))
     return None
+
+
+def fh2m_adventure_h3m_target(group, index):
+    """h3m (class, subclass) target of a mapped ADVENTURE_POWER_UPS /
+    ADVENTURE_WATER / ADVENTURE_MISCELLANEOUS object - the same
+    resolution the h3m object encoder uses - or None when the object
+    has no h3m counterpart."""
+    if group == "ADVENTURE_MISCELLANEOUS" and index == 0:
+        return (91, 0)  # sign
+    if group in ("ADVENTURE_MISCELLANEOUS", "ADVENTURE_WATER"):
+        if group == "ADVENTURE_MISCELLANEOUS" and 51 <= index <= 58:
+            return (9, FH2M_TO_H3M_COLOR_INDEX[index - 51])   # barrier
+        if group == "ADVENTURE_MISCELLANEOUS" and 59 <= index <= 66:
+            return (10, FH2M_TO_H3M_COLOR_INDEX[index - 59])  # tent
+        key = ("MISC_%d" if group == "ADVENTURE_MISCELLANEOUS"
+               else "WATER_%d") % index
+        return FH2M_TO_H3M_MISC.get(key)
+    if group == "ADVENTURE_POWER_UPS":
+        shrine = FH2M_TO_H3M_SHRINES.get(index)
+        if shrine is not None:
+            return (shrine, 0)
+        return FH2M_TO_H3M_MISC.get("POWER_%d" % index)
+    return None
+
+
+def _adventure_target_body(target):
+    """Catalog body (sprite, passability/actionability bytes, trailing
+    bytes) of an h3m target from fh2m_adventure_h3m_target."""
+    if target is None:
+        return None
+    if len(target) == 3:
+        return _h3m_def_body(None, 0, target[2])
+    ref = FH2M_TO_H3M_CATALOG.get(target)
+    if ref is None and target[0] == 9:
+        ref = H3M_BORDER_GATE_DEFS.get(target[1])
+    if ref is None and target[0] == 10:
+        ref = H3M_KEYMASTER_TENT_DEFS.get(target[1])
+    return ref
 
 
 def fh2m_h3m_anchor_shift(h2_cells, h3_cells):
@@ -3492,18 +3652,13 @@ def _h3m_def_body(h3m_class, h3m_subclass, def_name):
 # checked before the footprint alignment: the alchemist lab def
 # (AVMalch0/AVMalcs0) is drawn one tile further west than its deduced
 # footprint alignment, so the h3m instance goes one tile further east
-# than the symmetric-difference minimum; the mercenary camp def
-# (AVXmercn0.def) is drawn one tile further west than the fh2m
-# Mercenary Camp anchor.
+# than the symmetric-difference minimum. The ADVENTURE_POWER_UPS /
+# ADVENTURE_WATER / ADVENTURE_MISCELLANEOUS objects are NOT overridden
+# here anymore: per the AGENTS.md placement rule they follow the
+# footprint alignment computed in fh2m_to_h3m_anchor_shift.
 FH2M_TO_H3M_SHIFT_OVERRIDE = {
     ("ADVENTURE_MINES", 54): (1, 0),  # alchemist lab, generic
     ("ADVENTURE_MINES", 55): (1, 0),  # alchemist lab, snow
-    ("ADVENTURE_POWER_UPS", 13): (1, 0),  # mercenary camp
-    ("ADVENTURE_POWER_UPS", 5): (1, 0),   # oasis
-    ("ADVENTURE_MISCELLANEOUS", 26): (1, 0),  # witch's hut
-    ("ADVENTURE_WATER", 4): (1, 0),  # boat: the h3m boat def (AVXboat*)
-    # blocks the cell west of its anchor while the H2 boat sits on its
-    # own anchor tile, so the h3m instance goes one tile east.
 }
 
 
@@ -3709,6 +3864,18 @@ def fh2m_to_h3m_anchor_shift(group, index, tile_terrain=None,
     round-trip restores the original anchor. None when the family
     has no known footprint (the anchor is copied as is)."""
     h2_cells = fh2m_footprint(group, index)
+    if group in ("ADVENTURE_POWER_UPS", "ADVENTURE_WATER",
+                 "ADVENTURE_MISCELLANEOUS"):
+        # Placement rule (AGENTS.md): prioritize the footprint over
+        # the anchor tile - the shift aligns the h3m def's blocked
+        # cells on the true fh2m footprint of the object.
+        target = fh2m_adventure_h3m_target(group, index)
+        body = _adventure_target_body(target)
+        h3_cells = (h3m_passability_cells(body[1][:12])
+                    if body is not None else None)
+        if target is None or not h2_cells or not h3_cells:
+            return FH2M_TO_H3M_SHIFT_OVERRIDE.get((group, index))
+        return fh2m_h3m_anchor_shift(h2_cells, h3_cells)
     if not h2_cells:
         # Families without a deduced footprint still honour the
         # in-game validated overrides.

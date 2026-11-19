@@ -578,6 +578,20 @@ quest messages, garrison canTake, event players flags).
    (111); the objects without a confirmed h3m sprite class stay
    dropped). The maps convert to the RoE layout.
 
+   Placement of the mapped ADVENTURE_POWER_UPS / ADVENTURE_WATER /
+   ADVENTURE_MISCELLANEOUS objects follows the AGENTS.md rule
+   "prioritize footprint over anchor tile": their anchor shift is
+   computed from the footprint alignment (the true fheroes2
+   footprints of FH2M_ADVENTURE_SHAPES against the blocked cells of
+   the h3m def, via fh2m_to_h3m_anchor_shift), not kept on the fh2m
+   tile. So e.g. the windmill (h2 footprint (0,0),(1,0), h3 def
+   blocking (-1,0)) and the boat (h2 (0,0), h3 def blocking (-1,0))
+   are placed one tile east, the faerie ring / artesian spring /
+   temple (h2 (0,0),(1,0) vs h3 (0,0),(-1,0)) too, and the whirlpool
+   (6-cell h2 footprint) lands exactly. The in-game validated
+   FH2M_TO_H3M_SHIFT_OVERRIDE corrections remain only for the
+   families outside this rule (the alchemist labs).
+
    Objects without a confirmed h3m class (fh2m -> h3m): the
    Heroes II objects below have no confirmed h3m sprite class in
    the reference catalog and stay dropped by the h3m encoder (they
