@@ -38,16 +38,13 @@ content for `.h3m`).
 
 ## Workflow
 
-- Work on a `vibe/<short-slug>-6dc5ad` branch, push it, and open a **draft PR**.
-  If a PR already exists for the task, update it in place by pushing to its
-  exact head branch. Never force-push, never delete a PR branch.
-- Push directly to `main` **only** when the owner explicitly asks for it.
 - Commit messages: conventional style, short, English — `fix:`, `docs:`,
   `test:`, `chore:`, `feat:`.
 - One logical change per commit.
 - use files in input directory for tests and checks. If information or cases are 
   missing, inform user.
 - Unless specified otherwise, merge directly into main and do not create branch
+- when working on object placement, prioritize footprint over anchor tile
 
 ## Map-object terminology
 
