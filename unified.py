@@ -2042,15 +2042,16 @@ def _translate_h3m_tile_objects(obj_list, objects_section, translated_metadata,
                 dropped_ids.append(obj_id)
                 continue
             sub = obj.get("subclass")
-            if obj_class == 10 and isinstance(sub, int) and 0 <= sub <= 7:
-                # Keymaster's tent: the subclass is the color; it
-                # converts back to the fh2m Traveller's Tent color
-                # variant (ADVENTURE_MISCELLANEOUS indices 59-66).
+            if obj_class in (9, 10) and isinstance(sub, int) and 0 <= sub <= 7:
+                # Border gate (9) / keymaster's tent (10): the subclass
+                # is the color; they convert back to the fh2m Barrier /
+                # Traveller's Tent color variants (MISC 51-58 / 59-66).
                 from correspondence import H3M_TO_FH2M_COLOR_INDEX
+                base = 51 if obj_class == 9 else 59
                 translated.append(OrderedDict([
                     ("id", obj_id),
                     ("group", "ADVENTURE_MISCELLANEOUS"),
-                    ("index", 59 + H3M_TO_FH2M_COLOR_INDEX[sub]),
+                    ("index", base + H3M_TO_FH2M_COLOR_INDEX[sub]),
                 ]))
                 continue
             interactive = H3M_TO_FH2M_INTERACTIVE.get(obj_class)
@@ -3293,7 +3294,8 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
                                   FH2M_TO_H3M_RESOURCES,
                                   H3M_CREATURE_DEF_NAMES,
                                   H3M_DWELLING_DEFS,
-                                  H3M_KEYMASTER_TENT_DEFS)
+                                  H3M_KEYMASTER_TENT_DEFS,
+                                  H3M_BORDER_GATE_DEFS)
 
     objects_section = unified.get("objects") or {}
     tiles = objects_section.get("tiles") or {}
@@ -3481,12 +3483,18 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
                 # confirmed h3m sprite map through the misc table.
                 from correspondence import (FH2M_TO_H3M_MISC,
                                           FH2M_TO_H3M_COLOR_INDEX)
-                if group == "ADVENTURE_MISCELLANEOUS" and 59 <= index <= 66:
-                    # Traveller's Tent (PoL): the fh2m index is one of
-                    # the 8 color variants (fheroes2
+                if group == "ADVENTURE_MISCELLANEOUS" and 51 <= index <= 58:
+                    # Barrier (PoL): the fh2m index is one of the 8
+                    # color variants (fheroes2
                     # populateAdventureMiscellaneous); it maps to the
-                    # h3m keymaster's tent (class 10) with the color as
-                    # subclass (def AVXkey<c>0.def).
+                    # h3m border gate (class 9) with the color as
+                    # subclass (def AVXbor<c>0.def).
+                    entry = ("generic", (x, y, z),
+                             (9, FH2M_TO_H3M_COLOR_INDEX[index - 51]), None)
+                elif group == "ADVENTURE_MISCELLANEOUS" and 59 <= index <= 66:
+                    # Traveller's Tent (PoL): same color-variant scheme;
+                    # it maps to the h3m keymaster's tent (class 10,
+                    # subclass = color, def AVXkey<c>0.def).
                     entry = ("generic", (x, y, z),
                              (10, FH2M_TO_H3M_COLOR_INDEX[index - 59]), None)
                 else:
@@ -3627,6 +3635,11 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
                     # catalog get their def from the original game's
                     # Objects.txt (AVXkey<c>0.def per color subclass).
                     ref = H3M_KEYMASTER_TENT_DEFS.get(obj_subclass)
+                if ref is None and obj_class == 9:
+                    # Border gates missing from the reference catalog
+                    # get their def from the original game's Objects.txt
+                    # (AVXbor<c>0.def per color subclass).
+                    ref = H3M_BORDER_GATE_DEFS.get(obj_subclass)
             if ref is None and obj_class == 34:
                 # The hero template subclass is the hero CLASS and
                 # the sprite is the class sprite AH<class>_E.DEF (the
