@@ -1,0 +1,50 @@
+   ╔═══════════════════════════════════════════════════════════════╗
+   ║                                                               ║
+   ║  JSON fields for Heroes of Might and Magic: Olden Era         ║
+   ║  native maps (.map), as written by main.py into               ║
+   ║  the outputjson/ directory                                    ║
+   ║                                                               ║
+   ╚═══════════════════════════════════════════════════════════════╝
+
+   This document describes the JSON structure produced by parse_hommoe()
+   in hommoedecoder.py. The binary format itself is described in
+   hommoe_description.english.txt.
+
+   The root object contains the following sections, in this order:
+   "headerHash", "version", "separator", "blocks", "trailingData".
+
+ Field            Type        Description
+
+   "headerHash"   string      The 32-char hex digest from the container
+                                header (same value as block 1's
+                                "hashSum").
+   "version"      string      Game/format version string, e.g.
+                                "0.80.47" or "0.82.08".
+   "separator"    list        The 2 separator bytes as integers, e.g.
+                                [5, 0] (3-block map) or [13, 0] (bit
+                                0x08 set: scripting block present).
+   "blocks"       list        The JSON blocks of the container, in file
+                                order. Each entry has:
+   "blocks[i].name"   string   Canonical name by position: "scenario",
+                                "adventure", "dialogQuestData",
+                                "commentAiData"; any further block is
+                                named "block5", "block6", ...
+   "blocks[i].raw"    string   The exact UTF-8 JSON text of the block, as
+                                read from the file ("" for a zero-length
+                                block). Kept verbatim so write_hommoe()
+                                re-emits the decompressed content
+                                byte-identically; edit "data" instead and
+                                drop "raw" to re-serialize the block.
+   "blocks[i].data"   object   The parsed JSON content of the block.
+                                {} for a zero-length block, null if "raw"
+                                is not valid JSON.
+   "trailingData" string      Hex string of any opaque bytes after the
+                                last block; "" when there are none.
+
+   The known fields inside each block's "data" are listed in
+   hommoe_description.english.txt (scenario / adventure /
+   dialogQuestData / commentAiData). They are game-defined JSON and are
+   passed through unchanged; object placements live in
+   "adventure"."objects" as groups { sid, ids[], nodes[], rotations[],
+   levels[] } with columns aligned by index, on a flat row-major grid
+   where X = node % sizeX and Z = node // sizeX.
