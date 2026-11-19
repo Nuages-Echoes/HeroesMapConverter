@@ -2041,6 +2041,18 @@ def _translate_h3m_tile_objects(obj_list, objects_section, translated_metadata,
             except ValueError:
                 dropped_ids.append(obj_id)
                 continue
+            sub = obj.get("subclass")
+            if obj_class == 10 and isinstance(sub, int) and 0 <= sub <= 7:
+                # Keymaster's tent: the subclass is the color; it
+                # converts back to the fh2m Traveller's Tent color
+                # variant (ADVENTURE_MISCELLANEOUS indices 59-66).
+                from correspondence import H3M_TO_FH2M_COLOR_INDEX
+                translated.append(OrderedDict([
+                    ("id", obj_id),
+                    ("group", "ADVENTURE_MISCELLANEOUS"),
+                    ("index", 59 + H3M_TO_FH2M_COLOR_INDEX[sub]),
+                ]))
+                continue
             interactive = H3M_TO_FH2M_INTERACTIVE.get(obj_class)
             if interactive is not None:
                 translated.append(OrderedDict([
@@ -3280,7 +3292,8 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
                                   FH2M_TO_H3M_ARTIFACTS,
                                   FH2M_TO_H3M_RESOURCES,
                                   H3M_CREATURE_DEF_NAMES,
-                                  H3M_DWELLING_DEFS)
+                                  H3M_DWELLING_DEFS,
+                                  H3M_KEYMASTER_TENT_DEFS)
 
     objects_section = unified.get("objects") or {}
     tiles = objects_section.get("tiles") or {}
@@ -3466,13 +3479,23 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
             elif group in ("ADVENTURE_MISCELLANEOUS", "ADVENTURE_WATER"):
                 # The miscellaneous and water objects with a
                 # confirmed h3m sprite map through the misc table.
-                from correspondence import FH2M_TO_H3M_MISC
-                h3m_key = ("MISC_%d" % index) if group == "ADVENTURE_MISCELLANEOUS" else "WATER_%d" % index
-                h3m_target = FH2M_TO_H3M_MISC.get(h3m_key)
-                if h3m_target is not None:
-                    obj_class, obj_subclass = h3m_target
-                    meta = (objects_section.get("signMetadata") or {}).get(str(obj_id)) or {}
-                    entry = ("generic", (x, y, z), (obj_class, obj_subclass), meta)
+                from correspondence import (FH2M_TO_H3M_MISC,
+                                          FH2M_TO_H3M_COLOR_INDEX)
+                if group == "ADVENTURE_MISCELLANEOUS" and 59 <= index <= 66:
+                    # Traveller's Tent (PoL): the fh2m index is one of
+                    # the 8 color variants (fheroes2
+                    # populateAdventureMiscellaneous); it maps to the
+                    # h3m keymaster's tent (class 10) with the color as
+                    # subclass (def AVXkey<c>0.def).
+                    entry = ("generic", (x, y, z),
+                             (10, FH2M_TO_H3M_COLOR_INDEX[index - 59]), None)
+                else:
+                    h3m_key = ("MISC_%d" % index) if group == "ADVENTURE_MISCELLANEOUS" else "WATER_%d" % index
+                    h3m_target = FH2M_TO_H3M_MISC.get(h3m_key)
+                    if h3m_target is not None:
+                        obj_class, obj_subclass = h3m_target
+                        meta = (objects_section.get("signMetadata") or {}).get(str(obj_id)) or {}
+                        entry = ("generic", (x, y, z), (obj_class, obj_subclass), meta)
             elif group == "ADVENTURE_POWER_UPS":
                 # The shrine circles (index 14-16) map back to the
                 # h3m shrine classes 88-90; the Gazebo (11) maps to
@@ -3599,6 +3622,11 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
                     # their def and passability body from the original
                     # game's Objects.txt (every dwelling id 0-79).
                     ref = H3M_DWELLING_DEFS.get(obj_subclass)
+                if ref is None and obj_class == 10:
+                    # Keymaster's tents missing from the reference
+                    # catalog get their def from the original game's
+                    # Objects.txt (AVXkey<c>0.def per color subclass).
+                    ref = H3M_KEYMASTER_TENT_DEFS.get(obj_subclass)
             if ref is None and obj_class == 34:
                 # The hero template subclass is the hero CLASS and
                 # the sprite is the class sprite AH<class>_E.DEF (the
