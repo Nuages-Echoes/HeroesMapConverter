@@ -493,7 +493,8 @@ quest messages, garrison canTake, event players flags).
    Marletto Tower (23), Witch Doctor's Hut -> Garden of
    Revelation (32), Mercenary Camp -> Mercenary Camp (51),
    Standing Stones -> Star Axis (61), Temple -> Temple (96),
-   Xanadu -> Library of Enlightenment (41), Arena -> Arena (4);
+   Xanadu -> Library of Enlightenment (41), Arena -> Arena (4),
+   the 3 Magic Well variants (7-9) -> magic well (49);
    the Genie's Lamp -> Refugee Camp (78). The Oasis sprite
    (AVXosis0.def) is added to the reference catalog.
 

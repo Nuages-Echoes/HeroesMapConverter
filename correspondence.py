@@ -3875,6 +3875,9 @@ FH2M_TO_H3M_MISC = {
     "POWER_4": (28, 0),    # Faerie Ring variant -> Faerie Ring
     "POWER_5": (56, 0),    # Oasis -> Oasis
     "POWER_6": (30, 0),    # Fountain -> Fountain of Fortune
+    "POWER_7": (49, 0),    # Magic Well (grass) -> magic well
+    "POWER_8": (49, 0),    # Magic Well (dirt) -> magic well
+    "POWER_9": (49, 0),    # Magic Well (snow) -> magic well
     "POWER_10": (23, 0),   # Fort -> Marletto Tower
     "POWER_12": (32, 0),   # Witch Doctor's Hut -> Garden of Revelation
     "POWER_13": (51, 0),   # Mercenary Camp -> Mercenary Camp
