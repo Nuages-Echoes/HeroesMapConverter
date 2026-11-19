@@ -3719,6 +3719,23 @@ FH2M_TO_H3M_SHRINES = {
 FH2M_TO_H3M_COLOR_INDEX = [1, 3, 0, 2, 4, 5, 6, 7]
 H3M_TO_FH2M_COLOR_INDEX = [2, 0, 3, 1, 4, 5, 6, 7]
 
+# h3m border gate (class 9) sprite entries, from the original game's
+# Objects.txt: the subclass is the color (0-7), the def is
+# AVXbor<c>0.def. The Heroes II Barrier (ADVENTURE_MISCELLANEOUS
+# indices 51-58, one per color) converts to these; the matching
+# keymaster's tent (class 10, same color) opens them.
+H3M_BORDER_GATE_DEFS = {
+    0: ("AVXbor00.def", "ffffffffff7f000000000080ff01ff00", "000000000000000000000000000000000000"),
+    1: ("AVXbor10.def", "ffffffffff7f000000000080ff01ff00", "000000000000000000000000000000000000"),
+    2: ("AVXbor20.def", "ffffffffff7f000000000080ff01ff00", "000000000000000000000000000000000000"),
+    3: ("AVXbor30.def", "ffffffffff7f000000000080ff01ff00", "000000000000000000000000000000000000"),
+    4: ("AVXbor40.def", "ffffffffff7f000000000080ff01ff00", "000000000000000000000000000000000000"),
+    5: ("AVXbor50.def", "ffffffffff7f000000000080ff01ff00", "000000000000000000000000000000000000"),
+    6: ("AVXbor60.def", "ffffffffff7f000000000080ff01ff00", "000000000000000000000000000000000000"),
+    7: ("AVXbor70.def", "ffffffffff7f000000000080ff01ff00", "000000000000000000000000000000000000"),
+}
+
+
 # h3m keymaster's tent (class 10) sprite entries, from the original
 # game's Objects.txt: the subclass is the color (0-7), the def is
 # AVXkey<c>0.def. The Heroes II Traveller's Tent (ADVENTURE_MISCELLANEOUS
@@ -3912,8 +3929,7 @@ H3M_TO_FH2M_INTERACTIVE = {
     57: ("ADVENTURE_MISCELLANEOUS", 15),   # obelisk -> Obelisk
     # Dropped (no Heroes II gameplay equivalent): cursed ground (21),
     # magic plains (46), subterranean gate (103), arena (4),
-    # black market (7), border gate (9),
-    # cartographer (13), cover of darkness (15), hill fort (35),
+    # black market (7), cartographer (13), cover of darkness (15), hill fort (35),
     # hut of the magi (37), magic spring (48), resource merchant
     # (52), rally point (64), stables (94), trading post (99 - the
     # den of thieves already maps to it), war memorial (107),

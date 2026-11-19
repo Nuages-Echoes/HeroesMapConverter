@@ -571,10 +571,12 @@ quest messages, garrison canTake, event players flags).
    Lighthouses (34), Events (38 - the ground events need their
    dedicated h3m layout), Freeman's Foundry (39), Magic Gardens
    (40), Alchemist's Tower (45), Stables (46), Hut of
-   the Magi (48), Barriers (51-58),
-   Black Cats (70); the Traveller's Tents (indices 59-66, one per
-   color) encode to the h3m keymaster's tent (class 10, subclass =
-   color, AVXkey<c>0.def, from the original Objects.txt); the Eye of
+   the Magi (48),
+   Black Cats (70); the Barriers (indices 51-58, one per color) encode
+   to the h3m border gate (class 9, subclass = color, AVXbor<c>0.def)
+   and the Traveller's Tents (indices 59-66) to the h3m keymaster's
+   tent (class 10, subclass = color, AVXkey<c>0.def), both from the
+   original Objects.txt; the Eye of
    the Magi (50) encodes to the
    h3m eye of the magi (27), the Wagon (25) to the h3m
    wagon (105); the Jail (47) stays dropped (the h3m prison
@@ -642,7 +644,8 @@ quest messages, garrison canTake, event players flags).
    pond (14) -> Idol (POWER_UPS 17), mermaid (52) -> Mermaid
    (WATER 10), tavern (95) -> Oracle (MISC 7), keymaster's tent
    (10, subclass = color) -> Traveller's Tent (MISC 59-66 by
-   color), hill fort (35) ->
+   color), border gate (9, subclass = color) -> Barrier (MISC 51-58
+   by color), hill fort (35) ->
    Hill Fort (MISC 2), magic spring (48) -> Artesian Spring
    (POWER_UPS 0), monolith one-way entrance (43) and exit (44)
    -> Stone Liths (MISC 35). The sirens (92) convert to the
