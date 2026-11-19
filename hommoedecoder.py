@@ -34,9 +34,19 @@ Format documented from the reference implementations (local copies under
 
 import gzip
 import json
+import struct
+import zlib
 from collections import OrderedDict
 
 GZIP_MAGIC = b"\x1f\x8b"
+
+# Gzip header fields observed on every real .map sample (game and editor
+# resources alike): FLG=0, MTIME=0, XFL=0, OS=10. The deflate stream is
+# zlib level 6, memLevel 8, default strategy, raw (wbits=-15): recompressing
+# the payload with those settings reproduces the original file byte-for-byte.
+DEFAULT_GZIP_HEADER = {"flg": 0, "mtime": 0, "xfl": 0, "os": 10}
+DEFLATE_LEVEL = 6
+DEFLATE_MEM_LEVEL = 8
 
 BLOCK_NAMES = ["scenario", "adventure", "dialogQuestData", "commentAiData"]
 
@@ -82,6 +92,63 @@ def block_name(index):
     return f"block{index + 1}"
 
 
+def parse_gzip_header(compressed):
+    """Extract the gzip header fields and any optional header bytes.
+
+    Returns (header_dict, deflate_offset): header_dict holds "flg", "mtime",
+    "xfl", "os" and "extra" (hex string of the optional FEXTRA/FNAME/FCOMMENT/
+    FHCRC bytes between the fixed 10-byte header and the deflate stream);
+    deflate_offset is where the deflate stream starts.
+    """
+    if compressed[:len(GZIP_MAGIC)] != GZIP_MAGIC or len(compressed) < 18:
+        raise ValueError("Not an Olden Era map file: expected a gzip stream")
+    flg = compressed[3]
+    mtime = struct.unpack("<I", compressed[4:8])[0]
+    xfl = compressed[8]
+    os_byte = compressed[9]
+    pos = 10
+    if flg & 4:
+        xlen = struct.unpack("<H", compressed[pos:pos + 2])[0]
+        pos += 2 + xlen
+    if flg & 8:
+        pos = compressed.index(b"\x00", pos) + 1
+    if flg & 16:
+        pos = compressed.index(b"\x00", pos) + 1
+    if flg & 2:
+        pos += 2
+    if pos > len(compressed) - 8:
+        raise ValueError("Truncated .map file: incomplete gzip header")
+    header = OrderedDict([
+        ("flg", flg),
+        ("mtime", mtime),
+        ("xfl", xfl),
+        ("os", os_byte),
+        ("extra", compressed[10:pos].hex()),
+    ])
+    return header, pos
+
+
+def write_gzip(payload, gzip_header):
+    """Compress payload into a gzip stream matching the game's convention:
+    stored header fields, raw deflate at level 6 / memLevel 8 / default
+    strategy, CRC32 + ISIZE trailer."""
+    header = gzip_header or {}
+    out = bytearray()
+    out += GZIP_MAGIC
+    out.append(8)
+    out.append(header.get("flg", DEFAULT_GZIP_HEADER["flg"]))
+    out += struct.pack("<I", header.get("mtime", DEFAULT_GZIP_HEADER["mtime"]))
+    out.append(header.get("xfl", DEFAULT_GZIP_HEADER["xfl"]))
+    out.append(header.get("os", DEFAULT_GZIP_HEADER["os"]))
+    out += bytes.fromhex(header.get("extra") or "")
+    compressor = zlib.compressobj(DEFLATE_LEVEL, zlib.DEFLATED, -15,
+                                   DEFLATE_MEM_LEVEL, zlib.Z_DEFAULT_STRATEGY)
+    out += compressor.compress(payload) + compressor.flush()
+    out += struct.pack("<II", zlib.crc32(payload) & 0xFFFFFFFF,
+                       len(payload) & 0xFFFFFFFF)
+    return bytes(out)
+
+
 def parse_hommoe(file_path):
     """
     Parse an Olden Era native map file (.map).
@@ -101,8 +168,7 @@ def parse_hommoe(file_path):
     with open(file_path, "rb") as f:
         compressed = f.read()
 
-    if compressed[:len(GZIP_MAGIC)] != GZIP_MAGIC:
-        raise ValueError("Not an Olden Era map file: expected a gzip stream")
+    gzip_header, _ = parse_gzip_header(compressed)
     data = gzip.decompress(compressed)
 
     pos = 0
@@ -148,6 +214,7 @@ def parse_hommoe(file_path):
     trailing_data = data[pos:].hex() if pos < len(data) else ""
 
     return OrderedDict([
+        ("gzipHeader", gzip_header),
         ("headerHash", header_hash),
         ("version", version),
         ("separator", separator),
@@ -195,4 +262,4 @@ def write_hommoe(map_data, output_path):
         container += bytes.fromhex(trailing_data)
 
     with open(output_path, "wb") as f:
-        f.write(gzip.compress(bytes(container), compresslevel=9, mtime=0))
+        f.write(write_gzip(bytes(container), map_data.get("gzipHeader")))
