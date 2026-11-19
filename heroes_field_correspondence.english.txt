@@ -608,7 +608,9 @@ quest messages, garrison canTake, event players flags).
    Survivors (5), Magellan's Maps (6), Whirlpools (7), Shipwrecks
    (8), Derelict Ships (9), Mermaids (10), Sirens (11), Barrels
    (12); the Boats
-   (4) encode to the h3m boat (class 8). The Genie's Lamp
+   (4) encode to the h3m boat (class 8), placed one tile east of the
+   fh2m tile (FH2M_TO_H3M_SHIFT_OVERRIDE) because the AVXboat def
+   blocks the cell west of its anchor. The Genie's Lamp
    (ADVENTURE_TREASURES 7) encodes to the h3m Refugee Camp (78),
    the Random Resource (8) to the h3m random resource (76), the
    Treasure Chest (9) to the h3m treasure chest (101) and the
