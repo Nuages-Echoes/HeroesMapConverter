@@ -469,6 +469,22 @@ quest messages, garrison canTake, event players flags).
    counterpart) stay dropped: the h3m towns carry their own
    basements and flags.
 
+   The multi-cell miscellaneous objects with no single
+   footprint-exact h3m def (the former "could not be converted"
+   list of landscape_inventory.txt) fan out into same-terrain
+   decorative defs whose blocked cells tile the true fh2m
+   footprint exactly, like the multi-cell trees do:
+   FH2M_MISC_H3M_COVER lists per fh2m index the native h3m terrain
+   and the (class, def, anchor offset from the fh2m anchor) pieces
+   (37 big frozen water lake -> 4x AVLflk20 snow; 69 wide lava
+   crater -> 1x AVLct1l0; 71 small lava pool -> AVLlv120 + AVLlv150;
+   134 big wasteland crack -> 2x AVLct6r0; 138 tar pit -> AVLct3r0 +
+   3x AVLct6r0; 139 wasteland crack -> AVLct3r0 + AVLct4r0, the
+   wasteland/desert ones as Rough variants). The passable objects
+   of that list (the dug holes, the small cliffs) stay dropped.
+   The three new def bodies (AVLct1l0, AVLct6r0, AVLlv150) come from
+   the original game's Objects.txt and live in H3M_LANDSCAPE_DEFS.
+
    Power-up pairings (per user decision, fh2m -> h3m): the
    Heroes II power-ups map to their h3m counterparts - Artesian
    Spring -> Magic Spring (48), Watering Hole -> Watering Hole

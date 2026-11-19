@@ -3233,6 +3233,7 @@ def _fh2m_objects_to_unified(map_data):
     # (one tile left of the castle entrance) is fh2m-specific and
     # the owner decoding above runs on the unshifted positions.
     from correspondence import (fh2m_tree_h3m_cover,
+                                fh2m_misc_h3m_cover,
                                 fh2m_to_h3m_anchor_shift)
     terrain_names = {}
     for tile_index, tile in enumerate(map_data.get("tiles", [])):
@@ -3257,6 +3258,14 @@ def _fh2m_objects_to_unified(map_data):
                 # A forest or wide tree converts to several
                 # same-terrain trees that position themselves from
                 # the fh2m anchor.
+                shift = (0, 0)
+            elif (group == "LANDSCAPE_MISCELLANEOUS"
+                  and fh2m_misc_h3m_cover(
+                      index, terrain_names.get((x, y)), (x, y), width)
+                  is not None):
+                # A multi-cell miscellaneous object with no single
+                # h3m def converts to several same-terrain defs that
+                # position themselves from the fh2m anchor.
                 shift = (0, 0)
             else:
                 shift = fh2m_to_h3m_anchor_shift(
@@ -3552,11 +3561,16 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
                 # anchor offset from the unshifted fh2m anchor).
                 from correspondence import (FH2M_LANDSCAPE_TO_H3M,
                                             fh2m_tree_h3m_cover,
+                                            fh2m_misc_h3m_cover,
                                             fh2m_landscape_def)
                 tile_terrain = (tile_terrains or {}).get(terrain_pos, "Grass")
                 forest_cover = None
                 if group == "LANDSCAPE_TREES":
                     forest_cover = fh2m_tree_h3m_cover(
+                        index, tile_terrain, terrain_pos, map_width)
+                misc_cover = None
+                if group == "LANDSCAPE_MISCELLANEOUS":
+                    misc_cover = fh2m_misc_h3m_cover(
                         index, tile_terrain, terrain_pos, map_width)
                 if forest_cover is not None:
                     for fc_class, fc_def, fc_offset in forest_cover:
@@ -3567,10 +3581,20 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
                         instances.append(
                             ("decorative", (fx, fy, z),
                              (fc_class, 0, fc_def), None))
-                chosen = None if forest_cover is not None else \
+                if misc_cover is not None:
+                    for mc_class, mc_def, mc_offset in misc_cover:
+                        mx = min(max(terrain_pos[0] + mc_offset[0], 0),
+                                 map_width - 1)
+                        my = min(max(terrain_pos[1] + mc_offset[1], 0),
+                                 map_width - 1)
+                        instances.append(
+                            ("decorative", (mx, my, z),
+                             (mc_class, 0, mc_def), None))
+                chosen = None if (forest_cover is not None
+                                  or misc_cover is not None) else \
                     fh2m_landscape_def(group, index, tile_terrain,
                                        terrain_pos, map_width)
-                if forest_cover is not None:
+                if forest_cover is not None or misc_cover is not None:
                     pass  # the cover instances are already appended
                 elif chosen is not None:
                     entry = ("decorative", (x, y, z),

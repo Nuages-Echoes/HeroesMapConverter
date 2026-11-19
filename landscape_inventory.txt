@@ -4,9 +4,11 @@ LANDSCAPE INVENTORY (non-tree): rocks, miscellaneous, water
 Per H2 object: species, the true fheroes2 footprint, and the H3
 def the converter writes (footprint-exact, same terrain first;
 'a|b|c' = equivalent models, one picked at random). The objects
-with NO model have no same-footprint H3 def: they keep the
-class-level fallback (representative def, footprint NOT
-respected) and are listed at the end.
+with NO single model fan out into several same-terrain H3 defs
+whose blocked cells tile the footprint exactly (COVER entries,
+FH2M_MISC_H3M_COVER). The objects with NO model at all have no
+same-footprint H3 def: they are dropped (the passable ones are
+ignored) and are listed at the end.
 
 ------------------------------------------------------------------------------
 H2 LANDSCAPE_ROCKS (indices 0-39)
@@ -92,7 +94,7 @@ H2 LANDSCAPE_MISCELLANEOUS (indices 0-146)
  34  Very small shrub, snow terrain. 3 variants.    H2=[(0, 0)]                             class 150: AVLs1sn0|AVLs2sn0  MATCH
  35  Very small shrub, snow terrain. 3 variants.    H2=[(0, 0)]                             class 150: AVLs1sn0|AVLs2sn0  MATCH
  36  Very small shrub, snow terrain. 3 variants.    H2=[(0, 0)]                             class 150: AVLs1sn0|AVLs2sn0  MATCH
- 37  Big frozen water lake, snow terrain.           H2=[(-2, -1), (-2, 0), (-1, -1), (-1, 0), (0, -1), (0, 0), (1, -1), (1, 0), (2, 0)] fallback class 131: AVLman40.def  UNCONVERTED
+ 37  Big frozen water lake, snow terrain.           H2=[(-2, -1), (-2, 0), (-1, -1), (-1, 0), (0, -1), (0, 0), (1, -1), (1, 0), (2, 0)] COVER class 121: 4x AVLflk20 (snow) @ (0,-1),(0,0),(1,-1),(2,0)
  38  Medium frozen water lake, snow terrain.        H2=[(-1, 0), (0, 0), (1, 0)]            class 121: AVLflk20  MATCH
  39  Small frozen water lake, snow terrain.         H2=[(0, 0), (1, 0)]                     class 121: AVLflk30  MATCH
  40  Crack, swamp terrain.                          H2=(passable)                           class 118: AVLct4g0|AVLct6g0  MATCH (passable)
@@ -124,11 +126,11 @@ H2 LANDSCAPE_MISCELLANEOUS (indices 0-146)
  66  Small shrub, swamp terrain.                    H2=[(0, 0)]                             class 150: AVLs05s0|AVLs07s0|AVLs08s0|AVLs10s0|AVLs11s0  MATCH
  67  Mossy roots, swamp terrain. In original editor H2=[(-1, 0), (0, 0)]                    class 129: AVLms010|AVLms060|AVLms070|AVLms120  MATCH
  68  Crack, lava terrain.                           H2=(passable)                           class 118: AVLct4g0|AVLct6g0  MATCH (passable)
- 69  Medium crater (wide), lava terrain.            H2=[(-2, -1), (-2, 0), (-1, -1), (-1, 0), (0, -1), (0, 0), (1, -1), (1, 0)] fallback class 116: AVLca010.def  UNCONVERTED
+ 69  Medium crater (wide), lava terrain.            H2=[(-2, -1), (-2, 0), (-1, -1), (-1, 0), (0, -1), (0, 0), (1, -1), (1, 0)] COVER class 118: 1x AVLct1l0 (lava) @ (1,0)
  70  Medium crater (high), lava terrain.            H2=[(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 0), (0, 1)] fallback class 116: AVLca010.def  UNCONVERTED
- 71  Small lava pool, lava terrain.                 H2=[(-1, 0), (0, -1), (0, 0)]           fallback class 116: AVLca010.def  UNCONVERTED
+ 71  Small lava pool, lava terrain.                 H2=[(-1, 0), (0, -1), (0, 0)]           COVER class 127: AVLlv120 @ (0,0) + AVLlv150 @ (0,-1)
  72  Passable lava, lava terrain.                   H2=(passable)                           fallback class 116: AVLca010.def  UNCONVERTED
- 73  Dug hole, lava terrain.                        H2=(passable)                           fallback class 116: AVLca010.def  UNCONVERTED
+ 73  Dug hole, lava terrain.                        H2=(passable)                           DROPPED (passable, ignored)
  74  Big lava pool, lava terrain.                   H2=[(-3, -1), (-3, 0), (-2, -1), (-2, 0), (-1, -1), (-1, 0), (0, -1), (0, 0), (1, -1), (1, 0), (2, -1), (2, 0)] class 127: AVLlav30  MATCH
  75  Medium lava pool, lava terrain.                H2=[(-1, -1), (-1, 0), (0, -1), (0, 0), (1, -1), (1, 0)] class 127: AVLlav40|AVLlav50|AVLlav90|AVLlv100  MATCH
  76  Medium (little lifted) lava pool, lava terrain H2=[(-1, -1), (-1, 0), (0, -1), (0, 0), (1, -1), (1, 0)] class 127: AVLlav40|AVLlav50|AVLlav90|AVLlv100  MATCH
@@ -181,7 +183,7 @@ H2 LANDSCAPE_MISCELLANEOUS (indices 0-146)
 123  Grass (high), dirt terrain. In original editor H2=[(0, 0)]                             fallback class 118: AVLct4l0.def  UNCONVERTED
 124  Grass, dirt terrain. In original editor is cal H2=[(0, 0)]                             fallback class 118: AVLct4l0.def  UNCONVERTED
 125  Dug hole, dirt terrain.                        H2=(passable)                           fallback class 118: AVLct4l0.def  UNCONVERTED
-126  Small cliff, dirt terrain. 3 variants.         H2=(passable)                           fallback class 118: AVLct4l0.def  UNCONVERTED
+126  Small cliff, dirt terrain. 3 variants.         H2=(passable)                           DROPPED (passable, ignored)
 127  Small cliff, dirt terrain. 3 variants.         H2=(passable)                           fallback class 118: AVLct4l0.def  UNCONVERTED
 128  Small cliff, dirt terrain. 3 variants.         H2=(passable)                           fallback class 118: AVLct4l0.def  UNCONVERTED
 129  Crack, wasteland terrain.                      H2=(passable)                           class 118: AVLct4g0|AVLct6g0  MATCH (passable)
@@ -189,12 +191,12 @@ H2 LANDSCAPE_MISCELLANEOUS (indices 0-146)
 131  Cactus, wasteland terrain.                     H2=[(0, 0)]                             class 116: AVLca1r0|AVLca2r0  MATCH
 132  Cow scull, wasteland terrain.                  H2=[(0, 0)]                             class 151: AVLskul0  MATCH
 133  Shrub, wasteland terrain.                      H2=[(0, 0)]                             class 150: AVLsh1r0|AVLsh2r0|AVLsh3r0|avlsh4r0|avlsh5r0|avlsh7r0|avlsh8r0  MATCH
-134  Big crack, wasteland terrain.                  H2=[(-2, -1), (-2, 0), (-1, -1), (-1, 0), (0, 0), (0, 1), (1, 0), (1, 1)] fallback class 118: AVLct4l0.def  UNCONVERTED
+134  Big crack, wasteland terrain.                  H2=[(-2, -1), (-2, 0), (-1, -1), (-1, 0), (0, 0), (0, 1), (1, 0), (1, 1)] COVER class 118: 2x AVLct6r0 (rough) @ (-1,0),(1,1)
 135  Dug hole, wasteland terrain.                   H2=(passable)                           fallback class 118: AVLct4l0.def  UNCONVERTED
 136  Shrub, wasteland terrain. 2 variants.          H2=[(0, 0)]                             class 150: AVLsh1r0|AVLsh2r0|AVLsh3r0|avlsh4r0|avlsh5r0|avlsh7r0|avlsh8r0  MATCH
 137  Shrub, wasteland terrain. 2 variants.          H2=[(0, 0)]                             class 150: AVLsh1r0|AVLsh2r0|AVLsh3r0|avlsh4r0|avlsh5r0|avlsh7r0|avlsh8r0  MATCH
-138  Tar pit, wasteland terrain.                    H2=[(-3, 0), (-3, 1), (-2, -1), (-2, 0), (-2, 1), (-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 0), (0, 1), (1, 0), (1, 1), (2, 0), (2, 1)] fallback class 118: AVLct4l0.def  UNCONVERTED
-139  Crack, wasteland terrain.                      H2=[(-1, -1), (-1, 0), (0, -1), (0, 0), (1, -1)] fallback class 118: AVLct4l0.def  UNCONVERTED
+138  Tar pit, wasteland terrain.                    H2=[(-3, 0), (-3, 1), (-2, -1), (-2, 0), (-2, 1), (-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 0), (0, 1), (1, 0), (1, 1), (2, 0), (2, 1)] COVER class 118: AVLct3r0 @ (0,-1) + 3x AVLct6r0 @ (-2,1),(0,1),(2,1) (rough)
+139  Crack, wasteland terrain.                      H2=[(-1, -1), (-1, 0), (0, -1), (0, 0), (1, -1)] COVER class 118: AVLct3r0 @ (1,-1) + AVLct4r0 @ (0,0) (rough)
 140  Crack (vertical), wasteland terrain.           H2=[(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 0), (0, 1)] fallback class 118: AVLct4l0.def  UNCONVERTED
 141  Crack (horizontal), wasteland terrain.         H2=[(-1, 0), (0, 0), (1, 0)]            class 118: AVLct3r0  MATCH
 142  Shrub, generic terrain.                        H2=[(-1, 0), (0, 0), (1, 0)]            class 150: AVLs02s0|AVLs04s0|AVLsh1g0|AVLsh2g0|AVLsh6d0|AVLswp20|AVLswp30  MATCH
@@ -220,11 +222,16 @@ H2 LANDSCAPE_WATER (indices 0-11)
  11                                                 H2=[(0, 0), (0, 1)]                     class 161: AVLref60  MATCH
 
 ------------------------------------------------------------------------------
-OBJECTS THAT COULD NOT BE CONVERTED (35)
+OBJECTS THAT COULD NOT BE CONVERTED (29)
 ------------------------------------------------------------------------------
 
 No H3 def of the right family blocks the same cells, so these
-keep the class-level fallback (footprint not respected):
+are dropped (the encoder keeps no class-level fallback with the
+wrong footprint). The passable ones (fp=(passable)) are ignored.
+The 6 multi-cell objects that used to be in this list (37, 69,
+71, 134, 138, 139) are now covered footprint-exactly by a fan-out
+of same-terrain H3 defs - see the COVER entries above and
+FH2M_MISC_H3M_COVER in correspondence.py.
 
 LANDSCAPE_MISCELLANEOUS    4  Big water lake, grass terrain.                 fp=[(-2, -1), (-2, 0), (-1, -1), (-1, 0), (0, -1), (0, 0), (1, -1), (1, 0), (2, -1), (2, 0)]  (fallback class 29)
 LANDSCAPE_MISCELLANEOUS   25  Dug hole, grass terrain.                       fp=(passable)  (fallback class 150)
@@ -235,16 +242,13 @@ LANDSCAPE_MISCELLANEOUS   30  Dug hole, snow terrain.                        fp=
 LANDSCAPE_MISCELLANEOUS   31  Small cliff, snow terrain. 2 variants.         fp=(passable)  (fallback class 118)
 LANDSCAPE_MISCELLANEOUS   32  Small cliff, snow terrain. 2 variants.         fp=(passable)  (fallback class 29)
 LANDSCAPE_MISCELLANEOUS   33  Wide small cliff, snow terrain.                fp=(passable)  (fallback class 29)
-LANDSCAPE_MISCELLANEOUS   37  Big frozen water lake, snow terrain.           fp=[(-2, -1), (-2, 0), (-1, -1), (-1, 0), (0, -1), (0, 0), (1, -1), (1, 0), (2, 0)]  (fallback class 131)
 LANDSCAPE_MISCELLANEOUS   42  Dug hole, swamp terrain.                       fp=(passable)  (fallback class 29)
 LANDSCAPE_MISCELLANEOUS   43  Big water lake, swamp terrain.                 fp=[(-2, -1), (-2, 0), (-2, 1), (-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 0), (0, 1), (1, -1), (1, 0), (1, 1), (2, 0), (2, 1)]  (fallback class 131)
 LANDSCAPE_MISCELLANEOUS   51  Wide swampy water lake, swamp terrain.         fp=[(-2, 0), (-1, 0), (0, -1), (0, 0), (1, -1), (1, 0), (2, -1), (2, 0)]  (fallback class 150)
 LANDSCAPE_MISCELLANEOUS   56  Wide reed, swamp terrain.                      fp=[(-2, 0), (-1, 0), (0, 0), (1, 0), (2, 0)]  (fallback class 127)
-LANDSCAPE_MISCELLANEOUS   69  Medium crater (wide), lava terrain.            fp=[(-2, -1), (-2, 0), (-1, -1), (-1, 0), (0, -1), (0, 0), (1, -1), (1, 0)]  (fallback class 116)
 LANDSCAPE_MISCELLANEOUS   70  Medium crater (high), lava terrain.            fp=[(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 0), (0, 1)]  (fallback class 116)
-LANDSCAPE_MISCELLANEOUS   71  Small lava pool, lava terrain.                 fp=[(-1, 0), (0, -1), (0, 0)]  (fallback class 116)
 LANDSCAPE_MISCELLANEOUS   72  Passable lava, lava terrain.                   fp=(passable)  (fallback class 116)
-LANDSCAPE_MISCELLANEOUS   73  Dug hole, lava terrain.                        fp=(passable)  (fallback class 116)
+LANDSCAPE_MISCELLANEOUS   73  Dug hole, lava terrain.                        fp=(passable)  DROPPED (passable, ignored)
 LANDSCAPE_MISCELLANEOUS   78  Small lava streams, lava terrain.              fp=[(-1, 0), (0, -1), (0, 0)]  (fallback class 116)
 LANDSCAPE_MISCELLANEOUS   80  Medium lava streams, lava terrain.             fp=[(-1, 0), (0, 0), (1, -1), (1, 0)]  (fallback class 161)
 LANDSCAPE_MISCELLANEOUS   81  Medium lava streams, lava terrain.             fp=[(-1, -1), (-1, 0), (0, -1), (0, 0), (1, 0)]  (fallback class 118)
@@ -253,13 +257,10 @@ LANDSCAPE_MISCELLANEOUS  103  Big water lake, dirt terrain.                  fp=
 LANDSCAPE_MISCELLANEOUS  123  Grass (high), dirt terrain. In original editor fp=[(0, 0)]  (fallback class 118)
 LANDSCAPE_MISCELLANEOUS  124  Grass, dirt terrain. In original editor is cal fp=[(0, 0)]  (fallback class 118)
 LANDSCAPE_MISCELLANEOUS  125  Dug hole, dirt terrain.                        fp=(passable)  (fallback class 118)
-LANDSCAPE_MISCELLANEOUS  126  Small cliff, dirt terrain. 3 variants.         fp=(passable)  (fallback class 118)
+LANDSCAPE_MISCELLANEOUS  126  Small cliff, dirt terrain. 3 variants.         fp=(passable)  DROPPED (passable, ignored)
 LANDSCAPE_MISCELLANEOUS  127  Small cliff, dirt terrain. 3 variants.         fp=(passable)  (fallback class 118)
 LANDSCAPE_MISCELLANEOUS  128  Small cliff, dirt terrain. 3 variants.         fp=(passable)  (fallback class 118)
-LANDSCAPE_MISCELLANEOUS  134  Big crack, wasteland terrain.                  fp=[(-2, -1), (-2, 0), (-1, -1), (-1, 0), (0, 0), (0, 1), (1, 0), (1, 1)]  (fallback class 118)
 LANDSCAPE_MISCELLANEOUS  135  Dug hole, wasteland terrain.                   fp=(passable)  (fallback class 118)
-LANDSCAPE_MISCELLANEOUS  138  Tar pit, wasteland terrain.                    fp=[(-3, 0), (-3, 1), (-2, -1), (-2, 0), (-2, 1), (-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 0), (0, 1), (1, 0), (1, 1), (2, 0), (2, 1)]  (fallback class 118)
-LANDSCAPE_MISCELLANEOUS  139  Crack, wasteland terrain.                      fp=[(-1, -1), (-1, 0), (0, -1), (0, 0), (1, -1)]  (fallback class 118)
 LANDSCAPE_MISCELLANEOUS  140  Crack (vertical), wasteland terrain.           fp=[(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 0), (0, 1)]  (fallback class 118)
 
 Known edge case: an object hanging off the map edge (its H2
