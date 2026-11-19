@@ -20,8 +20,9 @@ explicitly overrides one.
   faithful to the source format) → `outputunified/<name>.json` (unified JSON)
   → `output/<name>.h3m` **and** `output/<name>.fh2m`. `--target h3m|fh2m`
   restricts the conversion to one format. `.map` (Olden Era) inputs are parsed
-  to `outputjson/` and regenerated as-is to `output/<name>.map` (unified
-  conversion for Olden Era is not implemented yet).
+  to `outputjson/`, converted to `outputunified/` (`convert_hommoe_to_unified`)
+  and regenerated to `output/<name>.map` from the detailed JSON (no unified ->
+  hommoe writer yet).
 - Read `README.md` and `Progress.md` first. Binary/JSON format specs live in
   the `*_description.english.txt` files; ID correspondences between the two
   games live in `correspondence.py` (documented in

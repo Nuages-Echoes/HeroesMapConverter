@@ -12,7 +12,7 @@ How it works :
 - each file is parsed to a detailed JSON stored in the `outputjson/` directory
 - the detailed JSON is converted to a common unified JSON stored in the `outputunified/` directory
 - the unified JSON is then converted to each target format and written to the `output/` directory (both `.h3m` and `.fh2m` by default; use `--target h3m|fh2m` to pick a single one)
-- Olden Era `.map` files are parsed by `hommoedecoder.py` into `outputjson/` and regenerated as-is into `output/` (conversion to/from the unified JSON is not implemented for them yet)
+- Olden Era `.map` files are parsed by `hommoedecoder.py` into `outputjson/`, converted to the unified JSON in `outputunified/`, and regenerated as-is into `output/` (no unified -> `.map` writer yet)
 
 Why all the bother ?
 Because by using the unified JSON format, a map from any supported Heroes game can be converted to any other through the common JSON file, instead of writing a direct converter for every pair of formats (heroesX -> heroesY).
