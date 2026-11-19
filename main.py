@@ -4,6 +4,7 @@ import os
 
 from h2decoder import parse_fh2m, write_fh2m
 from h3decoder import parse_h3m, write_h3m
+from hommoedecoder import parse_hommoe, write_hommoe
 from unified import convert_to_unified, convert_from_unified
 
 INPUT_DIR = "input"
@@ -14,7 +15,8 @@ OUTPUT_UNIFIED_DIR = "outputunified"
 SKIP_DISPLAY_KEYS = {"Surface Map", "Underground Map", "Objects"}
 
 H2_EXTENSIONS = (".fh2m", ".mp2")
-MAP_EXTENSIONS = (".h3m",) + H2_EXTENSIONS
+OE_EXTENSIONS = (".map",)
+MAP_EXTENSIONS = (".h3m",) + H2_EXTENSIONS + OE_EXTENSIONS
 
 
 def write_target(unified_data, target_game, base_name):
@@ -51,7 +53,7 @@ def main():
     map_files = sorted(f for f in os.listdir(INPUT_DIR) if f.lower().endswith(MAP_EXTENSIONS))
 
     if not map_files:
-        print(f"Aucun fichier .h3m, .fh2m ou .mp2 trouvé dans le dossier '{INPUT_DIR}'.")
+        print(f"Aucun fichier .h3m, .fh2m, .mp2 ou .map trouvé dans le dossier '{INPUT_DIR}'.")
         return
 
     for file_name in map_files:
@@ -61,8 +63,11 @@ def main():
         try:
             # Étape 1 : lecture de la carte et écriture du JSON dans le dossier outputjson
             is_h2_map = file_name.lower().endswith(H2_EXTENSIONS)
+            is_oe_map = file_name.lower().endswith(OE_EXTENSIONS)
             if is_h2_map:
                 result = parse_fh2m(map_file_path)
+            elif is_oe_map:
+                result = parse_hommoe(map_file_path)
             else:
                 result = parse_h3m(map_file_path)
 
@@ -71,6 +76,14 @@ def main():
             with open(json_file_path, "w", encoding="utf-8") as json_file:
                 json.dump(result, json_file, indent=4, ensure_ascii=False)
             print(f"JSON écrit dans '{json_file_path}'")
+
+            if is_oe_map:
+                # Olden Era (.map) maps are regenerated as-is: conversion
+                # to/from the unified JSON is not implemented for them yet.
+                output_path = os.path.join(OUTPUT_DIR, f"{base_name}.map")
+                write_hommoe(result, output_path)
+                print(f"HOMMOE file written to {output_path}")
+                continue
 
             # Étape 1b : conversion au format unifié dans le dossier outputunified
             source_game = "fh2m" if is_h2_map else "h3m"

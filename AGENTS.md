@@ -11,13 +11,17 @@ explicitly overrides one.
   `gzip`, `json`, `argparse`, `os`.
 - CLI tool, **no UI**. It converts Heroes of Might and Magic maps between
   `.h3m` (Heroes III — gzip, headers RoE `0x0E` / AB `0x15` / SoD `0x1C`) and
-  `.fh2m` / `.mp2` (fheroes2 / Olden Era — magic `h2map\0`, big-endian,
-  format versions 2–13, zlib-compressed tail), through an intermediate
-  unified JSON.
+  `.fh2m` / `.mp2` (fheroes2 — magic `h2map\0`, big-endian,
+  format versions 2–13, zlib-compressed tail) and `.map` (Heroes of
+  Might and Magic: Olden Era — a single gzip stream of varint-framed
+  JSON blocks, read/written by `hommoedecoder.py`), through an
+  intermediate unified JSON.
 - Pipeline (`main.py`): `input/` → `outputjson/<name>.json` (detailed JSON,
   faithful to the source format) → `outputunified/<name>.json` (unified JSON)
   → `output/<name>.h3m` **and** `output/<name>.fh2m`. `--target h3m|fh2m`
-  restricts the conversion to one format.
+  restricts the conversion to one format. `.map` (Olden Era) inputs are parsed
+  to `outputjson/` and regenerated as-is to `output/<name>.map` (unified
+  conversion for Olden Era is not implemented yet).
 - Read `README.md` and `Progress.md` first. Binary/JSON format specs live in
   the `*_description.english.txt` files; ID correspondences between the two
   games live in `correspondence.py` (documented in
