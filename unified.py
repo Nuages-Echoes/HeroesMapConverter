@@ -753,6 +753,46 @@ HOMMOE_TILE_TERRAINS = {
     7: "Dirt",
 }
 
+# Olden Era win conditions: adventure.settings.mapWinConditions[] entries,
+# keyed by typeWinCondition. Enum from the game's own RMG (see
+# /workspace/references/map-editor-json-tool/src/lib/rmg/win-conditions.ts
+# and map-write.ts's patchWinConditions: a fresh map ships 0,2,1):
+#   0 classic, 1 desertion, 2 hero lighting, 3 capital hold (editor
+#   "LostStartCity"), 4 guardian's demise ("LostStartHero"), 5 final
+#   battle, 8 city hold, 9 tournament. Unknown ids map to "unknown" and
+#   keep their raw int in metadata. OE has no structured loss-condition
+#   list: loss is "lose everything" unless the script uses GameLose /
+#   SideLose actions (block commentAiData).
+HOMMOE_WIN_CONDITIONS = {
+    0: "defeatEveryone",
+    1: "desertion",
+    2: "heroLighting",
+    3: "captureTown",
+    4: "killHero",
+    5: "finalBattle",
+    8: "captureTown",
+    9: "tournament",
+}
+
+
+def _hommoe_script_actions(blocks):
+    """Collect the action names ("a" fields) used in the scripting block."""
+    actions = set()
+
+    def walk(node):
+        if isinstance(node, dict):
+            action = node.get("a")
+            if isinstance(action, str):
+                actions.add(action)
+            for value in node.values():
+                walk(value)
+        elif isinstance(node, list):
+            for value in node:
+                walk(value)
+
+    walk(blocks.get("commentAiData") or {})
+    return actions
+
 
 # Sid fragments identifying adventure-map objects (checked before scenery).
 _HOMMOE_ADVENTURE_MISC_TOKENS = (
@@ -1003,19 +1043,44 @@ def convert_hommoe_to_unified(map_data):
     # No alliance data in the samples (maxAlliancesCount is 0).
     unified["teams"] = []
 
-    # Victory/loss: the scenario's endController is carried raw; 0 is the
-    # standard ending observed in every sample.
-    end_controller = scenario.get("endController", 0)
+    # Victory: from adventure.settings.mapWinConditions (typeWinCondition
+    # ints); when empty, from the scripting block (GameVictory action =
+    # quest-scripted win, e.g. scenario maps). Loss: OE has no structured
+    # loss list, so "loseEverything" unless the script forces a loss.
+    win_entries = (adventure.get("settings") or {}).get("mapWinConditions") or []
+    win_types = [entry.get("typeWinCondition") for entry in win_entries if isinstance(entry, dict)]
+    script_actions = _hommoe_script_actions(blocks)
+    has_script_victory = "GameVictory" in script_actions
+    has_script_lose = bool(script_actions & {"GameLose", "SideLose"})
+
     victory = OrderedDict()
-    victory["type"] = "defeatEveryone" if end_controller == 0 else "unknown"
-    victory["allowNormalVictory"] = True
+    if any(t == 0 for t in win_types):
+        victory["type"] = "defeatEveryone"
+        allow_normal = True
+    elif win_types:
+        victory["type"] = HOMMOE_WIN_CONDITIONS.get(win_types[0], "unknown")
+        allow_normal = False
+    elif has_script_victory:
+        victory["type"] = "scriptedVictory"
+        allow_normal = False
+    else:
+        victory["type"] = "defeatEveryone"
+        allow_normal = True
+    victory["allowNormalVictory"] = allow_normal
     victory["appliesToAI"] = True
-    victory["metadata"] = []
-    victory["sourceEndController"] = end_controller
+    victory["metadata"] = list(win_types)
+    victory["sourceEndController"] = scenario.get("endController", 0)
+    if win_entries:
+        victory["sourceWinConditions"] = win_entries
+    if has_script_victory:
+        victory["scriptHasVictoryAction"] = True
     unified["victoryCondition"] = victory
+
     loss = OrderedDict()
     loss["type"] = "loseEverything"
     loss["metadata"] = []
+    if has_script_lose:
+        loss["scriptHasLoseAction"] = True
     unified["lossCondition"] = loss
 
     unified["rumors"] = []

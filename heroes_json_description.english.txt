@@ -143,9 +143,6 @@ Description of the unified JSON format produced from .h3m and .fh2m maps
    the union of both games.
 
    "victoryCondition"  object:
-     "sourceEndController" int     (hommoe) raw scenario endController
-                                    (0 = standard ending, mapped to
-                                    "defeatEveryone")
      "type"            string      One of:
      "defeatEveryone"              Default (no special condition):
                                         (fh2m) 0 (VICTORY_DEFEAT_EVERYONE)
@@ -183,7 +180,19 @@ Description of the unified JSON format produced from .h3m and .fh2m maps
                                     "Whether the computer can reach it")
      "metadata"        list        Raw condition metadata values of the
                                     source game (4-byte values for fh2m;
-                                    the raw detail bytes for h3m)
+                                    the raw detail bytes for h3m;
+                                    (hommoe) the raw typeWinCondition ints
+                                    of settings.mapWinConditions[])
+     (hommoe) extra fields: "sourceWinConditions" (raw
+       settings.mapWinConditions entries), "sourceEndController" (raw
+       scenario endController int), "scriptHasVictoryAction" (the
+       scripting block uses a GameVictory action). Type is the mapped
+       label of the conditions; a classic (0) entry always maps to
+       "defeatEveryone". hommoe-only type labels (kept per the union
+       rule above): "desertion" (1), "heroLighting" (2), "finalBattle"
+       (5), "tournament" (9); 3/8 map to "captureTown", 4 to "killHero".
+       When mapWinConditions is empty but the script has GameVictory,
+       type is "scriptedVictory" and allowNormalVictory is false.
 
    "lossCondition"     object:
      "type"            string      One of:
@@ -202,6 +211,10 @@ Description of the unified JSON format produced from .h3m and .fh2m maps
      "metadata"        list        Raw condition metadata values of the
                                     source game (4-byte values for fh2m;
                                     the raw detail bytes for h3m)
+     (hommoe) type is always "loseEverything" (Olden Era has no
+       structured loss-condition list); extra field
+       "scriptHasLoseAction" is set when the scripting block uses a
+       GameLose or SideLose action
 
 
 ████████████████████████████════════════════════════════████████████████
