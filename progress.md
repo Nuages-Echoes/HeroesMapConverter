@@ -7,11 +7,14 @@ see [README.md](README.md).
 ## Goal
 
 Command-line tool (Python 3.12, standard library only, no UI) that converts
-maps between Heroes of Might and Magic games. First target: Heroes II /
-fheroes2 (Olden Era, `.fh2m` / `.mp2`) and Heroes III (`.h3m`). The design
-routes every conversion through a common **unified JSON** format, so a map
-from any supported game can be converted to any other without writing a
-direct converter for every pair of formats.
+maps between Heroes of Might and Magic games. 
+Main objective is to convert all file types to Olden Era map file.
+Secondary objective is to convert map files in all Heroes of Might and Magic
+format. 
+Project started with a round conversion between free Heroes 2 and Heroes 3.
+The design routes every conversion through a common **unified JSON** format, 
+so a map from any supported game can be converted to any other without writing 
+a direct converter for every pair of formats.
 
 ## 1. H3 → JSON (and back)
 
@@ -27,16 +30,25 @@ direct converter for every pair of formats.
 
 ## 2. H2 → JSON (and back)
 
-- `h2decoder.py` implements `parse_fh2m()` for fheroes2 / Olden Era maps:
+- `h2decoder.py` implements `parse_fh2m()` for fheroes2 maps:
   magic `h2map\0`, big-endian integers, format versions 2–13, plain base
-  parameters followed by a single zlib-compressed section. `.mp2` files
-  are recognized as Heroes II maps too.
+  parameters followed by a single zlib-compressed section.
 - `write_fh2m()` writes the structure back to `.fh2m`.
 - Each H2 map in `input/` is decoded to a detailed JSON in
   `outputjson/<name>.json`, documented in `h2m_description.english.txt` and
   `h2m_json_description.english.txt`.
 
-## 3. Detailed JSON → unified JSON
+## 3. Hommoe (Olden Era) → JSON (and back)
+
+- `hommoedecoder.py` implements `parse_hommoe()` for Olden Era maps:
+  magic `h2map\0`, big-endian integers, format versions 2–13, plain base
+  parameters followed by a single zlib-compressed section.
+- `write_hommoe()` writes the structure back to `.map` and optionnal `.json`.
+- Each Olden Era map in `input/` is decoded to a detailed JSON in
+  `outputjson/<name>.json`, documented in `hommoe_description.english.txt` and
+  `hommoe_json_description.english.txt`.
+
+## 4. Detailed JSON → unified JSON
 
 - `unified.py` provides `convert_to_unified()` with
   `convert_h3m_to_unified()` and `convert_fh2m_to_unified()`, normalizing a
@@ -53,23 +65,24 @@ direct converter for every pair of formats.
   shifts between the H2 and H3 conventions are carried explicitly
   (`anchorShift`) so each writer restores its own anchor placement.
 
-## 4. Unified JSON → H2 or H3
+## 5. Unified JSON → H2, H3 or Hommoe
 
-- `convert_from_unified()` (`unified_to_h3m()` / `unified_to_fh2m()`)
+- `convert_from_unified()` (`unified_to_h3m()` / `unified_to_fh2m()` / `unified_to_hommoe()`)
   rebuilds a game-specific structure from the unified JSON, then
-  `write_h3m()` / `write_fh2m()` serialize the binaries into `output/`.
-- By default every input map is converted to **both** `.h3m` and `.fh2m`;
-  `--target h3m|fh2m` restricts the output to a single format
+  `write_h3m()` / `write_fh2m()` / `write_hommoe()` serialize the binaries into `output/`.
+- By default every input map is converted to `.h3m` and `.fh2m` and `.map` ;
+  `--target h3m|fh2m|oe` restricts the output to a single format
   (`main.py` orchestrates the whole pipeline).
 
 ```
-input/*.{h3m,fh2m,mp2}
+input/*.{h3m,fh2m,map,json}
    → outputjson/<name>.json     (detailed JSON, faithful to the source format)
    → outputunified/<name>.json  (unified JSON, common to both games)
-   → output/<name>.h3m + output/<name>.fh2m   (regenerated/converted maps)
+   → output/<name>.h3m + output/<name>.fh2m + output/<name>.map 
+      + output/<name>.json (optionnal)     (regenerated/converted maps)
 ```
 
-## 5. Content conversion work (H2 ↔ H3 fidelity)
+## 6. Content conversion work (H2 ↔ H3 fidelity)
 
 Beyond the pipeline skeleton, most of the effort went into making the
 converted maps actually match the target game:
@@ -117,6 +130,12 @@ converted maps actually match the target game:
 - H3 maps with an underground level cannot be converted to H2 (no
   underground in H2): the conversion fails on purpose.
 - Neutral heroes from H3 disappear in H2 output (no neutral heroes in H2).
+- road conversion between H2 and H3 is imperfect as of yet
+- Event conversion is also to be done
+- some object do not have the same footprint in different map format 
+and some collision may occur when other objects are put next to it
+- conversion from H2 to H3 is mostly working besides the limitations
+above, conversion from H3 to H2 has not been tested
 
 ## Reference maps
 
