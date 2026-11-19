@@ -13,7 +13,7 @@ permettre à terme de convertir n'importe quel format vers n'importe quel autre
 ## Entrées
 
 `main.py` scanne le dossier `input/` et traite tout fichier dont l'extension
-est `.h3m`, `.fh2m` ou `.mp2` (par ordre alphabétique). Deux formats binaires
+est `.h3m`, `.fh2m`, `.mp2` ou `.map` (par ordre alphabétique). Trois formats binaires
 sont supportés :
 
 - **H3M (Heroes III)** — fichier gzip ; les variantes d'en-tête RoE (`0x0E`),
@@ -22,15 +22,20 @@ sont supportés :
   de format 2 à 13 ; entiers en big-endian ; paramètres de base en clair, puis
   une unique section compressée zlib. Parsing : `h2decoder.parse_fh2m()`.
 
-Cartes de référence embarquées dans `input/` : 1 carte `.h3m` (`all for one`)
-et 4 cartes H2 (`4_dimensions.fh2m`, `5Kings1Ring.fh2m`, `Full Backpack.fh2m`,
-`Tetra_conflict.fh2m`).
+Cartes de référence embarquées dans `input/` : 1 carte `.h3m` (`all for one`),
+4 cartes H2 (`4_dimensions.fh2m`, `5Kings1Ring.fh2m`, `Full Backpack.fh2m`,
+`Tetra_conflict.fh2m`) et 2 cartes Olden Era : `olden_era_template.map`
+(vrai échantillon, version 0.80.47, séparateur `05 00`, 3 blocs, copié depuis
+les références locales `src-tauri/resources/template.map` de map-editor-json-tool)
+et `synthetic_oemap_4blocks.map` (carte synthétique générée par
+`hommoedecoder.write_hommoe` pour couvrir la variante `0d 00` / 4 blocs, aucun
+échantillon 0.82.08 public n'étant disponible).
 
 ## Fonctionnement entre les deux (pipeline)
 
 Pour chaque fichier de `input/`, `main.py` applique trois étapes :
 
-1. **Binaire → JSON détaillé.** `parse_h3m()` ou `parse_fh2m()` produit un
+1. **Binaire → JSON détaillé.** `parse_h3m()`, `parse_fh2m()` ou `parse_hommoe()` produit un
    dictionnaire fidèle au format source, écrit dans `outputjson/<nom>.json`.
    Les schémas de ces JSON sont documentés dans `h3m_json_description.english.txt`
    et `h2m_json_description.english.txt` (les formats binaires eux-mêmes dans
@@ -43,7 +48,9 @@ Pour chaque fichier de `input/`, `main.py` applique trois étapes :
    artefacts, sorts, héros, villes, mines, objets de paysage…) sont traduits
    via les tables de `correspondence.py`, dont les équivalences sont listées
    dans `heroes_field_correspondence.english.txt`.
-3. **JSON unifié → formats cibles.** Le JSON unifié est relu, puis
+3. **JSON unifié → formats cibles.** (Étape ignorée pour les sources `.map` :
+   la conversion Olden Era ↔ JSON unifié n'est pas encore implémentée, la carte
+   est régénérée telle quelle dans `output/<nom>.map`.) Le JSON unifié est relu, puis
    `convert_from_unified()` le retransforme en structure propre à chaque jeu
    (`unified_to_h3m()` / `unified_to_fh2m()`) et `write_h3m()` / `write_fh2m()`
    sérialisent le binaire dans `output/`. Par défaut, chaque carte est produite
@@ -102,10 +109,11 @@ input/*.{h3m,fh2m,mp2}
 | `main.py` | CLI et orchestration du pipeline (input → outputjson → outputunified → output) |
 | `h2decoder.py` | lecture/écriture binaire `.fh2m` / `.mp2` (big-endian, zlib) |
 | `h3decoder.py` | lecture/écriture binaire `.h3m` (gzip, RoE/AB/SoD) |
+| `hommoedecoder.py` | lecture/écriture binaire `.map` (Olden Era : gzip, blocs JSON préfixés par varint LEB128) |
 | `unified.py` | conversions vers/depuis le JSON unifié |
 | `correspondence.py` | tables de correspondance H2 ↔ H3 (ID et noms) |
 | `verify_roundtrip.py` | vérification aller-retour parse → convert → write → parse |
 | `make_variant.py` | génération de variantes de test |
-| `*_description.english.txt`, `heroes_field_correspondence.english.txt` | spécifications des formats binaires, des JSON et des équivalences de valeurs |
+| `*_description.english.txt`, `heroes_field_correspondence.english.txt` | spécifications des formats binaires, des JSON et des équivalences de valeurs (`hommoe_*` pour Olden Era) |
 | `coastal_link.json`, `road_link.json`, `river_link.json` | tables de lien H2→H3 apprises des cartes de référence (côtes, routes, rivières) |
 | `coastal_tiles_h2_h3.md` | doc du lien tuiles côtières H2→H3 (Tableau 3) |

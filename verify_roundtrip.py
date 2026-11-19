@@ -9,7 +9,9 @@ carries the exact same data as the input:
 - otherwise, equality of the logical content: the fh2m base section and
   the decompressed zlib section must be identical byte-to-byte (the
   deflate stream itself depends on the zlib version that wrote it);
-- for h3m, the gzipped content must be identical byte-to-byte.
+- for h3m, the gzipped content must be identical byte-to-byte;
+- for hommoe (.map), the gunzipped content must be identical
+  byte-to-byte.
 
 Additionally the parsed structures must be equal: for fh2m they cover
 the whole file; for h3m the Objects > Raw Data reference bytes are
@@ -25,6 +27,7 @@ import zlib
 
 from h2decoder import parse_fh2m
 from h3decoder import parse_h3m
+from hommoedecoder import parse_hommoe
 
 
 def normalize_h3m(data):
@@ -34,6 +37,10 @@ def normalize_h3m(data):
 
 
 def normalize_fh2m(data):
+    return json.loads(json.dumps(data, sort_keys=True))
+
+
+def normalize_hommoe(data):
     return json.loads(json.dumps(data, sort_keys=True))
 
 
@@ -70,6 +77,22 @@ def content_equal_h3m(input_path, output_path):
     return False, "decompressed content differs"
 
 
+def content_equal_hommoe(input_path, output_path):
+    """Compare the gunzipped content of two .map files."""
+    with open(input_path, "rb") as f:
+        a = f.read()
+    with open(output_path, "rb") as f:
+        b = f.read()
+    if a == b:
+        return True, "binary identical"
+    try:
+        if gzip.decompress(a) == gzip.decompress(b):
+            return True, "content identical (gzip streams differ)"
+    except OSError:
+        pass
+    return False, "decompressed content differs"
+
+
 def main():
     input_dir = "input"
     output_dir = "output"
@@ -86,12 +109,17 @@ def main():
             parse = parse_fh2m
             normalize = normalize_fh2m
             content_equal = content_equal_fh2m
+        elif file_name.lower().endswith(".map"):
+            kind = "hommoe"
+            parse = parse_hommoe
+            normalize = normalize_hommoe
+            content_equal = content_equal_hommoe
         else:
             continue
 
         input_path = os.path.join(input_dir, file_name)
         base_name = os.path.splitext(file_name)[0]
-        output_ext = ".h3m" if kind == "h3m" else ".fh2m"
+        output_ext = {"h3m": ".h3m", "fh2m": ".fh2m", "hommoe": ".map"}[kind]
         output_path = os.path.join(output_dir, base_name + output_ext)
         if not os.path.exists(output_path):
             failures.append(f"{file_name}: missing output file")
