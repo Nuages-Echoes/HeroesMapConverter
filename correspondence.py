@@ -1337,6 +1337,7 @@ FH2M_LANDSCAPE_SHAPES = {
     ("LANDSCAPE_MISCELLANEOUS", 34): [(0, 0)],
     ("LANDSCAPE_MISCELLANEOUS", 35): [(0, 0)],
     ("LANDSCAPE_MISCELLANEOUS", 36): [(0, 0)],
+    ("LANDSCAPE_MISCELLANEOUS", 37): [(-2, -1), (-2, 0), (-1, -1), (-1, 0), (0, -1), (0, 0), (1, -1), (1, 0), (2, 0)],
     ("LANDSCAPE_MISCELLANEOUS", 38): [(-1, 0), (0, 0), (1, 0)],
     ("LANDSCAPE_MISCELLANEOUS", 39): [(0, 0), (1, 0)],
     ("LANDSCAPE_MISCELLANEOUS", 40): [],
@@ -1364,6 +1365,8 @@ FH2M_LANDSCAPE_SHAPES = {
     ("LANDSCAPE_MISCELLANEOUS", 66): [(0, 0)],
     ("LANDSCAPE_MISCELLANEOUS", 67): [(-1, 0), (0, 0)],
     ("LANDSCAPE_MISCELLANEOUS", 68): [],
+    ("LANDSCAPE_MISCELLANEOUS", 69): [(-2, -1), (-2, 0), (-1, -1), (-1, 0), (0, -1), (0, 0), (1, -1), (1, 0)],
+    ("LANDSCAPE_MISCELLANEOUS", 71): [(-1, 0), (0, -1), (0, 0)],
     ("LANDSCAPE_MISCELLANEOUS", 74): [(-3, -1), (-3, 0), (-2, -1), (-2, 0), (-1, -1), (-1, 0), (0, -1), (0, 0), (1, -1), (1, 0), (2, -1), (2, 0)],
     ("LANDSCAPE_MISCELLANEOUS", 75): [(-1, -1), (-1, 0), (0, -1), (0, 0), (1, -1), (1, 0)],
     ("LANDSCAPE_MISCELLANEOUS", 76): [(-1, -1), (-1, 0), (0, -1), (0, 0), (1, -1), (1, 0)],
@@ -1414,7 +1417,10 @@ FH2M_LANDSCAPE_SHAPES = {
     ("LANDSCAPE_MISCELLANEOUS", 132): [(0, 0)],
     ("LANDSCAPE_MISCELLANEOUS", 133): [(0, 0)],
     ("LANDSCAPE_MISCELLANEOUS", 136): [(0, 0)],
+    ("LANDSCAPE_MISCELLANEOUS", 134): [(-2, -1), (-2, 0), (-1, -1), (-1, 0), (0, 0), (0, 1), (1, 0), (1, 1)],
     ("LANDSCAPE_MISCELLANEOUS", 137): [(0, 0)],
+    ("LANDSCAPE_MISCELLANEOUS", 138): [(-3, 0), (-3, 1), (-2, -1), (-2, 0), (-2, 1), (-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 0), (0, 1), (1, 0), (1, 1), (2, 0), (2, 1)],
+    ("LANDSCAPE_MISCELLANEOUS", 139): [(-1, -1), (-1, 0), (0, -1), (0, 0), (1, -1)],
     ("LANDSCAPE_MISCELLANEOUS", 141): [(-1, 0), (0, 0), (1, 0)],
     ("LANDSCAPE_MISCELLANEOUS", 142): [(-1, 0), (0, 0), (1, 0)],
     ("LANDSCAPE_MISCELLANEOUS", 143): [],
@@ -1679,6 +1685,7 @@ H3M_LANDSCAPE_DEFS = {
     "avlca1r0.def": ("AVLca1r0.def", "ffffffffff7f000000000000ff012000", "000000000000000000000000000000000000"),
     "avlca2r0.def": ("AVLca2r0.def", "ffffffffff7f000000000000ff012000", "000000000000000000000000000000000000"),
     "avlct1d0.def": ("AVLct1d0.def", "ffffffffff3f000000000000ff010100", "000000000000000000000000000000000000"),
+    "avlct1l0.def": ("AVLct1l0.def", "ffffffff0f0f000000000000ff018000", "000000000000000000000000000000000000"),
     "avlct1u0.def": ("AVLct1u0.def", "ffffffffff3f000000000000ff014000", "000000000000000000000000000000000000"),
     "avlct2d0.def": ("AVLct2d0.def", "ffffffffff3f000000000000ff010100", "000000000000000000000000000000000000"),
     "avlct3d0.def": ("AVLct3d0.def", "ffffffffff3f000000000000ff010100", "000000000000000000000000000000000000"),
@@ -1689,6 +1696,7 @@ H3M_LANDSCAPE_DEFS = {
     "avlct5g0.def": ("AVLct5g0.def", "ffffffffff3f000000000000ff010400", "000000000000000000000000000000000000"),
     "avlct5r0.def": ("AVLct5r0.def", "ffffffffff3f000000000000ff012000", "000000000000000000000000000000000000"),
     "avlct6g0.def": ("AVLct6g0.def", "ffffffffffff000000000000ff010400", "000000000000000000000000000000000000"),
+    "avlct6r0.def": ("AVLct6r0.def", "ffffffff3f3f000000000000ff012000", "000000000000000000000000000000000000"),
     "avlct8r0.def": ("AVLct8r0.def", "ffffffffff3f000000000000ff012000", "000000000000000000000000000000000000"),
     "avlct9l0.def": ("AVLct9l0.def", "ffffffffff3f000000000000ff018000", "000000000000000000000000000000000000"),
     "avlctds0.def": ("AVLctds0.def", "ffffffffff3f000000000000ff010200", "000000000000000000000000000000000000"),
@@ -1743,6 +1751,7 @@ H3M_LANDSCAPE_DEFS = {
     "avllv120.def": ("AVLlv120.def", "ffffffffff3f000000000000ff018000", "000000000000000000000000000000000000"),
     "avllv130.def": ("AVLlv130.def", "ffffffffff3f000000000000ff018000", "000000000000000000000000000000000000"),
     "avllv140.def": ("AVLlv140.def", "ffffffffff3f000000000000ff018000", "000000000000000000000000000000000000"),
+    "avllv150.def": ("AVLlv150.def", "ffffffffff7f000000000000ff018000", "000000000000000000000000000000000000"),
     "avllv180.def": ("AVLlv180.def", "ffffffff3f3f000000000000ff018000", "000000000000000000000000000000000000"),
     "avllv190.def": ("AVLlv190.def", "ffffffff3f3f000000000000ff018000", "000000000000000000000000000000000000"),
     "avllv1u0.def": ("AVLlv1u0.def", "ffffffff3f3f000000000000ff014000", "000000000000000000000000000000000000"),
@@ -3562,6 +3571,61 @@ def _fh2m_landscape_def_candidates(group, index, tile_terrain):
         candidates.sort(key=lambda n: (not n.startswith("avlmt%s" % own), n))
         return [H3M_MOUNTAIN_DEFS[n][0] for n in candidates]
     return []
+
+
+# Footprint-exact h3m covers of the LANDSCAPE_MISCELLANEOUS objects
+# that have no single same-terrain h3m def (the former "could not be
+# converted" list of landscape_inventory.txt): each fans out into
+# same-terrain decorative defs whose blocked cells tile the true fh2m
+# footprint exactly, like the multi-cell trees do. Per fh2m index:
+# the native h3m terrain of the object and the list of
+# (h3m class, def name, anchor offset from the fh2m anchor).
+FH2M_MISC_H3M_COVER = {
+    37: ("Snow", [(121, "AVLflk20.def", (0, -1)),
+                  (121, "AVLflk20.def", (0, 0)),
+                  (121, "AVLflk20.def", (1, -1)),
+                  (121, "AVLflk20.def", (2, 0))]),
+    69: ("Lava", [(118, "AVLct1l0.def", (1, 0))]),
+    71: ("Lava", [(127, "AVLlv120.def", (0, 0)),
+                  (127, "AVLlv150.def", (0, -1))]),
+    134: ("Rough", [(118, "AVLct6r0.def", (-1, 0)),
+                    (118, "AVLct6r0.def", (1, 1))]),
+    138: ("Rough", [(118, "AVLct3r0.def", (0, -1)),
+                    (118, "AVLct6r0.def", (-2, 1)),
+                    (118, "AVLct6r0.def", (0, 1)),
+                    (118, "AVLct6r0.def", (2, 1))]),
+    139: ("Rough", [(118, "AVLct3r0.def", (1, -1)),
+                    (118, "AVLct4r0.def", (0, 0))]),
+}
+
+
+def fh2m_misc_h3m_cover(index, tile_terrain, anchor=None,
+                        map_width=None):
+    """h3m instances covering a multi-cell fh2m miscellaneous object
+    that has no single footprint-exact h3m def: a list of
+    (class, def name, anchor offset from the fh2m anchor) whose
+    blocked cells tile the fh2m footprint exactly. The cover applies
+    only on the object's native h3m terrain (H2 Wasteland and Desert
+    both convert to Rough); with the anchor and the map width, an
+    object whose cover would hang off the map edge is left uncovered
+    (None)."""
+    entry = FH2M_MISC_H3M_COVER.get(index)
+    if entry is None:
+        return None
+    terrain, pieces = entry
+    if _h3_tile_terrain(tile_terrain) != terrain:
+        return None
+    if anchor is not None and map_width is not None:
+        for _, def_name, offset in pieces:
+            body = _h3m_def_body(None, 0, def_name)
+            if body is None:
+                return None
+            for cx, cy in h3m_passability_cells(body[1][:12]):
+                x = anchor[0] + offset[0] + cx
+                y = anchor[1] + offset[1] + cy
+                if not (0 <= x < map_width and 0 <= y < map_width):
+                    return None
+    return pieces
 
 
 def fh2m_landscape_def(group, index, tile_terrain, anchor=None,
