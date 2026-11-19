@@ -11,10 +11,18 @@
    hommoe_description.english.txt.
 
    The root object contains the following sections, in this order:
-   "headerHash", "version", "separator", "blocks", "trailingData".
+   "gzipHeader", "headerHash", "version", "separator", "blocks",
+   "trailingData".
 
  Field            Type        Description
 
+   "gzipHeader"   object      Gzip wrapper fields, so write_hommoe() can
+                                re-emit the original container byte-exactly:
+                                "flg", "mtime", "xfl", "os" (ints) and
+                                "extra" (hex string of any optional
+                                FEXTRA/FNAME/FCOMMENT/FHCRC header bytes).
+                                Observed on real maps: flg=0, mtime=0,
+                                xfl=0, os=10.
    "headerHash"   string      The 32-char hex digest from the container
                                 header (same value as block 1's
                                 "hashSum").
