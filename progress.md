@@ -7,13 +7,13 @@ see [README.md](README.md).
 ## Goal
 
 Command-line tool (Python 3.12, standard library only, no UI) that converts
-maps between Heroes of Might and Magic games. 
+maps between Heroes of Might and Magic games.
 Main objective is to convert all file types to Olden Era map file.
 Secondary objective is to convert map files in all Heroes of Might and Magic
-format. 
+format.
 Project started with a round conversion between free Heroes 2 and Heroes 3.
-The design routes every conversion through a common **unified JSON** format, 
-so a map from any supported game can be converted to any other without writing 
+The design routes every conversion through a common **unified JSON** format,
+so a map from any supported game can be converted to any other without writing
 a direct converter for every pair of formats.
 
 ## 1. H3 → JSON (and back)
@@ -32,7 +32,8 @@ a direct converter for every pair of formats.
 
 - `h2decoder.py` implements `parse_fh2m()` for fheroes2 maps:
   magic `h2map\0`, big-endian integers, format versions 2–13, plain base
-  parameters followed by a single zlib-compressed section.
+  parameters followed by a single zlib-compressed section. `.mp2` files
+  are recognized as Heroes II maps too.
 - `write_fh2m()` writes the structure back to `.fh2m`.
 - Each H2 map in `input/` is decoded to a detailed JSON in
   `outputjson/<name>.json`, documented in `h2m_description.english.txt` and
@@ -40,13 +41,21 @@ a direct converter for every pair of formats.
 
 ## 3. Hommoe (Olden Era) → JSON (and back)
 
-- `hommoedecoder.py` implements `parse_hommoe()` for Olden Era maps:
-  magic `h2map\0`, big-endian integers, format versions 2–13, plain base
-  parameters followed by a single zlib-compressed section.
-- `write_hommoe()` writes the structure back to `.map` and optionnal `.json`.
+- `hommoedecoder.py` implements `parse_hommoe()` for Olden Era `.map`
+  files: a single gzip stream which, once decompressed, contains a hash,
+  a version string, a 2-byte separator, then several unsigned-LEB128-varint-
+  framed UTF-8 JSON blocks (`scenario`, `adventure`, `dialogQuestData`,
+  plus an optional `commentAiData` when scripts are embedded), and optional
+  opaque trailing bytes. Each block is kept as raw JSON text so the writer
+  can re-emit the decompressed content byte-identically.
+- `write_hommoe()` writes the structure back to a `.map` file, reproducing
+  the original gzip container byte-for-byte (same header fields and deflate
+  settings).
 - Each Olden Era map in `input/` is decoded to a detailed JSON in
   `outputjson/<name>.json`, documented in `hommoe_description.english.txt` and
   `hommoe_json_description.english.txt`.
+- `.map` maps are currently regenerated as-is into `output/<name>.map`;
+  conversion to/from the unified JSON is not implemented for them yet.
 
 ## 4. Detailed JSON → unified JSON
 
@@ -65,21 +74,22 @@ a direct converter for every pair of formats.
   shifts between the H2 and H3 conventions are carried explicitly
   (`anchorShift`) so each writer restores its own anchor placement.
 
-## 5. Unified JSON → H2, H3 or Hommoe
+## 5. Unified JSON → H2 or H3 (Olden Era not yet)
 
-- `convert_from_unified()` (`unified_to_h3m()` / `unified_to_fh2m()` / `unified_to_hommoe()`)
+- `convert_from_unified()` (`unified_to_h3m()` / `unified_to_fh2m()`)
   rebuilds a game-specific structure from the unified JSON, then
-  `write_h3m()` / `write_fh2m()` / `write_hommoe()` serialize the binaries into `output/`.
-- By default every input map is converted to `.h3m` and `.fh2m` and `.map` ;
-  `--target h3m|fh2m|oe` restricts the output to a single format
-  (`main.py` orchestrates the whole pipeline).
+  `write_h3m()` / `write_fh2m()` serialize the binaries into `output/`.
+- By default every `.h3m` / `.fh2m` / `.mp2` input is converted to **both**
+  `.h3m` and `.fh2m`; `--target h3m|fh2m` restricts the output to a single
+  format (`main.py` orchestrates the whole pipeline). `.map` inputs are
+  parsed and regenerated as-is (see section 3).
 
 ```
-input/*.{h3m,fh2m,map,json}
+input/*.{h3m,fh2m,mp2,map}
    → outputjson/<name>.json     (detailed JSON, faithful to the source format)
-   → outputunified/<name>.json  (unified JSON, common to both games)
-   → output/<name>.h3m + output/<name>.fh2m + output/<name>.map 
-      + output/<name>.json (optionnal)     (regenerated/converted maps)
+   → outputunified/<name>.json  (unified JSON, for .h3m/.fh2m/.mp2 sources)
+   → output/<name>.h3m + output/<name>.fh2m   (converted from h3m/fh2m/mp2 sources)
+   → output/<name>.map          (Olden Era .map inputs, regenerated as-is)
 ```
 
 ## 6. Content conversion work (H2 ↔ H3 fidelity)
@@ -114,32 +124,36 @@ converted maps actually match the target game:
 - **Victory/defeat conditions**: H2 conditions mapped to H3 equivalents
   (e.g. defeatOtherSide → None, ultimate artifact → buildGrail).
 
-## 6. Verification
+## 7. Verification
 
 - `verify_roundtrip.py` checks every `input/` map against its regenerated
   `output/` file of the same extension: byte-perfect equality for h3m
-  (gunzipped content), and content-level equality for fh2m (decompressed
-  zlib section), plus equality of the parsed structures. Must exit 0.
+  (gunzipped content), content-level equality for fh2m (decompressed
+  zlib section), gunzipped content byte-identical for `.map` (Olden Era),
+  plus equality of the parsed structures. Must exit 0.
 - `make_variant.py` generates `.h3m` variants of a converted map (e.g.
   without a class of objects) from `outputunified/` to isolate load issues.
 - CI was intentionally removed; verification is manual:
   `python main.py` then `python verify_roundtrip.py`.
 
-## 7. Known limitations
+## 8. Known limitations
 
 - H3 maps with an underground level cannot be converted to H2 (no
   underground in H2): the conversion fails on purpose.
 - Neutral heroes from H3 disappear in H2 output (no neutral heroes in H2).
 - road conversion between H2 and H3 is imperfect as of yet
 - Event conversion is also to be done
-- some object do not have the same footprint in different map format 
-and some collision may occur when other objects are put next to it
+- some object do not have the same footprint in different map format
+  and some collision may occur when other objects are put next to it
 - conversion from H2 to H3 is mostly working besides the limitations
-above, conversion from H3 to H2 has not been tested
+  above, conversion from H3 to H2 has not been tested
+- Olden Era `.map` files are only round-tripped as-is; conversion
+  to/from the unified JSON (and thus to/from H2/H3) is not implemented yet
 
 ## Reference maps
 
 `input/` holds the reference maps used for development and verification:
-`all for one.h3m` (H3) plus `4_dimensions.fh2m`, `5Kings1Ring.fh2m`,
+`all for one.h3m` (H3); `4_dimensions.fh2m`, `5Kings1Ring.fh2m`,
 `Barbarian vs Wizard.fh2m`, `Full Backpack.fh2m`, `Mymaptest.fh2m` and
-`Tetra_conflict.fh2m` (H2).
+`Tetra_conflict.fh2m` (H2); `Broken_Alliance.map`, `all_cats_go_to_heaven.map`,
+`olden_era_template.map` and `synthetic_oemap_4blocks.map` (Olden Era).
