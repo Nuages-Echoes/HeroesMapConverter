@@ -716,19 +716,364 @@ def convert_fh2m_to_unified(map_data):
     return unified
 
 
+# Olden Era (hommoe) player colors: a spawn's colorId indexes this list
+# when >= 0; every sample carries colorId=-1, in which case the spawn
+# order is used instead.
+HOMMOE_PLAYER_COLORS = ["Blue", "Green", "Red", "Yellow", "Orange", "Purple", "Tan", "Teal", "Pink"]
+
+# Olden Era faction sid -> display name (Core.zip DB/fractions; see the
+# faction table in /workspace/references/map-editor-json-tool/src/lib/factions.ts).
+# OE factions have no Heroes II/III equivalent, so they keep their own
+# names in the unified race set.
+HOMMOE_FACTION_NAMES = {
+    "human": "Temple",
+    "undead": "Necropolis",
+    "dungeon": "Dungeon",
+    "nature": "Grove",
+    "demons": "Hive",
+    "unfrozen": "Schism",
+    "neutral": "Neutral",
+}
+
+# Olden Era tilesMap biome id -> unified terrain (biome ids from Core.zip
+# DB/map/tiles/tiles.json: 1=Grass, 2=Sand, 3=Deathland, 4=Snow, 5=Autumn,
+# 6=Lava, 7=Dirt; see /workspace/references/map-editor-json-tool/src/lib/map-grid/terrain-colors.ts).
+# Water is not a tilesMap value: a nonzero waterMap id means "Water".
+HOMMOE_TILE_TERRAINS = {
+    1: "Grass",
+    2: "Desert",
+    3: "Wasteland",
+    4: "Snow",
+    5: "Swamp",
+    6: "Lava",
+    7: "Dirt",
+}
+
+
+# Sid fragments identifying adventure-map objects (checked before scenery).
+_HOMMOE_ADVENTURE_MISC_TOKENS = (
+    "portal", "market", "trading", "shrine", "altar", "magic_amplifier", "magic_wheel",
+    "storage", "windmill", "prison", "arena", "dragon", "mana_well", "observatory",
+    "learning", "wise_owl", "mystical_tower", "knowledge", "lost_library",
+    "circle_of_life", "unit_trade", "random-hire",
+)
+# Sid fragments identifying decorative scenery.
+_HOMMOE_SCENERY_TOKENS = (
+    "tree", "palm", "mushroom", "stones", "stone", "hill", "ground", "grass",
+    "flowers", "weed", "fish", "camp_fire", "thorns", "gallows", "pool", "fx_",
+    "dead_", "desert_", "dirt_", "cactus", "rock", "mountain", "campaign_fx",
+    "cart", "gardener", "spider", "bridge", "reed", "stump", "bones", "chick",
+)
+
+
+def _hommoe_sid_group(sid):
+    """Map an Olden Era object sid to a unified (fh2m-style) object group."""
+    s = sid.lower()
+    if s in ("city-spawner", "random-city", "random-town") or s.startswith("town"):
+        return "KINGDOM_TOWNS"
+    if s in ("hero-spawner", "random-hero"):
+        return "KINGDOM_HEROES"
+    if s.startswith("mine"):
+        return "ADVENTURE_MINES"
+    if s.startswith("dwelling") or s.startswith("barracks"):
+        return "ADVENTURE_DWELLINGS"
+    if s.startswith(("chest", "resource", "random-item", "pandora", "random-res")) or s.endswith("_artifact"):
+        return "ADVENTURE_TREASURES"
+    if s == "random-squad" or s.startswith("squad"):
+        return "MONSTERS"
+    if any(token in s for token in _HOMMOE_ADVENTURE_MISC_TOKENS):
+        return "ADVENTURE_MISCELLANEOUS"
+    if any(token in s for token in _HOMMOE_SCENERY_TOKENS):
+        if "tree" in s or "palm" in s:
+            return "LANDSCAPE_TREES"
+        if "mountain" in s:
+            return "LANDSCAPE_MOUNTAINS"
+        return "LANDSCAPE_MISCELLANEOUS"
+    return "UNMAPPED"
+
+
+def _hommoe_main_town(spawn, adventure, width):
+    """Resolve a spawn entry's main town (spawnPointType 0 = city spawner).
+
+    The link goes spawn.owner -> objectsProperties.propSpawns (owner) ->
+    object id -> the city-spawner group's node for that id.
+    """
+    props = adventure.get("objectsProperties") or {}
+    owner = spawn.get("owner")
+    spawn_id = None
+    for row in props.get("propSpawns") or []:
+        if isinstance(row, dict) and row.get("owner") == owner:
+            spawn_id = row.get("id")
+            break
+    if spawn_id is None:
+        return None
+    node = None
+    for group in adventure.get("objects", []):
+        ids = group.get("ids") or []
+        if spawn_id in ids:
+            j = ids.index(spawn_id)
+            nodes = group.get("nodes") or []
+            if j < len(nodes):
+                node = nodes[j]
+            break
+    if node is None:
+        return None
+    generate_hero = True
+    for row in props.get("propCities") or []:
+        if isinstance(row, dict) and row.get("id") == spawn_id:
+            generate_hero = bool(row.get("spawnHero", True))
+            break
+    return OrderedDict([
+        ("generateHero", generate_hero),
+        ("x", int(node) % width if width else 0),
+        ("y", int(node) // width if width else 0),
+        ("z", 0),
+    ])
+
+
+def _hommoe_objects_to_unified(adventure, width):
+    """
+    Convert the adventure block's object groups into the unified objects
+    section: objects stored per tile ("x_y_z" -> list), each carrying its
+    raw sid, node, rotation, level and its objectsProperties rows.
+    """
+    props = adventure.get("objectsProperties") or {}
+    prop_rows_by_id = {}
+    for table, rows in props.items():
+        if not isinstance(rows, list):
+            continue
+        for row in rows:
+            if isinstance(row, dict) and isinstance(row.get("id"), int):
+                prop_rows_by_id.setdefault(row["id"], {})[table] = row
+
+    tiles = OrderedDict()
+    group_counters = {}
+
+    def add_object(oid, group_name, sid, node, rotation, level):
+        x = int(node) % width if width else 0
+        y = int(node) // width if width else 0
+        index = group_counters.get(group_name, 0)
+        group_counters[group_name] = index + 1
+        entry = OrderedDict([
+            ("id", oid),
+            ("group", group_name),
+            ("index", index),
+            ("sourceSid", sid),
+            ("sourceNode", node),
+        ])
+        if rotation is not None:
+            entry["rotation"] = rotation
+        if level is not None:
+            entry["level"] = level
+        rows = prop_rows_by_id.get(oid)
+        if rows:
+            entry["properties"] = rows
+        tiles.setdefault("{}_{}_0".format(x, y), []).append(entry)
+
+    for group in adventure.get("objects", []):
+        sid = group.get("sid")
+        sid_str = sid if isinstance(sid, str) else (",".join(sid) if isinstance(sid, list) else str(sid))
+        group_name = _hommoe_sid_group(sid_str)
+        ids = group.get("ids") or []
+        nodes = group.get("nodes") or []
+        rotations = group.get("rotations") or []
+        levels = group.get("levels") or []
+        for j, oid in enumerate(ids):
+            if j >= len(nodes) or nodes[j] is None:
+                continue
+            add_object(oid, group_name, sid_str, nodes[j],
+                       rotations[j] if j < len(rotations) else None,
+                       levels[j] if j < len(levels) else None)
+
+    # Fixed squads live in a separate id namespace but are monster
+    # placements, so they join the MONSTERS group.
+    for squad in adventure.get("squads", []):
+        sid = squad.get("sid") or ""
+        ids = squad.get("ids") or []
+        nodes = squad.get("nodes") or []
+        for j, oid in enumerate(ids):
+            if j < len(nodes) and nodes[j] is not None:
+                add_object(oid, "MONSTERS", sid, nodes[j], None, None)
+
+    # Editor zone markers become MAP_EXTRAS entries.
+    for marker in adventure.get("markers", []):
+        node = marker.get("node")
+        if node is not None:
+            add_object(marker.get("id"), "MAP_EXTRAS", marker.get("sid") or "", node, None, None)
+
+    result = OrderedDict([("tiles", tiles)])
+    # Raw adventure-level data with no unified equivalent, kept as-is.
+    if adventure.get("rivers"):
+        result["sourceRivers"] = adventure["rivers"]
+    if adventure.get("areas"):
+        result["sourceAreas"] = adventure["areas"]
+    return result
+
+
+def convert_hommoe_to_unified(map_data):
+    """
+    Convert the JSON produced by parse_hommoe into the unified format.
+
+    Args:
+        map_data: Dictionary as returned by parse_hommoe.
+
+    Returns:
+        OrderedDict: The map in the unified format.
+    """
+    blocks = {}
+    for block in map_data.get("blocks", []):
+        if block.get("data") is not None:
+            blocks[block.get("name")] = block["data"]
+    scenario = blocks.get("scenario") or {}
+    adventure = blocks.get("adventure") or {}
+
+    unified = OrderedDict()
+    unified["sourceGame"] = "hommoe"
+    unified["sourceVersion"] = str(map_data.get("version", ""))
+    unified["name"] = adventure.get("mapName") or scenario.get("title", "")
+    unified["description"] = adventure.get("mapDesc") or scenario.get("desc", "")
+    unified["creatorNotes"] = ""
+    # Olden Era has no single map difficulty (only per-side start
+    # settings, kept raw below); default to Normal like the other games.
+    unified["difficulty"] = "Normal"
+
+    width = scenario.get("sizeX") or adventure.get("sizeX_") or 0
+    height = scenario.get("sizeZ") or adventure.get("sizeZ_") or width
+    unified["mapSize"] = OrderedDict([("width", width), ("height", height)])
+    unified["hasUnderground"] = False
+    unified["mainLanguage"] = 0
+
+    # Raw scenario fields with no unified equivalent, kept for reference.
+    if scenario.get("title") or scenario.get("desc"):
+        unified["sourceNameDescSids"] = OrderedDict([
+            ("title", scenario.get("title", "")),
+            ("desc", scenario.get("desc", "")),
+        ])
+    if scenario.get("startSettings"):
+        unified["sourceStartSettings"] = scenario["startSettings"]
+    if scenario.get("banInfoData"):
+        unified["sourceBanInfoData"] = scenario["banInfoData"]
+
+    # Players: one spawn entry per side (owner is 1-based).
+    spawns = (scenario.get("spawns") or {}).get("spawns", [])
+    available = []
+    human = []
+    computer = []
+    player_details = []
+    for index, spawn in enumerate(spawns):
+        color_id = spawn.get("colorId", -1)
+        if not isinstance(color_id, int) or color_id < 0:
+            color_id = index
+        color = HOMMOE_PLAYER_COLORS[color_id % len(HOMMOE_PLAYER_COLORS)]
+        spawn_type = spawn.get("spawnType", 2)
+        if spawn_type in (0, 1):
+            available.append(color)
+        if spawn_type == 0:
+            human.append(color)
+        elif spawn_type == 1:
+            computer.append(color)
+        faction_sid = spawn.get("factionSid") or ""
+        detail = OrderedDict()
+        detail["color"] = color
+        detail["available"] = spawn_type in (0, 1)
+        detail["sourceRace"] = faction_sid if faction_sid else "Random"
+        if faction_sid:
+            detail["race"] = HOMMOE_FACTION_NAMES.get(faction_sid)
+        else:
+            detail["race"] = "Random"
+        if spawn.get("isHeroDefined") and spawn.get("heroSid"):
+            detail["sourceHeroSid"] = spawn["heroSid"]
+        if spawn.get("spawnPointType") == 0:
+            main_town = _hommoe_main_town(spawn, adventure, width)
+            if main_town is not None:
+                detail["mainTown"] = main_town
+        player_details.append(detail)
+
+    unified["players"] = OrderedDict([
+        ("availableColors", available),
+        ("humanColors", human),
+        ("computerColors", computer),
+    ])
+    unified["playerDetails"] = player_details
+
+    # No alliance data in the samples (maxAlliancesCount is 0).
+    unified["teams"] = []
+
+    # Victory/loss: the scenario's endController is carried raw; 0 is the
+    # standard ending observed in every sample.
+    end_controller = scenario.get("endController", 0)
+    victory = OrderedDict()
+    victory["type"] = "defeatEveryone" if end_controller == 0 else "unknown"
+    victory["allowNormalVictory"] = True
+    victory["appliesToAI"] = True
+    victory["metadata"] = []
+    victory["sourceEndController"] = end_controller
+    unified["victoryCondition"] = victory
+    loss = OrderedDict()
+    loss["type"] = "loseEverything"
+    loss["metadata"] = []
+    unified["lossCondition"] = loss
+
+    unified["rumors"] = []
+    unified["dailyEvents"] = []
+
+    # Terrain: tilesMap biome ids; a nonzero waterMap id means Water.
+    grid = []
+    tiles_map = adventure.get("tilesMap", [])
+    water_map = adventure.get("waterMap", [])
+    levels_map = adventure.get("levelsMap", [])
+    climbs_map = adventure.get("climbsMap", [])
+    roads_map = adventure.get("roadsMap", [])
+    for index, tile_id in enumerate(tiles_map):
+        x = index % width if width else 0
+        y = index // width if width else 0
+        water_id = water_map[index] if index < len(water_map) else 0
+        if water_id:
+            terrain = "Water"
+            source_terrain = "water:{}".format(water_id)
+        else:
+            terrain = HOMMOE_TILE_TERRAINS.get(tile_id, "Unknown (0x{:02X})".format(tile_id))
+            source_terrain = "tile:{}".format(tile_id)
+        cell = OrderedDict([
+            ("x", x),
+            ("y", y),
+            ("z", 0),
+            ("terrain", terrain),
+            ("sourceTerrain", source_terrain),
+            ("sourceTileId", tile_id),
+        ])
+        if index < len(levels_map):
+            cell["sourceLevel"] = levels_map[index]
+        if index < len(climbs_map):
+            cell["sourceClimb"] = climbs_map[index]
+        if index < len(roads_map) and roads_map[index]:
+            cell["sourceRoadIndex"] = roads_map[index]
+        grid.append(cell)
+    unified["terrain"] = OrderedDict([
+        ("levels", [OrderedDict([("grid", grid)])]),
+    ])
+
+    unified["objects"] = _hommoe_objects_to_unified(adventure, width)
+
+    return unified
+
+
 def convert_to_unified(map_data, source_game):
     """
     Convert a parsed map into the unified format.
 
     Args:
-        map_data: Dictionary as returned by parse_h3m or parse_fh2m.
-        source_game: "h3m" or "fh2m".
+        map_data: Dictionary as returned by parse_h3m, parse_fh2m or
+            parse_hommoe.
+        source_game: "h3m", "fh2m" or "hommoe".
 
     Returns:
         OrderedDict: The map in the unified format.
     """
     if source_game == "fh2m":
         return convert_fh2m_to_unified(map_data)
+    if source_game == "hommoe":
+        return convert_hommoe_to_unified(map_data)
     return convert_h3m_to_unified(map_data)
 
 

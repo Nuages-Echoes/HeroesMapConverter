@@ -78,8 +78,14 @@ def main():
             print(f"JSON écrit dans '{json_file_path}'")
 
             if is_oe_map:
-                # Olden Era (.map) maps are regenerated as-is: conversion
-                # to/from the unified JSON is not implemented for them yet.
+                # Olden Era (.map) maps go through the unified JSON like the
+                # other formats; the binary output is still regenerated from
+                # the detailed JSON (no unified -> hommoe writer yet).
+                unified_result = convert_to_unified(result, "hommoe")
+                unified_file_path = os.path.join(OUTPUT_UNIFIED_DIR, f"{base_name}.json")
+                with open(unified_file_path, "w", encoding="utf-8") as json_file:
+                    json.dump(unified_result, json_file, indent=4, ensure_ascii=False)
+                print(f"JSON unifié écrit dans '{unified_file_path}'")
                 output_path = os.path.join(OUTPUT_DIR, f"{base_name}.map")
                 write_hommoe(result, output_path)
                 print(f"HOMMOE file written to {output_path}")

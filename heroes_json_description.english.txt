@@ -13,6 +13,7 @@ Description of the unified JSON format produced from .h3m and .fh2m maps
 
    (h3m)   { field only fillable from a .h3m map
    (fh2m)  { field only fillable from a .fh2m map
+   (hommoe) { field only fillable from a .map (Olden Era) map
    (cond.) { field only present under the condition stated in its
              description
 
@@ -32,10 +33,13 @@ Description of the unified JSON format produced from .h3m and .fh2m maps
    "sourceGame"        string      Game the map was converted from:
                                         "h3m" - Heroes of Might and Magic III
                                         "fh2m" - fheroes2 native map
+                                        "hommoe" - Olden Era native .map
    "sourceVersion"     string      Version of the source format:
                                         (h3m) "RoE", "AB" or "SoD"
                                         (fh2m) the numeric map format
                                         version as a string ("2" to "13")
+                                        (hommoe) the .map version string
+                                        (e.g. "0.72.30")
    "name"              string      Name of the map
    "description"       string      Description of the map
    "creatorNotes"      string      Notes of the map maker (fh2m; empty
@@ -47,7 +51,12 @@ Description of the unified JSON format produced from .h3m and .fh2m maps
      "height"          int         Height
    "hasUnderground"    bool        Whether the map has an underground level
                                     (always false for fh2m, no underground
-                                    in Heroes II)
+                                    in Heroes II; always false for hommoe,
+                                    Olden Era maps are single-level)
+   "sourceNameDescSids" object     (hommoe) raw title/desc localization
+                                    SIDs of the scenario block
+   "sourceStartSettings" object    (hommoe) raw scenario startSettings
+   "sourceBanInfoData" object      (hommoe) raw banInfoData
    "mainLanguage"      int         Main language of the map (fh2m; 0 -
                                     English; always 0 for h3m)
 
@@ -78,6 +87,14 @@ Description of the unified JSON format produced from .h3m and .fh2m maps
                                     no mapping exists
      "sourceRace"      string      Raw race/faction value of the source
                                     game:
+                                        (hommoe) the faction sid of the
+                                        spawn entry (e.g. "human"), or
+                                        "Random" when empty; "race" then
+                                        holds the Olden Era faction name
+                                        (Temple, Necropolis, ...) which has
+                                        no H2/H3 equivalent, and
+                                        "sourceHeroSid" the spawn's hero
+                                        sid when defined
                                         (fh2m) "Random", "Knight",
                                         "Barbarian", "Sorceress",
                                         "Warlock", "Wizard",
@@ -85,6 +102,7 @@ Description of the unified JSON format produced from .h3m and .fh2m maps
                                         (h3m) one of the owned town types
                                         ("Castle", "Rampart", ...), or
                                         "Random"
+                                        (hommoe) see above
      "mainTown"        object      (cond.) Main town, when defined:
        "generateHero"  bool        Whether to create a hero at the main
                                     town (h3m AB+; true for fh2m)
@@ -125,6 +143,9 @@ Description of the unified JSON format produced from .h3m and .fh2m maps
    the union of both games.
 
    "victoryCondition"  object:
+     "sourceEndController" int     (hommoe) raw scenario endController
+                                    (0 = standard ending, mapped to
+                                    "defeatEveryone")
      "type"            string      One of:
      "defeatEveryone"              Default (no special condition):
                                         (fh2m) 0 (VICTORY_DEFEAT_EVERYONE)
@@ -239,6 +260,14 @@ Description of the unified JSON format produced from .h3m and .fh2m maps
                                         (fh2m) "terrain:<index>" where
                                         index is the raw terrain index
                                         of the tile
+                                        (hommoe) "tile:<id>" (tilesMap
+                                        biome id 1-7) or "water:<id>"
+                                        (waterMap id) when the tile is
+                                        water; "sourceTileId",
+                                        "sourceLevel", "sourceClimb" and
+                                        "sourceRoadIndex" carry the raw
+                                        tilesMap/levelsMap/climbsMap/
+                                        roadsMap values
 
 
 ████████████████════════════════════════════════════████████████████████
@@ -274,8 +303,16 @@ Description of the unified JSON format produced from .h3m and .fh2m maps
        "id"            int         Unique object id on the map
        "group"         string      Object group ("ROADS", "STREAMS",
                                     "ADVENTURE_MINES", "KINGDOM_TOWNS",
-                                    "MONSTERS", "LANDSCAPE_*", ...)
+                                    "MONSTERS", "LANDSCAPE_*", ...);
+                                    (hommoe) sids with no known group
+                                    get "UNMAPPED"
        "index"         int         Object index within its group
+     (hommoe) each entry also carries "sourceSid" (raw object sid),
+       "sourceNode" (flat tile index, x = node % width, y = node // width),
+       "rotation", "level" and "properties" (the object's raw
+       objectsProperties rows, keyed by table name); squads join MONSTERS,
+       markers join MAP_EXTRAS; "sourceRivers"/"sourceAreas" hold the raw
+       rivers/areas arrays
      ... plus the metadata maps (castleMetadata, heroMetadata, ...)
      keyed by object id (see above).
 

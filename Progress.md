@@ -48,9 +48,10 @@ Pour chaque fichier de `input/`, `main.py` applique trois étapes :
    artefacts, sorts, héros, villes, mines, objets de paysage…) sont traduits
    via les tables de `correspondence.py`, dont les équivalences sont listées
    dans `heroes_field_correspondence.english.txt`.
-3. **JSON unifié → formats cibles.** (Étape ignorée pour les sources `.map` :
-   la conversion Olden Era ↔ JSON unifié n'est pas encore implémentée, la carte
-   est régénérée telle quelle dans `output/<nom>.map`.) Le JSON unifié est relu, puis
+3. **JSON unifié → formats cibles.** Pour les sources `.map`, le JSON unifié est
+   produit (`convert_hommoe_to_unified` dans `unified.py`) mais la carte binaire
+   est régénérée depuis le JSON détaillé dans `output/<nom>.map` (pas encore
+   d'écrivain JSON unifié → .map). Pour les autres sources, le JSON unifié est relu, puis
    `convert_from_unified()` le retransforme en structure propre à chaque jeu
    (`unified_to_h3m()` / `unified_to_fh2m()`) et `write_h3m()` / `write_fh2m()`
    sérialisent le binaire dans `output/`. Par défaut, chaque carte est produite
