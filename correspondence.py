@@ -4007,6 +4007,7 @@ FH2M_TO_H3M_MISC = {
     "MISC_22": (91, 0),   # Sign, generic
     "MISC_23": (109, 0),  # Water wheel, snow
     "MISC_24": (109, 0),  # Water wheel, generic
+    "MISC_25": (105, 0),  # Wagon -> wagon
     "MISC_26": (113, 0),  # Witch's Hut, swamp
     # The Stone Liths are the Heroes II teleportation portals (two-way
     # only in H2): they convert to the h3m two-way monolith (45), the
