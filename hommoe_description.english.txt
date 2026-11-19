@@ -90,6 +90,13 @@
    or an array of strings), squads[] (fixed squad placements, a
    SEPARATE id namespace from objects[]): { sid, ids[], nodes[] },
    markers[] (editor zone annotations): { node, id, sid, v },
+   settings: game rules, including mapWinConditions[] (one entry per
+   active win condition, keyed by typeWinCondition: 0 classic, 1
+   desertion, 2 hero lighting, 3 capital hold, 4 guardian's demise,
+   5 final battle, 8 city hold, 9 tournament; enum from the game's RMG,
+   see the references). Loss conditions are not structured: the default
+   is "lose everything", scripts can force one with GameLose/SideLose
+   actions (block 4).
    objectsProperties: per-instance property tables keyed by
    (type, id), including propEntities, propsName, propHeroes,
    propCities, propSquads, propNoCombineGeometries, propSpawns
