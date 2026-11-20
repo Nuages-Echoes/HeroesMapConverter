@@ -1,23 +1,21 @@
 H2/H3 map objects with no Olden Era equivalent
 ============================================================
 
-Generated from the local reference
-references/map-editor-json-tool (h3-import/h3-object-mapping.json,
-outcome "omit") cross-checked against the input maps via
-oe_loop_check.py. Regenerate the observed section with:
-    python3 oe_loop_check.py
+Generated from the local references (map-editor-json-tool,
+olden-era-map-vs-code-inspector) and the real input maps; the observed
+section is regenerated with:  python3 oe_loop_check.py
 
-OE object mapping source: oe_object_correspondence.json.
+OE object mapping source: oe_object_correspondence.json
+(reference mapping + evidence-cited supplements).
 
 ------------------------------------------------------------
-1. H3 object classes the OE mapping omits entirely (143 classes)
+1. H3 object classes with no known OE equivalent (108 remaining of 143 omitted)
 ------------------------------------------------------------
 
   h3Id  name                              reason
   0      Nothing                            unmapped_template_object_id_0
   1      Unidentified                       unmapped_template_object_id_1
   3      Unidentified                       unmapped_template_object_id_3
-  7      Black Market                       unmapped_template_object_id_7
   8      Boat                               boat_no_stock_objectconfig
   9      Border Guard                       unmapped_template_object_id_9
   10     Keymaster Tent                     unmapped_template_object_id_10
@@ -32,29 +30,21 @@ OE object mapping source: oe_object_correspondence.json.
   27     Eye of the Magi                    unmapped_template_object_id_27
   29     Flotsam                            flotsam_water_travel_omit
   32     Garden of Revelation               unmapped_template_object_id_32
-  33     Garrison Horizontal                garrison_army_payload_deferred
-  34     Hero                               unmapped_template_object_id_34
-  35     Hill Fort                          unmapped_template_object_id_35
   36     Grail                              grail_deferred
   39     Lean To                            lean_to_deferred
   40     Unidentified                       unmapped_template_object_id_40
   41     Library of Enlightenment           unmapped_template_object_id_41
-  43     Monolith One Way Entrance          unmapped_template_object_id_43
-  44     Monolith One Way Exit              unmapped_template_object_id_44
   46     Magic Plains                       unmapped_template_object_id_46
   47     School of Magic                    unmapped_template_object_id_47
   48     Magic Spring                       unmapped_template_object_id_48
   50     Market of Time                     unmapped_template_object_id_50
-  51     Mercenary Camp                     unmapped_template_object_id_51
   52     Mermaids                           unmapped_template_object_id_52
   55     Mystical Garden                    unmapped_template_object_id_55
   56     Oasis                              unmapped_template_object_id_56
   57     Obelisk                            unmapped_template_object_id_57
   58     Redwood Observatory                unmapped_template_object_id_58
   59     Ocean Bottle                       ocean_bottle_omit
-  62     Prison                             prison_payload_deferred
   63     Pyramid                            unmapped_template_object_id_63
-  70     Random Hero                        unmapped_template_object_id_70
   78     Refugee Camp                       unmapped_template_object_id_78
   81     Scholar                            scholar_deferred
   82     Sea Chest                          sea_chest_water_travel_omit
@@ -68,36 +58,18 @@ OE object mapping source: oe_object_correspondence.json.
   93     Spell Scroll                       spell_scroll_deferred
   96     Temple                             unmapped_template_object_id_96
   97     Den of Thieves                     unmapped_template_object_id_97
-  99     Trading Post                       unmapped_template_object_id_99
   106    War Machine Factory                unmapped_template_object_id_106
   107    School of War                      unmapped_template_object_id_107
-  108    Warrior Tomb                       warriors_tomb_deferred
   109    Water Wheel                        unmapped_template_object_id_109
   110    Watering Hole                      unmapped_template_object_id_110
   113    Witch Hut                          witch_hut_deferred
-  114    Brush                              unmapped_template_object_id_114
-  115    Bush                               unmapped_template_object_id_115
-  117    Canyon                             unmapped_template_object_id_117
-  121    Frozen Lake                        unmapped_template_object_id_121
-  122    Hedge                              unmapped_template_object_id_122
   123    Unidentified                       unmapped_template_object_id_123
-  132    Moss                               unmapped_template_object_id_132
-  138    Plant                              unmapped_template_object_id_138
-  139    Misc Scenery (highland/sand/snow/  unmapped_template_object_id_139
   141    Magical Terrain (cracked ice/dune  unmapped_template_object_id_141
   142    Misc Active Object (resource gene  unmapped_template_object_id_142
-  143    River Delta                        unmapped_template_object_id_143
   144    Misc Active Object (highland/roug  unmapped_template_object_id_144
   145    Water Treasure (resources)         unmapped_template_object_id_145
   146    Misc Active Object (water; creatu  unmapped_template_object_id_146
-  152    Stalagmite                         unmapped_template_object_id_152
-  154    Wasteland Lake                     unmapped_template_object_id_154
-  155    Trees                              unmapped_template_object_id_155
   156    Unidentified                       unmapped_template_object_id_156
-  157    Volcanic Vent                      unmapped_template_object_id_157
-  158    Volcano                            unmapped_template_object_id_158
-  159    Willow Trees                       unmapped_template_object_id_159
-  160    Sand Decoration                    unmapped_template_object_id_160
   165    Unidentified                       unmapped_template_object_id_165
   166    Unidentified                       unmapped_template_object_id_166
   167    Unidentified                       unmapped_template_object_id_167
@@ -110,7 +82,6 @@ OE object mapping source: oe_object_correspondence.json.
   174    Unidentified                       unmapped_template_object_id_174
   175    Unidentified                       unmapped_template_object_id_175
   176    Unidentified                       unmapped_template_object_id_176
-  177    Lake                               unmapped_template_object_id_177
   178    Unidentified                       unmapped_template_object_id_178
   179    Unidentified                       unmapped_template_object_id_179
   180    Unidentified                       unmapped_template_object_id_180
@@ -136,18 +107,11 @@ OE object mapping source: oe_object_correspondence.json.
   201    Unidentified                       unmapped_template_object_id_201
   202    Unidentified                       unmapped_template_object_id_202
   203    Unidentified                       unmapped_template_object_id_203
-  204    Yucca Trees                        unmapped_template_object_id_204
   205    Unidentified                       unmapped_template_object_id_205
-  212    Border Gate                        border_gate_deferred
-  213    Freelancers Guild                  unmapped_template_object_id_213
-  214    Hero Placeholder                   hero_placeholder_deferred
   215    Quest Guard                        quest_guard_payload_deferred
   216    Random Dwelling                    random_dwelling_decoder_unsupported
   217    Random Dwelling Lvl                random_dwelling_lvl_unsupported
   218    Random Dwelling Faction            random_dwelling_faction_unsupported
-  219    Garrison Vertical                  garrison_army_payload_deferred
-  221    Trading Post                       unmapped_template_object_id_221
-  222    Clover Field                       unmapped_template_object_id_222
   223    Cursed Ground                      unmapped_template_object_id_223
   224    Evil Fog                           unmapped_template_object_id_224
   225    Favorable Winds                    unmapped_template_object_id_225
@@ -159,21 +123,61 @@ OE object mapping source: oe_object_correspondence.json.
   231    Rocklands                          unmapped_template_object_id_231
 
 ------------------------------------------------------------
-2. Objects dropped when converting the input maps to .map
+2. Classes the reference omits but for which an OE equivalent was found
+   locally (supplements in oe_object_correspondence.json, now converted)
+------------------------------------------------------------
+
+  h3Id  name                              OE sid             local evidence
+  7      Black Market                       item_markets       map-objects.json 'item_markets' (artifact market = H3 Black Market); 'market_items' is the sibling resource market
+  33     Garrison Horizontal                garrisons          map-objects.json + inspector object-categories garrison family; real maps use 'garrisons'
+  34     Hero                               hero-spawner       real maps + inspector special family city-spawner|hero-spawner|random-hero|random-city; already the KINGDOM_HEROES group sid
+  35     Hill Fort                          fort               map-objects.json: fort = 'Pauper Knight Order' (the knight adventure site, = H3 Hill Fort)
+  43     Monolith One Way Entrance          portal_4           rmg/zone-islands PORTAL_SIDS portal_1..5; h3-import/portal-links.ts: portal_5 = subterranean gate; one-way monolith entrance -> portal_4
+  44     Monolith One Way Exit              portal_5           one-way monolith exit -> portal_5 (subterranean gate)
+  51     Mercenary Camp                     mercenary_guild    unit-selling camp; inspector unit-trade family random-hire|unit_trade, map-objects mercenary_guild
+  62     Prison                             prison             map-objects.json: prison = 'Hero Cage' (hero prison = H3 Prison); inspector object-categories: adventure-sites
+  70     Random Hero                        random-hero        inspector object-categories special family includes random-hero
+  77     Random Town                        random-city        real maps use 'random-city'; inspector special family
+  99     Trading Post                       market             inspector object-categories markets-and-trade: market|marketplace|trading_post; real maps use 'market'
+  108    Warrior Tomb                       heros_crypt        map-objects.json: heros_crypt = 'Tomb of a Nameless Hero' (= H3 Warrior's Tomb)
+  212    Border Gate                        town_gate          map-objects.json Travel & Portals: town_gate = 'Town Gate' (= H3 Border Gate)
+  213    Freelancers Guild                  mercenary_guild    map-objects.json Dwellings: mercenary_guild (= H3 Freelancers' Guild)
+  214    Hero Placeholder                   hero-spawner       hero placeholder -> hero-spawner
+  219    Garrison Vertical                  garrisons          same as class 33 (vertical garrison)
+  221    Trading Post                       market             same as class 99 (SoD trading post)
+  114    Brush                              scenery role shrub         (class name + reference role vocabulary)
+  115    Bush                               scenery role shrub         (class name + reference role vocabulary)
+  117    Canyon                             scenery role rock          (class name + reference role vocabulary)
+  121    Frozen Lake                        scenery role pool          (class name + reference role vocabulary)
+  122    Hedge                              scenery role shrub         (class name + reference role vocabulary)
+  132    Moss                               scenery role shrub         (class name + reference role vocabulary)
+  138    Plant                              scenery role shrub         (class name + reference role vocabulary)
+  139    Misc Scenery (highland/sand/snow/  scenery role ground        (class name + reference role vocabulary)
+  143    River Delta                        scenery role water_decoration (class name + reference role vocabulary)
+  152    Stalagmite                         scenery role rock          (class name + reference role vocabulary)
+  154    Wasteland Lake                     scenery role pool          (class name + reference role vocabulary)
+  155    Trees                              scenery role tree          (class name + reference role vocabulary)
+  157    Volcanic Vent                      scenery role mountain      (class name + reference role vocabulary)
+  158    Volcano                            scenery role mountain      (class name + reference role vocabulary)
+  159    Willow Trees                       scenery role tree          (class name + reference role vocabulary)
+  160    Sand Decoration                    scenery role ground        (class name + reference role vocabulary)
+  177    Lake                               scenery role pool          (class name + reference role vocabulary)
+  204    Yucca Trees                        scenery role tree          (class name + reference role vocabulary)
+  222    Clover Field                       scenery role shrub         (class name + reference role vocabulary)
+
+------------------------------------------------------------
+3. Objects dropped when converting the current input maps to .map
 ------------------------------------------------------------
 
   map                      dropped object type
-  4_dimensions.fh2m         h3 class 121 (Frozen Lake), sub 0 | fh2m LANDSCAPE_MISCELLANEOUS index 38  x1
-  4_dimensions.fh2m         h3 class 143 (River Delta), sub 0 | fh2m LANDSCAPE_MISCELLANEOUS index 143  x9
-  4_dimensions.fh2m         h3 class 143 (River Delta), sub 0 | fh2m LANDSCAPE_MISCELLANEOUS index 144  x4
-  4_dimensions.fh2m         h3 class 143 (River Delta), sub 0 | fh2m LANDSCAPE_MISCELLANEOUS index 145  x14
-  4_dimensions.fh2m         h3 class 143 (River Delta), sub 0 | fh2m LANDSCAPE_MISCELLANEOUS index 146  x14
   4_dimensions.fh2m         h3 class 23 (Marletto Tower), sub 0 | fh2m ADVENTURE_POWER_UPS index 10  x5
   4_dimensions.fh2m         h3 class 29 (Flotsam), sub 0 | fh2m ADVENTURE_WATER index 2  x21
+  4_dimensions.fh2m         h3 class 29 (Flotsam), sub 0 | fh2m LANDSCAPE_MISCELLANEOUS index 26  x7
+  4_dimensions.fh2m         h3 class 29 (Flotsam), sub 0 | fh2m LANDSCAPE_MISCELLANEOUS index 27  x1
+  4_dimensions.fh2m         h3 class 29 (Flotsam), sub 0 | fh2m LANDSCAPE_MISCELLANEOUS index 28  x3
   4_dimensions.fh2m         h3 class 32 (Garden of Revelation), sub 0 | fh2m ADVENTURE_POWER_UPS index 12  x9
   4_dimensions.fh2m         h3 class 41 (Library of Enlightenment), sub 0 | fh2m ADVENTURE_POWER_UPS index 21  x4
   4_dimensions.fh2m         h3 class 48 (Magic Spring), sub 0 | fh2m ADVENTURE_POWER_UPS index 0  x4
-  4_dimensions.fh2m         h3 class 51 (Mercenary Camp), sub 0 | fh2m ADVENTURE_POWER_UPS index 13  x9
   4_dimensions.fh2m         h3 class 52 (Mermaids), sub 0 | fh2m ADVENTURE_WATER index 10  x1
   4_dimensions.fh2m         h3 class 8 (Boat), sub 1 | fh2m ADVENTURE_WATER index 4  x12
   4_dimensions.fh2m         h3 class 82 (Sea Chest), sub 0 | fh2m ADVENTURE_WATER index 1  x56
@@ -198,28 +202,6 @@ OE object mapping source: oe_object_correspondence.json.
   4_dimensions.fh2m         no h3 reference | fh2m LANDSCAPE_FLAGS index 3  x4
   4_dimensions.fh2m         no h3 reference | fh2m LANDSCAPE_FLAGS index 4  x4
   4_dimensions.fh2m         no h3 reference | fh2m LANDSCAPE_FLAGS index 5  x4
-  4_dimensions.fh2m         no h3 reference | fh2m LANDSCAPE_MISCELLANEOUS index 103  x1
-  4_dimensions.fh2m         no h3 reference | fh2m LANDSCAPE_MISCELLANEOUS index 123  x25
-  4_dimensions.fh2m         no h3 reference | fh2m LANDSCAPE_MISCELLANEOUS index 124  x22
-  4_dimensions.fh2m         no h3 reference | fh2m LANDSCAPE_MISCELLANEOUS index 126  x5
-  4_dimensions.fh2m         no h3 reference | fh2m LANDSCAPE_MISCELLANEOUS index 127  x8
-  4_dimensions.fh2m         no h3 reference | fh2m LANDSCAPE_MISCELLANEOUS index 128  x11
-  4_dimensions.fh2m         no h3 reference | fh2m LANDSCAPE_MISCELLANEOUS index 134  x1
-  4_dimensions.fh2m         no h3 reference | fh2m LANDSCAPE_MISCELLANEOUS index 138  x1
-  4_dimensions.fh2m         no h3 reference | fh2m LANDSCAPE_MISCELLANEOUS index 139  x5
-  4_dimensions.fh2m         no h3 reference | fh2m LANDSCAPE_MISCELLANEOUS index 140  x2
-  4_dimensions.fh2m         no h3 reference | fh2m LANDSCAPE_MISCELLANEOUS index 26  x7
-  4_dimensions.fh2m         no h3 reference | fh2m LANDSCAPE_MISCELLANEOUS index 27  x1
-  4_dimensions.fh2m         no h3 reference | fh2m LANDSCAPE_MISCELLANEOUS index 28  x3
-  4_dimensions.fh2m         no h3 reference | fh2m LANDSCAPE_MISCELLANEOUS index 56  x11
-  4_dimensions.fh2m         no h3 reference | fh2m LANDSCAPE_MISCELLANEOUS index 69  x16
-  4_dimensions.fh2m         no h3 reference | fh2m LANDSCAPE_MISCELLANEOUS index 70  x34
-  4_dimensions.fh2m         no h3 reference | fh2m LANDSCAPE_MISCELLANEOUS index 71  x16
-  4_dimensions.fh2m         no h3 reference | fh2m LANDSCAPE_MISCELLANEOUS index 72  x42
-  4_dimensions.fh2m         no h3 reference | fh2m LANDSCAPE_MISCELLANEOUS index 78  x191
-  4_dimensions.fh2m         no h3 reference | fh2m LANDSCAPE_MISCELLANEOUS index 80  x22
-  4_dimensions.fh2m         no h3 reference | fh2m LANDSCAPE_MISCELLANEOUS index 81  x50
-  4_dimensions.fh2m         no h3 reference | fh2m LANDSCAPE_MISCELLANEOUS index 97  x2
   4_dimensions.fh2m         no h3 reference | fh2m LANDSCAPE_TOWN_BASEMENTS index 0  x8
   4_dimensions.fh2m         no h3 reference | fh2m LANDSCAPE_TOWN_BASEMENTS index 1  x2
   4_dimensions.fh2m         no h3 reference | fh2m LANDSCAPE_TOWN_BASEMENTS index 2  x3
@@ -228,14 +210,11 @@ OE object mapping source: oe_object_correspondence.json.
   4_dimensions.fh2m         no h3 reference | fh2m LANDSCAPE_TOWN_BASEMENTS index 5  x9
   4_dimensions.fh2m         no h3 reference | fh2m LANDSCAPE_TOWN_BASEMENTS index 6  x4
   4_dimensions.fh2m         no h3 reference | fh2m LANDSCAPE_TOWN_BASEMENTS index 7  x5
-  5Kings1Ring.fh2m          h3 class 121 (Frozen Lake), sub 0 | fh2m LANDSCAPE_MISCELLANEOUS index 38  x1
-  5Kings1Ring.fh2m          h3 class 121 (Frozen Lake), sub 0 | fh2m LANDSCAPE_MISCELLANEOUS index 39  x1
   5Kings1Ring.fh2m          h3 class 23 (Marletto Tower), sub 0 | fh2m ADVENTURE_POWER_UPS index 10  x1
   5Kings1Ring.fh2m          h3 class 29 (Flotsam), sub 0 | fh2m ADVENTURE_WATER index 2  x2
   5Kings1Ring.fh2m          h3 class 32 (Garden of Revelation), sub 0 | fh2m ADVENTURE_POWER_UPS index 12  x3
   5Kings1Ring.fh2m          h3 class 41 (Library of Enlightenment), sub 0 | fh2m ADVENTURE_POWER_UPS index 21  x1
   5Kings1Ring.fh2m          h3 class 48 (Magic Spring), sub 0 | fh2m ADVENTURE_POWER_UPS index 0  x1
-  5Kings1Ring.fh2m          h3 class 51 (Mercenary Camp), sub 0 | fh2m ADVENTURE_POWER_UPS index 13  x1
   5Kings1Ring.fh2m          h3 class 56 (Oasis), sub 0 | fh2m ADVENTURE_POWER_UPS index 5  x1
   5Kings1Ring.fh2m          h3 class 59 (Ocean Bottle), sub 0 | fh2m ADVENTURE_WATER index 0  x1
   5Kings1Ring.fh2m          h3 class 86 (Shipwreck Survivor), sub 0 | fh2m ADVENTURE_WATER index 5  x2
@@ -255,14 +234,6 @@ OE object mapping source: oe_object_correspondence.json.
   5Kings1Ring.fh2m          no h3 reference | fh2m LANDSCAPE_FLAGS index 7  x1
   5Kings1Ring.fh2m          no h3 reference | fh2m LANDSCAPE_FLAGS index 8  x1
   5Kings1Ring.fh2m          no h3 reference | fh2m LANDSCAPE_FLAGS index 9  x1
-  5Kings1Ring.fh2m          no h3 reference | fh2m LANDSCAPE_MISCELLANEOUS index 126  x1
-  5Kings1Ring.fh2m          no h3 reference | fh2m LANDSCAPE_MISCELLANEOUS index 134  x2
-  5Kings1Ring.fh2m          no h3 reference | fh2m LANDSCAPE_MISCELLANEOUS index 138  x1
-  5Kings1Ring.fh2m          no h3 reference | fh2m LANDSCAPE_MISCELLANEOUS index 139  x1
-  5Kings1Ring.fh2m          no h3 reference | fh2m LANDSCAPE_MISCELLANEOUS index 37  x1
-  5Kings1Ring.fh2m          no h3 reference | fh2m LANDSCAPE_MISCELLANEOUS index 69  x1
-  5Kings1Ring.fh2m          no h3 reference | fh2m LANDSCAPE_MISCELLANEOUS index 71  x1
-  5Kings1Ring.fh2m          no h3 reference | fh2m LANDSCAPE_MISCELLANEOUS index 73  x1
   5Kings1Ring.fh2m          no h3 reference | fh2m LANDSCAPE_TOWN_BASEMENTS index 1  x1
   5Kings1Ring.fh2m          no h3 reference | fh2m LANDSCAPE_TOWN_BASEMENTS index 2  x1
   5Kings1Ring.fh2m          no h3 reference | fh2m LANDSCAPE_TOWN_BASEMENTS index 3  x1
@@ -270,7 +241,6 @@ OE object mapping source: oe_object_correspondence.json.
   5Kings1Ring.fh2m          no h3 reference | fh2m LANDSCAPE_TOWN_BASEMENTS index 6  x1
   Barbarian vs Wizard.fh2m  h3 class 23 (Marletto Tower), sub 0 | fh2m ADVENTURE_POWER_UPS index 10  x2
   Barbarian vs Wizard.fh2m  h3 class 32 (Garden of Revelation), sub 0 | fh2m ADVENTURE_POWER_UPS index 12  x2
-  Barbarian vs Wizard.fh2m  h3 class 51 (Mercenary Camp), sub 0 | fh2m ADVENTURE_POWER_UPS index 13  x4
   Barbarian vs Wizard.fh2m  h3 class 56 (Oasis), sub 0 | fh2m ADVENTURE_POWER_UPS index 5  x2
   Barbarian vs Wizard.fh2m  h3 class 8 (Boat), sub 1 | fh2m ADVENTURE_WATER index 4  x6
   Barbarian vs Wizard.fh2m  no h3 reference | fh2m LANDSCAPE_FLAGS index 12  x1
@@ -279,7 +249,6 @@ OE object mapping source: oe_object_correspondence.json.
   Barbarian vs Wizard.fh2m  no h3 reference | fh2m LANDSCAPE_FLAGS index 3  x1
   Barbarian vs Wizard.fh2m  no h3 reference | fh2m LANDSCAPE_FLAGS index 8  x1
   Barbarian vs Wizard.fh2m  no h3 reference | fh2m LANDSCAPE_FLAGS index 9  x1
-  Barbarian vs Wizard.fh2m  no h3 reference | fh2m LANDSCAPE_MISCELLANEOUS index 97  x1
   Barbarian vs Wizard.fh2m  no h3 reference | fh2m LANDSCAPE_TOWN_BASEMENTS index 3  x1
   Barbarian vs Wizard.fh2m  no h3 reference | fh2m LANDSCAPE_TOWN_BASEMENTS index 7  x2
   Full Backpack.fh2m        h3 class 96 (Temple), sub 0 | fh2m ADVENTURE_POWER_UPS index 19  x3
@@ -297,16 +266,11 @@ OE object mapping source: oe_object_correspondence.json.
   Mymaptest.fh2m            no h3 reference | fh2m LANDSCAPE_FLAGS index 5  x1
   Mymaptest.fh2m            no h3 reference | fh2m LANDSCAPE_TOWN_BASEMENTS index 1  x1
   Mymaptest.fh2m            no h3 reference | fh2m LANDSCAPE_TOWN_BASEMENTS index 4  x1
-  Tetra_conflict.fh2m       h3 class 143 (River Delta), sub 0 | fh2m LANDSCAPE_MISCELLANEOUS index 143  x1
-  Tetra_conflict.fh2m       h3 class 143 (River Delta), sub 0 | fh2m LANDSCAPE_MISCELLANEOUS index 144  x1
-  Tetra_conflict.fh2m       h3 class 143 (River Delta), sub 0 | fh2m LANDSCAPE_MISCELLANEOUS index 145  x2
-  Tetra_conflict.fh2m       h3 class 143 (River Delta), sub 0 | fh2m LANDSCAPE_MISCELLANEOUS index 146  x1
   Tetra_conflict.fh2m       h3 class 23 (Marletto Tower), sub 0 | fh2m ADVENTURE_POWER_UPS index 10  x8
   Tetra_conflict.fh2m       h3 class 29 (Flotsam), sub 0 | fh2m ADVENTURE_WATER index 2  x56
   Tetra_conflict.fh2m       h3 class 32 (Garden of Revelation), sub 0 | fh2m ADVENTURE_POWER_UPS index 12  x8
   Tetra_conflict.fh2m       h3 class 41 (Library of Enlightenment), sub 0 | fh2m ADVENTURE_POWER_UPS index 21  x2
   Tetra_conflict.fh2m       h3 class 48 (Magic Spring), sub 0 | fh2m ADVENTURE_POWER_UPS index 0  x1
-  Tetra_conflict.fh2m       h3 class 51 (Mercenary Camp), sub 0 | fh2m ADVENTURE_POWER_UPS index 13  x8
   Tetra_conflict.fh2m       h3 class 56 (Oasis), sub 0 | fh2m ADVENTURE_POWER_UPS index 5  x2
   Tetra_conflict.fh2m       h3 class 59 (Ocean Bottle), sub 0 | fh2m ADVENTURE_WATER index 0  x1
   Tetra_conflict.fh2m       h3 class 82 (Sea Chest), sub 0 | fh2m ADVENTURE_WATER index 1  x20
@@ -327,18 +291,6 @@ OE object mapping source: oe_object_correspondence.json.
   Tetra_conflict.fh2m       no h3 reference | fh2m LANDSCAPE_FLAGS index 7  x1
   Tetra_conflict.fh2m       no h3 reference | fh2m LANDSCAPE_FLAGS index 8  x1
   Tetra_conflict.fh2m       no h3 reference | fh2m LANDSCAPE_FLAGS index 9  x1
-  Tetra_conflict.fh2m       no h3 reference | fh2m LANDSCAPE_MISCELLANEOUS index 103  x1
-  Tetra_conflict.fh2m       no h3 reference | fh2m LANDSCAPE_MISCELLANEOUS index 123  x7
-  Tetra_conflict.fh2m       no h3 reference | fh2m LANDSCAPE_MISCELLANEOUS index 126  x3
-  Tetra_conflict.fh2m       no h3 reference | fh2m LANDSCAPE_MISCELLANEOUS index 127  x3
-  Tetra_conflict.fh2m       no h3 reference | fh2m LANDSCAPE_MISCELLANEOUS index 128  x5
-  Tetra_conflict.fh2m       no h3 reference | fh2m LANDSCAPE_MISCELLANEOUS index 134  x1
-  Tetra_conflict.fh2m       no h3 reference | fh2m LANDSCAPE_MISCELLANEOUS index 138  x1
-  Tetra_conflict.fh2m       no h3 reference | fh2m LANDSCAPE_MISCELLANEOUS index 139  x2
-  Tetra_conflict.fh2m       no h3 reference | fh2m LANDSCAPE_MISCELLANEOUS index 140  x2
-  Tetra_conflict.fh2m       no h3 reference | fh2m LANDSCAPE_MISCELLANEOUS index 43  x1
-  Tetra_conflict.fh2m       no h3 reference | fh2m LANDSCAPE_MISCELLANEOUS index 51  x1
-  Tetra_conflict.fh2m       no h3 reference | fh2m LANDSCAPE_MISCELLANEOUS index 78  x1
   Tetra_conflict.fh2m       no h3 reference | fh2m LANDSCAPE_TOWN_BASEMENTS index 0  x4
   Tetra_conflict.fh2m       no h3 reference | fh2m LANDSCAPE_TOWN_BASEMENTS index 1  x1
   Tetra_conflict.fh2m       no h3 reference | fh2m LANDSCAPE_TOWN_BASEMENTS index 2  x3
@@ -351,18 +303,11 @@ OE object mapping source: oe_object_correspondence.json.
   all for one.h3m           h3 class 10 (Keymaster Tent), sub 2 | h3m sprite AVXkey20.def  x1
   all for one.h3m           h3 class 106 (War Machine Factory), sub 0 | h3m sprite AVGsieg0.def  x1
   all for one.h3m           h3 class 107 (School of War), sub 0 | h3m sprite AVSwar20.def  x1
-  all for one.h3m           h3 class 108 (Warrior Tomb), sub 0 | h3m sprite AVXtomb0.def  x6
   all for one.h3m           h3 class 109 (Water Wheel), sub 0 | h3m sprite AVMwwsn0.def  x1
   all for one.h3m           h3 class 110 (Watering Hole), sub 0 | h3m sprite AVXwtrh0.def  x1
-  all for one.h3m           h3 class 121 (Frozen Lake), sub 0 | h3m sprite AVLflk10.def  x1
-  all for one.h3m           h3 class 121 (Frozen Lake), sub 0 | h3m sprite AVLflk20.def  x2
-  all for one.h3m           h3 class 121 (Frozen Lake), sub 0 | h3m sprite AVLflk30.def  x1
   all for one.h3m           h3 class 13 (Cartographer), sub 0 | h3m sprite AVXmapw0.def  x1
   all for one.h3m           h3 class 13 (Cartographer), sub 1 | h3m sprite AVXmaps0.def  x1
-  all for one.h3m           h3 class 132 (Moss), sub 0 | h3m sprite AVLmoss0.def  x13
   all for one.h3m           h3 class 14 (Swan Pond), sub 0 | h3m sprite AVSclvg0.def  x1
-  all for one.h3m           h3 class 143 (River Delta), sub 0 | h3m sprite clrdelt1.def  x2
-  all for one.h3m           h3 class 143 (River Delta), sub 0 | h3m sprite clrdelt4.def  x2
   all for one.h3m           h3 class 21 (Cursed Ground), sub 0 | h3m sprite AVXcrsd0.def  x19
   all for one.h3m           h3 class 23 (Marletto Tower), sub 0 | h3m sprite AvSMarl.def  x2
   all for one.h3m           h3 class 27 (Eye of the Magi), sub 0 | h3m sprite AVXeyem0.def  x1
@@ -370,14 +315,9 @@ OE object mapping source: oe_object_correspondence.json.
   all for one.h3m           h3 class 32 (Garden of Revelation), sub 0 | h3m sprite AVSgrdn0.def  x4
   all for one.h3m           h3 class 39 (Lean To), sub 0 | h3m sprite AVMlean0.def  x2
   all for one.h3m           h3 class 41 (Library of Enlightenment), sub 0 | h3m sprite AVSlibr0.def  x1
-  all for one.h3m           h3 class 43 (Monolith One Way Entrance), sub 0 | h3m sprite AVXmn1b0.def  x1
-  all for one.h3m           h3 class 43 (Monolith One Way Entrance), sub 1 | h3m sprite AVXmn1r0.def  x1
-  all for one.h3m           h3 class 44 (Monolith One Way Exit), sub 0 | h3m sprite AVXmx1b0.def  x1
-  all for one.h3m           h3 class 44 (Monolith One Way Exit), sub 1 | h3m sprite AVXmx1r0.def  x1
   all for one.h3m           h3 class 46 (Magic Plains), sub 0 | h3m sprite AVXplns0.def  x7
   all for one.h3m           h3 class 47 (School of Magic), sub 0 | h3m sprite AVSschm0.def  x2
   all for one.h3m           h3 class 48 (Magic Spring), sub 0 | h3m sprite AVXmags0.def  x1
-  all for one.h3m           h3 class 51 (Mercenary Camp), sub 0 | h3m sprite AVSmerc0.def  x2
   all for one.h3m           h3 class 52 (Mermaids), sub 0 | h3m sprite AVXmerm0.def  x1
   all for one.h3m           h3 class 55 (Mystical Garden), sub 0 | h3m sprite AVTmyst0.def  x2
   all for one.h3m           h3 class 57 (Obelisk), sub 0 | h3m sprite AvXOblB.def  x1
@@ -389,7 +329,6 @@ OE object mapping source: oe_object_correspondence.json.
   all for one.h3m           h3 class 57 (Obelisk), sub 0 | h3m sprite AvXOblY.def  x1
   all for one.h3m           h3 class 58 (Redwood Observatory), sub 0 | h3m sprite AvXRedW.def  x4
   all for one.h3m           h3 class 63 (Pyramid), sub 0 | h3m sprite AVXprmd0.def  x2
-  all for one.h3m           h3 class 7 (Black Market), sub 0 | h3m sprite AVXmktb0.def  x1
   all for one.h3m           h3 class 78 (Refugee Camp), sub 0 | h3m sprite AVGrefg0.def  x1
   all for one.h3m           h3 class 82 (Sea Chest), sub 0 | h3m sprite AVXccht0.def  x6
   all for one.h3m           h3 class 86 (Shipwreck Survivor), sub 0 | h3m sprite AVAsurv0.def  x3
@@ -398,11 +337,9 @@ OE object mapping source: oe_object_correspondence.json.
   all for one.h3m           h3 class 92 (Sirens), sub 0 | h3m sprite AVXsirn0.def  x1
   all for one.h3m           h3 class 96 (Temple), sub 0 | h3m sprite AVStmpl0.def  x2
   all for one.h3m           h3 class 97 (Den of Thieves), sub 0 | h3m sprite AVXdend0.def  x1
-  all for one.h3m           h3 class 99 (Trading Post), sub 0 | h3m sprite AVXpost0.def  x1
-  all for one.h3m           h3 class 99 (Trading Post), sub 0 | h3m sprite AVXpstr0.def  x1
 
 ------------------------------------------------------------
-3. Types converted but collapsed to a coarser OE object (kept, not lost)
+4. Types converted but collapsed to a coarser OE object (kept, not lost)
 ------------------------------------------------------------
 
   - Scenery sprite variants: many H2/H3 def variants share one OE sid
@@ -416,5 +353,6 @@ OE object mapping source: oe_object_correspondence.json.
     linked), so the H2 town race / hero class is not kept per object.
   - Roads and rivers are not OE objects: they live in the terrain layer
     (roadsMap bitfield, rivers node lists).
-  - Monoliths/border gates (h3 class 45/9/10) have no OE equivalent in
-    the reference mapping and are dropped (listed in section 1).
+  - H3 Event / Sign / Seer Hut / Quest Guard objects are not OE objects
+    either: they become OE quest script triggers (see the 'scripts'
+    section), when their metadata can be expressed there.
