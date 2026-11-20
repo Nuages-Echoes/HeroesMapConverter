@@ -3367,6 +3367,439 @@ def unified_to_fh2m(unified):
     return data
 
 
+# unified terrain -> Olden Era tilesMap id (reverse of HOMMOE_TILE_TERRAINS).
+# Water is emitted as tilesMap 2 (sand basin) + waterMap 7, the game's own
+# convention for ocean/lake tiles (see the references' terrain-map.ts).
+UNIFIED_TO_HOMMOE_TILE = {
+    "Grass": 1, "Desert": 2, "Wasteland": 3, "Snow": 4,
+    "Swamp": 5, "Lava": 6, "Dirt": 7, "Water": 2, "Rock": 7,
+    "Subterranean": 7, "Beach": 2,
+}
+HOMMOE_WATER_TILE = 2
+HOMMOE_WATER_ID = 7  # "Water (Grass)"
+
+# unified object group -> Olden Era sid, for objects that carry no
+# sourceSid (h2/h3 sources). Values observed on real maps; the fine-grained
+# choice (which mine/artifact/dwelling sid) needs the game's Core.zip
+# catalog and is out of scope here.
+HOMMOE_GROUP_TO_SID = {
+    "KINGDOM_TOWNS": "city-spawner",
+    "KINGDOM_HEROES": "hero-spawner",
+    "ADVENTURE_MINES": "mine_gold",
+    "ADVENTURE_TREASURES": "chest",
+    "ADVENTURE_DWELLINGS": "barracks_neutral_1",
+    "MONSTERS": "random-squad",
+    "ADVENTURE_MISCELLANEOUS": "windmill",
+    "MAP_EXTRAS": "Zone 3x3",
+}
+
+# H2/H3 resource names -> Olden Era resource sids (BASIC_RESOURCE_IDS in
+# the references' src/lib/resources.ts)
+UNIFIED_TO_HOMMOE_RESOURCE = {
+    "wood": "wood", "mercury": "mercury", "ore": "ore", "sulfur": "dust",
+    "crystal": "crystals", "gems": "gemstones", "gold": "gold",
+}
+
+# unified victory label -> typeWinCondition (reverse of HOMMOE_WIN_CONDITIONS)
+UNIFIED_TO_HOMMOE_WIN = {
+    "defeatEveryone": 0, "captureTown": 8, "killHero": 4,
+}
+
+HOMMOE_DEFAULT_VERSION = "0.72.30"
+
+
+def _hommoe_event_actions(event, obj_id):
+    """Build OE script actions for an H2/H3 event object's metadata.
+
+    The message goes to a Print action and resource rewards to GiveRes
+    actions; parts that need OE sids from the game's Core.zip catalog
+    (artifact, monster, secondary skill, stat bonuses) are kept in the
+    trigger's comment instead of being guessed.
+    """
+    actions = []
+    message = event.get("message") or ""
+    if message:
+        actions.append(OrderedDict([("comment", ""), ("p", [message]), ("a", "Print")]))
+    resources = event.get("resources") or {}
+    for name, value in resources.items():
+        oe_res = UNIFIED_TO_HOMMOE_RESOURCE.get(name)
+        if oe_res and value:
+            actions.append(OrderedDict([
+                ("comment", ""), ("p", [oe_res, str(value)]), ("a", "GiveRes"),
+            ]))
+    unconverted = []
+    if event.get("artifact") not in (None, 0, -1):
+        unconverted.append("artifact={}".format(event.get("artifact")))
+    if event.get("monsterType") not in (None, 0, -1):
+        unconverted.append("monster={}x{}".format(event.get("monsterType"), event.get("monsterCount", 0)))
+    if event.get("secondarySkill") not in (None, 0):
+        unconverted.append("skill={}/{}".format(event.get("secondarySkill"), event.get("secondarySkillLevel", 0)))
+    for stat in ("attack", "defense", "knowledge", "spellPower", "experience"):
+        if event.get(stat):
+            unconverted.append("{}={}".format(stat, event.get(stat)))
+    if event.get("morale") or event.get("luck") or event.get("mana"):
+        unconverted.append("morale/luck/mana={}/{}/{}".format(event.get("morale"), event.get("luck"), event.get("mana")))
+    return actions, unconverted
+
+
+def _hommoe_generate_scripts(unified, width):
+    """Generate the commentAiData scripting block for h2/h3-sourced maps.
+
+    Converts the unified event patterns into Olden Era quest triggers:
+    - H2 adventureMapEventMetadata / H3 eventMetadata objects -> a quest
+      trigger with an ObjectInteractionAfter condition on the object's
+      entity plus Print/GiveRes actions (repeat = isRecurringEvent)
+    - H2 dailyEvents -> StartTurn condition (week/day from
+      firstOccurrenceDay) + GiveRes actions
+    """
+    objects = unified.get("objects") or {}
+    tiles = objects.get("tiles") or {}
+    event_meta = {}
+    for key in ("adventureMapEventMetadata", "eventMetadata"):
+        for oid, entry in (objects.get(key) or {}).items():
+            event_meta[int(oid)] = entry
+
+    obj_by_id = {}
+    for tile_key, obj_list in tiles.items():
+        for obj in obj_list:
+            if obj.get("id") is not None:
+                obj_by_id[obj["id"]] = (tile_key, obj)
+
+    quests = []
+    prop_entities = []
+
+    for oid, event in sorted(event_meta.items()):
+        if oid not in obj_by_id:
+            continue
+        entity_sid = "event_{}".format(oid)
+        prop_entities.append(OrderedDict([("type", 0), ("id", oid), ("sid", entity_sid)]))
+        actions, unconverted = _hommoe_event_actions(event, oid)
+        trigger = OrderedDict([
+            ("comment", "converted event (unconverted without OE sids: {})".format(", ".join(unconverted)) if unconverted else ""),
+            ("repeat", bool(event.get("isRecurringEvent", False))),
+            ("conditions", [OrderedDict([
+                ("comment", ""),
+                ("p", [entity_sid, ""]),
+                ("counter", 1),
+                ("c", "ObjectInteractionAfter"),
+            ])]),
+            ("actions", actions),
+            ("conditionsLogic", "And"),
+        ])
+        quests.append(OrderedDict([
+            ("sid", "event_{}".format(oid)),
+            ("activeOnStart", True),
+            ("comment", "converted H2/H3 event object {}".format(oid)),
+            ("main", False),
+            ("hidden", True),
+            ("name", ""),
+            ("desc", ""),
+            ("sharing", "Clone"),
+            ("subQuests", [OrderedDict([
+                ("sid", "1"), ("activeOnStart", True), ("hidden", False),
+                ("name", ""), ("desc", ""), ("comment", ""),
+                ("triggers", [trigger]),
+            ])]),
+        ]))
+
+    for index, daily in enumerate(unified.get("dailyEvents") or []):
+        day = int(daily.get("firstOccurrenceDay", 1))
+        week = str((day - 1) // 7 + 1)
+        day_of_week = str((day - 1) % 7 + 1)
+        actions = []
+        message = daily.get("message") or ""
+        if message:
+            actions.append(OrderedDict([("comment", ""), ("p", [message]), ("a", "Print")]))
+        for name, value in (daily.get("resources") or {}).items():
+            oe_res = UNIFIED_TO_HOMMOE_RESOURCE.get(name)
+            if oe_res and value:
+                actions.append(OrderedDict([
+                    ("comment", ""), ("p", [oe_res, str(value)]), ("a", "GiveRes"),
+                ]))
+        quests.append(OrderedDict([
+            ("sid", "daily_event_{}".format(index)),
+            ("activeOnStart", True),
+            ("comment", "converted H2 daily event {}".format(index)),
+            ("main", False),
+            ("hidden", True),
+            ("name", ""),
+            ("desc", ""),
+            ("sharing", "Clone"),
+            ("subQuests", [OrderedDict([
+                ("sid", "1"), ("activeOnStart", True), ("hidden", False),
+                ("name", ""), ("desc", ""), ("comment", ""),
+                ("triggers", [OrderedDict([
+                    ("comment", ""),
+                    ("repeat", int(daily.get("repeatPeriodInDays", 0)) > 0),
+                    ("conditions", [OrderedDict([
+                        ("comment", ""),
+                        ("p", [week, day_of_week]),
+                        ("counter", 1),
+                        ("c", "StartTurn"),
+                    ])]),
+                    ("actions", actions),
+                    ("conditionsLogic", "And"),
+                ])]),
+            ])]),
+        ]))
+
+    scripting = OrderedDict([
+        ("comment", ""),
+        ("aiRolesId", ""),
+        ("counters", []),
+        ("interruptions", []),
+        ("quests", quests),
+    ])
+    return scripting, prop_entities
+
+
+def unified_to_hommoe(unified):
+    """
+    Convert a map in the unified format into the JSON structure expected by
+    hommoedecoder.write_hommoe (parse_hommoe format).
+
+    Args:
+        unified: Dictionary in the unified format.
+
+    Returns:
+        OrderedDict: The map in the hommoe (Olden Era) detailed format.
+    """
+    width = int(unified.get("mapSize", {}).get("width", 0))
+    height = int(unified.get("mapSize", {}).get("height", width))
+    name = unified.get("name", "") or "converted map"
+    description = unified.get("description", "")
+
+    header_hash = "0" * 32
+
+    # --- block 1: scenario ---
+    player_details = unified.get("playerDetails") or []
+    players = unified.get("players") or {}
+    spawns = []
+    for index, detail in enumerate(player_details):
+        color = detail.get("color")
+        human = color in (players.get("humanColors") or [])
+        available = color in (players.get("availableColors") or [])
+        spawn = OrderedDict([
+            ("owner", index + 1),
+            ("spawnType", 0 if human else (1 if available else 2)),
+            ("playerId", ""),
+            ("spawnPointType", 0 if detail.get("mainTown") else 1),
+            ("isCityDefined", bool(detail.get("mainTown"))),
+            ("factionSid", ""),
+            ("isHeroDefined", bool(detail.get("sourceHeroSid"))),
+            ("heroSid", detail.get("sourceHeroSid", "")),
+            ("colorId", -1),
+            ("isAlive", True),
+            ("isLocked", False),
+        ])
+        spawns.append(spawn)
+    scenario = OrderedDict([
+        ("title", name),
+        ("template", ""),
+        ("gameMode", 0),
+        ("endController", (unified.get("victoryCondition") or {}).get("sourceEndController", 0)),
+        ("desc", description),
+        ("displayWinCondition", ""),
+        ("hashSum", header_hash),
+        ("nameFromLocalization", False),
+        ("descFromLocalization", False),
+        ("sizeX", width),
+        ("sizeZ", height),
+        ("spawns", OrderedDict([
+            ("playersCount", len(spawns)),
+            ("spawns", spawns),
+            ("takenHeroes", []),
+        ])),
+        ("startSettings", unified.get("sourceStartSettings") or OrderedDict([
+            ("RandomSeed", 0), ("MapSpeed", 0), ("BattleSpeed", 0),
+            ("EconomicDifficulty", 0), ("NeutralsDifficulty", 0), ("AiDifficulty", 1),
+            ("RestartPoints", 0), ("TurnMode", 2),
+        ])),
+        ("banInfoData", unified.get("sourceBanInfoData") or OrderedDict([
+            ("bannedMagics", []), ("bannedItems", []), ("bannedSkills", []),
+            ("bannedHeroes", []), ("bannedUnits", []),
+        ])),
+        ("daysInGame", 0),
+        ("isAutoSave", False),
+        ("currentTurnMode", 0),
+        ("gameVersion", ""),
+        ("isScenario", False),
+    ])
+
+    # --- block 2: adventure ---
+    levels = (unified.get("terrain") or {}).get("levels") or []
+    grid = (levels[0] if levels else {}).get("grid") or []
+    total = width * height
+    tiles_map = [1] * total
+    water_map = [0] * total
+    levels_map = [0] * total
+    climbs_map = [0] * total
+    roads_map = [0] * total
+    for cell in grid:
+        x, y = int(cell.get("x", 0)), int(cell.get("y", 0))
+        if 0 <= x < width and 0 <= y < height:
+            index = y * width + x
+            terrain = cell.get("terrain", "Grass")
+            tiles_map[index] = UNIFIED_TO_HOMMOE_TILE.get(terrain, 1)
+            if terrain == "Water":
+                water_map[index] = HOMMOE_WATER_ID
+            if cell.get("sourceLevel") is not None:
+                levels_map[index] = int(cell["sourceLevel"])
+            if cell.get("sourceClimb") is not None:
+                climbs_map[index] = int(cell["sourceClimb"])
+            if cell.get("sourceRoadIndex"):
+                roads_map[index] = int(cell["sourceRoadIndex"])
+
+    objects = unified.get("objects") or {}
+    groups = {}
+    order = []
+    squads_out = []
+    markers_out = []
+    prop_rows = {}
+    next_free = 1
+    for tile_key, obj_list in (objects.get("tiles") or {}).items():
+        for obj in obj_list:
+            oid = obj.get("id")
+            if oid is None:
+                oid = next_free
+            next_free = max(next_free, int(oid) + 1)
+            sid = obj.get("sourceSid")
+            if not sid:
+                sid = HOMMOE_GROUP_TO_SID.get(obj.get("group"), "random-squad")
+            node = None
+            try:
+                x, y, _z = tile_key.split("_")
+                node = int(y) * width + int(x)
+            except (ValueError, IndexError):
+                node = 0
+            rotation = obj.get("rotation", 0)
+            level = obj.get("level", 0)
+            if obj.get("group") == "MAP_EXTRAS":
+                markers_out.append(OrderedDict([
+                    ("node", node), ("id", oid), ("sid", sid), ("v", ""),
+                ]))
+                continue
+            if obj.get("group") == "MONSTERS" and sid.startswith("squad"):
+                squads_out.append((sid, oid, node))
+                continue
+            if sid not in groups:
+                groups[sid] = {"ids": [], "nodes": [], "rotations": [], "levels": []}
+                order.append(sid)
+            groups[sid]["ids"].append(oid)
+            groups[sid]["nodes"].append(node)
+            groups[sid]["rotations"].append(rotation)
+            groups[sid]["levels"].append(level)
+            if obj.get("properties"):
+                for table, row in obj["properties"].items():
+                    prop_rows.setdefault(table, []).append(row)
+
+    objects_out = [OrderedDict([
+        ("sid", sid),
+        ("ids", groups[sid]["ids"]),
+        ("nodes", groups[sid]["nodes"]),
+        ("rotations", groups[sid]["rotations"]),
+        ("levels", groups[sid]["levels"]),
+    ]) for sid in order]
+    squads_list = [OrderedDict([("sid", sid), ("ids", [oid]), ("nodes", [node])])
+                   for sid, oid, node in squads_out]
+
+    victory = unified.get("victoryCondition") or {}
+    win_types = victory.get("metadata") or []
+    if not win_types and victory.get("type") in UNIFIED_TO_HOMMOE_WIN:
+        win_types = [UNIFIED_TO_HOMMOE_WIN[victory["type"]]]
+    if not win_types:
+        win_types = [0]
+    win_entry_template = OrderedDict([
+        ("valueDesertion", 0.0), ("dayAdditionWinCondition", 0), ("heroSids", []),
+        ("indexSideCampaign", 0), ("indexOtherPlayers", []), ("sidBuildWinCondition", ""),
+        ("isRegistrationStartWork", False), ("isRegistrationStartFight", True),
+        ("daysDelayStart", 0), ("countDayGladiatorArena", 3), ("countDayLostStartCity", 0),
+        ("countDayCityHold", 3), ("isResetColdownCityHold", True),
+        ("daysAnounceTournament", []), ("daysDelayStartFightTournament", []),
+        ("countPointsTournament", 0), ("isSaveArmyTournament", True), ("autoSelectRule", 0),
+    ])
+    map_win_conditions = []
+    for t in win_types:
+        entry = OrderedDict(win_entry_template)
+        entry["typeWinCondition"] = t
+        map_win_conditions.append(entry)
+
+    # scripts: passthrough for hommoe sources, generated events otherwise
+    scripts = unified.get("scripts") or {}
+    extra_prop_entities = []
+    if unified.get("sourceGame") == "hommoe" and scripts.get("commentAiData"):
+        scripting = scripts["commentAiData"]
+        dialog_quest = scripts.get("dialogQuestData") or OrderedDict([
+            ("dialogs", OrderedDict([("lines", [])])),
+            ("quests", OrderedDict([("quests", [])])),
+        ])
+    else:
+        scripting, extra_prop_entities = _hommoe_generate_scripts(unified, width)
+        dialog_quest = OrderedDict([
+            ("dialogs", OrderedDict([("lines", [])])),
+            ("quests", OrderedDict([("quests", [])])),
+        ])
+    if extra_prop_entities:
+        prop_rows.setdefault("propEntities", []).extend(extra_prop_entities)
+
+    objects_properties = OrderedDict()
+    for table in sorted(prop_rows):
+        objects_properties[table] = prop_rows[table]
+
+    adventure = OrderedDict([
+        ("fileMapName", name),
+        ("mapName", name),
+        ("mapNameFromLoc", False),
+        ("mapDesc", description),
+        ("mapDescFromLoc", False),
+        ("sizeX_", width),
+        ("sizeZ_", height),
+        ("tilesMap", tiles_map),
+        ("levelsMap", levels_map),
+        ("climbsMap", climbs_map),
+        ("roadsMap", roads_map),
+        ("waterMap", water_map),
+        ("cliffRandomSeed", 0),
+        ("views", []),
+        ("objects", objects_out),
+        ("objectsFreeId", next_free),
+        ("squads", squads_list),
+        ("squadsFreeId", next_free),
+        ("markers", markers_out),
+        ("markersFreeId", next_free),
+        ("areas", objects.get("sourceAreas") or []),
+        ("areasVersion", 0),
+        ("rivers", objects.get("sourceRivers") or [OrderedDict([("sid", "test"), ("randomSeed", 0), ("nodes", [])])]),
+        ("objectsProperties", objects_properties),
+        ("settings", OrderedDict([("mapWinConditions", map_win_conditions)])),
+        ("banInfoData", scenario["banInfoData"]),
+        ("takenHeroes", []),
+        ("haveCustomAreas", False),
+        ("customAreasPainting", []),
+        ("generatorChecksum", 0),
+    ])
+
+    has_scripts = bool(scripting.get("quests")) or unified.get("sourceGame") == "hommoe"
+    separator = [0x0D, 0x00] if has_scripts else [0x05, 0x00]
+
+    blocks = [
+        OrderedDict([("name", "scenario"), ("raw", None), ("data", scenario)]),
+        OrderedDict([("name", "adventure"), ("raw", None), ("data", adventure)]),
+        OrderedDict([("name", "dialogQuestData"), ("raw", None), ("data", dialog_quest)]),
+    ]
+    if has_scripts:
+        blocks.append(OrderedDict([("name", "commentAiData"), ("raw", None), ("data", scripting)]))
+
+    return OrderedDict([
+        ("gzipHeader", OrderedDict([("flg", 0), ("mtime", 0), ("xfl", 0), ("os", 10), ("extra", "")])),
+        ("headerHash", header_hash),
+        ("version", HOMMOE_DEFAULT_VERSION),
+        ("separator", separator),
+        ("blocks", blocks),
+        ("trailingData", ""),
+    ])
+
+
 def convert_from_unified(unified, source_game):
     """
     Convert a map in the unified format into the JSON structure of the
@@ -3374,13 +3807,15 @@ def convert_from_unified(unified, source_game):
 
     Args:
         unified: Dictionary in the unified format.
-        source_game: "h3m" or "fh2m".
+        source_game: "h3m", "fh2m" or "hommoe".
 
     Returns:
         OrderedDict: The map in the game-specific format.
     """
     if source_game == "fh2m":
         return unified_to_fh2m(unified)
+    if source_game == "hommoe":
+        return unified_to_hommoe(unified)
     return unified_to_h3m(unified)
 
 

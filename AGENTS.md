@@ -18,11 +18,12 @@ explicitly overrides one.
   intermediate unified JSON.
 - Pipeline (`main.py`): `input/` → `outputjson/<name>.json` (detailed JSON,
   faithful to the source format) → `outputunified/<name>.json` (unified JSON)
-  → `output/<name>.h3m` **and** `output/<name>.fh2m`. `--target h3m|fh2m`
-  restricts the conversion to one format. `.map` (Olden Era) inputs are parsed
-  to `outputjson/`, converted to `outputunified/` (`convert_hommoe_to_unified`)
-  and regenerated to `output/<name>.map` from the detailed JSON (no unified ->
-  hommoe writer yet).
+  → `output/<name>.h3m`, `output/<name>.fh2m` **and** `output/<name>.map`.
+  `--target h3m|fh2m|map` restricts the conversion to one format. `.map`
+  (Olden Era) inputs are parsed to `outputjson/`, converted to
+  `outputunified/` (`convert_hommoe_to_unified`) and regenerated to
+  `output/<name>.map` from the detailed JSON; H2/H3 inputs are converted to
+  `.map` via `unified_to_hommoe()` (H2/H3 events become OE quest triggers).
 - Read `README.md` and `Progress.md` first. Binary/JSON format specs live in
   the `*_description.english.txt` files; ID correspondences between the two
   games live in `correspondence.py` (documented in
