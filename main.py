@@ -31,6 +31,10 @@ def write_target(unified_data, target_game, base_name):
         output_path = os.path.join(OUTPUT_DIR, f"{base_name}.fh2m")
         write_fh2m(map_data, output_path)
         print(f"FH2M file written to {output_path}")
+    elif target_game == "hommoe":
+        output_path = os.path.join(OUTPUT_DIR, f"{base_name}.map")
+        write_hommoe(map_data, output_path)
+        print(f"HOMMOE file written to {output_path}")
     else:
         output_path = os.path.join(OUTPUT_DIR, f"{base_name}.h3m")
         write_h3m(map_data, output_path)
@@ -104,9 +108,9 @@ def main():
                 unified_data = json.load(json_file)
 
             if args.target is not None:
-                targets = [args.target]
+                targets = [{"map": "hommoe"}.get(args.target, args.target)]
             else:
-                targets = ["h3m", "fh2m"]
+                targets = ["h3m", "fh2m", "hommoe"]
 
             for target_game in targets:
                 try:
