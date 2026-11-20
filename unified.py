@@ -1082,6 +1082,18 @@ def convert_hommoe_to_unified(map_data):
     unified["rumors"] = []
     unified["dailyEvents"] = []
 
+    # Quest/dialog scripts: the Olden Era equivalent of H2/H3 map events,
+    # but with full trigger support (conditions + actions + counters).
+    # Blocks dialogQuestData and commentAiData are carried raw under
+    # "scripts" so nothing is lost.
+    scripts = OrderedDict()
+    if blocks.get("dialogQuestData"):
+        scripts["dialogQuestData"] = blocks["dialogQuestData"]
+    if blocks.get("commentAiData"):
+        scripts["commentAiData"] = blocks["commentAiData"]
+    if scripts:
+        unified["scripts"] = scripts
+
     # Terrain: tilesMap biome ids; a nonzero waterMap id means Water.
     grid = []
     tiles_map = adventure.get("tilesMap", [])

@@ -307,6 +307,28 @@ Description of the unified JSON format produced from .h3m and .fh2m maps
 
 
 ========================================================================
+                          Scripts (hommoe only)
+========================================================================
+
+   Olden Era quest/dialog scripts are the equivalent of H2/H3 map events,
+   but richer: H2's adventureMapEventMetadata and H3's ground "event"
+   objects are fixed reward/message records fired on visit, while Olden
+   Era scripts (blocks "dialogQuestData" and "commentAiData" of the .map)
+   are trigger-based: quests with conditions ("c") and actions ("a"),
+   plus counters, interruptions and dialogs. GameVictory/GameLose/SideLose
+   actions are the scripted win/loss (see victoryCondition/lossCondition).
+
+   "scripts"         object      (hommoe) Raw passthrough of the scripting
+                                    blocks, so no script data is lost:
+     "dialogQuestData" object     Block 3: "dialogs", "quests"
+     "commentAiData"   object     Block 4: "comment", "aiRolesId",
+                                    "counters" [{ sid, value, sharing, ... }],
+                                    "interruptions", "quests" (quest trees:
+                                    sid, subQuests, triggers with
+                                    conditions/actions, ...)
+
+
+========================================================================
                                 Objects
 ========================================================================
 
