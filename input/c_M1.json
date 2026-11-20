@@ -1,0 +1,405 @@
+﻿{
+	"counters":
+	[
+		{ "sid": "infinite_turn_start", "value": 0, "comment": "счетчик включения бесконечного хода в миссии" },
+
+		{ "sid": "bridge_quest", 		"value": 0, "comment": "0 = мост еще не встречен, 1 = игрок начал квест по сбору дерева, 2 = квест закончен" },
+		{ "sid": "main_quest", 			"value": 0, "comment": "0 = игрок в процессе мейн квеста, 1 = игрок победил насекомое, закончил игру" },
+		{ "sid": "defeated_insects", 	"value": 0, "comment": "победил ли игрок жуков, окруживших крестьянина" }
+	],
+
+	"quests":
+	[
+		{
+			"sid": "intro",
+
+			"hidden": true,
+
+			"comment": "intro",
+
+			"activeOnStart": true,
+			"sharing": "Clone",
+
+			"name": "1",
+
+			"subQuests":
+			[	
+				{
+					"sid": "1",
+					"activeOnStart": true,
+
+					"triggers":
+					[
+						{
+							"conditions":
+							[
+								{ "c": "StartTurn", "p": [ "1", "1" ] }
+							],
+
+							"actions":
+							[
+								{ "a": "SetQuestMarker", "p": [ "first_guard", "effects/global_map/quest_mark_silver_01" ] },
+								{ "a": "SetQuestMarker", "p": [ "reinforcements1", "effects/global_map/quest_mark_silver_02" ] },
+								{ "a": "SetQuestMarker", "p": [ "reinforcements2", "effects/global_map/quest_mark_silver_02" ] },
+								{ "a": "SetQuestMarker", "p": [ "reinforcements3", "effects/global_map/quest_mark_silver_02" ] },
+								{ "a": "SetQuestMarker", "p": [ "reinforcements4", "effects/global_map/quest_mark_silver_02" ] },
+								{ "a": "SetQuestMarker", "p": [ "reinforcements5", "effects/global_map/quest_mark_silver_02" ] },
+								{ "a": "SetQuestMarker", "p": [ "reinforcements6", "effects/global_map/quest_mark_silver_02" ] },
+								{ "a": "SetQuestMarker", "p": [ "guard_1", "effects/global_map/quest_mark_silver_01" ] },
+								{ "a": "SetQuestMarker", "p": [ "peasant_king", "effects/global_map/quest_mark_silver_01" ] },	
+								{ "a": "SetQuestMarker", "p": [ "final_squad", "effects/global_map/quest_mark_gold_01" ] },
+
+								{ "a": "Dialog", "p": [ "M1Q1_dial1" ] }
+							]
+						}
+					]
+				},
+				{
+					"sid": "2",
+					"activeOnStart": true,
+					"comment": "difficulty settings",
+
+					"triggers":
+					[
+						{
+							"conditionsLogic": "And",
+
+							"conditions":
+							[
+								{ "c": "StartTurn", "p": [ "1", "1" ] },
+								{ "c": "Difficulty", "p": [ "0" ] }
+							],
+
+							"actions":
+							[
+								{ "a": "AddBuffHeroDays", "p": [ "campaign_heroStatBuff_easy_2", "campaign_hero_1", "-1" ] }
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"sid": "intro_ChangeCampaignOneStep",
+
+			"hidden": true,
+
+			"comment": "intro",
+
+			"activeOnStart": true,
+			"sharing": "Clone",
+
+			"name": "1",
+
+			"subQuests":
+			[	
+				{
+					"sid": "1",
+					"activeOnStart": true,
+
+					"triggers":
+					[
+						{
+							"conditions":
+							[
+								{ "c": "Counter", "p": [ "infinite_turn_start", "=", "1" ] }
+							],
+
+							"actions":
+							[
+								{ "a": "ChangeCampaignOneStep", "p": [ "true" ] }
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"sid": "Questlog0",
+			"main": true,
+
+			"comment": "Квест 'Герои не должны умереть'",
+
+			"activeOnStart": true,
+			"sharing": "Clone",
+
+			"name": "quest_name_genericQ0",
+
+			"subQuests":
+			[
+				{
+					"sid": "Questlog0_1",
+					"activeOnStart": true,
+					
+					"name": "quest_sub_M1Q0_1",
+
+					"triggers":
+					[
+						{
+							"conditions":
+							[
+								{ "c": "Counter", "p": [ "main_quest", "=", "1" ] }
+							],
+
+							"actions":
+							[
+								{ "a": "CurrentSubQuestDone" }
+							]
+						},
+						{
+							"conditions":
+							[
+								{ "c": "HeroKill", "p": [ "campaign_hero_1" ] }
+							],
+
+							"actions":
+							[
+								{ "a": "GameLose" }
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"sid": "Questlog1",
+			"main": true,
+
+			"comment": "Основной квест",
+
+			"activeOnStart": true,
+			"sharing": "Clone",
+
+			"name": "quest_name_M1Q1",
+
+			"subQuests":
+			[	
+				{
+					"sid": "Questlog1_1",
+					"activeOnStart": true,
+					
+					"name": "quest_sub_M1Q1_1",
+
+					"triggers":
+					[
+						{
+							"conditions":
+							[
+								{ "c": "Counter", "p": [ "main_quest", "=", "1" ] }
+							],
+
+							"actions":
+							[
+								{ "a": "NextQuest" },
+								{ "a": "RemoveItem", "p": [ "campaign_empty_crystal_item" ] },
+								{ "a": "RemoveItem", "p": [ "campaign_ichor_item" ] },
+								{ "a": "RemoveItem", "p": [ "campaign_M3_freed_priestesses_item" ] },
+								{ "a": "RemoveItem", "p": [ "campaign_M3_captured_priestesses_item" ] },
+								{ "a": "RemoveItem", "p": [ "campaign_M5_friend_item" ] },
+								{ "a": "RemoveItem", "p": [ "campaign_M9_phoenix_egg_item" ] }
+							]
+						}
+					]
+				}
+			]
+		},
+			{
+				"sid": "supportQuestlog1_1",
+				"hidden": true,
+
+				"comment": "завершение миссии + ачивмент на сохранение хотя бы 1 минотавра в армии к концу миссии",
+
+				"activeOnStart": true,
+				"sharing": "Clone",
+
+				"subQuests":
+				[	
+					{
+						"sid": "1",
+						"activeOnStart": true,
+
+						"triggers":
+						[
+							{
+								"conditions":
+								[
+									{ "c": "Counter", "p": [ "main_quest", "=", "1" ] }
+								],
+
+								"actions":
+								[
+									{ "a": "Dialog", "p": [ "M1_victory_dial1" ] },
+									{ "a": "SetAchievement", "p": [ "achievement_10" ] }
+								]
+							},
+							{
+								"conditions":
+								[
+									{ "c": "UnitOwnHero", "p": [ "campaign_hero_1", "minos", "=", "0" ] }
+								],
+
+								"actions":
+								[
+									{ "a": "NextSubQuest", "p": [ "2" ] }
+								]
+							}
+						]
+					},
+					{
+						"sid": "2",
+						"activeOnStart": false,
+
+						"triggers":
+						[
+							{
+								"conditions":
+								[
+									{ "c": "Counter", "p": [ "main_quest", "=", "1" ] }
+								],
+
+								"actions":
+								[
+									{ "a": "Dialog", "p": [ "M1_victory_dial1" ] }
+								]
+							}
+						]
+					}
+				]
+			},
+			{
+				"sid": "supportQuestlog1_2",
+				"hidden": true,
+
+				"comment": "additional dialogues",
+
+				"sharing": "Clone",
+				"activeOnStart": true,
+
+				"subQuests":
+				[	
+					{
+						"sid": "1",
+						"activeOnStart": true,
+
+						"triggers":
+						[
+							{
+								"conditions": 
+								[ 
+									{ "c": "SquadKill", "p": [ "peasant_demon" ] } 
+								],
+
+								"actions": 
+								[
+									{ "a": "Dialog", "p": [ "M1Q6_dial2" ] }
+								]
+							}
+						]
+					}
+				]
+			},
+
+			{
+				"sid": "setupQuestlog2",
+				"hidden": true,
+
+				"comment": "квест, чтобы активировать Questlog2 по условию",
+
+				"activeOnStart": true,
+				"sharing": "Clone",
+
+				"name": "1",
+
+				"subQuests":
+				[	
+					{
+						"sid": "1",
+						"activeOnStart": true,
+
+						"triggers":
+						[
+							{
+								"conditions":
+								[
+									{ "c": "NodeRevealed", "p": [ "1174" ] }
+								],
+
+								"actions":
+								[
+									{ "a": "Dialog", "p": [ "M1Q1_dial2" ] }
+								]
+							},
+							{
+								"conditions":
+								[
+									{ "c": "Counter", "p": [ "bridge_quest", "=", "1" ] }
+								],
+
+								"actions":
+								[
+									{ "a": "NextQuest", "p": [ "Questlog2" ] }
+								]
+							}
+						]
+					}
+				]
+			},
+		{
+			"sid": "Questlog2",
+			"main": true,
+
+			"comment": "починка моста",
+
+			"sharing": "Clone",
+
+			"name": "quest_name_M1Q2",
+
+			"subQuests":
+			[	
+				{
+					"sid": "Questlog2_1",
+					"activeOnStart": true,
+
+					"name": "quest_sub_M1Q2_1",
+
+					"triggers":
+					[
+						{
+							"conditions":
+							[
+								{ "c": "ResCounter", "p": [ "wood", ">", "30" ] }
+							],
+
+							"actions":
+							[
+								{ "a": "CurrentSubQuestDone" },
+								{ "a": "NextSubQuest", "p": [ "Questlog2_2" ] }
+							]
+						}
+					]
+				},
+				{
+					"sid": "Questlog2_2",
+
+					"name": "quest_sub_M1Q2_2",
+
+					"triggers":
+					[
+						{
+							"conditions":
+							[
+								{ "c": "Counter", "p": [ "bridge_quest", "=", "2" ] }
+							],
+
+							"actions":
+							[
+								{ "a": "CurrentSubQuestDone" },
+								{ "a": "NextQuest", "p": [] }
+							]
+						}
+					]
+				}
+			]
+		}
+	]
+}
