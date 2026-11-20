@@ -89,6 +89,10 @@ input/*.{h3m,fh2m,mp2}
 - `make_variant.py` : outil de test qui génère des variantes `.h3m` d'une carte
   convertie (ex. suppression de classes d'objets) à partir de
   `outputunified/<nom>.json`, pour isoler des problèmes de chargement.
+- `oe_loop_check.py` : boucle complète input → `.map` (Olden Era) → format
+  d'origine (sorties dans `outputloop/`), avec le rapport des types d'objets
+  perdus au passage ; les objets sans équivalent OE sont listés dans
+  `no_olden_era_equivalent.english.txt`.
 
 ## Points de fonctionnement notables
 
@@ -110,6 +114,14 @@ input/*.{h3m,fh2m,mp2}
 - Limites connues (README) : une carte H3 avec souterrain ne peut pas être
   convertie en H2 (pas de souterrain en H2) ; les héros neutres H3 disparaissent
   dans les cartes H2.
+- Boucle complète vers Olden Era (`oe_loop_check.py`) : les objets H2/H3 sont
+  résolus en classe h3m puis en sid OE via `oe_object_correspondence.json`
+  (copie normalisée de la référence locale : `resolveObjectSid`, tables scène/biome,
+  suppléments 155/158) ; au retour, le sid retrouve son groupe/index h3m/fh2m
+  (index de représentation pour la décoration). Monstres : `propSquads` /
+  `propRandomSquads` via les équivalents d'unités ; routes/rivières restent dans la
+  couche terrain. Les types sans équivalent OE sont dans
+  `no_olden_era_equivalent.english.txt`.
 
 ## Organisation du code
 
@@ -123,6 +135,9 @@ input/*.{h3m,fh2m,mp2}
 | `correspondence.py` | tables de correspondance H2 ↔ H3 (ID et noms) |
 | `verify_roundtrip.py` | vérification aller-retour parse → convert → write → parse |
 | `make_variant.py` | génération de variantes de test |
+| `oe_loop_check.py` | boucle complète input → `.map` → format d'origine + rapport des pertes |
+| `oe_object_correspondence.json` | correspondance objets h3m → sid Olden Era (référence locale `map-editor-json-tool`) |
+| `no_olden_era_equivalent.english.txt` | objets H2/H3 sans équivalent Olden Era |
 | `*_description.english.txt`, `heroes_field_correspondence.english.txt` | spécifications des formats binaires, des JSON et des équivalences de valeurs (`hommoe_*` pour Olden Era) |
 | `coastal_link.json`, `road_link.json`, `river_link.json` | tables de lien H2→H3 apprises des cartes de référence (côtes, routes, rivières) |
 | `coastal_tiles_h2_h3.md` | doc du lien tuiles côtières H2→H3 (Tableau 3) |

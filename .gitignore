@@ -4,3 +4,4 @@ outputjson/
 outputunified/
 output/*
 !output/.gitkeep
+outputloop/
