@@ -21,7 +21,7 @@ Description of the unified JSON format produced from .h3m and .fh2m maps
    "sourceGame", "sourceVersion", "name", "description", "creatorNotes",
    "difficulty", "mapSize", "hasUnderground", "mainLanguage", "players",
    "playerDetails", "teams", "victoryCondition", "lossCondition", "rumors",
-   "dailyEvents" (fh2m), "terrain".
+   "dailyEvents", "terrain".
 
 
 ████████████████████████████████████████████══════════════════════████████████
@@ -225,14 +225,16 @@ Description of the unified JSON format produced from .h3m and .fh2m maps
      "name"            string|null Name of the rumor (h3m; null for fh2m)
      "text"            string      Text of the rumor
 
-   "dailyEvents"       list        (fh2m) One entry per daily event (h3m
-                                    has no daily events):
+   "dailyEvents"       list        One entry per daily/timed event (fh2m
+                                    daily events, h3m global timed events):
+     "name"            string|null Name of the event (h3m; null for fh2m)
      "message"         string      Event message
      "humanColors"     list        Names of the human player colors
                                     concerned by the event
      "computerColors"  list        Names of the computer player colors
                                     concerned by the event
-     "firstOccurrenceDay" int      First occurrence day
+     "firstOccurrenceDay" int      First occurrence day (1-based: day 1
+                                    is the first day of the map)
      "repeatPeriodInDays" int      Repeat period in days (0 means no
                                     repetition)
      "resources"       object      Resources to be given as a reward:

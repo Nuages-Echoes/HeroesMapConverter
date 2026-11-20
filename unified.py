@@ -368,8 +368,34 @@ def convert_h3m_to_unified(map_data):
         ]))
     unified["rumors"] = rumors
 
-    # No daily events in h3m
-    unified["dailyEvents"] = []
+    # Timed events (the h3m global events table at the end of the file).
+    # The h3m players mask is a bitmask over H3M_PLAYER_COLORS; the
+    # applies-to-human/computer flags select which kind of controller the
+    # masked players must be (RoE/AB records carry no human flag: the mask
+    # alone selects the players and only the computer flag applies). The
+    # h3m first occurrence is 0-based (0 = calendar day 1); the unified
+    # firstOccurrenceDay is 1-based, like fh2m.
+    daily_events = []
+    events_section = map_data.get("Events") or {}
+    has_human_flag = events_section.get("Human Flag Present", True)
+    for event in events_section.get("Events", []):
+        mask = event.get("Players Mask", 0)
+        colors = [H3M_PLAYER_COLORS[bit] for bit in range(8) if mask & (1 << bit)]
+        if has_human_flag:
+            human_colors = list(colors) if event.get("Applies to Human") else []
+        else:
+            human_colors = list(colors)
+        computer_colors = list(colors) if event.get("Applies to Computer") else []
+        daily_events.append(OrderedDict([
+            ("name", event.get("Name", "")),
+            ("message", event.get("Message", "")),
+            ("humanColors", human_colors),
+            ("computerColors", computer_colors),
+            ("firstOccurrenceDay", event.get("First Occurrence Day", 0) + 1),
+            ("repeatPeriodInDays", event.get("Repeat Period In Days", 0)),
+            ("resources", OrderedDict((name, value) for name, value in event.get("Resources", {}).items())),
+        ]))
+    unified["dailyEvents"] = daily_events
 
     # Terrain
     levels = []
@@ -676,6 +702,7 @@ def convert_fh2m_to_unified(map_data):
     daily_events = []
     for event in map_data.get("dailyEvents", []):
         daily_events.append(OrderedDict([
+            ("name", None),
             ("message", event.get("message", "")),
             ("humanColors", list(event.get("humanPlayerColors", []))),
             ("computerColors", list(event.get("computerPlayerColors", []))),
@@ -2126,6 +2153,40 @@ def unified_to_h3m(unified):
             # bitfield, so it travels alongside the map dict instead
             # of inside the file (write_h3m ignores this key).
             data["fh2mRoadIndex"] = road_index_side
+
+    # Timed events: rebuild the h3m global events table from the unified
+    # daily events. The players mask is the union of the human and
+    # computer color lists; the applies-to-human byte exists in SoD and
+    # later only. The unified firstOccurrenceDay is 1-based, the h3m
+    # field is 0-based.
+    daily_events = unified.get("dailyEvents") or []
+    if daily_events:
+        h3m_events = []
+        for index, daily in enumerate(daily_events):
+            mask = 0
+            for color in list(daily.get("humanColors") or []) + list(daily.get("computerColors") or []):
+                if color in H3M_PLAYER_COLORS:
+                    mask |= 1 << H3M_PLAYER_COLORS.index(color)
+            event = OrderedDict([
+                ("Name", daily.get("name") or "Event%d" % (index + 1)),
+                ("Message", daily.get("message") or ""),
+                ("Resources", OrderedDict(
+                    (res, int((daily.get("resources") or {}).get(res, 0)))
+                    for res in ("wood", "mercury", "ore", "sulfur", "crystal", "gems", "gold"))),
+                ("Players Mask", mask),
+            ])
+            if version_sod:
+                event["Applies to Human"] = bool(daily.get("humanColors"))
+            event["Applies to Computer"] = bool(daily.get("computerColors"))
+            event["First Occurrence Day"] = max(0, int(daily.get("firstOccurrenceDay", 1)) - 1)
+            event["Repeat Period In Days"] = int(daily.get("repeatPeriodInDays", 0))
+            h3m_events.append(event)
+        data["Events"] = OrderedDict([
+            ("Number of Events", len(h3m_events)),
+            ("Events", h3m_events),
+            ("Human Flag Present", version_sod),
+            ("Raw Data", ""),
+        ])
 
     return data
 

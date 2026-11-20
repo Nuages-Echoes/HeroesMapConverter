@@ -38,6 +38,159 @@ def safe_read(buffer, size, default=b'\x00'):
     return data
 
 
+def _find_h3m_events_offset(raw, has_human_affected):
+    """
+    Locate the global timed events table inside the raw object section.
+
+    The table is the last section of the file, after the object instances
+    and their metadata, but the object walker does not necessarily stop
+    exactly at its first byte. Scan for an offset from which a well-formed
+    events table decodes cleanly up to the end of the buffer (count in
+    1..256, zero padding bytes, only zero bytes left afterwards). When
+    several offsets qualify, the latest one wins: the events table is at
+    the very end of the file. Returns None when no table is present.
+    """
+    n = len(raw)
+    if n < 4:
+        return None
+    best = None
+    zero16 = bytes(16)
+    for start in range(0, n - 3):
+        count = struct.unpack_from('<I', raw, start)[0]
+        if not 1 <= count <= 256:
+            continue
+        pos = start + 4
+        ok = True
+        for _ in range(count):
+            if pos + 4 > n:
+                ok = False
+                break
+            name_len = struct.unpack_from('<i', raw, pos)[0]
+            pos += 4
+            if name_len < 0 or name_len > 4096 or pos + name_len > n:
+                ok = False
+                break
+            pos += name_len
+            if pos + 4 > n:
+                ok = False
+                break
+            msg_len = struct.unpack_from('<i', raw, pos)[0]
+            pos += 4
+            if msg_len < 0 or msg_len > 1000000 or pos + msg_len > n:
+                ok = False
+                break
+            pos += msg_len
+            pos += 28  # resources (7 x i32)
+            pos += 1   # players mask
+            if has_human_affected:
+                pos += 1  # applies to human
+            pos += 1   # applies to computer
+            pos += 4   # first occurrence (u16) + repeat period (u16)
+            if pos + 16 > n:
+                ok = False
+                break
+            if raw[pos:pos + 16] != zero16:
+                ok = False
+                break
+            pos += 16
+        if ok and not any(raw[pos:]):
+            best = start
+    return best
+
+
+def parse_h3m_events(raw, has_human_affected=True):
+    """
+    Parse the global timed events table of an h3m map (the bytes at the
+    very end of the file, after the object instances and their metadata).
+    Layout per event: u32 name length + name, u32 message length + message,
+    7 x i32 resource amounts (wood, mercury, ore, sulfur, crystal, gems,
+    gold; negative = taken away), u8 players bitmask (bit 0 = first player
+    color), u8 applies-to-human (SoD and later only), u8
+    applies-to-computer, u16 first occurrence (0-based: 0 = calendar day
+    1), u16 repeat period in days (0 = one-time), 16 reserved zero bytes.
+    """
+    result = OrderedDict([
+        ('Number of Events', 0),
+        ('Events', []),
+        ('Human Flag Present', bool(has_human_affected)),
+        ('Raw Data', raw.hex() if raw else ''),
+    ])
+    if len(raw) < 4:
+        return result
+    buffer = BytesIO(raw)
+    count = struct.unpack('<I', safe_read(buffer, 4))[0]
+    events = []
+    for _ in range(min(count, 256)):
+        name_len_data = safe_read(buffer, 4)
+        if len(name_len_data) < 4:
+            break
+        name_len = struct.unpack('<i', name_len_data)[0]
+        name = read_string(buffer, name_len) if name_len > 0 else ''
+        msg_len_data = safe_read(buffer, 4)
+        if len(msg_len_data) < 4:
+            break
+        msg_len = struct.unpack('<i', msg_len_data)[0]
+        message = read_string(buffer, msg_len) if msg_len > 0 else ''
+        res_data = safe_read(buffer, 28)
+        if len(res_data) < 28:
+            break
+        resources = struct.unpack('<7i', res_data)
+        event = OrderedDict([
+            ('Name', name),
+            ('Message', message),
+            ('Resources', OrderedDict([
+                ('wood', resources[0]), ('mercury', resources[1]),
+                ('ore', resources[2]), ('sulfur', resources[3]),
+                ('crystal', resources[4]), ('gems', resources[5]),
+                ('gold', resources[6]),
+            ])),
+            ('Players Mask', safe_read(buffer, 1)[0]),
+        ])
+        if has_human_affected:
+            event['Applies to Human'] = bool(safe_read(buffer, 1)[0])
+        event['Applies to Computer'] = bool(safe_read(buffer, 1)[0])
+        first_data = safe_read(buffer, 2)
+        event['First Occurrence Day'] = struct.unpack('<H', first_data)[0] if len(first_data) == 2 else 0
+        repeat_data = safe_read(buffer, 2)
+        event['Repeat Period In Days'] = struct.unpack('<H', repeat_data)[0] if len(repeat_data) == 2 else 0
+        safe_read(buffer, 16)
+        events.append(event)
+    result['Number of Events'] = count
+    result['Events'] = events
+    return result
+
+
+def write_h3m_events(buffer, events_section):
+    """Write the timed events section (raw passthrough when available)."""
+    raw = events_section.get('Raw Data', '')
+    if raw:
+        buffer.write(bytes.fromhex(raw))
+        return
+    events = events_section.get('Events', [])
+    if not events:
+        return
+    has_human = events_section.get('Human Flag Present', True)
+    buffer.write(struct.pack('<I', events_section.get('Number of Events', len(events))))
+    for event in events:
+        name_bytes = event.get('Name', '').encode('cp1252', errors='replace')
+        msg_bytes = event.get('Message', '').encode('cp1252', errors='replace')
+        buffer.write(struct.pack('<i', len(name_bytes)))
+        buffer.write(name_bytes)
+        buffer.write(struct.pack('<i', len(msg_bytes)))
+        buffer.write(msg_bytes)
+        resources = event.get('Resources', {})
+        buffer.write(struct.pack('<7i', *[int(resources.get(k, 0)) for k in
+                                          ('wood', 'mercury', 'ore', 'sulfur',
+                                           'crystal', 'gems', 'gold')]))
+        buffer.write(struct.pack('<B', event.get('Players Mask', 0)))
+        if has_human:
+            buffer.write(struct.pack('<B', 1 if event.get('Applies to Human') else 0))
+        buffer.write(struct.pack('<B', 1 if event.get('Applies to Computer') else 0))
+        buffer.write(struct.pack('<H', int(event.get('First Occurrence Day', 0)) & 0xFFFF))
+        buffer.write(struct.pack('<H', int(event.get('Repeat Period In Days', 0)) & 0xFFFF))
+        buffer.write(b'\x00' * 16)
+
+
 def parse_h3m(file_path):
     """
     Parse a Heroes of Might and Magic III map file (.h3m).
@@ -429,13 +582,23 @@ def parse_h3m(file_path):
     num_objects_data = safe_read(buffer, 4)
     if len(num_objects_data) == 4:
         num_objects = struct.unpack('<I', num_objects_data)[0]
-        raw_objects = num_objects_data + safe_read(buffer, buffer.getbuffer().nbytes - buffer.tell())
+        full_raw = num_objects_data + safe_read(buffer, buffer.getbuffer().nbytes - buffer.tell())
+        tiles = parse_h3m_objects(full_raw, level_ab, level_sod,
+                                  artifact_id_bytes,
+                                  creature_id_bytes, artifact_slots)
+        # The global timed events table is the last section of the file;
+        # locate it precisely (the object walk does not necessarily stop
+        # exactly at its first byte).
+        events_offset = _find_h3m_events_offset(full_raw, level_sod)
+        if events_offset is not None:
+            objects_raw = full_raw[:events_offset]
+            data['Events'] = parse_h3m_events(full_raw[events_offset:], level_sod)
+        else:
+            objects_raw = full_raw
         data['Objects'] = OrderedDict([
             ('Number of Objects', num_objects),
-            ('Raw Data', raw_objects.hex()),
-            ('Tiles', parse_h3m_objects(raw_objects, level_ab, level_sod,
-                                        artifact_id_bytes,
-                                        creature_id_bytes, artifact_slots))
+            ('Raw Data', objects_raw.hex()),
+            ('Tiles', tiles)
         ])
     else:
         data['Objects'] = OrderedDict([('Note', 'End of file')])
@@ -832,6 +995,11 @@ def write_h3m(map_data, output_path):
     else:
         num_objects = objects.get('Number of Objects', 0)
         buffer.write(struct.pack('<I', num_objects))
+
+    # === Timed events ===
+    events_section = map_data.get('Events')
+    if events_section:
+        write_h3m_events(buffer, events_section)
 
     all_data = buffer.getvalue()
 
