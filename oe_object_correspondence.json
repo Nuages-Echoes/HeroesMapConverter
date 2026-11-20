@@ -2344,8 +2344,95 @@
    "8": "pool"
   }
  },
+ "supplement_emit": {
+  "108": {
+   "evidence": "map-objects.json: heros_crypt = 'Tomb of a Nameless Hero' (= H3 Warrior's Tomb)",
+   "sid": "heros_crypt"
+  },
+  "212": {
+   "evidence": "map-objects.json Travel & Portals: town_gate = 'Town Gate' (= H3 Border Gate)",
+   "sid": "town_gate"
+  },
+  "213": {
+   "evidence": "map-objects.json Dwellings: mercenary_guild (= H3 Freelancers' Guild)",
+   "sid": "mercenary_guild"
+  },
+  "214": {
+   "evidence": "hero placeholder -> hero-spawner",
+   "sid": "hero-spawner"
+  },
+  "219": {
+   "evidence": "same as class 33 (vertical garrison)",
+   "sid": "garrisons"
+  },
+  "221": {
+   "evidence": "same as class 99 (SoD trading post)",
+   "sid": "market"
+  },
+  "33": {
+   "evidence": "map-objects.json + inspector object-categories garrison family; real maps use 'garrisons'",
+   "sid": "garrisons"
+  },
+  "34": {
+   "evidence": "real maps + inspector special family city-spawner|hero-spawner|random-hero|random-city; already the KINGDOM_HEROES group sid",
+   "sid": "hero-spawner"
+  },
+  "35": {
+   "evidence": "map-objects.json: fort = 'Pauper Knight Order' (the knight adventure site, = H3 Hill Fort)",
+   "sid": "fort"
+  },
+  "43": {
+   "evidence": "rmg/zone-islands PORTAL_SIDS portal_1..5; h3-import/portal-links.ts: portal_5 = subterranean gate; one-way monolith entrance -> portal_4",
+   "sid": "portal_4"
+  },
+  "44": {
+   "evidence": "one-way monolith exit -> portal_5 (subterranean gate)",
+   "sid": "portal_5"
+  },
+  "51": {
+   "evidence": "unit-selling camp; inspector unit-trade family random-hire|unit_trade, map-objects mercenary_guild",
+   "sid": "mercenary_guild"
+  },
+  "62": {
+   "evidence": "map-objects.json: prison = 'Hero Cage' (hero prison = H3 Prison); inspector object-categories: adventure-sites",
+   "sid": "prison"
+  },
+  "7": {
+   "evidence": "map-objects.json 'item_markets' (artifact market = H3 Black Market); 'market_items' is the sibling resource market",
+   "sid": "item_markets"
+  },
+  "70": {
+   "evidence": "inspector object-categories special family includes random-hero",
+   "sid": "random-hero"
+  },
+  "77": {
+   "evidence": "real maps use 'random-city'; inspector special family",
+   "sid": "random-city"
+  },
+  "99": {
+   "evidence": "inspector object-categories markets-and-trade: market|marketplace|trading_post; real maps use 'market'",
+   "sid": "market"
+  }
+ },
  "supplement_scenery": {
+  "114": "shrub",
+  "115": "shrub",
+  "117": "rock",
+  "121": "pool",
+  "122": "shrub",
+  "132": "shrub",
+  "138": "shrub",
+  "139": "ground",
+  "143": "water_decoration",
+  "152": "rock",
+  "154": "pool",
   "155": "tree",
-  "158": "mountain"
+  "157": "mountain",
+  "158": "mountain",
+  "159": "tree",
+  "160": "ground",
+  "177": "pool",
+  "204": "tree",
+  "222": "shrub"
  }
 }

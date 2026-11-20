@@ -861,6 +861,7 @@ OE_ROLE_BIOME_SID = OE_OBJECT_CORRESPONDENCE["role_biome_sid"]
 OE_DEF_TO_SID = OE_OBJECT_CORRESPONDENCE["def_to_sid"]
 OE_SUPPLEMENT_SCENERY = OE_OBJECT_CORRESPONDENCE["supplement_scenery"]
 OE_CREATURE_EQUIVALENTS = OE_OBJECT_CORRESPONDENCE["creature_equivalents"]
+OE_SUPPLEMENT_EMIT = OE_OBJECT_CORRESPONDENCE["supplement_emit"]
 # OE unit sid -> h3m creature id (reverse of creatureEquivalents).
 OE_UNIT_SID_TO_H3_CREATURE = {}
 for _cid, _usid in OE_CREATURE_EQUIVALENTS.items():
@@ -945,6 +946,8 @@ for _role, _by_biome in OE_ROLE_BIOME_SID.items():
         for _c in _cands:
             if _c != _best:
                 _index_hommoe_sid(_sid, _c)
+for _h3, _row in OE_SUPPLEMENT_EMIT.items():
+    _index_hommoe_sid(_row["sid"], _h3)
 
 # Reverse table for scenery sids: OE sid -> a representative unified
 # (group, index) of the landscape family that produces it. Built by running
@@ -1047,6 +1050,10 @@ def _resolve_hommoe_sid(h3_id, anim, subtype, terrain_name):
         if d.get("default"):
             return d["default"]
         return None
+    if h3 in OE_SUPPLEMENT_EMIT:
+        # Evidence-backed supplement (see oe_object_correspondence.json
+        # "supplement_emit" for the per-class local evidence).
+        return OE_SUPPLEMENT_EMIT[h3]["sid"]
     return None
 
 
@@ -1163,10 +1170,17 @@ def _unified_obj_h3m_ref(obj, terrain_name=None):
         return (H3M_DEF_OBJECT_CLASS.get(anim, cls), 0, anim)
     if group in ("LANDSCAPE_ROCKS", "LANDSCAPE_MISCELLANEOUS", "LANDSCAPE_WATER"):
         entry = fh2m_landscape_def(group, index, terrain)
-        if entry is None:
+        if entry is not None:
+            cls, anim = entry[0], entry[1].lower()
+            cls = H3M_DEF_OBJECT_CLASS.get(anim, cls)
+        else:
+            # No footprint-matched def, but the class table still knows
+            # the h3m class of this fh2m index (cactus, crater, ...).
+            cls = FH2M_LANDSCAPE_TO_H3M.get((group, index))
+            anim = None
+        if cls is None:
             return None
-        cls, anim = entry[0], entry[1].lower()
-        return (H3M_DEF_OBJECT_CLASS.get(anim, cls), 0, anim)
+        return (cls, 0, anim)
     return None
 
 
