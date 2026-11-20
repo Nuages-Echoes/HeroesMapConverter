@@ -100,6 +100,13 @@ input/*.{h3m,fh2m,mp2}
   de `unified.py`).
 - Pour les sources fh2m, la ville principale d'un joueur est pointée sur la
   case d'entrée de la ville.
+- Événements temporisés h3m (table globale en fin de fichier, après les
+  objets) : parsés dans la section `Events` du JSON détaillé
+  (`h3decoder.parse_h3m_events`, détection robuste de l'offset de la table)
+  et remontés dans `dailyEvents` du JSON unifié (champ `name` renseigné,
+  `firstOccurrenceDay` rendu 1-based comme en fh2m) ; `unified_to_h3m()`
+  reconstruit la table (re-encodage octet-identique vérifié sur
+  `all for one.h3m`, RoE : pas d'octet applies-to-human avant SoD).
 - Limites connues (README) : une carte H3 avec souterrain ne peut pas être
   convertie en H2 (pas de souterrain en H2) ; les héros neutres H3 disparaissent
   dans les cartes H2.

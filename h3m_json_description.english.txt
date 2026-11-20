@@ -19,7 +19,8 @@ Description of the JSON fields produced by h3decoder.py (parse_h3m) for .h3m fil
    "Victory Condition", "Loss Condition", "Teams", "Available Heroes",
    "Reserved Bytes", "Random Artifacts" (AB+), "Allowed Spells" (SoD),
    "Allowed Abilities" (SoD), "Rumors", "Hero Settings" (SoD),
-   "Surface Map", "Underground Map" (cond.), "Objects".
+   "Surface Map", "Underground Map" (cond.), "Objects",
+   "Events" (cond.).
 
 
 ████████████████████████████████████████████████████████████████████████████████
@@ -220,3 +221,28 @@ Description of the JSON fields produced by h3decoder.py (parse_h3m) for .h3m fil
                                     absent if the file is truncated)
    "Note"                string    "End of file" (cond., only on truncated
                                     files)
+
+
+███                                  Events                                  ███
+
+   "Events" object (cond., only when the file ends with a global timed
+   events table, after the objects):
+   "Number of Events"    int       Number of events in the list below
+   "Events"              list      One entry per timed event:
+     "Name"                  string   Event name
+     "Message"               string   Event message
+     "Resources"             object   7 resource amounts as ints:
+                                      "wood", "mercury", "ore", "sulfur",
+                                      "crystal", "gems", "gold" (negative =
+                                      taken away)
+     "Players Mask"          int      Bitmask of the concerned players
+                                      (bit 0 = Red, then Blue, Tan, Green,
+                                      Orange, Purple, Teal, Pink)
+     "Applies to Human"      bool     Concerned human players (SoD+ only)
+     "Applies to Computer"   bool     Concerned computer players
+     "First Occurrence Day"  int      First occurrence, 0-based
+                                      (0 = calendar day 1)
+     "Repeat Period In Days" int      Repeat period in days (0 = one-time)
+   "Human Flag Present"  bool      True for SoD and later (RoE/AB records
+                                   have no "Applies to Human" field)
+   "Raw Data"            string    The raw events table, hex-encoded
