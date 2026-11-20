@@ -24,6 +24,7 @@ python main.py                  # convert every map in input/ to .h3m, .fh2m and
 python main.py --target fh2m    # convert only to fheroes2 (.fh2m) maps
 python main.py --target map     # convert only to Olden Era (.map) maps
 python verify_roundtrip.py      # check that each output/ file round-trips with its input/
+python oe_loop_check.py         # full loop input -> .map (Olden Era) -> original format, with the lost-object-types report (outputs in outputloop/)
 ```
 
 See [Progress.md](Progress.md) for a description of the current inputs, outputs and pipeline, and the `*_description.english.txt` files for the binary and JSON format specifications.
@@ -38,3 +39,5 @@ Known Limitations
 Converting maps with subterranean map to H2 ends in failure (no underground in H2)
 Neutral heroes from H3 disappear in H2 maps (no neutral heroes in the game)
 More info on limitations in the `*_description.english.txt` files.
+H2/H3 objects with no Olden Era equivalent are listed in `no_olden_era_equivalent.english.txt`
+(OE object correspondence table: `oe_object_correspondence.json`).

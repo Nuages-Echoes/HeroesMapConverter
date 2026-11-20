@@ -837,6 +837,416 @@ _HOMMOE_SCENERY_TOKENS = (
 )
 
 
+# ---------------------------------------------------------------------------
+# Olden Era object correspondence, learned from the local reference
+# references/map-editor-json-tool (h3-import/h3-object-mapping.json plus
+# h3-object-mapping.ts's resolveObjectSid() and H3_TERRAIN_BIOME): h3m
+# object class -> OE sid, with subtype / def-name / token dispatch and the
+# scenery role -> biome -> sid tables. oe_object_correspondence.json is the
+# normalized copy of that data checked in at the repository root.
+# ---------------------------------------------------------------------------
+import json as _json
+import os as _os
+
+with open(_os.path.join(_os.path.dirname(_os.path.abspath(__file__)),
+                        "oe_object_correspondence.json"), encoding="utf-8") as _f:
+    OE_OBJECT_CORRESPONDENCE = _json.load(_f)
+
+OE_EMIT_SID = OE_OBJECT_CORRESPONDENCE["emit"]
+OE_DISPATCH = OE_OBJECT_CORRESPONDENCE["dispatch"]
+OE_SCENERY_ROLE = OE_OBJECT_CORRESPONDENCE["scenery"]
+OE_SCENERY_DISPATCH = OE_OBJECT_CORRESPONDENCE["scenery_dispatch"]
+OE_SCENERY_DISPATCH_SUBTYPE = OE_OBJECT_CORRESPONDENCE["scenery_dispatch_subtype"]
+OE_ROLE_BIOME_SID = OE_OBJECT_CORRESPONDENCE["role_biome_sid"]
+OE_DEF_TO_SID = OE_OBJECT_CORRESPONDENCE["def_to_sid"]
+OE_SUPPLEMENT_SCENERY = OE_OBJECT_CORRESPONDENCE["supplement_scenery"]
+OE_CREATURE_EQUIVALENTS = OE_OBJECT_CORRESPONDENCE["creature_equivalents"]
+# OE unit sid -> h3m creature id (reverse of creatureEquivalents).
+OE_UNIT_SID_TO_H3_CREATURE = {}
+for _cid, _usid in OE_CREATURE_EQUIVALENTS.items():
+    OE_UNIT_SID_TO_H3_CREATURE.setdefault(_usid, int(_cid))
+OE_H3_TERRAIN_BIOME = OE_OBJECT_CORRESPONDENCE["h3_terrain_biome"]
+OE_OMIT_CLASSES = {str(o["h3Id"]) for o in OE_OBJECT_CORRESPONDENCE["omit"]}
+
+# h3m terrain name -> h3m terrain id (h3decoder TERRAIN_MAP), used to pick
+# the scenery biome bucket.
+H3M_TERRAIN_ID_BY_NAME = {
+    "Dirt": 0, "Sand": 1, "Grass": 2, "Snow": 3, "Swamp": 4, "Rough": 5,
+    "Subterranean": 6, "Lava": 7, "Water": 8, "Rock": 9,
+}
+
+# Reverse index: OE sid -> list of (h3m class, subtype, def name) that
+# resolve to it (first entry is the canonical one).
+OE_SID_TO_H3 = {}
+
+
+def _index_hommoe_sid(sid, h3_id, subtype=None, def_name=None):
+    OE_SID_TO_H3.setdefault(sid, []).append((int(h3_id), subtype, def_name))
+
+
+for _h3, _row in OE_EMIT_SID.items():
+    _index_hommoe_sid(_row["sid"], _h3)
+for _h3, _d in OE_DISPATCH.items():
+    for _sub, _sid in (_d.get("subtypes") or {}).items():
+        _index_hommoe_sid(_sid, _h3, subtype=int(_sub) if str(_sub).isdigit() else None)
+    for _def, _sid in (_d.get("exact") or {}).items():
+        _index_hommoe_sid(_sid, _h3, def_name=_def)
+    for _tok, _sid in (_d.get("tokens") or {}).items():
+        # h3m class 79 (Resource) dispatches on the resource token of the
+        # def name; the token is the resource subtype (FH2M_RESOURCE_ORDER).
+        _sub = {"wood": 0, "merc": 1, "ore": 2, "sulf": 3,
+                "crys": 4, "gems": 5, "gold": 6}.get(_tok)
+        _index_hommoe_sid(_sid, _h3, subtype=_sub)
+    if _d.get("default"):
+        _index_hommoe_sid(_d["default"], _h3)
+    _fc = _d.get("freeChoice")
+    if _fc:
+        for _sub in _fc.get("subtypes", []):
+            _index_hommoe_sid(_fc["sid"], _h3, subtype=_sub)
+for _h3, _exact in OE_SCENERY_DISPATCH.items():
+    for _def, _sid in _exact.items():
+        _index_hommoe_sid(_sid, _h3, def_name=_def)
+OE_H3_NAMES = OE_OBJECT_CORRESPONDENCE["h3_names"]
+
+
+def _alnum(s):
+    import re as _re
+    return _re.sub(r"[^a-z0-9]+", "", s.lower())
+
+
+def _common_substring_len(a, b):
+    # longest common substring length between two lowercase alnum strings
+    best = 0
+    for i in range(len(a)):
+        for j in range(len(b)):
+            k = 0
+            while i + k < len(a) and j + k < len(b) and a[i + k] == b[j + k]:
+                k += 1
+            if k > best:
+                best = k
+    return best
+
+
+for _role, _by_biome in OE_ROLE_BIOME_SID.items():
+    for _biome, _sid in _by_biome.items():
+        _cands = [int(_h3) for _h3, _r in OE_SCENERY_ROLE.items() if _r == _role]
+        _cands += [int(_h3) for _h3, _r in OE_SUPPLEMENT_SCENERY.items() if _r == _role]
+        _cands += [int(_h3) for _h3, _subs in OE_SCENERY_DISPATCH_SUBTYPE.items()
+                   if _role in _subs.values()]
+        if not _cands:
+            continue
+        # Prefer the candidate class whose name best matches the sid stem
+        # (pinetree_* -> 137 "Pine Trees", flowers_* -> 120 "Flowers"...),
+        # so the way back recovers the original class when possible.
+        _stem = _alnum(_sid)
+        _best = max(_cands, key=lambda c: _common_substring_len(
+            _stem, _alnum(OE_H3_NAMES.get(str(c), ""))))
+        _index_hommoe_sid(_sid, _best)
+        for _c in _cands:
+            if _c != _best:
+                _index_hommoe_sid(_sid, _c)
+
+# Reverse table for scenery sids: OE sid -> a representative unified
+# (group, index) of the landscape family that produces it. Built by running
+# the forward resolution over the known fh2m landscape indices and terrain
+# variants; first hit wins (groups in order, indices ascending, terrains in
+# H3M_TERRAIN_ID_BY_NAME order), so it is deterministic. OE scenery sids are
+# coarser than the H2/H3 variants (many defs share one sid), so the way
+# back recovers the family, not necessarily the exact original variant.
+OE_SID_LANDSCAPE_REVERSE = {}
+
+
+def _build_oe_sid_landscape_reverse():
+    groups = ("LANDSCAPE_TREES", "LANDSCAPE_MOUNTAINS", "LANDSCAPE_ROCKS",
+              "LANDSCAPE_MISCELLANEOUS", "LANDSCAPE_WATER", "ADVENTURE_WATER")
+    terrains = list(H3M_TERRAIN_ID_BY_NAME)
+    candidates = {}
+    for group in groups:
+        for index in range(256):
+            for terrain in terrains:
+                try:
+                    ref = _unified_obj_h3m_ref({"group": group, "index": index},
+                                               terrain)
+                except Exception:
+                    ref = None
+                if ref is None:
+                    continue
+                sid = _resolve_hommoe_sid(ref[0], ref[2], ref[1], terrain)
+                # Only claim the sid for this group when the sid's own
+                # token family agrees, so rock sids are not claimed by a
+                # tree index that happens to resolve to them.
+                if sid and _hommoe_sid_group(sid) == group:
+                    candidates.setdefault(sid, []).append((group, index, ref[0]))
+    for sid, cands in candidates.items():
+        # Prefer the (group, index) whose h3m class is the name-matched
+        # best candidate for the sid (first entry of OE_SID_TO_H3), so the
+        # way back recovers the original scenery class when possible.
+        best_class = (OE_SID_TO_H3.get(sid) or [(None,)])[0][0]
+        for group, index, cls in cands:
+            if cls == best_class:
+                OE_SID_LANDSCAPE_REVERSE[sid] = (group, index)
+                break
+        else:
+            OE_SID_LANDSCAPE_REVERSE[sid] = cands[0][0], cands[0][1]
+
+
+# Objects dropped by unified_to_hommoe because the reference mapping has no
+# Olden Era equivalent for their type; reset on each unified_to_hommoe
+# call, consumed by oe_loop_check.py to build the no-equivalent listing.
+HOMMOE_UNMAPPED_OBJECTS = []
+
+
+def _hommoe_biome_for_terrain(terrain_name):
+    terrain_id = H3M_TERRAIN_ID_BY_NAME.get(terrain_name or "Grass", 2)
+    return OE_H3_TERRAIN_BIOME.get(str(terrain_id), "grass")
+
+
+def _resolve_hommoe_sid(h3_id, anim, subtype, terrain_name):
+    """Port of the reference resolveObjectSid(): h3m object (class,
+    animation, subtype) placed on a terrain -> OE sid, or None when the
+    reference mapping omits the object (no Olden Era equivalent)."""
+    h3 = str(h3_id)
+    if h3 in OE_EMIT_SID:
+        return OE_EMIT_SID[h3]["sid"]
+    known = (h3 in OE_DISPATCH or h3 in OE_SCENERY_ROLE
+             or h3 in OE_SCENERY_DISPATCH or h3 in OE_SCENERY_DISPATCH_SUBTYPE)
+    if anim and not known:
+        # The class itself is unmapped, but the exact def is in one of the
+        # reference's exact tables (e.g. class 155 defs listed under 199).
+        exact_sid = OE_DEF_TO_SID.get(anim.lower())
+        if exact_sid:
+            return exact_sid
+    if h3 in OE_SCENERY_ROLE or h3 in OE_SUPPLEMENT_SCENERY:
+        role = OE_SCENERY_ROLE.get(h3) or OE_SUPPLEMENT_SCENERY.get(h3)
+        return (OE_ROLE_BIOME_SID.get(role) or {}).get(
+            _hommoe_biome_for_terrain(terrain_name))
+    if h3 in OE_SCENERY_DISPATCH:
+        return OE_SCENERY_DISPATCH[h3].get((anim or "").lower())
+    if h3 in OE_SCENERY_DISPATCH_SUBTYPE:
+        role = (OE_SCENERY_DISPATCH_SUBTYPE[h3] or {}).get(str(subtype or 0))
+        if role:
+            return (OE_ROLE_BIOME_SID.get(role) or {}).get(
+                _hommoe_biome_for_terrain(terrain_name))
+        return None
+    if h3 in OE_DISPATCH:
+        d = OE_DISPATCH[h3]
+        fc = d.get("freeChoice")
+        if fc and (subtype or 0) in fc.get("subtypes", []):
+            return fc["sid"]
+        by_sub = (d.get("subtypes") or {}).get(str(subtype or 0))
+        if by_sub:
+            return by_sub
+        if anim:
+            anim_l = anim.lower()
+            exact = (d.get("exact") or {}).get(anim_l)
+            if exact:
+                return exact
+            for token, sid in (d.get("tokens") or {}).items():
+                if token in anim_l:
+                    return sid
+        if d.get("default"):
+            return d["default"]
+        return None
+    return None
+
+
+def _unified_obj_h3m_ref(obj, terrain_name=None):
+    """Resolve a unified object to an h3m reference (class, subtype,
+    animation def name). h3m sources carry class/subclass/sprite
+    directly; fh2m sources go through the same correspondence tables the
+    h3m object encoder uses. Returns None when the object has no h3m
+    reference (roads, streams, markers...)."""
+    if obj.get("class") is not None:
+        return (int(obj["class"]), obj.get("subclass") or 0,
+                (obj.get("sprite") or "").lower() or None)
+    from correspondence import (
+        FH2M_TO_H3M_MONSTERS, FH2M_TO_H3M_ARTIFACTS, FH2M_TO_H3M_RESOURCES,
+        FH2M_TO_H3M_MISC, FH2M_TO_H3M_MINES, FH2M_TO_H3M_DWELLINGS,
+        FH2M_TO_H3M_SHRINES, FH2M_TO_H3M_COLOR_INDEX, FH2M_TO_H3M_HERO_RACE,
+        FH2M_TOWN_RACE_ORDER, H3M_TOWN_TYPE_TO_FH2M_RACE,
+        H3M_CREATURE_DEF_NAMES, H3M_DWELLING_DEFS, FH2M_LANDSCAPE_TO_H3M,
+        H3M_DEF_OBJECT_CLASS,
+        fh2m_tree_h3m_class, fh2m_tree_def_name, fh2m_mountain_h3m_class,
+        fh2m_mountain_def_name, fh2m_mine_def_name, fh2m_landscape_def)
+    group = obj.get("group")
+    index = obj.get("index", 0) or 0
+    terrain = terrain_name or "Grass"
+
+    def _target(target):
+        if target is None:
+            return None
+        anim = target[2].lower() if len(target) > 2 and target[2] else None
+        cls = target[0]
+        if anim:
+            # Prefer the class of the actual def: the correspondence
+            # tables sometimes route through a generic class (155 Trees,
+            # 29 Flotsam) that the OE mapping omits, while the def's own
+            # class (119/137/134...) is mapped.
+            cls = H3M_DEF_OBJECT_CLASS.get(anim, cls)
+        return (cls, target[1], anim)
+
+    if group == "MONSTERS":
+        creature = index + 1
+        if 67 <= creature <= 71:
+            return (71 + (creature - 67), 0, None)
+        h3 = FH2M_TO_H3M_MONSTERS.get(creature)
+        if h3 is None:
+            return None
+        return (54, h3, (H3M_CREATURE_DEF_NAMES.get(h3) or "").lower() or None)
+    if group == "ADVENTURE_TREASURES":
+        if index in FH2M_TO_H3M_RESOURCES:
+            # h3m class 79 dispatches on the resource token of the def
+            # name (avtwood0.def, avtgold0.def, ...).
+            token = ("wood", "merc", "ore", "sulf", "crys", "gems", "gold")[index]
+            return (79, index, token)
+        return _target(FH2M_TO_H3M_MISC.get("TREASURE_%d" % index))
+    if group == "ADVENTURE_ARTIFACTS":
+        if index in (91, 92, 93, 94, 95):
+            return (65 + {91: 0, 92: 1, 93: 2, 94: 3, 95: 4}[index], 0, None)
+        if index <= 72:
+            artifact = index + 9
+        elif index == 73:
+            artifact = 82
+        else:
+            artifact = index + 13
+        h3 = FH2M_TO_H3M_ARTIFACTS.get(artifact)
+        return (5, h3, None) if h3 is not None else None
+    if group == "ADVENTURE_MINES":
+        mine = FH2M_TO_H3M_MINES.get(index)
+        if mine is None:
+            return None
+        return (mine[0], mine[1], fh2m_mine_def_name(index).lower())
+    if group == "ADVENTURE_DWELLINGS":
+        dw = FH2M_TO_H3M_DWELLINGS.get(index)
+        if dw is None:
+            return None
+        anim = dw[2].lower() if len(dw) > 2 and dw[2] else None
+        if anim is None and dw[1] in H3M_DWELLING_DEFS:
+            anim = H3M_DWELLING_DEFS[dw[1]][0].lower()
+        return (dw[0], dw[1], anim)
+    if group == "KINGDOM_TOWNS":
+        if index in (12, 13):
+            return (77, 0, "avcranx0.def")
+        race_id = index // 2
+        if 0 <= race_id < len(FH2M_TOWN_RACE_ORDER):
+            for tt, race in H3M_TOWN_TYPE_TO_FH2M_RACE.items():
+                if race == FH2M_TOWN_RACE_ORDER[race_id]:
+                    return (98, tt, None)
+        return (98, 0, None)
+    if group == "KINGDOM_HEROES":
+        race = index % 7
+        hero_type = FH2M_TO_H3M_HERO_RACE.get(race) or 0
+        return (34, (hero_type or 0) // 8, None)
+    if group == "ADVENTURE_POWER_UPS":
+        shrine = FH2M_TO_H3M_SHRINES.get(index)
+        if shrine is not None:
+            return (shrine, 0, None)
+        return _target(FH2M_TO_H3M_MISC.get("POWER_%d" % index))
+    if group in ("ADVENTURE_MISCELLANEOUS", "ADVENTURE_WATER"):
+        if group == "ADVENTURE_MISCELLANEOUS" and 51 <= index <= 58:
+            return (9, FH2M_TO_H3M_COLOR_INDEX[index - 51], None)
+        if group == "ADVENTURE_MISCELLANEOUS" and 59 <= index <= 66:
+            return (10, FH2M_TO_H3M_COLOR_INDEX[index - 59], None)
+        key = ("MISC_%d" % index) if group == "ADVENTURE_MISCELLANEOUS" else ("WATER_%d" % index)
+        return _target(FH2M_TO_H3M_MISC.get(key))
+    if group == "LANDSCAPE_TREES":
+        cls = fh2m_tree_h3m_class(index, terrain)
+        if cls is None:
+            return None
+        anim = fh2m_tree_def_name(cls, terrain, index).lower()
+        return (H3M_DEF_OBJECT_CLASS.get(anim, cls), 0, anim)
+    if group == "LANDSCAPE_MOUNTAINS":
+        cls = fh2m_mountain_h3m_class(index, terrain)
+        if cls is None:
+            return None
+        anim = fh2m_mountain_def_name(index, cls, terrain).lower()
+        return (H3M_DEF_OBJECT_CLASS.get(anim, cls), 0, anim)
+    if group in ("LANDSCAPE_ROCKS", "LANDSCAPE_MISCELLANEOUS", "LANDSCAPE_WATER"):
+        entry = fh2m_landscape_def(group, index, terrain)
+        if entry is None:
+            return None
+        cls, anim = entry[0], entry[1].lower()
+        return (H3M_DEF_OBJECT_CLASS.get(anim, cls), 0, anim)
+    return None
+
+
+def _hommoe_sid_to_group_index(sid):
+    """Reverse of the h3m -> OE sid correspondence: OE sid -> unified
+    (group, index). The index is None when it cannot be recovered (the
+    caller then falls back to a per-group counter); the group is None
+    when the sid is not in the correspondence table."""
+    from h3decoder import H3M_CLASS_TO_GROUP
+    from correspondence import (
+        H3M_TO_FH2M_MONSTERS, H3M_TO_FH2M_ARTIFACTS, H3M_TO_FH2M_DWELLINGS,
+        FH2M_TO_H3M_MINES, H3M_TREE_DEF_TO_FH2M_INDEX,
+        H3M_MOUNTAIN_DEF_TO_FH2M_INDEX, H3M_TOWN_TYPE_TO_FH2M_RACE,
+        FH2M_TOWN_RACE_ORDER, H3M_RANDOM_MONSTER_CLASSES)
+    candidates = OE_SID_TO_H3.get(sid)
+    if not candidates:
+        return None, None
+    h3_id, subtype, def_name = candidates[0]
+    group = H3M_CLASS_TO_GROUP.get(h3_id) or "UNDEFINED_%d" % h3_id
+    if group.startswith("UNDEFINED_"):
+        # Classes outside H3M_CLASS_TO_GROUP (chest 101, ...) still have
+        # an fh2m object through the misc table: invert it.
+        from correspondence import FH2M_TO_H3M_MISC
+        misc_reverse = {(v[0], v[1]): k for k, v in FH2M_TO_H3M_MISC.items()}
+        key = misc_reverse.get((h3_id, subtype or 0))
+        if key is None:
+            key = misc_reverse.get((h3_id, None))
+        if key is not None:
+            prefix, _, num = key.partition("_")
+            group = {"TREASURE": "ADVENTURE_TREASURES", "WATER": "ADVENTURE_WATER",
+                     "MISC": "ADVENTURE_MISCELLANEOUS", "POWER": "ADVENTURE_POWER_UPS"}.get(prefix)
+            if group and num.isdigit():
+                return group, int(num)
+    index = None
+    if group == "MONSTERS":
+        if h3_id in H3M_RANDOM_MONSTER_CLASSES:
+            index = H3M_RANDOM_MONSTER_CLASSES[h3_id] - 1
+        elif subtype is not None:
+            fh2m_monster = H3M_TO_FH2M_MONSTERS.get(subtype)
+            if fh2m_monster:
+                index = fh2m_monster - 1
+    elif group == "ADVENTURE_TREASURES":
+        if h3_id == 76:
+            index = 8  # fh2m random resource
+        else:
+            index = subtype
+    elif group == "ADVENTURE_ARTIFACTS":
+        if 65 <= h3_id <= 69:
+            index = {65: 91, 66: 92, 67: 93, 68: 94, 69: 95}[h3_id]
+        elif subtype is not None:
+            fh2m_art = H3M_TO_FH2M_ARTIFACTS.get(subtype)
+            if fh2m_art is not None:
+                if 9 <= fh2m_art <= 81:
+                    index = fh2m_art - 9
+                elif fh2m_art == 82:
+                    index = 73
+                else:
+                    index = fh2m_art - 13
+    elif group == "ADVENTURE_MINES" and subtype is not None:
+        for fh2m_index, target in FH2M_TO_H3M_MINES.items():
+            if target[0] == h3_id and target[1] == subtype:
+                index = fh2m_index
+                break
+    elif group == "ADVENTURE_DWELLINGS" and subtype is not None:
+        index = H3M_TO_FH2M_DWELLINGS.get(subtype)
+    elif group == "LANDSCAPE_TREES" and def_name:
+        index = H3M_TREE_DEF_TO_FH2M_INDEX.get(def_name)
+    elif group == "LANDSCAPE_MOUNTAINS" and def_name:
+        index = H3M_MOUNTAIN_DEF_TO_FH2M_INDEX.get(def_name)
+    elif group == "KINGDOM_TOWNS" and subtype is not None:
+        race = H3M_TOWN_TYPE_TO_FH2M_RACE.get(subtype)
+        if race in FH2M_TOWN_RACE_ORDER:
+            index = FH2M_TOWN_RACE_ORDER.index(race) * 2
+    if index is None:
+        alt = OE_SID_LANDSCAPE_REVERSE.get(sid)
+        if alt is not None:
+            return alt
+    return group, index
+
+
 def _hommoe_sid_group(sid):
     """Map an Olden Era object sid to a unified (fh2m-style) object group."""
     s = sid.lower()
@@ -861,6 +1271,9 @@ def _hommoe_sid_group(sid):
             return "LANDSCAPE_MOUNTAINS"
         return "LANDSCAPE_MISCELLANEOUS"
     return "UNMAPPED"
+
+
+_build_oe_sid_landscape_reverse()
 
 
 def _hommoe_main_town(spawn, adventure, width):
@@ -920,11 +1333,12 @@ def _hommoe_objects_to_unified(adventure, width):
     tiles = OrderedDict()
     group_counters = {}
 
-    def add_object(oid, group_name, sid, node, rotation, level):
+    def add_object(oid, group_name, sid, node, rotation, level, index=None):
         x = int(node) % width if width else 0
         y = int(node) // width if width else 0
-        index = group_counters.get(group_name, 0)
-        group_counters[group_name] = index + 1
+        if index is None:
+            index = group_counters.get(group_name, 0)
+            group_counters[group_name] = index + 1
         entry = OrderedDict([
             ("id", oid),
             ("group", group_name),
@@ -945,6 +1359,13 @@ def _hommoe_objects_to_unified(adventure, width):
         sid = group.get("sid")
         sid_str = sid if isinstance(sid, str) else (",".join(sid) if isinstance(sid, list) else str(sid))
         group_name = _hommoe_sid_group(sid_str)
+        # The h3m-class correspondence gives a more precise group and the
+        # real subtype index when the sid is in the table (mines,
+        # resources, monsters, ...); scenery sids stay with the
+        # token-based group and a per-group counter.
+        ref_group, ref_index = _hommoe_sid_to_group_index(sid_str)
+        if ref_group and not ref_group.startswith("UNDEFINED_"):
+            group_name = ref_group
         ids = group.get("ids") or []
         nodes = group.get("nodes") or []
         rotations = group.get("rotations") or []
@@ -954,7 +1375,8 @@ def _hommoe_objects_to_unified(adventure, width):
                 continue
             add_object(oid, group_name, sid_str, nodes[j],
                        rotations[j] if j < len(rotations) else None,
-                       levels[j] if j < len(levels) else None)
+                       levels[j] if j < len(levels) else None,
+                       ref_index)
 
     # Fixed squads live in a separate id namespace but are monster
     # placements, so they join the MONSTERS group.
@@ -972,7 +1394,54 @@ def _hommoe_objects_to_unified(adventure, width):
         if node is not None:
             add_object(marker.get("id"), "MAP_EXTRAS", marker.get("sid") or "", node, None, None)
 
+    # Squad properties recover the monster type: propSquads rows carry the
+    # units (OE unit sid -> h3m creature id -> fh2m monster index),
+    # propRandomSquads rows carry a tier (h3m random monster class 71-75,
+    # fh2m monsters 67-71).
+    from correspondence import H3M_TO_FH2M_MONSTERS, H3M_RANDOM_MONSTER_CLASSES
+    monster_metadata = OrderedDict()
+    for tile_key, obj_list in tiles.items():
+        for entry in obj_list:
+            if entry.get("group") != "MONSTERS":
+                continue
+            props = entry.get("properties") or {}
+            oid = entry.get("id")
+            squad_row = props.get("propSquads")
+            random_row = props.get("propRandomSquads")
+            if squad_row:
+                units = squad_row.get("unitProps") or []
+                count = sum(int(u.get("count", 0)) for u in units)
+                h3_creature = None
+                if units:
+                    h3_creature = OE_UNIT_SID_TO_H3_CREATURE.get(units[0].get("sid"))
+                if h3_creature is not None:
+                    fh2m_monster = H3M_TO_FH2M_MONSTERS.get(h3_creature)
+                    if fh2m_monster:
+                        entry["index"] = fh2m_monster - 1
+                monster_metadata[str(oid)] = OrderedDict([
+                    ("count", count),
+                    ("joinCondition", 0),
+                    ("isWeeklyGrowthDisabled", False),
+                    ("selected", []),
+                ])
+                if h3_creature is not None:
+                    monster_metadata[str(oid)]["creature"] = h3_creature
+            elif random_row:
+                tier = int(random_row.get("tier", 0) or 0)
+                monster_class = 70 + tier
+                fh2m_monster = H3M_RANDOM_MONSTER_CLASSES.get(monster_class)
+                if fh2m_monster:
+                    entry["index"] = fh2m_monster - 1
+                monster_metadata[str(oid)] = OrderedDict([
+                    ("count", 0),
+                    ("joinCondition", 0),
+                    ("isWeeklyGrowthDisabled", False),
+                    ("selected", []),
+                    ("monsterClass", monster_class),
+                ])
     result = OrderedDict([("tiles", tiles)])
+    if monster_metadata:
+        result["monsterMetadata"] = monster_metadata
     # Raw adventure-level data with no unified equivalent, kept as-is.
     if adventure.get("rivers"):
         result["sourceRivers"] = adventure["rivers"]
@@ -3291,16 +3760,18 @@ def unified_to_fh2m(unified):
 
     default_terrain = (UNIFIED_TO_FH2M_TERRAIN_INDEX.get("Grass", 30), 0)
 
-    # Roads and rivers (h3m source only): the h3m format stores the
-    # road/river type per tile; the directions are derived from the
-    # neighboring tiles and encoded as the fheroes2 bitfield
-    # (TOP_LEFT=1, TOP=2, TOP_RIGHT=4, RIGHT=8, BOTTOM_RIGHT=16,
-    # BOTTOM=32, BOTTOM_LEFT=64, LEFT=128).
+    # Roads and rivers (h3m and hommoe sources): the h3m format stores
+    # the road/river type per tile and an Olden Era map stores the road
+    # bitfield per tile (roadsMap) plus the river node lists; the
+    # directions are derived from the neighboring tiles and encoded as
+    # the fheroes2 bitfield (TOP_LEFT=1, TOP=2, TOP_RIGHT=4, RIGHT=8,
+    # BOTTOM_RIGHT=16, BOTTOM=32, BOTTOM_LEFT=64, LEFT=128).
     road_tiles = {}
     road_props_tiles = {}
     road_index_tiles = {}
     river_tiles = {}
-    if is_h3m_source:
+    is_hommoe_source = unified.get("sourceGame") == "hommoe"
+    if is_h3m_source or is_hommoe_source:
         _h3m_direction_bits = [(-1, -1, 1), (0, -1, 2), (1, -1, 4),
                                 (1, 0, 8), (1, 1, 16), (0, 1, 32),
                                 (-1, 1, 64), (-1, 0, 128)]
@@ -3309,13 +3780,28 @@ def unified_to_fh2m(unified):
                 if cell.get("z", 0) != 0:
                     continue
                 pos = (cell.get("x", 0), cell.get("y", 0))
-                if cell.get("sourceRoad") and cell.get("sourceRoad") != "None":
-                    road_tiles[pos] = cell.get("sourceRoad")
-                    road_props_tiles[pos] = cell.get("sourceRoadProperties", 0)
-                    if cell.get("sourceRoadIndex") is not None:
+                if is_hommoe_source:
+                    # An Olden Era map carries the original road bitfield
+                    # per tile (roadsMap): restore it exactly.
+                    if cell.get("sourceRoadIndex"):
+                        road_tiles[pos] = "Dirt"
                         road_index_tiles[pos] = cell.get("sourceRoadIndex")
-                if cell.get("sourceRiver") and cell.get("sourceRiver") != "None":
-                    river_tiles[pos] = cell.get("sourceRiver")
+                else:
+                    if cell.get("sourceRoad") and cell.get("sourceRoad") != "None":
+                        road_tiles[pos] = cell.get("sourceRoad")
+                        road_props_tiles[pos] = cell.get("sourceRoadProperties", 0)
+                        if cell.get("sourceRoadIndex") is not None:
+                            road_index_tiles[pos] = cell.get("sourceRoadIndex")
+                    if cell.get("sourceRiver") and cell.get("sourceRiver") != "None":
+                        river_tiles[pos] = cell.get("sourceRiver")
+        if is_hommoe_source:
+            # Olden Era rivers are node lists; mark the river tiles so the
+            # STREAMS bitfield is derived from the neighbors below.
+            for river in (objects_section.get("sourceRivers") or []):
+                for node in river.get("nodes") or []:
+                    n = node.get("n")
+                    if n is not None and width:
+                        river_tiles[(int(n) % width, int(n) // width)] = "Clear"
 
         def _direction_bitfield(present_set, x, y):
             bits = 0
@@ -3772,7 +4258,12 @@ def unified_to_hommoe(unified):
                 climbs_map[index] = int(cell["sourceClimb"])
             if cell.get("sourceRoadIndex"):
                 roads_map[index] = int(cell["sourceRoadIndex"])
+    terrain_by_pos = {}
+    for cell in grid:
+        terrain_by_pos[(int(cell.get("x", 0)), int(cell.get("y", 0)))] = \
+            cell.get("terrain", "Grass")
 
+    del HOMMOE_UNMAPPED_OBJECTS[:]
     objects = unified.get("objects") or {}
     groups = {}
     order = []
@@ -3786,9 +4277,40 @@ def unified_to_hommoe(unified):
             if oid is None:
                 oid = next_free
             next_free = max(next_free, int(oid) + 1)
+            group = obj.get("group")
             sid = obj.get("sourceSid")
             if not sid:
-                sid = HOMMOE_GROUP_TO_SID.get(obj.get("group"), "random-squad")
+                if group in ("ROADS", "STREAMS"):
+                    # Roads and rivers are stored in the terrain layer
+                    # (roadsMap / rivers), not as Olden Era objects.
+                    continue
+                if group in ("KINGDOM_TOWNS", "KINGDOM_HEROES"):
+                    # OE towns/heroes are spawn-linked spawners, not the
+                    # reference's stock city/hero sids.
+                    sid = HOMMOE_GROUP_TO_SID.get(group)
+                else:
+                    parts = tile_key.split("_")
+                    terrain_name = "Grass"
+                    if len(parts) == 3:
+                        terrain_name = terrain_by_pos.get(
+                            (int(parts[0]), int(parts[1])), "Grass")
+                    ref = _unified_obj_h3m_ref(obj, terrain_name)
+                    if ref is not None:
+                        sid = _resolve_hommoe_sid(ref[0], ref[2], ref[1],
+                                                  terrain_name)
+                    if sid is None:
+                        sid = HOMMOE_GROUP_TO_SID.get(group)
+                if not sid:
+                    # No Olden Era equivalent for this object type.
+                    HOMMOE_UNMAPPED_OBJECTS.append(OrderedDict([
+                        ("group", group),
+                        ("index", obj.get("index")),
+                        ("class", obj.get("class")),
+                        ("subclass", obj.get("subclass")),
+                        ("sprite", obj.get("sprite")),
+                        ("tile", tile_key),
+                    ]))
+                    continue
             node = None
             try:
                 x, y, _z = tile_key.split("_")
@@ -3802,7 +4324,51 @@ def unified_to_hommoe(unified):
                     ("node", node), ("id", oid), ("sid", sid), ("v", ""),
                 ]))
                 continue
-            if obj.get("group") == "MONSTERS" and sid.startswith("squad"):
+            if group == "MONSTERS":
+                # Squad properties from the unified monster metadata:
+                # fixed monsters -> propSquads with the OE unit sids,
+                # random monsters -> propRandomSquads with the tier.
+                from correspondence import FH2M_TO_H3M_MONSTERS
+                monster_meta = (objects.get("monsterMetadata") or {}).get(str(oid)) or {}
+                creature = monster_meta.get("creature")
+                if creature is None and obj.get("class") is None:
+                    creature = FH2M_TO_H3M_MONSTERS.get((obj.get("index") or 0) + 1)
+                monster_class = monster_meta.get("monsterClass")
+                if monster_class is None and obj.get("class") in (71, 72, 73, 74, 75):
+                    monster_class = obj["class"]
+                if monster_class is None and obj.get("class") is None \
+                        and 66 <= (obj.get("index") or 0) <= 70:
+                    # fh2m random monsters (indices 66-70 = ids 67-71)
+                    monster_class = 71 + (obj.get("index") + 1 - 67)
+                if monster_class is not None:
+                    prop_rows.setdefault("propRandomSquads", []).append(OrderedDict([
+                        ("type", 0), ("id", oid), ("sids", []),
+                        ("requestedValue", 0.0), ("fraction", ""),
+                        ("tier", monster_class - 70),
+                        ("isMainGuard", False), ("reactionType", 2),
+                        ("customTopUnit", ""), ("weeklyIncrementBonus", 0.0),
+                        ("diplomacyUnitsCountBonus", 0.0), ("isEscape", True),
+                        ("isAutobatle", True), ("isFreeDiplomacy", False),
+                        ("isCampaignFreeDiplomacy", False),
+                        ("isCampaignDiplomacy", False),
+                        ("isIgnoreMultiply", False), ("obstruction", ""),
+                        ("customStacks", 0),
+                    ]))
+                elif creature is not None:
+                    unit_sid = OE_CREATURE_EQUIVALENTS.get(str(creature))
+                    if unit_sid:
+                        prop_rows.setdefault("propSquads", []).append(OrderedDict([
+                            ("type", 0), ("id", oid),
+                            ("isMainGuard", False),
+                            ("isStartBattleImmediately", False),
+                            ("reactionType", 2),
+                            ("weeklyIncrementBonus", 0.0),
+                            ("unitProps", [OrderedDict([
+                                ("sid", unit_sid),
+                                ("count", int(monster_meta.get("count") or 0)),
+                            ])]),
+                        ]))
+            if group == "MONSTERS" and sid.startswith("squad"):
                 squads_out.append((sid, oid, node))
                 continue
             if sid not in groups:
