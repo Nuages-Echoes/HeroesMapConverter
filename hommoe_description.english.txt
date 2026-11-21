@@ -60,6 +60,46 @@
    ?     Optional opaque trailing bytes after the last block; preserved
          as-is by the parser/writer.
 
+Validation (parse_hommoe, mirrors the reference parsers):
+   - gzip: magic 1F 8B checked, header fields parsed (kept for byte-exact
+     rewrite), CRC32/ISIZE validated by the decompressor. The inspector
+     additionally caps the input at 32 MiB and the decompressed payload at
+     64 MiB; parse_hommoe enforces the same limits (INPUT_LIMIT /
+     OUTPUT_LIMIT) and rejects non-gzip files with a ValueError.
+   - header hash: must be 32 hex chars (inspector: /^[a-f0-9]{32}$/i,
+     hard error there; here a warning, value kept verbatim).
+   - version: must match N.N.N (inspector hard error); known versions
+     0.72.30 / 0.80.47 / 0.82.08, others produce a warning.
+   - separator: must be 05 00 (3 blocks) or 0D 00 (4 blocks). The
+     inspector hard-errors otherwise; map-editor-json-tool just skips
+     the 2 bytes. Here an unknown separator is a warning, and the
+     expected block count is compared with the actual one ("missing
+     observed block ..." / "extra block(s) ..." warnings).
+   - length prefixes of the hash and version strings: read as unsigned
+     LEB128 varints here and in the inspector (src/parser.js
+     lengthPrefix()); map-editor-json-tool (src/lib/map-parser.ts)
+     reads a single byte instead - identical for every real map since
+     both lengths are < 128, but a >127-byte hash/version would parse
+     differently there.
+   - blocks: each block's JSON is parsed after stripping a leading UTF-8
+     BOM (map-editor-json-tool does the same); the raw text is always
+     kept verbatim. The inspector requires each block to be a JSON
+     object and hard-errors on invalid JSON; the editor tool falls back
+     to {} with a warning. Here invalid/non-object JSON is a warning
+     and the raw text is preserved (lossless round-trip).
+   - adventure block structure: objects[] groups must have a string sid
+     and parallel ids/nodes/rotations/levels columns of equal length,
+     integer ids/nodes/rotations (levels is a float column on real maps,
+     e.g. -1.5/0.5), at most 250,000 placements, propRandomSquads an
+     array of rows with integer ids - the inspector enforces these as
+     hard errors, here they are warnings. A truncated final block is a
+     hard error for the inspector, an empty block for the editor tool;
+     here it becomes a warning and the remaining bytes stay in
+     "trailingData".
+   All checks are reported in the "warnings" list of the parse result;
+   hard errors (bad gzip, truncated header, varint overrun, size
+     limits) raise ValueError.
+
 ████                          JSON blocks                                ████
 
  Block 1 "scenario" - lobby/scenario metadata. Known fields include:

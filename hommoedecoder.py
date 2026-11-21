@@ -52,6 +52,20 @@ BLOCK_NAMES = ["scenario", "adventure", "dialogQuestData", "commentAiData"]
 
 SCRIPTS_FLAG = 0x08
 
+# Validation limits and header rules, aligned with the local reference
+# olden-era-map-vs-code-inspector (src/parser.js): input file up to 32 MiB,
+# decompressed payload up to 64 MiB, at most 250,000 placed objects, a
+# 32-hex-char header hash, a N.N.N version string and a 2-byte separator
+# of 05 00 (3 blocks) or 0d 00 (4 blocks). The other local reference
+# (map-editor-json-tool, src/lib/map-parser.ts) reads the hash/version
+# length prefixes as a single byte instead of a varint - identical for
+# every real map (both lengths are < 128); we keep the varint reading.
+INPUT_LIMIT = 32 * 1024 * 1024
+OUTPUT_LIMIT = 64 * 1024 * 1024
+OBJECT_LIMIT = 250000
+KNOWN_VERSIONS = ("0.72.30", "0.80.47", "0.82.08")
+VALID_SEPARATORS = ([0x05, 0x00], [0x0D, 0x00])
+
 
 def read_varint(data, pos):
     """Read an unsigned LEB128 varint from data at pos. Returns (value, next_pos)."""
@@ -165,53 +179,135 @@ def parse_hommoe(file_path):
         "trailingData" (hex string of any opaque bytes after the last
         block, "" if none).
     """
+    import re as _re
+
     with open(file_path, "rb") as f:
         compressed = f.read()
+    if len(compressed) > INPUT_LIMIT:
+        raise ValueError("Compressed .map exceeds %d bytes" % INPUT_LIMIT)
 
     gzip_header, _ = parse_gzip_header(compressed)
     data = gzip.decompress(compressed)
+    if len(data) > OUTPUT_LIMIT:
+        raise ValueError("Decompressed .map exceeds %d bytes" % OUTPUT_LIMIT)
+
+    warnings = []
 
     pos = 0
     hash_len, pos = read_varint(data, pos)
     if pos + hash_len > len(data):
         raise ValueError("Truncated .map header: incomplete hash")
-    header_hash = data[pos:pos + hash_len].decode("latin-1")
+    header_hash = data[pos:pos + hash_len].decode("utf-8")
     pos += hash_len
+    if not _re.match(r"^[a-f0-9]{32}$", header_hash, _re.IGNORECASE):
+        warnings.append("header hash is not 32 hex chars: %r" % header_hash)
 
     version_len, pos = read_varint(data, pos)
     if pos + version_len > len(data):
         raise ValueError("Truncated .map header: incomplete version")
     version = data[pos:pos + version_len].decode("utf-8")
     pos += version_len
+    if not _re.match(r"^\d+\.\d+\.\d+$", version):
+        warnings.append("version does not look like N.N.N: %r" % version)
+    elif version not in KNOWN_VERSIONS:
+        warnings.append("unverified game version %s (known: %s)"
+                        % (version, ", ".join(KNOWN_VERSIONS)))
 
     if pos + 2 > len(data):
         raise ValueError("Truncated .map header: missing separator")
     separator = [data[pos], data[pos + 1]]
     pos += 2
+    if separator not in VALID_SEPARATORS:
+        warnings.append("unsupported separator %s (expected 05 00 or 0d 00)"
+                        % bytes(separator).hex())
+    expected_blocks = 4 if separator == [0x0D, 0x00] else 3
 
     blocks = []
     while pos < len(data):
         block_start = pos
         length, pos = read_varint(data, pos)
         if pos + length > len(data):
+            warnings.append("block %d truncated at offset %d; rest kept as trailing data"
+                            % (len(blocks) + 1, block_start))
             pos = block_start
             break
         raw = data[pos:pos + length].decode("utf-8")
         pos += length
+        name = block_name(len(blocks))
         if raw == "":
             parsed = {}
         else:
+            parse_text = raw[1:] if raw.startswith("\ufeff") else raw
             try:
-                parsed = json.loads(raw)
+                parsed = json.loads(parse_text)
             except json.JSONDecodeError:
                 parsed = None
+                warnings.append("block %s is not valid JSON; raw text kept" % name)
+            else:
+                if parsed is None or isinstance(parsed, (list, str, int, float, bool)):
+                    warnings.append("block %s is not a JSON object" % name)
         blocks.append(OrderedDict([
-            ("name", block_name(len(blocks))),
+            ("name", name),
             ("raw", raw),
             ("data", parsed),
         ]))
 
+    if len(blocks) < expected_blocks:
+        for i in range(len(blocks), expected_blocks):
+            warnings.append("missing observed block %s" % block_name(i))
+    elif len(blocks) > expected_blocks:
+        warnings.append("%d extra block(s) beyond the separator's %d"
+                        % (len(blocks) - expected_blocks, expected_blocks))
+
     trailing_data = data[pos:].hex() if pos < len(data) else ""
+    if trailing_data:
+        warnings.append("preserved %d opaque trailing byte(s)" % (len(trailing_data) // 2))
+
+    # Structural checks on the adventure block (mirrors the inspector's
+    # object-column validation, as warnings so nothing is ever dropped).
+    for block in blocks:
+        if block["name"] != "adventure" or not isinstance(block["data"], dict):
+            continue
+        adventure = block["data"]
+        objects = adventure.get("objects")
+        if objects is not None and not isinstance(objects, list):
+            warnings.append("adventure.objects is not an array")
+            objects = None
+        total = 0
+        if objects is not None:
+            for group_index, group in enumerate(objects):
+                if not isinstance(group, dict):
+                    warnings.append("invalid object group %d" % group_index)
+                    continue
+                sid, ids = group.get("sid"), group.get("ids")
+                columns = [group.get(k) for k in ("nodes", "rotations", "levels")]
+                if not isinstance(sid, str) or not isinstance(ids, list) \
+                        or not all(isinstance(c, list) and len(c) == len(ids) for c in columns):
+                    warnings.append("invalid object columns at group %d" % group_index)
+                    continue
+                total += len(ids)
+                for row, oid in enumerate(ids):
+                    # ids/nodes/rotations are integers; levels is a float
+                    # column on real maps (heights like -1.5, 0.5).
+                    vals = [oid, columns[0][row], columns[1][row]]
+                    if not all(isinstance(v, int) and not isinstance(v, bool) for v in vals) \
+                            or not isinstance(columns[2][row], (int, float)) \
+                            or isinstance(columns[2][row], bool):
+                        warnings.append("invalid object column value at group %d, row %d"
+                                        % (group_index, row))
+                        break
+            if total > OBJECT_LIMIT:
+                warnings.append("object count %d exceeds %d" % (total, OBJECT_LIMIT))
+        props = adventure.get("objectsProperties")
+        if isinstance(props, dict):
+            prs = props.get("propRandomSquads")
+            if prs is not None and not isinstance(prs, list):
+                warnings.append("propRandomSquads is not an array")
+            elif isinstance(prs, list):
+                for row in prs:
+                    if not isinstance(row, dict) or not isinstance(row.get("id"), int):
+                        warnings.append("invalid propRandomSquads row id")
+                        break
 
     return OrderedDict([
         ("gzipHeader", gzip_header),
@@ -220,6 +316,7 @@ def parse_hommoe(file_path):
         ("separator", separator),
         ("blocks", blocks),
         ("trailingData", trailing_data),
+        ("warnings", warnings),
     ])
 
 
