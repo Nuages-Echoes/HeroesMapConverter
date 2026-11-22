@@ -164,7 +164,11 @@ Validation (parse_hommoe, mirrors the reference parsers):
    map-save.ts: "the game ignores the sidecar .json when it runs a
    map"). write_hommoe_sidecar() regenerates the sidecar next to every
    written .map that has a commentAiData block, from block 4 itself, so
-   the output sidecar is always a superset of the editor's export. The
+   the output sidecar is always a superset of the editor's export - but
+   only when the scenario carries meaningful data (at least one
+   non-empty counters/interruptions/quests list); an empty block 4
+   produces no sidecar (and a stale sidecar from a previous run is
+   removed). The
    unified JSON carries block 3 and block 4 verbatim under
    scripts.dialogQuestData / scripts.commentAiData, so no sidecar
    information is missing there.
