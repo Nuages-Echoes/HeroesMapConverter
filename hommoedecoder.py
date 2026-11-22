@@ -34,6 +34,7 @@ Format documented from the reference implementations (local copies under
 
 import gzip
 import json
+import os
 import struct
 import zlib
 from collections import OrderedDict
@@ -347,6 +348,15 @@ def write_hommoe_sidecar(map_data, map_path):
             scenario[key] = block4[key]
     sidecar_path = map_path[:-4] + ".json" if map_path.lower().endswith(".map") \
         else map_path + ".json"
+    # Only write the sidecar when it carries meaningful data: at least
+    # one non-empty scenario list. A block 4 that only holds an editor
+    # comment/aiRolesId produces no sidecar (and a stale sidecar from a
+    # previous run is removed).
+    meaningful = any(isinstance(v, list) and len(v) > 0 for v in scenario.values())
+    if not meaningful:
+        if os.path.exists(sidecar_path):
+            os.remove(sidecar_path)
+        return None
     text = "\ufeff" + json.dumps(scenario, ensure_ascii=False, indent="\t") + "\n"
     with open(sidecar_path, "w", encoding="utf-8") as f:
         f.write(text)
