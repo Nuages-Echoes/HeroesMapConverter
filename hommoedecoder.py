@@ -320,6 +320,39 @@ def parse_hommoe(file_path):
     ])
 
 
+def write_hommoe_sidecar(map_data, map_path):
+    """Write the scenario sidecar <name>.json next to a .map file.
+
+    The Olden Era editor keeps the scenario (counters/interruptions/
+    quests) as a same-name .json document and embeds it into block 4
+    ("commentAiData") of the .map on save; the game itself reads block 4
+    from the .map and ignores the sidecar (see the map-editor-json-tool
+    reference, map-save.ts: "the game ignores the sidecar .json when it
+    runs a map"). Observed sidecars (input/c_M1.json) are UTF-8 with a
+    BOM, tab-indented, and hold only the scenario keys. Nothing is
+    written when the map has no commentAiData block.
+
+    Returns the sidecar path, or None.
+    """
+    block4 = None
+    for block in map_data.get("blocks", []):
+        if block.get("name") == "commentAiData" and isinstance(block.get("data"), dict):
+            block4 = block["data"]
+            break
+    if block4 is None:
+        return None
+    scenario = OrderedDict()
+    for key in ("counters", "interruptions", "quests"):
+        if key in block4:
+            scenario[key] = block4[key]
+    sidecar_path = map_path[:-4] + ".json" if map_path.lower().endswith(".map") \
+        else map_path + ".json"
+    text = "\ufeff" + json.dumps(scenario, ensure_ascii=False, indent="\t") + "\n"
+    with open(sidecar_path, "w", encoding="utf-8") as f:
+        f.write(text)
+    return sidecar_path
+
+
 def write_hommoe(map_data, output_path):
     """
     Write an Olden Era native map file (.map) from a structured dictionary,

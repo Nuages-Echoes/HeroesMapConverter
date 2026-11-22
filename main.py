@@ -4,7 +4,7 @@ import os
 
 from h2decoder import parse_fh2m, write_fh2m
 from h3decoder import parse_h3m, write_h3m
-from hommoedecoder import parse_hommoe, write_hommoe
+from hommoedecoder import parse_hommoe, write_hommoe, write_hommoe_sidecar
 from unified import convert_to_unified, convert_from_unified
 
 INPUT_DIR = "input"
@@ -35,6 +35,9 @@ def write_target(unified_data, target_game, base_name):
         output_path = os.path.join(OUTPUT_DIR, f"{base_name}.map")
         write_hommoe(map_data, output_path)
         print(f"HOMMOE file written to {output_path}")
+        sidecar = write_hommoe_sidecar(map_data, output_path)
+        if sidecar:
+            print(f"HOMMOE sidecar written to {sidecar}")
     else:
         output_path = os.path.join(OUTPUT_DIR, f"{base_name}.h3m")
         write_h3m(map_data, output_path)
@@ -92,6 +95,9 @@ def main():
                 print(f"JSON unifié écrit dans '{unified_file_path}'")
                 output_path = os.path.join(OUTPUT_DIR, f"{base_name}.map")
                 write_hommoe(result, output_path)
+                sidecar = write_hommoe_sidecar(result, output_path)
+                if sidecar:
+                    print(f"HOMMOE sidecar written to {sidecar}")
                 print(f"HOMMOE file written to {output_path}")
                 continue
 

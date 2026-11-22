@@ -154,6 +154,21 @@ Validation (parse_hommoe, mirrors the reference parsers):
    The game runs a map's quests from THIS block inside the .map, not
    from the sidecar .json.
 
+   The same-name .json sidecar is the EDITOR's scenario export
+   ({counters, interruptions, quests}, UTF-8 with BOM, tab-indented), a
+   trimmed view of block 4: on real samples every sidecar field is
+   present with the same value in block 4, but block 4 also carries
+   extra per-entry fields (counter sharing/minValue/maxValue, quest
+   main/desc/subQuestGroups, ...). The game reads block 4 from the .map
+   and ignores the sidecar when running a map (map-editor-json-tool
+   map-save.ts: "the game ignores the sidecar .json when it runs a
+   map"). write_hommoe_sidecar() regenerates the sidecar next to every
+   written .map that has a commentAiData block, from block 4 itself, so
+   the output sidecar is always a superset of the editor's export. The
+   unified JSON carries block 3 and block 4 verbatim under
+   scripts.dialogQuestData / scripts.commentAiData, so no sidecar
+   information is missing there.
+
    Field names vary slightly across game versions (e.g. 0.80.x uses
    sizeX_/sizeZ_ in block 2); the parser is version-agnostic and keeps
    the JSON blocks as-is.
