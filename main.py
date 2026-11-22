@@ -4,6 +4,8 @@ import os
 
 from h2decoder import parse_fh2m, write_fh2m
 from h3decoder import parse_h3m, write_h3m
+import shutil
+
 from hommoedecoder import parse_hommoe, write_hommoe, write_hommoe_sidecar
 from unified import convert_to_unified, convert_from_unified
 
@@ -95,9 +97,19 @@ def main():
                 print(f"JSON unifié écrit dans '{unified_file_path}'")
                 output_path = os.path.join(OUTPUT_DIR, f"{base_name}.map")
                 write_hommoe(result, output_path)
-                sidecar = write_hommoe_sidecar(result, output_path)
-                if sidecar:
-                    print(f"HOMMOE sidecar written to {sidecar}")
+                # The scenario sidecar .json is the editor's own file, kept
+                # verbatim when the input has one (the game ignores it; it
+                # only needs to match the input byte-for-byte); otherwise
+                # it is regenerated from block 4, when it has content.
+                input_sidecar = os.path.splitext(map_file_path)[0] + ".json"
+                output_sidecar = os.path.splitext(output_path)[0] + ".json"
+                if os.path.exists(input_sidecar):
+                    shutil.copyfile(input_sidecar, output_sidecar)
+                    print(f"HOMMOE sidecar copied verbatim to {output_sidecar}")
+                else:
+                    sidecar = write_hommoe_sidecar(result, output_path)
+                    if sidecar:
+                        print(f"HOMMOE sidecar written to {sidecar}")
                 print(f"HOMMOE file written to {output_path}")
                 continue
 

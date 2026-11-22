@@ -138,10 +138,27 @@ def main():
             continue
 
         ok, message = content_equal(input_path, output_path)
-        if ok:
-            print(f"{file_name} : round-trip OK ({message})")
-        else:
+        if not ok:
             failures.append(f"{file_name} : {message}")
+            continue
+        # The scenario sidecar .json of a .map input is copied verbatim
+        # when present and must round-trip byte-identical.
+        if kind == "hommoe":
+            input_sidecar = os.path.splitext(input_path)[0] + ".json"
+            output_sidecar = os.path.splitext(output_path)[0] + ".json"
+            if os.path.exists(input_sidecar):
+                if not os.path.exists(output_sidecar):
+                    failures.append(f"{file_name} : missing sidecar {output_sidecar}")
+                    continue
+                with open(input_sidecar, "rb") as f:
+                    sidecar_in = f.read()
+                with open(output_sidecar, "rb") as f:
+                    sidecar_out = f.read()
+                if sidecar_in != sidecar_out:
+                    failures.append(f"{file_name} : sidecar .json differs from input")
+                    continue
+                message += " + sidecar identical"
+        print(f"{file_name} : round-trip OK ({message})")
 
     if failures:
         print()

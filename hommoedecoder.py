@@ -321,6 +321,58 @@ def parse_hommoe(file_path):
     ])
 
 
+# The official editor's sidecar .json omits fields whose value is the
+# type's default (observed on input/c_M1.json and
+# input/all_cats_go_to_heaven.json vs their block 4): empty strings,
+# false booleans, empty lists, counter sharing "Clone", condition counter
+# 1, minValue/maxValue at the int32 bounds, trigger conditionsLogic
+# "And"; top-level comment/aiRolesId when empty and an empty
+# interruptions list are dropped too.
+_SIDECAR_LIST_PARENT = {
+    "counters": "counter", "quests": "quest", "subQuests": "sub",
+    "triggers": "trigger", "conditions": "cond", "actions": "action",
+}
+
+
+def _sidecar_is_default(key, value, parent):
+    if isinstance(value, list):
+        return len(value) == 0
+    if isinstance(value, bool):
+        return not value
+    if isinstance(value, str):
+        if value == "":
+            return True
+        if parent == "counter" and key == "sharing" and value == "Clone":
+            return True
+        if key == "conditionsLogic" and value == "And":
+            return True
+        return False
+    if isinstance(value, (int, float)):
+        if key == "counter" and value == 1:
+            return True
+        if key == "minValue" and value == -2147483648:
+            return True
+        if key == "maxValue" and value == 2147483647:
+            return True
+        return False
+    return False
+
+
+def _sidecar_clean(value, parent=""):
+    if isinstance(value, dict):
+        out = OrderedDict()
+        for k, v in value.items():
+            if _sidecar_is_default(k, v, parent):
+                continue
+            child = _SIDECAR_LIST_PARENT.get(k, k)
+            out[k] = _sidecar_clean(v, child)
+        return out
+    if isinstance(value, list):
+        item_parent = parent
+        return [_sidecar_clean(v, item_parent) for v in value]
+    return value
+
+
 def write_hommoe_sidecar(map_data, map_path):
     """Write the scenario sidecar <name>.json next to a .map file.
 
@@ -342,10 +394,9 @@ def write_hommoe_sidecar(map_data, map_path):
             break
     if block4 is None:
         return None
-    scenario = OrderedDict()
-    for key in ("counters", "interruptions", "quests"):
-        if key in block4:
-            scenario[key] = block4[key]
+    scenario = _sidecar_clean(OrderedDict(
+        (key, block4[key]) for key in ("counters", "interruptions", "quests")
+        if key in block4))
     sidecar_path = map_path[:-4] + ".json" if map_path.lower().endswith(".map") \
         else map_path + ".json"
     # Only write the sidecar when it carries meaningful data: at least

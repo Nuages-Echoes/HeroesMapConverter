@@ -162,13 +162,20 @@ Validation (parse_hommoe, mirrors the reference parsers):
    main/desc/subQuestGroups, ...). The game reads block 4 from the .map
    and ignores the sidecar when running a map (map-editor-json-tool
    map-save.ts: "the game ignores the sidecar .json when it runs a
-   map"). write_hommoe_sidecar() regenerates the sidecar next to every
-   written .map that has a commentAiData block, from block 4 itself, so
-   the output sidecar is always a superset of the editor's export - but
-   only when the scenario carries meaningful data (at least one
-   non-empty counters/interruptions/quests list); an empty block 4
-   produces no sidecar (and a stale sidecar from a previous run is
-   removed). The
+   map"). When the INPUT .map has a sidecar, main.py copies it
+   byte-for-byte to the output (verify_roundtrip checks the copy is
+   identical); the sidecar is the editor's own file, not derived data.
+   When there is no input sidecar (H2/H3 conversions), write_hommoe_sidecar()
+   regenerates one from block 4 in the editor's export shape: default-
+   valued fields omitted (empty strings/booleans/lists, counter sharing
+   "Clone", condition counter 1, int32-bounds min/maxValue, trigger
+   conditionsLogic "And"), UTF-8 BOM, tab-indented - but only when the
+   scenario carries meaningful data (at least one non-empty
+   counters/interruptions/quests list); an empty block 4 produces no
+   sidecar (and a stale sidecar from a previous run is removed). Note
+   the official editor omits those defaults inconsistently (some "And"/
+   false/[] fields survive in real sidecars), so generated sidecars are
+   content-compatible, not byte-identical to the editor's. The
    unified JSON carries block 3 and block 4 verbatim under
    scripts.dialogQuestData / scripts.commentAiData, so no sidecar
    information is missing there.
