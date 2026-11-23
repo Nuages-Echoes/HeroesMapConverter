@@ -2,14 +2,15 @@ H2/H3 map objects with no Olden Era equivalent
 ============================================================
 
 Generated from the local references (map-editor-json-tool,
-olden-era-map-vs-code-inspector) and the real input maps; the observed
-section is regenerated with:  python3 oe_loop_check.py
+olden-era-map-vs-code-inspector), the real input maps and user-provided
+mappings; the observed section is regenerated with:
+    python3 oe_loop_check.py
 
 OE object mapping source: oe_object_correspondence.json
 (reference mapping + evidence-cited supplements).
 
 ------------------------------------------------------------
-1. H3 object classes with no known OE equivalent (108 remaining of 143 omitted)
+1. H3 object classes with no known OE equivalent (88 remaining of 143 omitted)
 ------------------------------------------------------------
 
   h3Id  name                              reason
@@ -19,33 +20,19 @@ OE object mapping source: oe_object_correspondence.json
   8      Boat                               boat_no_stock_objectconfig
   9      Border Guard                       unmapped_template_object_id_9
   10     Keymaster Tent                     unmapped_template_object_id_10
-  13     Cartographer                       unmapped_template_object_id_13
   14     Swan Pond                          unmapped_template_object_id_14
-  15     Cover of Darkness                  unmapped_template_object_id_15
   16     Creature Bank                      creature_bank_deferred
   21     Cursed Ground                      unmapped_template_object_id_21
-  23     Marletto Tower                     unmapped_template_object_id_23
   24     Derelict Ship                      unmapped_template_object_id_24
   26     Event                              unmapped_template_object_id_26
-  27     Eye of the Magi                    unmapped_template_object_id_27
   29     Flotsam                            flotsam_water_travel_omit
-  32     Garden of Revelation               unmapped_template_object_id_32
   36     Grail                              grail_deferred
-  39     Lean To                            lean_to_deferred
   40     Unidentified                       unmapped_template_object_id_40
-  41     Library of Enlightenment           unmapped_template_object_id_41
   46     Magic Plains                       unmapped_template_object_id_46
-  47     School of Magic                    unmapped_template_object_id_47
-  48     Magic Spring                       unmapped_template_object_id_48
   50     Market of Time                     unmapped_template_object_id_50
   52     Mermaids                           unmapped_template_object_id_52
-  55     Mystical Garden                    unmapped_template_object_id_55
-  56     Oasis                              unmapped_template_object_id_56
   57     Obelisk                            unmapped_template_object_id_57
-  58     Redwood Observatory                unmapped_template_object_id_58
   59     Ocean Bottle                       ocean_bottle_omit
-  63     Pyramid                            unmapped_template_object_id_63
-  78     Refugee Camp                       unmapped_template_object_id_78
   81     Scholar                            scholar_deferred
   82     Sea Chest                          sea_chest_water_travel_omit
   83     Seer Hut                           seer_hut_omitted_no_stock_interactable
@@ -56,12 +43,6 @@ OE object mapping source: oe_object_correspondence.json
   91     Sign                               sign_message_deferred
   92     Sirens                             unmapped_template_object_id_92
   93     Spell Scroll                       spell_scroll_deferred
-  96     Temple                             unmapped_template_object_id_96
-  97     Den of Thieves                     unmapped_template_object_id_97
-  106    War Machine Factory                unmapped_template_object_id_106
-  107    School of War                      unmapped_template_object_id_107
-  109    Water Wheel                        unmapped_template_object_id_109
-  110    Watering Hole                      unmapped_template_object_id_110
   113    Witch Hut                          witch_hut_deferred
   123    Unidentified                       unmapped_template_object_id_123
   141    Magical Terrain (cracked ice/dune  unmapped_template_object_id_141
@@ -124,22 +105,42 @@ OE object mapping source: oe_object_correspondence.json
 
 ------------------------------------------------------------
 2. Classes the reference omits but for which an OE equivalent was found
-   locally (supplements in oe_object_correspondence.json, now converted)
+   (supplements in oe_object_correspondence.json, now converted)
 ------------------------------------------------------------
 
   h3Id  name                              OE sid             local evidence
   7      Black Market                       item_markets       map-objects.json 'item_markets' (artifact market = H3 Black Market); 'market_items' is the sibling resource market
+  13     Cartographer                       wind_rose          user-provided H3<->OE mapping; OE sid 'wind_rose' has display name 'Wind Rose' in map-objects.json
+  15     Cover of Darkness                  insaras_eye        user-provided H3<->OE mapping; OE sid 'insaras_eye' has display name "Insara's Eye" in map-objects.json
+  23     Marletto Tower                     armory_automaton   user-provided H3<->OE mapping; OE sid 'armory_automaton' has display name 'Summit Automaton' in map-objects.json
+  27     Eye of the Magi                    flattering_mirror  user-provided H3<->OE mapping; OE sid 'flattering_mirror' has display name 'World Mirror' in map-objects.json
+  32     Garden of Revelation               knowledge_garden   user-provided H3<->OE mapping; OE sid 'knowledge_garden' has display name 'Knowledge Garden' in map-objects.json
   33     Garrison Horizontal                garrisons          map-objects.json + inspector object-categories garrison family; real maps use 'garrisons'
   34     Hero                               hero-spawner       real maps + inspector special family city-spawner|hero-spawner|random-hero|random-city; already the KINGDOM_HEROES group sid
   35     Hill Fort                          fort               map-objects.json: fort = 'Pauper Knight Order' (the knight adventure site, = H3 Hill Fort)
+  39     Lean To                            peasant_cart       user-provided H3<->OE mapping; OE sid 'peasant_cart' has display name 'Abandoned Cart' in map-objects.json
+  41     Library of Enlightenment           college_of_wonder  user-provided H3<->OE mapping; OE sid 'college_of_wonder' has display name 'Mountain Monastery' in map-objects.json
   43     Monolith One Way Entrance          portal_4           rmg/zone-islands PORTAL_SIDS portal_1..5; h3-import/portal-links.ts: portal_5 = subterranean gate; one-way monolith entrance -> portal_4
   44     Monolith One Way Exit              portal_5           one-way monolith exit -> portal_5 (subterranean gate)
+  47     School of Magic                    orb_observatory    user-provided H3<->OE mapping; OE sid 'orb_observatory' has display name 'Four Scholars Observatory' in map-objects.json
+  48     Magic Spring                       crystal_trail      user-provided H3<->OE mapping; OE sid 'crystal_trail' has display name 'Dragon Step' in map-objects.json
   51     Mercenary Camp                     mercenary_guild    unit-selling camp; inspector unit-trade family random-hire|unit_trade, map-objects mercenary_guild
+  55     Mystical Garden                    gardener           user-provided H3<->OE mapping; OE sid 'gardener' has display name 'Magic Garden' in map-objects.json
+  56     Oasis                              fountain           user-provided H3<->OE mapping; OE sid 'fountain' has display name 'Fountain' in map-objects.json
+  58     Redwood Observatory                watchtower         user-provided H3<->OE mapping; OE sid 'watchtower' has display name 'Redwood Observatory' in map-objects.json
   62     Prison                             prison             map-objects.json: prison = 'Hero Cage' (hero prison = H3 Prison); inspector object-categories: adventure-sites
+  63     Pyramid                            overgrown_grave    user-provided H3<->OE mapping; OE sid 'overgrown_grave' has display name 'Ancient Crypt' in map-objects.json
   70     Random Hero                        random-hero        inspector object-categories special family includes random-hero
   77     Random Town                        random-city        real maps use 'random-city'; inspector special family
+  78     Refugee Camp                       mercenary_guild    user-provided H3<->OE mapping; OE sid 'mercenary_guild' has display name 'Mercenary Guild' in map-objects.json
+  96     Temple                             quixs_path         user-provided H3<->OE mapping; OE sid 'quixs_path' has display name "Quix's Altar" in map-objects.json
+  97     Den of Thieves                     insaras_eye        user-provided H3<->OE mapping; OE sid 'insaras_eye' has display name "Insara's Eye" in map-objects.json
   99     Trading Post                       market             inspector object-categories markets-and-trade: market|marketplace|trading_post; real maps use 'market'
+  106    War Machine Factory                university         user-provided H3<->OE mapping; OE sid 'university' has display name 'University' in map-objects.json
+  107    School of War                      fort               user-provided H3<->OE mapping; OE sid 'fort' has display name 'Pauper Knight Order' in map-objects.json
   108    Warrior Tomb                       heros_crypt        map-objects.json: heros_crypt = 'Tomb of a Nameless Hero' (= H3 Warrior's Tomb)
+  109    Water Wheel                        gingerbread_house  user-provided H3<->OE mapping; OE sid 'gingerbread_house' has display name 'Gingerbread House' in map-objects.json
+  110    Watering Hole                      stables            user-provided H3<->OE mapping; OE sid 'stables' has display name 'Stables' in map-objects.json
   212    Border Gate                        town_gate          map-objects.json Travel & Portals: town_gate = 'Town Gate' (= H3 Border Gate)
   213    Freelancers Guild                  mercenary_guild    map-objects.json Dwellings: mercenary_guild (= H3 Freelancers' Guild)
   214    Hero Placeholder                   hero-spawner       hero placeholder -> hero-spawner
@@ -170,20 +171,15 @@ OE object mapping source: oe_object_correspondence.json
 ------------------------------------------------------------
 
   map                      dropped object type
-  4_dimensions.fh2m         h3 class 23 (Marletto Tower), sub 0 | fh2m ADVENTURE_POWER_UPS index 10  x5
   4_dimensions.fh2m         h3 class 29 (Flotsam), sub 0 | fh2m ADVENTURE_WATER index 2  x21
   4_dimensions.fh2m         h3 class 29 (Flotsam), sub 0 | fh2m LANDSCAPE_MISCELLANEOUS index 26  x7
   4_dimensions.fh2m         h3 class 29 (Flotsam), sub 0 | fh2m LANDSCAPE_MISCELLANEOUS index 27  x1
   4_dimensions.fh2m         h3 class 29 (Flotsam), sub 0 | fh2m LANDSCAPE_MISCELLANEOUS index 28  x3
-  4_dimensions.fh2m         h3 class 32 (Garden of Revelation), sub 0 | fh2m ADVENTURE_POWER_UPS index 12  x9
-  4_dimensions.fh2m         h3 class 41 (Library of Enlightenment), sub 0 | fh2m ADVENTURE_POWER_UPS index 21  x4
-  4_dimensions.fh2m         h3 class 48 (Magic Spring), sub 0 | fh2m ADVENTURE_POWER_UPS index 0  x4
   4_dimensions.fh2m         h3 class 52 (Mermaids), sub 0 | fh2m ADVENTURE_WATER index 10  x1
   4_dimensions.fh2m         h3 class 8 (Boat), sub 1 | fh2m ADVENTURE_WATER index 4  x12
   4_dimensions.fh2m         h3 class 82 (Sea Chest), sub 0 | fh2m ADVENTURE_WATER index 1  x56
   4_dimensions.fh2m         h3 class 86 (Shipwreck Survivor), sub 0 | fh2m ADVENTURE_WATER index 5  x8
   4_dimensions.fh2m         h3 class 92 (Sirens), sub 0 | fh2m ADVENTURE_WATER index 11  x1
-  4_dimensions.fh2m         h3 class 96 (Temple), sub 0 | fh2m ADVENTURE_POWER_UPS index 19  x4
   4_dimensions.fh2m         no h3 reference | fh2m ADVENTURE_ARTIFACTS index 76  x2
   4_dimensions.fh2m         no h3 reference | fh2m ADVENTURE_ARTIFACTS index 82  x5
   4_dimensions.fh2m         no h3 reference | fh2m ADVENTURE_ARTIFACTS index 89  x2
@@ -210,12 +206,7 @@ OE object mapping source: oe_object_correspondence.json
   4_dimensions.fh2m         no h3 reference | fh2m LANDSCAPE_TOWN_BASEMENTS index 5  x9
   4_dimensions.fh2m         no h3 reference | fh2m LANDSCAPE_TOWN_BASEMENTS index 6  x4
   4_dimensions.fh2m         no h3 reference | fh2m LANDSCAPE_TOWN_BASEMENTS index 7  x5
-  5Kings1Ring.fh2m          h3 class 23 (Marletto Tower), sub 0 | fh2m ADVENTURE_POWER_UPS index 10  x1
   5Kings1Ring.fh2m          h3 class 29 (Flotsam), sub 0 | fh2m ADVENTURE_WATER index 2  x2
-  5Kings1Ring.fh2m          h3 class 32 (Garden of Revelation), sub 0 | fh2m ADVENTURE_POWER_UPS index 12  x3
-  5Kings1Ring.fh2m          h3 class 41 (Library of Enlightenment), sub 0 | fh2m ADVENTURE_POWER_UPS index 21  x1
-  5Kings1Ring.fh2m          h3 class 48 (Magic Spring), sub 0 | fh2m ADVENTURE_POWER_UPS index 0  x1
-  5Kings1Ring.fh2m          h3 class 56 (Oasis), sub 0 | fh2m ADVENTURE_POWER_UPS index 5  x1
   5Kings1Ring.fh2m          h3 class 59 (Ocean Bottle), sub 0 | fh2m ADVENTURE_WATER index 0  x1
   5Kings1Ring.fh2m          h3 class 86 (Shipwreck Survivor), sub 0 | fh2m ADVENTURE_WATER index 5  x2
   5Kings1Ring.fh2m          no h3 reference | fh2m ADVENTURE_ARTIFACTS index 46  x1
@@ -239,9 +230,6 @@ OE object mapping source: oe_object_correspondence.json
   5Kings1Ring.fh2m          no h3 reference | fh2m LANDSCAPE_TOWN_BASEMENTS index 3  x1
   5Kings1Ring.fh2m          no h3 reference | fh2m LANDSCAPE_TOWN_BASEMENTS index 4  x1
   5Kings1Ring.fh2m          no h3 reference | fh2m LANDSCAPE_TOWN_BASEMENTS index 6  x1
-  Barbarian vs Wizard.fh2m  h3 class 23 (Marletto Tower), sub 0 | fh2m ADVENTURE_POWER_UPS index 10  x2
-  Barbarian vs Wizard.fh2m  h3 class 32 (Garden of Revelation), sub 0 | fh2m ADVENTURE_POWER_UPS index 12  x2
-  Barbarian vs Wizard.fh2m  h3 class 56 (Oasis), sub 0 | fh2m ADVENTURE_POWER_UPS index 5  x2
   Barbarian vs Wizard.fh2m  h3 class 8 (Boat), sub 1 | fh2m ADVENTURE_WATER index 4  x6
   Barbarian vs Wizard.fh2m  no h3 reference | fh2m LANDSCAPE_FLAGS index 12  x1
   Barbarian vs Wizard.fh2m  no h3 reference | fh2m LANDSCAPE_FLAGS index 13  x1
@@ -251,7 +239,6 @@ OE object mapping source: oe_object_correspondence.json
   Barbarian vs Wizard.fh2m  no h3 reference | fh2m LANDSCAPE_FLAGS index 9  x1
   Barbarian vs Wizard.fh2m  no h3 reference | fh2m LANDSCAPE_TOWN_BASEMENTS index 3  x1
   Barbarian vs Wizard.fh2m  no h3 reference | fh2m LANDSCAPE_TOWN_BASEMENTS index 7  x2
-  Full Backpack.fh2m        h3 class 96 (Temple), sub 0 | fh2m ADVENTURE_POWER_UPS index 19  x3
   Full Backpack.fh2m        no h3 reference | fh2m ADVENTURE_POWER_UPS index 17  x6
   Full Backpack.fh2m        no h3 reference | fh2m LANDSCAPE_FLAGS index 0  x1
   Full Backpack.fh2m        no h3 reference | fh2m LANDSCAPE_FLAGS index 1  x1
@@ -266,16 +253,10 @@ OE object mapping source: oe_object_correspondence.json
   Mymaptest.fh2m            no h3 reference | fh2m LANDSCAPE_FLAGS index 5  x1
   Mymaptest.fh2m            no h3 reference | fh2m LANDSCAPE_TOWN_BASEMENTS index 1  x1
   Mymaptest.fh2m            no h3 reference | fh2m LANDSCAPE_TOWN_BASEMENTS index 4  x1
-  Tetra_conflict.fh2m       h3 class 23 (Marletto Tower), sub 0 | fh2m ADVENTURE_POWER_UPS index 10  x8
   Tetra_conflict.fh2m       h3 class 29 (Flotsam), sub 0 | fh2m ADVENTURE_WATER index 2  x56
-  Tetra_conflict.fh2m       h3 class 32 (Garden of Revelation), sub 0 | fh2m ADVENTURE_POWER_UPS index 12  x8
-  Tetra_conflict.fh2m       h3 class 41 (Library of Enlightenment), sub 0 | fh2m ADVENTURE_POWER_UPS index 21  x2
-  Tetra_conflict.fh2m       h3 class 48 (Magic Spring), sub 0 | fh2m ADVENTURE_POWER_UPS index 0  x1
-  Tetra_conflict.fh2m       h3 class 56 (Oasis), sub 0 | fh2m ADVENTURE_POWER_UPS index 5  x2
   Tetra_conflict.fh2m       h3 class 59 (Ocean Bottle), sub 0 | fh2m ADVENTURE_WATER index 0  x1
   Tetra_conflict.fh2m       h3 class 82 (Sea Chest), sub 0 | fh2m ADVENTURE_WATER index 1  x20
   Tetra_conflict.fh2m       h3 class 86 (Shipwreck Survivor), sub 0 | fh2m ADVENTURE_WATER index 5  x5
-  Tetra_conflict.fh2m       h3 class 96 (Temple), sub 0 | fh2m ADVENTURE_POWER_UPS index 19  x8
   Tetra_conflict.fh2m       no h3 reference | fh2m ADVENTURE_POWER_UPS index 17  x2
   Tetra_conflict.fh2m       no h3 reference | fh2m ADVENTURE_POWER_UPS index 20  x8
   Tetra_conflict.fh2m       no h3 reference | fh2m ADVENTURE_WATER index 12  x26
@@ -301,25 +282,11 @@ OE object mapping source: oe_object_correspondence.json
   Tetra_conflict.fh2m       no h3 reference | fh2m LANDSCAPE_TOWN_BASEMENTS index 7  x3
   all for one.h3m           h3 class 10 (Keymaster Tent), sub 0 | h3m sprite AVXkey00.def  x1
   all for one.h3m           h3 class 10 (Keymaster Tent), sub 2 | h3m sprite AVXkey20.def  x1
-  all for one.h3m           h3 class 106 (War Machine Factory), sub 0 | h3m sprite AVGsieg0.def  x1
-  all for one.h3m           h3 class 107 (School of War), sub 0 | h3m sprite AVSwar20.def  x1
-  all for one.h3m           h3 class 109 (Water Wheel), sub 0 | h3m sprite AVMwwsn0.def  x1
-  all for one.h3m           h3 class 110 (Watering Hole), sub 0 | h3m sprite AVXwtrh0.def  x1
-  all for one.h3m           h3 class 13 (Cartographer), sub 0 | h3m sprite AVXmapw0.def  x1
-  all for one.h3m           h3 class 13 (Cartographer), sub 1 | h3m sprite AVXmaps0.def  x1
   all for one.h3m           h3 class 14 (Swan Pond), sub 0 | h3m sprite AVSclvg0.def  x1
   all for one.h3m           h3 class 21 (Cursed Ground), sub 0 | h3m sprite AVXcrsd0.def  x19
-  all for one.h3m           h3 class 23 (Marletto Tower), sub 0 | h3m sprite AvSMarl.def  x2
-  all for one.h3m           h3 class 27 (Eye of the Magi), sub 0 | h3m sprite AVXeyem0.def  x1
   all for one.h3m           h3 class 29 (Flotsam), sub 0 | h3m sprite AVAflot0.def  x20
-  all for one.h3m           h3 class 32 (Garden of Revelation), sub 0 | h3m sprite AVSgrdn0.def  x4
-  all for one.h3m           h3 class 39 (Lean To), sub 0 | h3m sprite AVMlean0.def  x2
-  all for one.h3m           h3 class 41 (Library of Enlightenment), sub 0 | h3m sprite AVSlibr0.def  x1
   all for one.h3m           h3 class 46 (Magic Plains), sub 0 | h3m sprite AVXplns0.def  x7
-  all for one.h3m           h3 class 47 (School of Magic), sub 0 | h3m sprite AVSschm0.def  x2
-  all for one.h3m           h3 class 48 (Magic Spring), sub 0 | h3m sprite AVXmags0.def  x1
   all for one.h3m           h3 class 52 (Mermaids), sub 0 | h3m sprite AVXmerm0.def  x1
-  all for one.h3m           h3 class 55 (Mystical Garden), sub 0 | h3m sprite AVTmyst0.def  x2
   all for one.h3m           h3 class 57 (Obelisk), sub 0 | h3m sprite AvXOblB.def  x1
   all for one.h3m           h3 class 57 (Obelisk), sub 0 | h3m sprite AvXOblG.def  x2
   all for one.h3m           h3 class 57 (Obelisk), sub 0 | h3m sprite AvXOblK.def  x9
@@ -327,16 +294,11 @@ OE object mapping source: oe_object_correspondence.json
   all for one.h3m           h3 class 57 (Obelisk), sub 0 | h3m sprite AvXOblP.def  x1
   all for one.h3m           h3 class 57 (Obelisk), sub 0 | h3m sprite AvXOblW.def  x3
   all for one.h3m           h3 class 57 (Obelisk), sub 0 | h3m sprite AvXOblY.def  x1
-  all for one.h3m           h3 class 58 (Redwood Observatory), sub 0 | h3m sprite AvXRedW.def  x4
-  all for one.h3m           h3 class 63 (Pyramid), sub 0 | h3m sprite AVXprmd0.def  x2
-  all for one.h3m           h3 class 78 (Refugee Camp), sub 0 | h3m sprite AVGrefg0.def  x1
   all for one.h3m           h3 class 82 (Sea Chest), sub 0 | h3m sprite AVXccht0.def  x6
   all for one.h3m           h3 class 86 (Shipwreck Survivor), sub 0 | h3m sprite AVAsurv0.def  x3
   all for one.h3m           h3 class 9 (Border Guard), sub 0 | h3m sprite AVXbor00.def  x1
   all for one.h3m           h3 class 9 (Border Guard), sub 2 | h3m sprite AVXbor20.def  x1
   all for one.h3m           h3 class 92 (Sirens), sub 0 | h3m sprite AVXsirn0.def  x1
-  all for one.h3m           h3 class 96 (Temple), sub 0 | h3m sprite AVStmpl0.def  x2
-  all for one.h3m           h3 class 97 (Den of Thieves), sub 0 | h3m sprite AVXdend0.def  x1
 
 ------------------------------------------------------------
 4. Types converted but collapsed to a coarser OE object (kept, not lost)

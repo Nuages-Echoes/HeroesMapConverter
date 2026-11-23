@@ -2345,9 +2345,33 @@
   }
  },
  "supplement_emit": {
+  "106": {
+   "evidence": "user-provided H3<->OE mapping; OE sid 'university' has display name 'University' in map-objects.json",
+   "sid": "university"
+  },
+  "107": {
+   "evidence": "user-provided H3<->OE mapping; OE sid 'fort' has display name 'Pauper Knight Order' in map-objects.json",
+   "sid": "fort"
+  },
   "108": {
    "evidence": "map-objects.json: heros_crypt = 'Tomb of a Nameless Hero' (= H3 Warrior's Tomb)",
    "sid": "heros_crypt"
+  },
+  "109": {
+   "evidence": "user-provided H3<->OE mapping; OE sid 'gingerbread_house' has display name 'Gingerbread House' in map-objects.json",
+   "sid": "gingerbread_house"
+  },
+  "110": {
+   "evidence": "user-provided H3<->OE mapping; OE sid 'stables' has display name 'Stables' in map-objects.json",
+   "sid": "stables"
+  },
+  "13": {
+   "evidence": "user-provided H3<->OE mapping; OE sid 'wind_rose' has display name 'Wind Rose' in map-objects.json",
+   "sid": "wind_rose"
+  },
+  "15": {
+   "evidence": "user-provided H3<->OE mapping; OE sid 'insaras_eye' has display name \"Insara's Eye\" in map-objects.json",
+   "sid": "insaras_eye"
   },
   "212": {
    "evidence": "map-objects.json Travel & Portals: town_gate = 'Town Gate' (= H3 Border Gate)",
@@ -2369,6 +2393,18 @@
    "evidence": "same as class 99 (SoD trading post)",
    "sid": "market"
   },
+  "23": {
+   "evidence": "user-provided H3<->OE mapping; OE sid 'armory_automaton' has display name 'Summit Automaton' in map-objects.json",
+   "sid": "armory_automaton"
+  },
+  "27": {
+   "evidence": "user-provided H3<->OE mapping; OE sid 'flattering_mirror' has display name 'World Mirror' in map-objects.json",
+   "sid": "flattering_mirror"
+  },
+  "32": {
+   "evidence": "user-provided H3<->OE mapping; OE sid 'knowledge_garden' has display name 'Knowledge Garden' in map-objects.json",
+   "sid": "knowledge_garden"
+  },
   "33": {
    "evidence": "map-objects.json + inspector object-categories garrison family; real maps use 'garrisons'",
    "sid": "garrisons"
@@ -2381,6 +2417,14 @@
    "evidence": "map-objects.json: fort = 'Pauper Knight Order' (the knight adventure site, = H3 Hill Fort)",
    "sid": "fort"
   },
+  "39": {
+   "evidence": "user-provided H3<->OE mapping; OE sid 'peasant_cart' has display name 'Abandoned Cart' in map-objects.json",
+   "sid": "peasant_cart"
+  },
+  "41": {
+   "evidence": "user-provided H3<->OE mapping; OE sid 'college_of_wonder' has display name 'Mountain Monastery' in map-objects.json",
+   "sid": "college_of_wonder"
+  },
   "43": {
    "evidence": "rmg/zone-islands PORTAL_SIDS portal_1..5; h3-import/portal-links.ts: portal_5 = subterranean gate; one-way monolith entrance -> portal_4",
    "sid": "portal_4"
@@ -2389,13 +2433,37 @@
    "evidence": "one-way monolith exit -> portal_5 (subterranean gate)",
    "sid": "portal_5"
   },
+  "47": {
+   "evidence": "user-provided H3<->OE mapping; OE sid 'orb_observatory' has display name 'Four Scholars Observatory' in map-objects.json",
+   "sid": "orb_observatory"
+  },
+  "48": {
+   "evidence": "user-provided H3<->OE mapping; OE sid 'crystal_trail' has display name 'Dragon Step' in map-objects.json",
+   "sid": "crystal_trail"
+  },
   "51": {
    "evidence": "unit-selling camp; inspector unit-trade family random-hire|unit_trade, map-objects mercenary_guild",
    "sid": "mercenary_guild"
   },
+  "55": {
+   "evidence": "user-provided H3<->OE mapping; OE sid 'gardener' has display name 'Magic Garden' in map-objects.json",
+   "sid": "gardener"
+  },
+  "56": {
+   "evidence": "user-provided H3<->OE mapping; OE sid 'fountain' has display name 'Fountain' in map-objects.json",
+   "sid": "fountain"
+  },
+  "58": {
+   "evidence": "user-provided H3<->OE mapping; OE sid 'watchtower' has display name 'Redwood Observatory' in map-objects.json",
+   "sid": "watchtower"
+  },
   "62": {
    "evidence": "map-objects.json: prison = 'Hero Cage' (hero prison = H3 Prison); inspector object-categories: adventure-sites",
    "sid": "prison"
+  },
+  "63": {
+   "evidence": "user-provided H3<->OE mapping; OE sid 'overgrown_grave' has display name 'Ancient Crypt' in map-objects.json",
+   "sid": "overgrown_grave"
   },
   "7": {
    "evidence": "map-objects.json 'item_markets' (artifact market = H3 Black Market); 'market_items' is the sibling resource market",
@@ -2408,6 +2476,18 @@
   "77": {
    "evidence": "real maps use 'random-city'; inspector special family",
    "sid": "random-city"
+  },
+  "78": {
+   "evidence": "user-provided H3<->OE mapping; OE sid 'mercenary_guild' has display name 'Mercenary Guild' in map-objects.json",
+   "sid": "mercenary_guild"
+  },
+  "96": {
+   "evidence": "user-provided H3<->OE mapping; OE sid 'quixs_path' has display name \"Quix's Altar\" in map-objects.json",
+   "sid": "quixs_path"
+  },
+  "97": {
+   "evidence": "user-provided H3<->OE mapping; OE sid 'insaras_eye' has display name \"Insara's Eye\" in map-objects.json",
+   "sid": "insaras_eye"
   },
   "99": {
    "evidence": "inspector object-categories markets-and-trade: market|marketplace|trading_post; real maps use 'market'",
