@@ -894,6 +894,14 @@ quest messages, garrison canTake, event players flags).
    unit sids are kept in oe_object_correspondence.json
    (creature_equivalents).
 
+   Olden Era units have two upgrades per tier where H3 has one:
+   <base>_upg and <base>_upg_alt (e.g. esquire_upg = Guard Captain and
+   esquire_upg_alt = Sun's Aegis; reference src/data/units.json). The
+   HOMMOE unit column shows the base -> _upg chain. H3 -> OE maps an
+   upgraded H3 creature to _upg or _upg_alt (chosen at random); OE ->
+   unified maps both _upg and _upg_alt to the same H3 upgraded
+   creature, since the _upg_alt variant has no H3 counterpart.
+
    Faction 1 (Knight <-> Castle <-> Temple):
 
 | Tier | H2                        | H3                          | HOMMOE unit                   |

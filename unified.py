@@ -885,9 +885,15 @@ OE_SUPPLEMENT_SCENERY = OE_OBJECT_CORRESPONDENCE["supplement_scenery"]
 OE_CREATURE_EQUIVALENTS = OE_OBJECT_CORRESPONDENCE["creature_equivalents"]
 OE_SUPPLEMENT_EMIT = OE_OBJECT_CORRESPONDENCE["supplement_emit"]
 # OE unit sid -> h3m creature id (reverse of creatureEquivalents).
+# OE units have a second upgrade variant (<base>_upg_alt, e.g.
+# esquire_upg_alt = Sun's Aegis) that H3 does not have: both _upg and
+# _upg_alt map to the same (single) H3 upgraded creature.
 OE_UNIT_SID_TO_H3_CREATURE = {}
 for _cid, _usid in OE_CREATURE_EQUIVALENTS.items():
     OE_UNIT_SID_TO_H3_CREATURE.setdefault(_usid, int(_cid))
+for _usid, _cid in list(OE_UNIT_SID_TO_H3_CREATURE.items()):
+    if _usid.endswith("_upg"):
+        OE_UNIT_SID_TO_H3_CREATURE.setdefault(_usid + "_alt", _cid)
 OE_H3_TERRAIN_BIOME = OE_OBJECT_CORRESPONDENCE["h3_terrain_biome"]
 OE_OMIT_CLASSES = {str(o["h3Id"]) for o in OE_OBJECT_CORRESPONDENCE["omit"]}
 
@@ -4407,6 +4413,11 @@ def unified_to_hommoe(unified):
                     ]))
                 elif creature is not None:
                     unit_sid = OE_CREATURE_EQUIVALENTS.get(str(creature))
+                    if unit_sid and unit_sid.endswith("_upg") \
+                            and (unit_sid + "_alt") in OE_UNIT_SID_TO_H3_CREATURE:
+                        # H3 has a single upgrade but OE has two
+                        # (<base>_upg and <base>_upg_alt): pick one at random.
+                        unit_sid = _random.choice((unit_sid, unit_sid + "_alt"))
                     if unit_sid:
                         prop_rows.setdefault("propSquads", []).append(OrderedDict([
                             ("type", 0), ("id", oid),
