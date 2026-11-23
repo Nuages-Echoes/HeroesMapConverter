@@ -82,18 +82,17 @@ Values used in the unified JSON format and their equivalents in .fh2m, .h3m and 
 ████████████████████════════════════════════════════════████████████
 
 | JSON unified | FH2M playerRace                            | H3M town type| HOMMOE (.map)                                                                                                |
-|--------------|--------------------------------------------|--------------|--------------------------------------------------------------------------------------------------------------|
-| "Random"     | "Random" (index 0, Race::RAND 0x80)        | "Random"     | "" (empty factionSid on real maps)                                                                           |
-| "Knight"     | "Knight" (index 1, Race::KNGT 0x01)        | "Castle"     | "human" (Temple)                                                                                             |
-| "Barbarian"  | "Barbarian" (index 2, Race::BARB 0x02)     | "Stronghold" | "demons" (Hive)                                                                                              |
-| "Sorceress"  | "Sorceress" (index 3, Race::SORC 0x04)     | "Rampart"    | "nature" (Grove)                                                                                             |
-| "Warlock"    | "Warlock" (index 4, Race::WRLK 0x08)       | "Dungeon"    | "dungeon" (Dungeon)                                                                                          |
-| "Wizard"     | "Wizard" (index 5, Race::WZRD 0x10)        | "Tower"      | UNDEFINE (OE has 6 factions, no Tower)                                                                       |
-| "Necromancer"| "Necromancer" (index 6, Race::NECR 0x20)    | "Necropolis" | "undead" (Necropolis; hero sids use the "necro" prefix)                                                      |
-| "Inferno"     | "Warlock" (index 4, Race::WRLK 0x08)       | "Inferno"    | "unfrozen" (Schism)                                                                                          |
-| "Fortress"    | "Barbarian" (index 2, Race::BARB 0x02)     | "Fortress"    | "unfrozen" (Schism)                                                                                          |
-| "Conflux"    | "Sorceress" (index 3, Race::SORC 0x04)     | "Conflux"    | "nature" (via the Rampart pairing)                                                                           |
-| "Temple".."Neutral" (OE display names, used when the source is a .map) | paired with the rows above                    | paired with the rows above | factionSid per HOMMOE_FACTION_NAMES: "human", "undead", "dungeon", "nature", "demons", "unfrozen", "neutral" |
+|--------------|--------------------------------------------|--------------|-----------------|
+| "Random"     | "Random" (index 0, Race::RAND 0x80)        | "Random"     | "Random"      |
+| "Knight"     | "Knight" (index 1, Race::KNGT 0x01)        | "Castle"     | "Temple"  |
+| "Barbarian"  | "Barbarian" (index 2, Race::BARB 0x02)     | "Stronghold" | "Temple"  |
+| "Sorceress"  | "Sorceress" (index 3, Race::SORC 0x04)     | "Rampart"    | "Grove"  |
+| "Warlock"    | "Warlock" (index 4, Race::WRLK 0x08)       | "Dungeon"    | "Dungeon"  |
+| "Wizard"     | "Wizard" (index 5, Race::WZRD 0x10)        | "Tower"      | "Schism"  |
+| "Necromancer"| "Necromancer" (index 6, Race::NECR 0x20)    | "Necropolis" | "Necropolis"  |
+| "Inferno"     | "Warlock" (index 4, Race::WRLK 0x08)       | "Inferno"    | "Hive"   |
+| "Fortress"    | "Barbarian" (index 2, Race::BARB 0x02)     | "Fortress"    | "Hive"  |
+| "Conflux"    | "Sorceress" (index 3, Race::SORC 0x04)     | "Conflux"    | "Grove"  |
 
    H3M "Multiple" (several owned town types) and FH2M "Unknown"
    (undocumented race code) have no unified value: they only appear in
@@ -407,25 +406,6 @@ object section bytes):
 The remaining h3m fields stay raw (building and spell bitfields,
 quest messages, garrison canTake, event players flags).
 
-
-   Town/race conversion (h3m -> fh2m): the h3m town types map to
-   the Heroes II races through the faction pairings, and the fh2m
-   KINGDOM_TOWNS object index is race * 2 (castle) or race * 2 + 1
-   (town), the fheroes2 race order being Knight, Barbarian,
-   Sorceress, Warlock, Wizard, Necromancer:
-
-| H3M type | H3M faction | FH2M race | FH2M index (castle) | HOMMOE (.map)                          |
-|----------|-------------|-----------|---------------------|----------------------------------------|
-| 0        | Castle      | Knight    | 0                   | "human"                                |
-| 1        | Rampart     | Sorceress | 4                  | "nature"                               |
-| 2        | Tower       | Wizard    | 8                   | UNDEFINE (OE has 6 factions, no Tower) |
-| 3        | Inferno     | Warlock   | 6                   | "unfrozen"                             |
-| 4        | Necropolis  | Necromancer | 10              | "undead"                               |
-| 5        | Dungeon     | Warlock   | 6                   | "dungeon"                              |
-| 6        | Stronghold  | Barbarian | 2                   | "demons"                               |
-| 7        | Fortress    | Barbarian | 2                   | "unfrozen"                             |
-| 8        | Conflux     | Sorceress | 4                   | "nature"                               |
-| random   | -           | Knight (default) | 0         | "" (empty factionSid)                  |
 
    The garrison creatures of an h3m town become the fh2m castle
    defenders (the first five non-empty slots, converted through the

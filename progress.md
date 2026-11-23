@@ -1,159 +1,143 @@
-# progress.md — Work done on HeroesMapConverter
+# Progress.md — Fonctionnement actuel de HeroesMapConverter
 
-This document describes the work accomplished so far. For the current
-inputs/outputs and pipeline layout, see [Progress.md](Progress.md); for usage,
-see [README.md](README.md).
+Document décrivant l'état actuel du projet (branche `main`, commit `a3880e8`) :
+quelles sont les entrées, les sorties, et ce qui se passe entre les deux.
 
-## Goal
+## Objectif
 
-Command-line tool (Python 3.12, standard library only, no UI) that converts
-maps between Heroes of Might and Magic games.
-Main objective is to convert all file types to Olden Era map file.
-Secondary objective is to convert map files in all Heroes of Might and Magic
-format.
-Project started with a round conversion between free Heroes 2 and Heroes 3.
-The design routes every conversion through a common **unified JSON** format,
-so a map from any supported game can be converted to any other without writing
-a direct converter for every pair of formats.
+Outil en ligne de commande (Python, sans UI) qui convertit des cartes entre
+jeux *Heroes of Might and Magic*. Le passage par un format JSON unifié doit
+permettre à terme de convertir n'importe quel format vers n'importe quel autre
+(premier objectif : Olden Era / fheroes2, puis d'autres jeux Heroes).
 
-## 1. H3 → JSON (and back)
+## Entrées
 
-- `h3decoder.py` implements `parse_h3m()`: reads gzip-compressed `.h3m`
-  files and recognizes the RoE (`0x0E`), AB (`0x15`) and SoD (`0x1C`)
-  header variants with version-aware parsing.
-- `write_h3m()` serializes the parsed structure back to a valid `.h3m`
-  (lossless round-trip; generated fh2m→h3m conversions are emitted as
-  RoE/AB/SoD variants matching the source).
-- Each `.h3m` in `input/` is decoded to a detailed, source-faithful JSON in
-  `outputjson/<name>.json`, documented in `h3m_description.english.txt`
-  (binary format) and `h3m_json_description.english.txt` (JSON schema).
+`main.py` scanne le dossier `input/` et traite tout fichier dont l'extension
+est `.h3m`, `.fh2m`, `.mp2` ou `.map` (par ordre alphabétique). Trois formats binaires
+sont supportés :
 
-## 2. H2 → JSON (and back)
+- **H3M (Heroes III)** — fichier gzip ; les variantes d'en-tête RoE (`0x0E`),
+  AB (`0x15`) et SoD (`0x1C`) sont reconnues. Parsing : `h3decoder.parse_h3m()`.
+- **FH2M / MP2 (fheroes2, Heroes II / Olden Era)** — magic `h2map\0`, versions
+  de format 2 à 13 ; entiers en big-endian ; paramètres de base en clair, puis
+  une unique section compressée zlib. Parsing : `h2decoder.parse_fh2m()`.
 
-- `h2decoder.py` implements `parse_fh2m()` for fheroes2 maps:
-  magic `h2map\0`, big-endian integers, format versions 2–13, plain base
-  parameters followed by a single zlib-compressed section. `.mp2` files
-  are recognized as Heroes II maps too.
-- `write_fh2m()` writes the structure back to `.fh2m`.
-- Each H2 map in `input/` is decoded to a detailed JSON in
-  `outputjson/<name>.json`, documented in `h2m_description.english.txt` and
-  `h2m_json_description.english.txt`.
+Cartes de référence embarquées dans `input/` : 1 carte `.h3m` (`all for one`),
+4 cartes H2 (`4_dimensions.fh2m`, `5Kings1Ring.fh2m`, `Full Backpack.fh2m`,
+`Tetra_conflict.fh2m`) et 2 cartes Olden Era : `olden_era_template.map`
+(vrai échantillon, version 0.80.47, séparateur `05 00`, 3 blocs, copié depuis
+les références locales `src-tauri/resources/template.map` de map-editor-json-tool)
+et `synthetic_oemap_4blocks.map` (carte synthétique générée par
+`hommoedecoder.write_hommoe` pour couvrir la variante `0d 00` / 4 blocs, aucun
+échantillon 0.82.08 public n'étant disponible).
 
-## 3. Hommoe (Olden Era) → JSON (and back)
+## Fonctionnement entre les deux (pipeline)
 
-- `hommoedecoder.py` implements `parse_hommoe()` for Olden Era `.map`
-  files: a single gzip stream which, once decompressed, contains a hash,
-  a version string, a 2-byte separator, then several unsigned-LEB128-varint-
-  framed UTF-8 JSON blocks (`scenario`, `adventure`, `dialogQuestData`,
-  plus an optional `commentAiData` when scripts are embedded), and optional
-  opaque trailing bytes. Each block is kept as raw JSON text so the writer
-  can re-emit the decompressed content byte-identically.
-- `write_hommoe()` writes the structure back to a `.map` file, reproducing
-  the original gzip container byte-for-byte (same header fields and deflate
-  settings).
-- Each Olden Era map in `input/` is decoded to a detailed JSON in
-  `outputjson/<name>.json`, documented in `hommoe_description.english.txt` and
-  `hommoe_json_description.english.txt`.
-- `.map` maps are currently regenerated as-is into `output/<name>.map`;
-  conversion to/from the unified JSON is not implemented for them yet.
+Pour chaque fichier de `input/`, `main.py` applique trois étapes :
 
-## 4. Detailed JSON → unified JSON
+1. **Binaire → JSON détaillé.** `parse_h3m()`, `parse_fh2m()` ou `parse_hommoe()` produit un
+   dictionnaire fidèle au format source, écrit dans `outputjson/<nom>.json`.
+   Les schémas de ces JSON sont documentés dans `h3m_json_description.english.txt`
+   et `h2m_json_description.english.txt` (les formats binaires eux-mêmes dans
+   `h3m_description.english.txt` et `h2m_description.english.txt`).
+2. **JSON détaillé → JSON unifié.** `unified.convert_to_unified()` normalise la
+   carte vers un schéma commun (`convert_h3m_to_unified()` /
+   `convert_fh2m_to_unified()`), écrit dans `outputunified/<nom>.json`. Schéma
+   documenté dans `heroes_json_description.english.txt`, exemple dans
+   `example_unified.json`. Les identifiants spécifiques à chaque jeu (monstres,
+   artefacts, sorts, héros, villes, mines, objets de paysage…) sont traduits
+   via les tables de `correspondence.py`, dont les équivalences sont listées
+   dans `heroes_field_correspondence.english.txt`.
+3. **JSON unifié → formats cibles.** `convert_from_unified()` produit `.h3m`, `.fh2m`
+   et `.map` (`unified_to_hommoe()` : les événements H2/H3 deviennent des quêtes
+   Olden Era avec déclencheurs `ObjectInteractionAfter`/`StartTurn`). Pour les
+   sources `.map`, le JSON unifié est produit (`convert_hommoe_to_unified`) mais la
+   carte binaire est régénérée depuis le JSON détaillé dans `output/<nom>.map`. Pour les autres sources, le JSON unifié est relu, puis
+   `convert_from_unified()` le retransforme en structure propre à chaque jeu
+   (`unified_to_h3m()` / `unified_to_fh2m()`) et `write_h3m()` / `write_fh2m()`
+   sérialisent le binaire dans `output/`. Par défaut, chaque carte est produite
+   dans **les deux** formats (`<nom>.h3m` et `<nom>.fh2m`) ; l'option
+   `--target h3m|fh2m` restreint la conversion à une seule cible.
 
-- `unified.py` provides `convert_to_unified()` with
-  `convert_h3m_to_unified()` and `convert_fh2m_to_unified()`, normalizing a
-  detailed JSON into the common schema written to
-  `outputunified/<name>.json`. The schema is documented in
-  `heroes_json_description.english.txt`, with a concrete example in
-  `example_unified.json`.
-- Game-specific identifiers (towns, monsters, artifacts, spells, heroes,
-  landscape objects, terrains…) are translated through the correspondence
-  tables in `correspondence.py`, documented field by field in
-  `heroes_field_correspondence.english.txt`.
-- Parsers stay lossless: raw source IDs/fields are kept in the unified JSON
-  so the target writers can rebuild the exact original structure, and anchor
-  shifts between the H2 and H3 conventions are carried explicitly
-  (`anchorShift`) so each writer restores its own anchor placement.
-
-## 5. Unified JSON → H2 or H3 (Olden Era not yet)
-
-- `convert_from_unified()` (`unified_to_h3m()` / `unified_to_fh2m()`)
-  rebuilds a game-specific structure from the unified JSON, then
-  `write_h3m()` / `write_fh2m()` serialize the binaries into `output/`.
-- By default every `.h3m` / `.fh2m` / `.mp2` input is converted to **both**
-  `.h3m` and `.fh2m`; `--target h3m|fh2m` restricts the output to a single
-  format (`main.py` orchestrates the whole pipeline). `.map` inputs are
-  parsed and regenerated as-is (see section 3).
+En résumé :
 
 ```
-input/*.{h3m,fh2m,mp2,map}
-   → outputjson/<name>.json     (detailed JSON, faithful to the source format)
-   → outputunified/<name>.json  (unified JSON, for .h3m/.fh2m/.mp2 sources)
-   → output/<name>.h3m + output/<name>.fh2m   (converted from h3m/fh2m/mp2 sources)
-   → output/<name>.map          (Olden Era .map inputs, regenerated as-is)
+input/*.{h3m,fh2m,mp2}
+   → outputjson/<nom>.json     (JSON détaillé, fidèle au format source)
+   → outputunified/<nom>.json  (JSON unifié, commun aux deux jeux)
+   → output/<nom>.h3m + output/<nom>.fh2m   (cartes régénérées/converties)
 ```
 
-## 6. Content conversion work (H2 ↔ H3 fidelity)
+## Sorties
 
-Beyond the pipeline skeleton, most of the effort went into making the
-converted maps actually match the target game:
+- `outputjson/<nom>.json` — représentation détaillée du fichier source
+  (dossier créé à l'exécution, non versionné).
+- `outputunified/<nom>.json` — format unifié commun (idem).
+- `output/<nom>.h3m` et `output/<nom>.fh2m` — cartes produites dans les deux
+  formats, régénérées à chaque exécution (le dossier n'est plus versionné :
+  seul `.gitkeep` y est suivi).
 
-- **Terrains, coasts, rivers, roads**: per-terrain picture layouts, coast
-  bits and mirror flags, sea-border sprites computed from the tile
-  neighborhood, and H2→H3 sprite selection driven by learned link tables
-  (`coastal_link.json`, `road_link.json`, `river_link.json`, documented in
-  `coastal_tiles_h2_h3.md`), including H2 diagonal roads → editor-style H3
-  bends and road-end stubs, and land–land terrain borders.
-- **Landscape objects**: footprint-exact, terrain-faithful conversion of
-  trees (incl. forests, lava/dead/snow variants), mountains, rocks, misc
-  and water objects; unconvertible objects are fanned out into
-  same-terrain H3 defs or dropped when no counterpart exists.
-- **Towns, dwellings, altars**: real H3 def names per dwelling/altar, town
-  entrance alignment (+2,0 shift), random town as class 77, starting
-  conditions (player colors, castle owners, main town, available heroes).
-- **Heroes**: starting heroes, prisons ↔ jail, hero classes/sprites/def
-  names matching the real game archives, generated missing starting heroes
-  for h3m sources.
-- **Monsters and artifacts**: fixed and random monsters, fixed artifacts,
-  random artifact classes (incl. the h3m 65–69 ↔ fh2m 91–95 mapping), and
-  unmapped artifacts falling back to a random artifact of the same class.
-- **Ownables and interactive objects**: mines (per-appearance defs),
-  windmills, witch huts, alchemist labs, mercenary camps, obelisks,
-  observation towers, gazebo, boats, teleportation portals, border gates
-  (barrier), keymaster's tent (traveller's tent), magic well, wagon,
-  summoning altars, power-ups, signs, resources, and more.
-- **Victory/defeat conditions**: H2 conditions mapped to H3 equivalents
-  (e.g. defeatOtherSide → None, ultimate artifact → buildGrail).
+## Vérification
 
-## 7. Verification
+- Plus de CI (le workflow GitHub Actions a été retiré) : vérifications manuelles —
+  `python -m compileall` sur les modules, `python main.py`, contrôle de la
+  présence de chaque JSON dans `outputjson/`, puis `python verify_roundtrip.py`.
+- `verify_roundtrip.py` : pour chaque carte, compare `parse(input)` et
+  `parse(output)` de la même extension — égalité binaire quand c'est possible,
+  sinon égalité du contenu logique (section zlib décompressée pour fh2m,
+  contenu gzip décompressé pour h3m) et des structures parsées.
+- `make_variant.py` : outil de test qui génère des variantes `.h3m` d'une carte
+  convertie (ex. suppression de classes d'objets) à partir de
+  `outputunified/<nom>.json`, pour isoler des problèmes de chargement.
+- `oe_loop_check.py` : boucle complète input → `.map` (Olden Era) → format
+  d'origine (sorties dans `outputloop/`), avec le rapport des types d'objets
+  perdus au passage ; les objets sans équivalent OE sont listés dans
+  `no_olden_era_equivalent.english.txt`.
 
-- `verify_roundtrip.py` checks every `input/` map against its regenerated
-  `output/` file of the same extension: byte-perfect equality for h3m
-  (gunzipped content), content-level equality for fh2m (decompressed
-  zlib section), gunzipped content byte-identical for `.map` (Olden Era),
-  plus equality of the parsed structures. Must exit 0.
-- `make_variant.py` generates `.h3m` variants of a converted map (e.g.
-  without a class of objects) from `outputunified/` to isolate load issues.
-- CI was intentionally removed; verification is manual:
-  `python main.py` then `python verify_roundtrip.py`.
+## Points de fonctionnement notables
 
-## 8. Known limitations
+- Conversion fh2m → h3m des tuiles côtières, routes et rivières : les sprites
+  (bordures de mer, routes, rivières) sont choisis via les tables
+  `coastal_link.json`, `road_link.json` et `river_link.json`, apprises des
+  cartes de référence `input/*.h3m` et documentées dans
+  `coastal_tiles_h2_h3.md` (Tableau 3, référencé par les commentaires
+  de `unified.py`).
+- Pour les sources fh2m, la ville principale d'un joueur est pointée sur la
+  case d'entrée de la ville.
+- Événements temporisés h3m (table globale en fin de fichier, après les
+  objets) : parsés dans la section `Events` du JSON détaillé
+  (`h3decoder.parse_h3m_events`, détection robuste de l'offset de la table)
+  et remontés dans `dailyEvents` du JSON unifié (champ `name` renseigné,
+  `firstOccurrenceDay` rendu 1-based comme en fh2m) ; `unified_to_h3m()`
+  reconstruit la table (re-encodage octet-identique vérifié sur
+  `all for one.h3m`, RoE : pas d'octet applies-to-human avant SoD).
+- Limites connues (README) : une carte H3 avec souterrain ne peut pas être
+  convertie en H2 (pas de souterrain en H2) ; les héros neutres H3 disparaissent
+  dans les cartes H2.
+- Boucle complète vers Olden Era (`oe_loop_check.py`) : les objets H2/H3 sont
+  résolus en classe h3m puis en sid OE via `oe_object_correspondence.json`
+  (copie normalisée de la référence locale : `resolveObjectSid`, tables scène/biome,
+  suppléments 155/158) ; au retour, le sid retrouve son groupe/index h3m/fh2m
+  (index de représentation pour la décoration). Monstres : `propSquads` /
+  `propRandomSquads` via les équivalents d'unités ; routes/rivières restent dans la
+  couche terrain. Les types sans équivalent OE sont dans
+  `no_olden_era_equivalent.english.txt`.
 
-- H3 maps with an underground level cannot be converted to H2 (no
-  underground in H2): the conversion fails on purpose.
-- Neutral heroes from H3 disappear in H2 output (no neutral heroes in H2).
-- road conversion between H2 and H3 is imperfect as of yet
-- Event conversion is also to be done
-- some object do not have the same footprint in different map format
-  and some collision may occur when other objects are put next to it
-- conversion from H2 to H3 is mostly working besides the limitations
-  above, conversion from H3 to H2 has not been tested
-- Olden Era `.map` files are only round-tripped as-is; conversion
-  to/from the unified JSON (and thus to/from H2/H3) is not implemented yet
+## Organisation du code
 
-## Reference maps
-
-`input/` holds the reference maps used for development and verification:
-`all for one.h3m` (H3); `4_dimensions.fh2m`, `5Kings1Ring.fh2m`,
-`Barbarian vs Wizard.fh2m`, `Full Backpack.fh2m`, `Mymaptest.fh2m` and
-`Tetra_conflict.fh2m` (H2); `Broken_Alliance.map`, `all_cats_go_to_heaven.map`,
-`olden_era_template.map` and `synthetic_oemap_4blocks.map` (Olden Era).
+| Fichier | Rôle |
+|---|---|
+| `main.py` | CLI et orchestration du pipeline (input → outputjson → outputunified → output) |
+| `h2decoder.py` | lecture/écriture binaire `.fh2m` / `.mp2` (big-endian, zlib) |
+| `h3decoder.py` | lecture/écriture binaire `.h3m` (gzip, RoE/AB/SoD) |
+| `hommoedecoder.py` | lecture/écriture binaire `.map` (Olden Era : gzip, blocs JSON préfixés par varint LEB128) |
+| `unified.py` | conversions vers/depuis le JSON unifié |
+| `correspondence.py` | tables de correspondance H2 ↔ H3 (ID et noms) |
+| `verify_roundtrip.py` | vérification aller-retour parse → convert → write → parse |
+| `make_variant.py` | génération de variantes de test |
+| `oe_loop_check.py` | boucle complète input → `.map` → format d'origine + rapport des pertes |
+| `oe_object_correspondence.json` | correspondance objets h3m → sid Olden Era (référence locale `map-editor-json-tool`) |
+| `no_olden_era_equivalent.english.txt` | objets H2/H3 sans équivalent Olden Era |
+| `*_description.english.txt`, `heroes_field_correspondence.english.txt` | spécifications des formats binaires, des JSON et des équivalences de valeurs (`hommoe_*` pour Olden Era) |
+| `coastal_link.json`, `road_link.json`, `river_link.json` | tables de lien H2→H3 apprises des cartes de référence (côtes, routes, rivières) |
+| `coastal_tiles_h2_h3.md` | doc du lien tuiles côtières H2→H3 (Tableau 3) |
