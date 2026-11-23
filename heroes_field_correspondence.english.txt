@@ -908,15 +908,15 @@ quest messages, garrison canTake, event players flags).
 
    Faction 2 (Barbarian <-> Stronghold <-> Temple):
 
-| Tier | H2                        | H3                          | HOMMOE unit                      |
-|------|---------------------------|-----------------------------|----------------------------------|
-| T1   | Goblin                    | Goblin -> Hobgoblin         | Parasite -> Pixie                |
-| T2   | Orc -> Orc Chief          | Goblin Wolf Rider -> Hobgoblin Wolf Rider | Halfling -> Vine Iriyad          |
-| T3   | Wolf                      | Orc -> Orc Chieftain        | Vine Iriyad -> Graverobber       |
-| T4   | Ogre -> Ogre Lord         | Ogre -> Ogre Mage           | Volcanic Scorpion -> Herbomancer |
-| T5   | Troll -> War Troll        | Roc -> Thunderbird          | Sporemancer -> Inquisitor        |
-| T6   | Cyclops                   | Cyclops -> Cyclops King     | Menacing Reaver -> Waurms        |
-| T7   | Cyclops                   | Behemoth -> Ancient Behemoth | Hive Queen -> Archangel          |
+| Tier | H2                        | H3                          | HOMMOE unit                   |
+|------|---------------------------|-----------------------------|-------------------------------|
+| T1   | Goblin                    | Goblin -> Hobgoblin         | Swordsman -> Guard Captain    |
+| T2   | Orc -> Orc Chief          | Goblin Wolf Rider -> Hobgoblin Wolf Rider | Crossbowman -> Austringer     |
+| T3   | Wolf                      | Orc -> Orc Chieftain        | Griffin -> Temple Griffin     |
+| T4   | Ogre -> Ogre Lord         | Ogre -> Ogre Mage           | Lightweaver -> Hierophant     |
+| T5   | Troll -> War Troll        | Roc -> Thunderbird          | Cavalry -> Noble Cavalry      |
+| T6   | Cyclops                   | Cyclops -> Cyclops King     | Inquisitor -> Mother Superior |
+| T7   | Cyclops                   | Behemoth -> Ancient Behemoth | Angel -> Archangel            |
 
    Faction 3 (Sorceress <-> Rampart <-> Grove):
 
@@ -932,15 +932,15 @@ quest messages, garrison canTake, event players flags).
 
    Faction 4 (Wizard <-> Tower <-> Schism):
 
-| Tier | H2                        | H3                          | HOMMOE unit                  |
-|------|---------------------------|-----------------------------|------------------------------|
-| T1   | Halfling                  | Gremlin -> Master Gremlin   | Troglodyte -> Swordsman      |
-| T2   | Boar                      | Stone Gargoyle -> Obsidian Gargoyle | Hoplet -> Vine Iriyad        |
-| T3   | Iron Golem -> Steel Golem | Iron Golem -> Stone Golem   | Griffin -> Chanter           |
-| T4   | Roc                       | Mage -> Archmage            | Minotaur Lord -> Herbomancer |
-| T5   | Mage -> Archmage          | Genie -> Master Genie       | Cavalry -> Faerie Dragon     |
-| T6   | Giant                     | Naga -> Naga Queen          | Chthonic Hydra -> Devourer   |
-| T7   | Giant -> Titan            | Giant -> Titan              | Angel -> Flaming Phoenix     |
+| Tier | H2                        | H3                          | HOMMOE unit                        |
+|------|---------------------------|-----------------------------|------------------------------------|
+| T1   | Halfling                  | Gremlin -> Master Gremlin   | Ra'Shoth -> Stinging Ra'Shoth      |
+| T2   | Boar                      | Stone Gargoyle -> Obsidian Gargoyle | Cultist -> Binder                  |
+| T3   | Iron Golem -> Steel Golem | Iron Golem -> Stone Golem   | Aga'Shoth Rider -> Aga'Shoth Tamer |
+| T4   | Roc                       | Mage -> Archmage            | Grand Shoth -> Unspeakable Shoth   |
+| T5   | Mage -> Archmage          | Genie -> Master Genie       | Concubus -> Mistress of Chains     |
+| T6   | Giant                     | Naga -> Naga Queen          | Arbitrator -> Rift Arbitrator      |
+| T7   | Giant -> Titan            | Giant -> Titan              | Abyssal Envoy -> Abyssal Overseer  |
 
    Faction 5 (Warlock <-> Dungeon <-> Dungeon):
 
@@ -982,13 +982,13 @@ quest messages, garrison canTake, event players flags).
 
 | Tier | H2                        | H3                          | HOMMOE unit                   |
 |------|---------------------------|-----------------------------|-------------------------------|
-| T1   | Goblin                    | Gnoll -> Gnoll Marauder     | Infernal Troglodyte -> Faun   |
-| T2   | Orc -> Orc Chief          | Lizardman -> Lizard Warrior | Halfling -> Vine Iriyad       |
-| T3   | Wolf                      | Serpent Fly -> Fire Dragon Fly | Animated Armor -> Lightweaver |
-| T4   | Ogre -> Ogre Lord         | Basilisk -> Greater Basilisk | Minotaur Lord -> Herbomancer  |
-| T5   | Troll -> War Troll        | Gorgon -> Mighty Gorgon     | Cavalry -> Sporemancer        |
-| T6   | Cyclops                   | Wyvern -> Wyvern Monarch    | Avatar of War -> Waurms       |
-| T7   | Cyclops                   | Hydra -> Chaos Hydra        | Hydra -> Chthonic Hydra       |
+| T1   | Goblin                    | Gnoll -> Gnoll Marauder     | Parasite -> Warden Parasite   |
+| T2   | Orc -> Orc Chief          | Lizardman -> Lizard Warrior | Locust -> Overgrown Locust    |
+| T3   | Wolf                      | Serpent Fly -> Fire Dragon Fly | Hornet -> Chanter             |
+| T4   | Ogre -> Ogre Lord         | Basilisk -> Greater Basilisk | Scorpion -> Volcanic Scorpion |
+| T5   | Troll -> War Troll        | Gorgon -> Mighty Gorgon     | Reaver -> Menacing Reaver     |
+| T6   | Cyclops                   | Wyvern -> Wyvern Monarch    | Waurms -> Devourer            |
+| T7   | Cyclops                   | Hydra -> Chaos Hydra        | Hive Queen -> Hive Mother     |
 
    Faction 9 (Sorceress <-> Conflux <-> Grove):
 
