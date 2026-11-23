@@ -1,19 +1,22 @@
-Values used in the unified JSON format and their equivalents in .fh2m and .h3m
+Values used in the unified JSON format and their equivalents in .fh2m, .h3m and .map (Olden Era)
    ╔╦╦╦════════════════════════════════════════════════════════════════════╦╦╦╗
-   ║║║║  Unified JSON / FH2M / H3M value correspondences                   ║║║║
+   ║║║║  Unified JSON / FH2M / H3M / .map value correspondences            ║║║║
    ╚╩╩╩════════════════════════════════════════════════════════════════════╩╩╩╝
 
-   Each table below lists the concrete values of one field in the three
+   Each table below lists the concrete values of one field in the four
    formats: the value as it appears in the unified JSON files
    (outputunified/), its equivalent in the .fh2m files (as parsed by
-   h2decoder.py / stored by the fheroes2 engine), and its equivalent in
-   the .h3m files (as parsed by h3decoder.py). UNDEFINE means the value
-   has no direct or obvious equivalent in that format.
+   h2decoder.py / stored by the fheroes2 engine), its equivalent in the
+   .h3m files (as parsed by h3decoder.py), and its equivalent in the
+   Olden Era .map files (parsed by hommoedecoder.py, "hommoe" source
+   game) in the last "HOMMOE (.map)" column. UNDEFINE means the value
+   has no direct or obvious equivalent in that format; an empty HOMMOE
+   cell means the conversion is not known yet.
 
-   The Olden Era (.map, parsed by hommoedecoder.py, "hommoe" source game)
-   values are documented in the dedicated section at the end of this
-   file ("Olden Era (.map / hommoe) values"): the tables above keep their
-   three columns, the OE equivalents live there.
+   The Olden Era structures that have no row in the tables above (OE
+   hero sids, scripting blocks, object placement model, per-tile
+   layers...) are documented in the "Olden Era (.map / hommoe)
+   specifics" section at the end of this file.
 
    FH2M values marked with an enum come from the fheroes2 source code;
    the number in parentheses is the raw value stored in the file.
@@ -22,50 +25,52 @@ Values used in the unified JSON format and their equivalents in .fh2m and .h3m
 ██ sourceGame                                                             ██
 ████████████████████████████████══════════════════════════████████████
 
-| JSON unified | FH2M                                       | H3M          |
-|--------------|--------------------------------------------|--------------|
-| "h3m"        | UNDEFINE (file magic: 68 32 6D 61 70 00    | file header  |
-|              | "h2map\\0")                                | identifier   |
-| "fh2m"       | file magic "h2map\\0"                      | UNDEFINE     |
+| JSON unified | FH2M                                       | H3M          | HOMMOE (.map)                                    |
+|--------------|--------------------------------------------|--------------|--------------------------------------------------|
+| "h3m"        | UNDEFINE (file magic: 68 32 6D 61 70 00    | file header  |                                                  |
+|              | "h2map\\0")                                | identifier   |                                                  |
+| "fh2m"       | file magic "h2map\\0"                      | UNDEFINE     |                                                  |
+| "hommoe"       | UNDEFINE                                     | UNDEFINE       | gzip stream (magic 1F 8B), no inner magic string |
 
 ████████████████████████████████══════════════════════════████████████████
 ██ sourceVersion                                                          ██
 ████████████████████████████════════════════════════════████████████████
 
-| JSON unified | FH2M                                       | H3M          |
-|--------------|--------------------------------------------|--------------|
-| "2" ... "13" | version: 2 to 13 (uint16, big endian)      | UNDEFINE     |
-| "RoE"        | UNDEFINE                                   | 0E 00 00 00  |
-| "AB"         | UNDEFINE                                   | 15 00 00 00  |
-| "SoD"        | UNDEFINE                                   | 1C 00 00 00  |
+| JSON unified | FH2M                                       | H3M          | HOMMOE (.map)                                                                                                                                                                                  |
+|--------------|--------------------------------------------|--------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| "2" ... "13" | version: 2 to 13 (uint16, big endian)      | UNDEFINE     |                                                                                                                                                                                                |
+| "RoE"        | UNDEFINE                                   | 0E 00 00 00  |                                                                                                                                                                                                |
+| "AB"         | UNDEFINE                                   | 15 00 00 00  |                                                                                                                                                                                                |
+| "SoD"        | UNDEFINE                                   | 1C 00 00 00  |                                                                                                                                                                                                |
+| "0.72.30" etc. (observed) | UNDEFINE                                     | UNDEFINE       | varint-framed version string in the container header after the 32-hex hash; observed "0.72.30", "0.80.47", "0.82.08"; the 2-byte separator tells the block count (05 00 = 3 blocks, 0D 00 = 4) |
 
 ████████████████████████████████══════════════════════════████████████
 ██ difficulty                                                             ██
 ████████████████████══════════════════════════════════════████████████
 
-| JSON unified | FH2M                                       | H3M          |
-|--------------|--------------------------------------------|--------------|
-| "Easy"       | 0 (uint8)                                  | 0 (uint8)    |
-| "Normal"     | 1                                           | 1            |
-| "Hard"       | 2                                           | 2            |
-| "Expert"     | 3                                           | 3            |
-| "Impossible" | 4                                           | 4            |
+| JSON unified | FH2M                                       | H3M          | HOMMOE (.map)                                                                                                                                                                           |
+|--------------|--------------------------------------------|--------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| "Easy"       | 0 (uint8)                                  | 0 (uint8)    |                                                                                                                                                                                         |
+| "Normal"     | 1                                           | 1            | block 1 startSettings EconomicDifficulty / NeutralsDifficulty / AiDifficulty integer indexes (observed 0, 0, 1 on the real samples); OE splits the unified difficulty in three, not 1:1 |
+| "Hard"       | 2                                           | 2            |                                                                                                                                                                                         |
+| "Expert"     | 3                                           | 3            |                                                                                                                                                                                         |
+| "Impossible" | 4                                           | 4            |                                                                                                                                                                                         |
 
 ████████████████████████████══════════════════════════████████████████
 ██ Player colors                                                          ██
 ████████████══════════════════════════════════════════████████████████
 
-| JSON unified | FH2M                                       | H3M          |
-|--------------|--------------------------------------------|--------------|
-| "Blue"       | PlayerColor::BLUE (bit 0x01)               | "Blue"       |
-| "Green"      | PlayerColor::GREEN (bit 0x02)              | "Green"      |
-| "Red"        | PlayerColor::RED (bit 0x04)                | "Red"        |
-| "Yellow"     | PlayerColor::YELLOW (bit 0x08)             | "Tan"        |
-| "Orange"     | PlayerColor::ORANGE (bit 0x10)             | "Orange"     |
-| "Purple"     | PlayerColor::PURPLE (bit 0x20)             | "Purple"     |
-| "Tan"        | UNDEFINE (no such color in H2)             | "Tan"        |
-| "Teal"       | UNDEFINE                                   | "Teal"       |
-| "Pink"       | UNDEFINE                                   | "Pink"       |
+| JSON unified | FH2M                                       | H3M          | HOMMOE (.map)                                                                                                         |
+|--------------|--------------------------------------------|--------------|-----------------------------------------------------------------------------------------------------------------------|
+| "Blue"       | PlayerColor::BLUE (bit 0x01)               | "Blue"       | spawns[] colorId (=-1 on all real maps -> color from spawn order position 1; HOMMOE_PLAYER_COLORS, same names as H3M) |
+| "Green"      | PlayerColor::GREEN (bit 0x02)              | "Green"      | same rule: spawn order position 2                                                                                     |
+| "Red"        | PlayerColor::RED (bit 0x04)                | "Red"        | same rule: spawn order position 3                                                                                     |
+| "Yellow"     | PlayerColor::YELLOW (bit 0x08)             | "Tan"        | same rule: spawn order position 4                                                                                     |
+| "Orange"     | PlayerColor::ORANGE (bit 0x10)             | "Orange"     | same rule: spawn order position 5                                                                                     |
+| "Purple"     | PlayerColor::PURPLE (bit 0x20)             | "Purple"     | same rule: spawn order position 6                                                                                     |
+| "Tan"        | UNDEFINE (no such color in H2)             | "Tan"        | same rule: spawn order position 7                                                                                     |
+| "Teal"       | UNDEFINE                                   | "Teal"       | same rule: spawn order position 8                                                                                     |
+| "Pink"       | UNDEFINE                                   | "Pink"       | same rule: spawn order position 9                                                                                     |
 
    In FH2M, sets of colors (availablePlayerColors, humanPlayerColors,
    computerPlayerColors, alliances[]) are stored as bit masks combining
@@ -76,18 +81,19 @@ Values used in the unified JSON format and their equivalents in .fh2m and .h3m
 ██ Races (playerDetails[].race / sourceRace)                              ██
 ████████████████████════════════════════════════════════████████████
 
-| JSON unified | FH2M playerRace                            | H3M town type|
-|--------------|--------------------------------------------|--------------|
-| "Random"     | "Random" (index 0, Race::RAND 0x80)        | "Random"     |
-| "Knight"     | "Knight" (index 1, Race::KNGT 0x01)        | "Castle"     |
-| "Barbarian"  | "Barbarian" (index 2, Race::BARB 0x02)     | "Stronghold" |
-| "Sorceress"  | "Sorceress" (index 3, Race::SORC 0x04)     | "Rampart"    |
-| "Warlock"    | "Warlock" (index 4, Race::WRLK 0x08)       | "Dungeon"    |
-| "Wizard"     | "Wizard" (index 5, Race::WZRD 0x10)        | "Tower"      |
-| "Necromancer"| "Necromancer" (index 6, Race::NECR 0x20)    | "Necropolis" |
-| "Inferno"     | "Warlock" (index 4, Race::WRLK 0x08)       | "Inferno"    |
-| "Fortress"    | "Barbarian" (index 2, Race::BARB 0x02)     | "Fortress"    |
-| "Conflux"    | "Sorceress" (index 3, Race::SORC 0x04)     | "Conflux"    |
+| JSON unified | FH2M playerRace                            | H3M town type| HOMMOE (.map)                                                                                                |
+|--------------|--------------------------------------------|--------------|--------------------------------------------------------------------------------------------------------------|
+| "Random"     | "Random" (index 0, Race::RAND 0x80)        | "Random"     | "" (empty factionSid on real maps)                                                                           |
+| "Knight"     | "Knight" (index 1, Race::KNGT 0x01)        | "Castle"     | "human" (Temple)                                                                                             |
+| "Barbarian"  | "Barbarian" (index 2, Race::BARB 0x02)     | "Stronghold" | "demons" (Hive)                                                                                              |
+| "Sorceress"  | "Sorceress" (index 3, Race::SORC 0x04)     | "Rampart"    | "nature" (Grove)                                                                                             |
+| "Warlock"    | "Warlock" (index 4, Race::WRLK 0x08)       | "Dungeon"    | "dungeon" (Dungeon)                                                                                          |
+| "Wizard"     | "Wizard" (index 5, Race::WZRD 0x10)        | "Tower"      | UNDEFINE (OE has 6 factions, no Tower)                                                                       |
+| "Necromancer"| "Necromancer" (index 6, Race::NECR 0x20)    | "Necropolis" | "undead" (Necropolis; hero sids use the "necro" prefix)                                                      |
+| "Inferno"     | "Warlock" (index 4, Race::WRLK 0x08)       | "Inferno"    | "unfrozen" (Schism)                                                                                          |
+| "Fortress"    | "Barbarian" (index 2, Race::BARB 0x02)     | "Fortress"    | "unfrozen" (Schism)                                                                                          |
+| "Conflux"    | "Sorceress" (index 3, Race::SORC 0x04)     | "Conflux"    | "nature" (via the Rampart pairing)                                                                           |
+| "Temple".."Neutral" (OE display names, used when the source is a .map) | paired with the rows above                    | paired with the rows above | factionSid per HOMMOE_FACTION_NAMES: "human", "undead", "dungeon", "nature", "demons", "unfrozen", "neutral" |
 
    H3M "Multiple" (several owned town types) and FH2M "Unknown"
    (undocumented race code) have no unified value: they only appear in
@@ -97,15 +103,15 @@ Values used in the unified JSON format and their equivalents in .fh2m and .h3m
 ██ Starting heroes (playerDetails[].hasStartingHero)                     ██
 ████████████████████████████████████████████████████████████████████
 
-| JSON unified                        | FH2M                                | H3M                                   |
-|-------------------------------------|-------------------------------------|---------------------------------------|
-| playerDetails[].hasStartingHero:    | tiles[].objects with group          | Player Heroes > Has Random Hero      |
-| true                                | "KINGDOM_HEROES": the starting      | / Hero Type                          |
-|                                     | hero is a hero object placed on     |                                       |
-|                                     | a tile                              |                                       |
-| playerDetails[].race (of a hero):   | object index = color * 7 + race:     | Player Heroes > Hero Type            |
-| "Knight"                            | metadata[0] = color (0-5),           | (00-7F, FF = no hero)                |
-|                                     | metadata[1] = race (0-6)             |                                       |
+| JSON unified                        | FH2M                                | H3M                                   | HOMMOE (.map)                                                                                                           |
+|-------------------------------------|-------------------------------------|---------------------------------------|-------------------------------------------------------------------------------------------------------------------------|
+| playerDetails[].hasStartingHero:    | tiles[].objects with group          | Player Heroes > Has Random Hero      | block 1 spawns[] entry per spawner: spawnType 0=Player(human) / 1=Bot(AI) / 2=open slot, spawnPointType 0=City / 1=Hero |
+| true                                | "KINGDOM_HEROES": the starting      | / Hero Type                          |                                                                                                                         |
+|                                     | hero is a hero object placed on     |                                       |                                                                                                                         |
+|                                     | a tile                              |                                       |                                                                                                                         |
+| playerDetails[].race (of a hero):   | object index = color * 7 + race:     | Player Heroes > Hero Type            | spawns[].heroSid ("<faction>_hero_<N>", empty = random); propHeroes.heroSid for placed heroes                           |
+| "Knight"                            | metadata[0] = color (0-5),           | (00-7F, FF = no hero)                |                                                                                                                         |
+|                                     | metadata[1] = race (0-6)             |                                       |                                                                                                                         |
 
    The FH2M format has no explicit starting hero field: a player has a
    starting hero if and only if a KINGDOM_HEROES object of his color is
@@ -117,37 +123,42 @@ Values used in the unified JSON format and their equivalents in .fh2m and .h3m
 ██ Player details (round-trip fields)                                   ██
 ████████████████████════════════════════════════════████████████████
 
-| JSON unified                          | FH2M                        | H3M                                        |
-|---------------------------------------|-----------------------------|--------------------------------------------|
-| playerDetails[].sourceRaceId          | playerRaceId (raw race      | UNDEFINE                                    |
-|   (raw race code, kept verbatim for   |   code, kept verbatim)      |                                             |
-|   undocumented race codes)             |                             |                                             |
-| playerDetails[].ownedTowns            | UNDEFINE (castle ownership  | Players Attributes > Owned Towns            |
-|   (per-town ownership map, h3m only)   |   is in castleMetadata)     |                                             |
-| playerDetails[].ownsRandomTown         | UNDEFINE                    | Players Attributes > Owns Random Town       |
-| hasHero (h3m only)                     | UNDEFINE                    | Basic Parameters > Has Hero                  |
-| availableHeroesBitfield (hex, h3m      | UNDEFINE                    | Available Heroes > Bitfield                  |
-|   only)                                |                             |                                             |
+| JSON unified                          | FH2M                        | H3M                                        | HOMMOE (.map)                                                   |
+|---------------------------------------|-----------------------------|--------------------------------------------|-----------------------------------------------------------------|
+| playerDetails[].sourceRaceId          | playerRaceId (raw race      | UNDEFINE                                    | spawns[].factionSid (raw sid string, e.g. "human"; "" = random) |
+|   (raw race code, kept verbatim for   |   code, kept verbatim)      |                                             |                                                                 |
+|   undocumented race codes)             |                             |                                             |                                                                 |
+| playerDetails[].ownedTowns            | UNDEFINE (castle ownership  | Players Attributes > Owned Towns            | propSpawns / propCities owner fields                            |
+|   (per-town ownership map, h3m only)   |   is in castleMetadata)     |                                             |                                                                 |
+| playerDetails[].ownsRandomTown         | UNDEFINE                    | Players Attributes > Owns Random Town       |                                                                 |
+| hasHero (h3m only)                     | UNDEFINE                    | Basic Parameters > Has Hero                  |                                                                 |
+| availableHeroesBitfield (hex, h3m      | UNDEFINE                    | Available Heroes > Bitfield                  |                                                                 |
+|   only)                                |                             |                                             |                                                                 |
 
 ████████████████══════════════════════════════════████████████████████
 ██ Victory condition type                                                 ██
 ████████████══════════════════════════════════════════████████████████
 
-| JSON unified            | FH2M victoryConditionType        | H3M Type    |
-|-------------------------|----------------------------------|-------------|
-| "defeatEveryone"       | 0 VICTORY_DEFEAT_EVERYONE       | "None"      |
-| "captureTown"          | 1 VICTORY_CAPTURE_TOWN           | "0x6"       |
-| "killHero"             | 2 VICTORY_KILL_HERO              | "0x5"       |
-| "obtainArtifact"       | 3 VICTORY_OBTAIN_ARTIFACT        | "0x0"       |
-| "defeatOtherSide"      | 4 VICTORY_DEFEAT_OTHER_SIDE      | "None"      |
-| "collectGold"          | 5 VICTORY_COLLECT_ENOUGH_GOLD    | "0x2"       |
-| "accumulateCreatures"  | 0 VICTORY_DEFEAT_EVERYONE       | "0x1"       |
-| "upgradeTown"          | 0 VICTORY_DEFEAT_EVERYONE       | "0x3"       |
-| "buildGrail"           | 0 VICTORY_DEFEAT_EVERYONE       | "0x4"       |
-| "defeatMonster"        | 0 VICTORY_DEFEAT_EVERYONE       | "0x7"       |
-| "flagDwellings"        | 0 VICTORY_DEFEAT_EVERYONE       | "0x8"       |
-| "flagMines"            | 0 VICTORY_DEFEAT_EVERYONE       | "0x9"       |
-| "transportArtifact"    | 0 VICTORY_DEFEAT_EVERYONE       | "0xA"       |
+| JSON unified            | FH2M victoryConditionType        | H3M Type    | HOMMOE (.map)                                                                                     |
+|-------------------------|----------------------------------|-------------|---------------------------------------------------------------------------------------------------|
+| "defeatEveryone"       | 0 VICTORY_DEFEAT_EVERYONE       | "None"      | adventure.settings.mapWinConditions[] typeWinCondition 0 (classic); a fresh RMG map ships 0, 2, 1 |
+| "captureTown"          | 1 VICTORY_CAPTURE_TOWN           | "0x6"       | typeWinCondition 3 (LostStartCity) or 8 (city hold; UNIFIED_TO_HOMMOE_WIN writes 8)               |
+| "killHero"             | 2 VICTORY_KILL_HERO              | "0x5"       | typeWinCondition 4 (LostStartHero)                                                                |
+| "obtainArtifact"       | 3 VICTORY_OBTAIN_ARTIFACT        | "0x0"       | UNDEFINE (kept as raw int in victoryCondition.metadata)                                           |
+| "defeatOtherSide"      | 4 VICTORY_DEFEAT_OTHER_SIDE      | "None"      | UNDEFINE (kept as raw int in victoryCondition.metadata)                                           |
+| "collectGold"          | 5 VICTORY_COLLECT_ENOUGH_GOLD    | "0x2"       | UNDEFINE (kept as raw int in victoryCondition.metadata)                                           |
+| "accumulateCreatures"  | 0 VICTORY_DEFEAT_EVERYONE       | "0x1"       | UNDEFINE (kept as raw int in victoryCondition.metadata)                                           |
+| "upgradeTown"          | 0 VICTORY_DEFEAT_EVERYONE       | "0x3"       | UNDEFINE (kept as raw int in victoryCondition.metadata)                                           |
+| "buildGrail"           | 0 VICTORY_DEFEAT_EVERYONE       | "0x4"       | UNDEFINE (kept as raw int in victoryCondition.metadata)                                           |
+| "defeatMonster"        | 0 VICTORY_DEFEAT_EVERYONE       | "0x7"       | UNDEFINE (kept as raw int in victoryCondition.metadata)                                           |
+| "flagDwellings"        | 0 VICTORY_DEFEAT_EVERYONE       | "0x8"       | UNDEFINE (kept as raw int in victoryCondition.metadata)                                           |
+| "flagMines"            | 0 VICTORY_DEFEAT_EVERYONE       | "0x9"       | UNDEFINE (kept as raw int in victoryCondition.metadata)                                           |
+| "transportArtifact"    | 0 VICTORY_DEFEAT_EVERYONE       | "0xA"       | UNDEFINE (kept as raw int in victoryCondition.metadata)                                           |
+| "desertion"               | 0 VICTORY_DEFEAT_EVERYONE          | "None"        | typeWinCondition 1                                                                                |
+| "heroLighting"            | 0 VICTORY_DEFEAT_EVERYONE          | "None"        | typeWinCondition 2                                                                                |
+| "finalBattle"             | 0 VICTORY_DEFEAT_EVERYONE          | "None"        | typeWinCondition 5                                                                                |
+| "tournament"              | 0 VICTORY_DEFEAT_EVERYONE          | "None"        | typeWinCondition 9                                                                                |
+| "scriptedVictory"         | UNDEFINE                           | UNDEFINE      | no mapWinConditions entry; a GameVictory action in block 4 (commentAiData)                        |
 
    The unified victory types with no Heroes II equivalent
    (accumulateCreatures, upgradeTown, buildGrail, defeatMonster,
@@ -166,30 +177,30 @@ Values used in the unified JSON format and their equivalents in .fh2m and .h3m
 ██ Loss condition type                                                    ██
 ████████████════════════════════════════════════════════████████████
 
-| JSON unified       | FH2M lossConditionType           | H3M Type    |
-|--------------------|----------------------------------|-------------|
-| "loseEverything"   | 0 LOSS_EVERYTHING                | "None"      |
-| "loseTown"         | 1 LOSS_TOWN                      | "0x0"       |
-| "loseHero"         | 2 LOSS_HERO                      | "0x1"       |
-| "outOfTime"        | 3 LOSS_OUT_OF_TIME               | "0x2"       |
+| JSON unified       | FH2M lossConditionType           | H3M Type    | HOMMOE (.map)                                                                                                          |
+|--------------------|----------------------------------|-------------|------------------------------------------------------------------------------------------------------------------------|
+| "loseEverything"   | 0 LOSS_EVERYTHING                | "None"      | default (OE has no structured loss list); GameLose / SideLose actions in block 4 set lossCondition.scriptHasLoseAction |
+| "loseTown"         | 1 LOSS_TOWN                      | "0x0"       | UNDEFINE (scripted via GameLose / SideLose actions in block 4)                                                         |
+| "loseHero"         | 2 LOSS_HERO                      | "0x1"       | UNDEFINE (scripted via GameLose / SideLose actions in block 4)                                                         |
+| "outOfTime"        | 3 LOSS_OUT_OF_TIME               | "0x2"       | UNDEFINE (scripted via GameLose / SideLose actions in block 4)                                                         |
 
 ████████████████════════════════════════════════════████████████████
 ██ Terrain (terrain.levels[].grid[].terrain)                             ██
 ████████████══════════════════════════════════════════████████████
 
-| JSON unified     | FH2M (Ground enum, image index range)| H3M Terrain |
-|------------------|--------------------------------------|------------|
-| "Water"          | WATER (image index 0-29)             | "Water"    |
-| "Grass"          | GRASS (30-91)                        | "Grass"    |
-| "Snow"           | SNOW (92-145)                        | "Snow"     |
-| "Swamp"          | SWAMP (146-207)                      | "Swamp"    |
-| "Lava"           | LAVA (208-261)                       | "Lava"     |
-| "Desert"         | DESERT (262-320)                     | "Rough"     |
-| "Dirt"           | DIRT (321-360)                       | "Dirt"     |
-| "Wasteland"      | WASTELAND (361-414)                 | "Rough"    |
-| "Beach"          | BEACH (415-431)                      | "Sand"     |
-| "Subterranean"   | UNDEFINE (no underground in H2)     | "Subterranean" |
-| "Rock"           | UNDEFINE (impassable images)         | "Rock"     |
+| JSON unified     | FH2M (Ground enum, image index range)| H3M Terrain | HOMMOE (.map)                                                                                |
+|------------------|--------------------------------------|------------|----------------------------------------------------------------------------------------------|
+| "Water"          | WATER (image index 0-29)             | "Water"    | tilesMap basin id 2 + waterMap id (observed 7 = "Water (Grass)"); sourceTerrain "water:<id>" |
+| "Grass"          | GRASS (30-91)                        | "Grass"    | tilesMap biome 1 (HOMMOE_TILE_TERRAINS); sourceTerrain "tile:<id>"                           |
+| "Snow"           | SNOW (92-145)                        | "Snow"     | tilesMap 4                                                                                   |
+| "Swamp"          | SWAMP (146-207)                      | "Swamp"    | tilesMap 5 (Autumn)                                                                          |
+| "Lava"           | LAVA (208-261)                       | "Lava"     | tilesMap 6                                                                                   |
+| "Desert"         | DESERT (262-320)                     | "Rough"     | tilesMap 2 (Sand)                                                                            |
+| "Dirt"           | DIRT (321-360)                       | "Dirt"     | tilesMap 7                                                                                   |
+| "Wasteland"      | WASTELAND (361-414)                 | "Rough"    | tilesMap 3 (Deathland)                                                                       |
+| "Beach"          | BEACH (415-431)                      | "Sand"     | UNDEFINE (written as basin id 2)                                                             |
+| "Subterranean"   | UNDEFINE (no underground in H2)     | "Subterranean" | UNDEFINE (no underground; written as Dirt 7)                                                 |
+| "Rock"           | UNDEFINE (impassable images)         | "Rock"     | UNDEFINE (written as Dirt 7; impassable via levelsMap/objects)                               |
 
    The H3M Sand terrain converts to the Heroes II DESERT terrain
    and back (the unified value is "Desert"); the Heroes II BEACH
@@ -200,15 +211,17 @@ Values used in the unified JSON format and their equivalents in .fh2m and .h3m
 
    Per-tile fields kept for a faithful round-trip:
 
-| JSON unified (grid cell)       | FH2M                        | H3M                                 |
-|--------------------------------|-----------------------------|-------------------------------------|
-| flags                          | terrainFlags (uint8)        | UNDEFINE (no per-tile flags)       |
-| sourcePicture                  | UNDEFINE                    | Terrain Picture                     |
-| sourceMirroring                | UNDEFINE                    | Mirroring ("0x00"-"0xFF")           |
-| sourceRoad / sourceRoadProperties | UNDEFINE (roads are     | Road Type / Road Properties        |
-|                                | objects of the ROADS group) |                                     |
-| sourceRiver / sourceRiverProperties | UNDEFINE (rivers are   | River Type / River Properties       |
-|                                | objects of the STREAMS group)|                                    |
+| JSON unified (grid cell)       | FH2M                        | H3M                                 | HOMMOE (.map)                                                                                                            |
+|--------------------------------|-----------------------------|-------------------------------------|--------------------------------------------------------------------------------------------------------------------------|
+| flags                          | terrainFlags (uint8)        | UNDEFINE (no per-tile flags)       | UNDEFINE (no per-tile flags in .map)                                                                                     |
+| sourcePicture                  | UNDEFINE                    | Terrain Picture                     | UNDEFINE (tilesMap stores one biome id per tile; sprite variants are derived)                                            |
+| sourceMirroring                | UNDEFINE                    | Mirroring ("0x00"-"0xFF")           | UNDEFINE                                                                                                                 |
+| sourceRoad / sourceRoadProperties | UNDEFINE (roads are     | Road Type / Road Properties        | roadsMap: road TYPE id per tile (0/1/2), not a direction bitfield                                                        |
+|                                | objects of the ROADS group) |                                     |                                                                                                                          |
+| sourceRiver / sourceRiverProperties | UNDEFINE (rivers are   | River Type / River Properties       | rivers[] overlay { sid, randomSeed, nodes: [{ n, s, isWaterfall }] } (sparse node list; river tiles do NOT set waterMap) |
+|                                | objects of the STREAMS group)|                                    |                                                                                                                          |
+| sourceLevel                           | UNDEFINE                       | UNDEFINE                              | levelsMap (elevation tier, -1 = basin)                                                                                   |
+| sourceClimb                           | UNDEFINE                       | UNDEFINE                              | climbsMap (slope marker on the lower side of a level boundary)                                                           |
 
    For FH2M sources the per-tile h3m fields are computed from the
    neighbors, not copied:
@@ -239,31 +252,32 @@ Values used in the unified JSON format and their equivalents in .fh2m and .h3m
 ██ mainLanguage                                                          ██
 ████████══════════════════════════════════████████████████████████████
 
-| JSON unified | FH2M (SupportedLanguage enum)   | H3M          |
-|--------------|---------------------------------|--------------|
-| 0            | 0 English                       | UNDEFINE     |
-| 1            | 1 French                        | UNDEFINE     |
-| 2            | 2 Polish                        | UNDEFINE     |
-| 3            | 3 German                        | UNDEFINE     |
-| 4            | 4 Russian                      | UNDEFINE     |
-| 5            | 5 Italian                       | UNDEFINE     |
-| 6            | 6 Czech                        | UNDEFINE     |
-| 7            | 7 Spanish                       | UNDEFINE     |
-| 8            | 8 Belarusian                   | UNDEFINE     |
-| ...          | (see SupportedLanguage enum)     | UNDEFINE     |
+| JSON unified | FH2M (SupportedLanguage enum)   | H3M          | HOMMOE (.map) |
+|--------------|---------------------------------|--------------|---------------|
+| 0            | 0 English                       | UNDEFINE     |               |
+| 1            | 1 French                        | UNDEFINE     |               |
+| 2            | 2 Polish                        | UNDEFINE     |               |
+| 3            | 3 German                        | UNDEFINE     |               |
+| 4            | 4 Russian                      | UNDEFINE     |               |
+| 5            | 5 Italian                       | UNDEFINE     |               |
+| 6            | 6 Czech                        | UNDEFINE     |               |
+| 7            | 7 Spanish                       | UNDEFINE     |               |
+| 8            | 8 Belarusian                   | UNDEFINE     |               |
+| ...          | (see SupportedLanguage enum)     | UNDEFINE     |               |
 
 ████████████══════════════════════════════════████████████████████████
 ██ Rumors and booleans                                                   ██
 ████████████══════════════════════════════════████████████████████████
 
-| JSON unified        | FH2M                       | H3M                |
-|---------------------|----------------------------|--------------------|
-| rumors[].text:      | rumors: the message text   | Rumors > Text      |
-| "some text"         | (UTF-8 string)             | (string)           |
-| rumors[].name:      | UNDEFINE (rumors have no   | Rumors > Name      |
-| "some name" / null  | name)                      | (string)           |
-| isCampaign-like     | UNDEFINE (out of scope of the unified format,       |
-| flags               | see the two lists below)   |                    |
+| JSON unified        | FH2M                       | H3M                | HOMMOE (.map)                                                                |
+|---------------------|----------------------------|--------------------|------------------------------------------------------------------------------|
+| rumors[].text:      | rumors: the message text   | Rumors > Text      | UNDEFINE (OE has no rumors; texts live in block 3 dialogs / block 4 quests)  |
+| "some text"         | (UTF-8 string)             | (string)           |                                                                              |
+| rumors[].name:      | UNDEFINE (rumors have no   | Rumors > Name      | UNDEFINE (OE has no rumors)                                                  |
+| "some name" / null  | name)                      | (string)           |                                                                              |
+| isCampaign-like     | UNDEFINE (out of scope of the unified format,       |                    |                                                                              |
+| flags               | see the two lists below)   |                    |                                                                              |
+| dailyEvents[] (timed events) | dailyEvents (read_daily_event records)                | Events section (timed events, at file end) | block 4 commentAiData quests with a StartTurn condition (week/day) + actions |
 
    Booleans are stored as true/false in JSON, 1/0 (uint8) in both
    FH2M and H3M files: hasUnderground (H3M only: 0-Single-level,
@@ -276,43 +290,45 @@ Values used in the unified JSON format and their equivalents in .fh2m and .h3m
    The unified format stores placed objects the fh2m way: per tile
    (key "x_y_z") with metadata maps keyed by object id.
 
-| JSON unified                          | FH2M                        | H3M                                        |
-|---------------------------------------|-----------------------------|--------------------------------------------|
-| objects.tiles["x_y_z"][]               | tiles[].objects (objects    | Objects > Tiles > tiles (decoded           |
-|   .id / .group / .index               |   are on their tile in      |   instances, stored per tile)              |
-|                                       |   the tile list)            |   .group mapped from the OBJECTS.TXT       |
-|                                       |                             |   class via H3M_CLASS_TO_GROUP             |
-| objects.monsterMetadata[id]           | monsterMetadata             | Objects > Tiles > monsterMetadata           |
-|   (count, creature)                   |   (count, joinCondition,   |   (count, creature)                        |
-|                                       |    selected)                |                                            |
-| objects.resourceMetadata[id]          | resourceMetadata (count)    | Objects > Tiles > resourceMetadata          |
-|   (count, resource)                   |                             |   (count, resource)                        |
-| objects.artifactMetadata[id]          | artifactMetadata (radius,   | Objects > Tiles > artifactMetadata          |
-|   (artifact, spell for scrolls)       |   captureCondition,        |   (artifact; spell for spell scrolls)      |
-|                                       |   selected)                 |                                            |
-| objects.signMetadata[id] (message)    | signMetadata (message)      | Objects > Tiles > signMetadata (message)   |
-| objects.ownableMetadata[id] (owner)   | capturableObjectsMetadata   | Objects > Tiles > ownableMetadata (owner   |
-|                                       |   (ownerColor)              |   of mines and dwellings)                  |
-| objects.townMetadata[id] (owner,     | castleMetadata (customName, | Objects > Tiles > townMetadata (owner,      |
-|   customName, type)                   |   garrison, buildings,     |   customName, type)                        |
-|                                       |   spells, hiring)           |                                            |
-| objects.heroMetadata[id]              | heroMetadata (full hero     | Objects > Tiles > heroMetadata (owner,      |
-|   (owner, type)                       |   customization)            |   type)                                    |
-| objects.eventMetadata[id] (message)   | adventureMapEventMetadata  | Objects > Tiles > eventMetadata            |
-|                                       |   (message, rewards...)    |   (message)                                |
-| objects.shrineMetadata[id] (spell)    | UNDEFINE (no shrines in     | Objects > Tiles > shrineMetadata (spell)    |
-|                                       |   the fh2m object set)      |                                            |
-| objects.castleMetadata /              | castleMetadata              | UNDEFINE (town metadata is stored in       |
-|   sphinxMetadata /                    | sphinxMetadata              |   townMetadata, differently structured)    |
-|   adventureMapEventMetadata /         | adventureMapEventMetadata   |                                            |
-|   selectionObjectMetadata /           | selectionObjectMetadata     |                                            |
-|   capturableObjectsMetadata           | capturableObjectsMetadata   |                                            |
-| objects.dropped[] (ids of objects     | UNDEFINE                    | Objects whose OBJECTS.TXT class has no     |
-|   whose class has no unified group)   |                             |   unified group mapping                    |
-| objects.rawData (hex of the raw       | UNDEFINE                    | Objects > Raw Data (the raw object         |
-|   object section, h3m only; the       |                             |   section bytes, re-encoded verbatim       |
-|   binary writer re-encodes it         |                             |   by write_h3m for a byte-perfect          |
-|   verbatim)                           |                             |   round-trip)                              |
+| JSON unified                          | FH2M                        | H3M                                        | HOMMOE (.map)                                                                                                                                  |
+|---------------------------------------|-----------------------------|--------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------|
+| objects.tiles["x_y_z"][]               | tiles[].objects (objects    | Objects > Tiles > tiles (decoded           | adventure.objects[] groups { sid, ids[], nodes[], rotations[], levels[] (float) }; node is flat row-major: x = node % sizeX, z = node // sizeX |
+|   .id / .group / .index               |   are on their tile in      |   instances, stored per tile)              |                                                                                                                                                |
+|                                       |   the tile list)            |   .group mapped from the OBJECTS.TXT       |                                                                                                                                                |
+|                                       |                             |   class via H3M_CLASS_TO_GROUP             |                                                                                                                                                |
+| objects.monsterMetadata[id]           | monsterMetadata             | Objects > Tiles > monsterMetadata           | objectsProperties propSquads / propRandomSquads rows (id -> creature sids + count); fixed squads in adventure.squads[]                         |
+|   (count, creature)                   |   (count, joinCondition,   |   (count, creature)                        |                                                                                                                                                |
+|                                       |    selected)                |                                            |                                                                                                                                                |
+| objects.resourceMetadata[id]          | resourceMetadata (count)    | Objects > Tiles > resourceMetadata          | propResParams rows; resource sids "wood", "mercury", "ore", "dust", "crystals", "gemstones", "gold" (UNIFIED_TO_HOMMOE_RESOURCE)               |
+|   (count, resource)                   |                             |   (count, resource)                        |                                                                                                                                                |
+| objects.artifactMetadata[id]          | artifactMetadata (radius,   | Objects > Tiles > artifactMetadata          | propRewardParams rows; artifact sids come from the game Core.zip catalog; random artifacts -> "random-item"                                    |
+|   (artifact, spell for scrolls)       |   captureCondition,        |   (artifact; spell for spell scrolls)      |                                                                                                                                                |
+|                                       |   selected)                 |                                            |                                                                                                                                                |
+| objects.signMetadata[id] (message)    | signMetadata (message)      | Objects > Tiles > signMetadata (message)   |                                                                                                                                                |
+| objects.ownableMetadata[id] (owner)   | capturableObjectsMetadata   | Objects > Tiles > ownableMetadata (owner   | propOwners rows (owner -1 = neutral)                                                                                                           |
+|                                       |   (ownerColor)              |   of mines and dwellings)                  |                                                                                                                                                |
+| objects.townMetadata[id] (owner,     | castleMetadata (customName, | Objects > Tiles > townMetadata (owner,      | propCities rows + city-spawner objects + spawns[] entry (factionSid, heroSid)                                                                  |
+|   customName, type)                   |   garrison, buildings,     |   customName, type)                        |                                                                                                                                                |
+|                                       |   spells, hiring)           |                                            |                                                                                                                                                |
+| objects.heroMetadata[id]              | heroMetadata (full hero     | Objects > Tiles > heroMetadata (owner,      | propHeroes rows + hero-spawner objects; heroSid "<faction>_hero_<N>"                                                                           |
+|   (owner, type)                       |   customization)            |   type)                                    |                                                                                                                                                |
+| objects.eventMetadata[id] (message)   | adventureMapEventMetadata  | Objects > Tiles > eventMetadata            | propEntities "event_<id>" + block 4 quest trigger ObjectInteractionAfter + actions (Print / GiveRes...)                                        |
+|                                       |   (message, rewards...)    |   (message)                                |                                                                                                                                                |
+| objects.shrineMetadata[id] (spell)    | UNDEFINE (no shrines in     | Objects > Tiles > shrineMetadata (spell)    |                                                                                                                                                |
+|                                       |   the fh2m object set)      |                                            |                                                                                                                                                |
+| objects.castleMetadata /              | castleMetadata              | UNDEFINE (town metadata is stored in       |                                                                                                                                                |
+|   sphinxMetadata /                    | sphinxMetadata              |   townMetadata, differently structured)    |                                                                                                                                                |
+|   adventureMapEventMetadata /         | adventureMapEventMetadata   |                                            |                                                                                                                                                |
+|   selectionObjectMetadata /           | selectionObjectMetadata     |                                            |                                                                                                                                                |
+|   capturableObjectsMetadata           | capturableObjectsMetadata   |                                            |                                                                                                                                                |
+| objects.dropped[] (ids of objects     | UNDEFINE                    | Objects whose OBJECTS.TXT class has no     | reported as HOMMOE_UNMAPPED_OBJECTS; listed per map in no_olden_era_equivalent.english.txt                                                     |
+|   whose class has no unified group)   |                             |   unified group mapping                    |                                                                                                                                                |
+| objects.rawData (hex of the raw       | UNDEFINE                    | Objects > Raw Data (the raw object         | blocks keep their raw text ("raw" field) re-emitted verbatim; container trailingData kept                                                      |
+|   object section, h3m only; the       |                             |   section bytes, re-encoded verbatim       |                                                                                                                                                |
+|   binary writer re-encodes it         |                             |   by write_h3m for a byte-perfect          |                                                                                                                                                |
+|   verbatim)                           |                             |   round-trip)                              |                                                                                                                                                |
+| objects.sourceRivers / sourceAreas       | UNDEFINE                      | UNDEFINE                                      | adventure.rivers[] / areas, kept raw                                                                                                           |
+| per-object source* fields                | UNDEFINE                      | UNDEFINE                                      | adventure.objects[] columns (sid/ids/nodes/rotations/levels) + objectsProperties rows, kept verbatim                                           |
 
    Note: h3m "UNDEFINED_*" classes are mostly landscape/decoration
    objects (trees, rocks, mountains...) which have no gameplay data and
@@ -398,18 +414,18 @@ quest messages, garrison canTake, event players flags).
    (town), the fheroes2 race order being Knight, Barbarian,
    Sorceress, Warlock, Wizard, Necromancer:
 
-| H3M type | H3M faction | FH2M race | FH2M index (castle) |
-|----------|-------------|-----------|---------------------|
-| 0        | Castle      | Knight    | 0                   |
-| 1        | Rampart     | Sorceress | 4                  |
-| 2        | Tower       | Wizard    | 8                   |
-| 3        | Inferno     | Warlock   | 6                   |
-| 4        | Necropolis  | Necromancer | 10              |
-| 5        | Dungeon     | Warlock   | 6                   |
-| 6        | Stronghold  | Barbarian | 2                   |
-| 7        | Fortress    | Barbarian | 2                   |
-| 8        | Conflux     | Sorceress | 4                   |
-| random   | -           | Knight (default) | 0         |
+| H3M type | H3M faction | FH2M race | FH2M index (castle) | HOMMOE (.map)                          |
+|----------|-------------|-----------|---------------------|----------------------------------------|
+| 0        | Castle      | Knight    | 0                   | "human"                                |
+| 1        | Rampart     | Sorceress | 4                  | "nature"                               |
+| 2        | Tower       | Wizard    | 8                   | UNDEFINE (OE has 6 factions, no Tower) |
+| 3        | Inferno     | Warlock   | 6                   | "unfrozen"                             |
+| 4        | Necropolis  | Necromancer | 10              | "undead"                               |
+| 5        | Dungeon     | Warlock   | 6                   | "dungeon"                              |
+| 6        | Stronghold  | Barbarian | 2                   | "demons"                               |
+| 7        | Fortress    | Barbarian | 2                   | "unfrozen"                             |
+| 8        | Conflux     | Sorceress | 4                   | "nature"                               |
+| random   | -           | Knight (default) | 0         | "" (empty factionSid)                  |
 
    The garrison creatures of an h3m town become the fh2m castle
    defenders (the first five non-empty slots, converted through the
@@ -418,11 +434,11 @@ quest messages, garrison canTake, event players flags).
    Shrine conversion (h3m -> fh2m): the Heroes III shrines convert to
    the Heroes II shrine circles (ADVENTURE_POWER_UPS group):
 
-| H3M class | H3M shrine                | FH2M index | FH2M shrine              |
-|-----------|---------------------------|------------|--------------------------|
-| 88        | Shrine of Magic Incantation | 14       | Shrine of the First Circle |
-| 89        | Shrine of Magic Gesture    | 15        | Shrine of the Second Circle |
-| 90        | Shrine of Magic Thought   | 16        | Shrine of the Third Circle |
+| H3M class | H3M shrine                | FH2M index | FH2M shrine              | HOMMOE (.map) |
+|-----------|---------------------------|------------|--------------------------|---------------|
+| 88        | Shrine of Magic Incantation | 14       | Shrine of the First Circle |               |
+| 89        | Shrine of Magic Gesture    | 15        | Shrine of the Second Circle |               |
+| 90        | Shrine of Magic Thought   | 16        | Shrine of the Third Circle |               |
 
    The Heroes II Shrine of Magic Mystery has no Heroes III
    equivalent: it converts to the Third Circle (h3m class 90). A
@@ -895,111 +911,111 @@ quest messages, garrison canTake, event players flags).
 
    Faction 1 (Knight <-> Castle):
 
-| Tier | H2                        | H3                          |
-|------|---------------------------|-----------------------------|
-| T1   | Peasant                   | Pikeman -> Halberdier       |
-| T2   | Archer -> Ranger          | Archer -> Marksman          |
-| T3   | Pikeman -> Veteran Pikeman | Griffin -> Royal Griffin    |
-| T4   | Swordsman -> Master Swordsman | Swordsman -> Crusader       |
-| T5   | Cavalry -> Champion       | Monk -> Zealot              |
-| T6   | Cavalry -> Champion       | Cavalier -> Champion        |
-| T7   | Paladin -> Crusader       | Angel -> Archangel          |
+| Tier | H2                        | H3                          | HOMMOE unit (sid)                                                  |
+|------|---------------------------|-----------------------------|--------------------------------------------------------------------|
+| T1   | Peasant                   | Pikeman -> Halberdier       | Swordsman (esquire) -> Guard Captain (esquire_upg)                 |
+| T2   | Archer -> Ranger          | Archer -> Marksman          | Crossbowman (crossbowman) -> Austringer (crossbowman_upg)          |
+| T3   | Pikeman -> Veteran Pikeman | Griffin -> Royal Griffin    | Griffin (griffin) -> Temple Griffin (griffin_upg)                  |
+| T4   | Swordsman -> Master Swordsman | Swordsman -> Crusader       | Lightweaver (lightweaver) -> Hierophant (lightweaver_upg)          |
+| T5   | Cavalry -> Champion       | Monk -> Zealot              | Cavalry (sunlight_cavalry) -> Noble Cavalry (sunlight_cavalry_upg) |
+| T6   | Cavalry -> Champion       | Cavalier -> Champion        | Inquisitor (inquisitor) -> Mother Superior (inquisitor_upg)        |
+| T7   | Paladin -> Crusader       | Angel -> Archangel          | Angel (angel) -> Archangel (angel_upg)                             |
 
    Faction 2 (Barbarian <-> Stronghold):
 
-| Tier | H2                        | H3                          |
-|------|---------------------------|-----------------------------|
-| T1   | Goblin                    | Goblin -> Hobgoblin         |
-| T2   | Orc -> Orc Chief          | Goblin Wolf Rider -> Hobgoblin Wolf Rider |
-| T3   | Wolf                      | Orc -> Orc Chieftain        |
-| T4   | Ogre -> Ogre Lord         | Ogre -> Ogre Mage           |
-| T5   | Troll -> War Troll        | Roc -> Thunderbird          |
-| T6   | Cyclops                   | Cyclops -> Cyclops King     |
-| T7   | Cyclops                   | Behemoth -> Ancient Behemoth |
+| Tier | H2                        | H3                          | HOMMOE unit (sid)                                  |
+|------|---------------------------|-----------------------------|----------------------------------------------------|
+| T1   | Goblin                    | Goblin -> Hobgoblin         | Parasite (trick_demon) -> Pixie (pixie)            |
+| T2   | Orc -> Orc Chief          | Goblin Wolf Rider -> Hobgoblin Wolf Rider | Halfling (halfling) -> Vine Iriyad (ent)           |
+| T3   | Wolf                      | Orc -> Orc Chieftain        | Vine Iriyad (ent) -> Graverobber (graverobber)     |
+| T4   | Ogre -> Ogre Lord         | Ogre -> Ogre Mage           | Volcanic Scorpion (jaw_upg) -> Herbomancer (druid) |
+| T5   | Troll -> War Troll        | Roc -> Thunderbird          | Sporemancer (druid_upg) -> Inquisitor (inquisitor) |
+| T6   | Cyclops                   | Cyclops -> Cyclops King     | Menacing Reaver (godslayer_upg) -> Waurms (olgoi)  |
+| T7   | Cyclops                   | Behemoth -> Ancient Behemoth | Hive Queen (hive_queen) -> Archangel (angel_upg)   |
 
    Faction 3 (Sorceress <-> Rampart):
 
-| Tier | H2                        | H3                          |
-|------|---------------------------|-----------------------------|
-| T1   | Sprite                    | Centaur -> Centaur Captain  |
-| T2   | Dwarf -> Battle Dwarf     | Dwarf -> Battle Dwarf       |
-| T3   | Elf -> Grand Elf          | Wood Elf -> Grand Elf       |
-| T4   | Druid -> Greater Druid    | Pegasus -> Silver Pegasus   |
-| T5   | Druid -> Greater Druid    | Dendroid Guard -> Dendroid Soldier |
-| T6   | Unicorn                   | Unicorn -> War Unicorn      |
-| T7   | Phoenix                   | Green Dragon -> Gold Dragon |
+| Tier | H2                        | H3                          | HOMMOE unit (sid)                                   |
+|------|---------------------------|-----------------------------|-----------------------------------------------------|
+| T1   | Sprite                    | Centaur -> Centaur Captain  | Faun (elf_tracker) -> Faun Archer (elf_tracker_upg) |
+| T2   | Dwarf -> Battle Dwarf     | Dwarf -> Battle Dwarf       | Hoplet (twinkle) -> Dawn Hoplet (twinkle_upg)       |
+| T3   | Elf -> Grand Elf          | Wood Elf -> Grand Elf       | Vine Iriyad (ent) -> Fungal Iriyad (ent_upg)        |
+| T4   | Druid -> Greater Druid    | Pegasus -> Silver Pegasus   | Naiad (aqualotl) -> Vernal Naiad (aqualotl_upg)     |
+| T5   | Druid -> Greater Druid    | Dendroid Guard -> Dendroid Soldier | Herbomancer (druid) -> Sporemancer (druid_upg)      |
+| T6   | Unicorn                   | Unicorn -> War Unicorn      | Qilin (qilin) -> Thunder Qilin (qilin_upg)          |
+| T7   | Phoenix                   | Green Dragon -> Gold Dragon | Phoenix (phoenix) -> Flaming Phoenix (phoenix_upg)  |
 
    Faction 4 (Wizard <-> Tower):
 
-| Tier | H2                        | H3                          |
-|------|---------------------------|-----------------------------|
-| T1   | Halfling                  | Gremlin -> Master Gremlin   |
-| T2   | Boar                      | Stone Gargoyle -> Obsidian Gargoyle |
-| T3   | Iron Golem -> Steel Golem | Iron Golem -> Stone Golem   |
-| T4   | Roc                       | Mage -> Archmage            |
-| T5   | Mage -> Archmage          | Genie -> Master Genie       |
-| T6   | Giant                     | Naga -> Naga Queen          |
-| T7   | Giant -> Titan            | Giant -> Titan              |
+| Tier | H2                        | H3                          | HOMMOE unit (sid)                                          |
+|------|---------------------------|-----------------------------|------------------------------------------------------------|
+| T1   | Halfling                  | Gremlin -> Master Gremlin   | Troglodyte (trogl) -> Swordsman (esquire)                  |
+| T2   | Boar                      | Stone Gargoyle -> Obsidian Gargoyle | Hoplet (twinkle) -> Vine Iriyad (ent)                      |
+| T3   | Iron Golem -> Steel Golem | Iron Golem -> Stone Golem   | Griffin (griffin) -> Chanter (wasp_upg)                    |
+| T4   | Roc                       | Mage -> Archmage            | Minotaur Lord (minos_upg) -> Herbomancer (druid)           |
+| T5   | Mage -> Archmage          | Genie -> Master Genie       | Cavalry (sunlight_cavalry) -> Faerie Dragon (fairy_dragon) |
+| T6   | Giant                     | Naga -> Naga Queen          | Chthonic Hydra (hydra_upg) -> Devourer (olgoi_upg)         |
+| T7   | Giant -> Titan            | Giant -> Titan              | Angel (angel) -> Flaming Phoenix (phoenix_upg)             |
 
    Faction 5 (Warlock <-> Dungeon):
 
-| Tier | H2                        | H3                          |
-|------|---------------------------|-----------------------------|
-| T1   | Centaur                   | Troglodyte -> Infernal Troglodyte |
-| T2   | Gargoyle                  | Harpy -> Harpy Hag          |
-| T3   | Griffin                   | Beholder -> Evil Eye        |
-| T4   | Minotaur -> Minotaur King | Medusa -> Medusa Queen      |
-| T5   | Minotaur -> Minotaur King | Minotaur -> Minotaur King   |
-| T6   | Hydra                     | Manticore -> Scorpicore     |
-| T7   | Red Dragon -> Black Dragon | Red Dragon -> Black Dragon  |
+| Tier | H2                        | H3                          | HOMMOE unit (sid)                                              |
+|------|---------------------------|-----------------------------|----------------------------------------------------------------|
+| T1   | Centaur                   | Troglodyte -> Infernal Troglodyte | Troglodyte (trogl) -> Infernal Troglodyte (trogl_upg)          |
+| T2   | Gargoyle                  | Harpy -> Harpy Hag          | Infiltrator (assassin) -> Guile Infiltrator (assassin_upg)     |
+| T3   | Griffin                   | Beholder -> Evil Eye        | Onyx Dancer (blade_dancer) -> Jasper Dancer (blade_dancer_upg) |
+| T4   | Minotaur -> Minotaur King | Medusa -> Medusa Queen      | Minotaur (minos) -> Minotaur Lord (minos_upg)                  |
+| T5   | Minotaur -> Minotaur King | Minotaur -> Minotaur King   | Medusa (medusa) -> Medusa Sculptor (medusa_upg)                |
+| T6   | Hydra                     | Manticore -> Scorpicore     | Hydra (hydra) -> Chthonic Hydra (hydra_upg)                    |
+| T7   | Red Dragon -> Black Dragon | Red Dragon -> Black Dragon  | Cave Dragon (black_dragon) -> Black Dragon (black_dragon_upg)  |
 
    Faction 6 (Necromancer <-> Necropolis):
 
-| Tier | H2                        | H3                          |
-|------|---------------------------|-----------------------------|
-| T1   | Skeleton                  | Skeleton -> Skeleton Warrior |
-| T2   | Zombie -> Mutant Zombie   | Walking Dead -> Zombie Lord |
-| T3   | Mummy -> Royal Mummy      | Wight -> Wraith             |
-| T4   | Vampire -> Vampire Lord   | Vampire -> Vampire Lord     |
-| T5   | Lich -> Power Lich        | Lich -> Power Lich          |
-| T6   | Lich -> Power Lich        | Black Knight -> Dread Knight |
-| T7   | Bone Dragon               | Bone Dragon -> Ghost Dragon |
+| Tier | H2                        | H3                          | HOMMOE unit (sid)                                                 |
+|------|---------------------------|-----------------------------|-------------------------------------------------------------------|
+| T1   | Skeleton                  | Skeleton -> Skeleton Warrior | Skeleton (skeleton) -> Skeleton Warrior (skeleton_upg)            |
+| T2   | Zombie -> Mutant Zombie   | Walking Dead -> Zombie Lord | Wight (flicker) -> Wraith (flicker_upg)                           |
+| T3   | Mummy -> Royal Mummy      | Wight -> Wraith             | Undead Pet (pet) -> Barghest (pet_upg)                            |
+| T4   | Vampire -> Vampire Lord   | Vampire -> Vampire Lord     | Graverobber (graverobber) -> Merchant of Death (graverobber_upg)  |
+| T5   | Lich -> Power Lich        | Lich -> Power Lich          | Lich (lich) -> Pestilent Lich (lich_upg)                          |
+| T6   | Lich -> Power Lich        | Black Knight -> Dread Knight | Dread Knight (avatar_of_war) -> Avatar of War (avatar_of_war_upg) |
+| T7   | Bone Dragon               | Bone Dragon -> Ghost Dragon | Vampire (vampire) -> Vampire Lord (vampire_upg)                   |
 
    Faction 7 (Warlock <-> Inferno):
 
-| Tier | H2                        | H3                          |
-|------|---------------------------|-----------------------------|
-| T1   | Centaur                   | Imp -> Familiar             |
-| T2   | Gargoyle                  | Gog -> Magog                |
-| T3   | Griffin                   | Hell Hound -> Cerberus      |
-| T4   | Minotaur -> Minotaur King | Demon -> Horned Demon       |
-| T5   | Minotaur -> Minotaur King | Pit Fiend -> Pit Lord       |
-| T6   | Hydra                     | Efreet -> Efreet Sultan     |
-| T7   | Green Dragon -> Red Dragon | Devil -> Arch Devil         |
+| Tier | H2                        | H3                          | HOMMOE unit (sid)                                           |
+|------|---------------------------|-----------------------------|-------------------------------------------------------------|
+| T1   | Centaur                   | Imp -> Familiar             | Parasite (trick_demon) -> Warden Parasite (trick_demon_upg) |
+| T2   | Gargoyle                  | Gog -> Magog                | Locust (locust) -> Overgrown Locust (locust_upg)            |
+| T3   | Griffin                   | Hell Hound -> Cerberus      | Hornet (wasp) -> Chanter (wasp_upg)                         |
+| T4   | Minotaur -> Minotaur King | Demon -> Horned Demon       | Scorpion (jaw) -> Volcanic Scorpion (jaw_upg)               |
+| T5   | Minotaur -> Minotaur King | Pit Fiend -> Pit Lord       | Reaver (godslayer) -> Menacing Reaver (godslayer_upg)       |
+| T6   | Hydra                     | Efreet -> Efreet Sultan     | Waurms (olgoi) -> Devourer (olgoi_upg)                      |
+| T7   | Green Dragon -> Red Dragon | Devil -> Arch Devil         | Hive Queen (hive_queen) -> Hive Mother (hive_queen_upg)     |
 
    Faction 8 (Barbarian <-> Fortress):
 
-| Tier | H2                        | H3                          |
-|------|---------------------------|-----------------------------|
-| T1   | Goblin                    | Gnoll -> Gnoll Marauder     |
-| T2   | Orc -> Orc Chief          | Lizardman -> Lizard Warrior |
-| T3   | Wolf                      | Serpent Fly -> Fire Dragon Fly |
-| T4   | Ogre -> Ogre Lord         | Basilisk -> Greater Basilisk |
-| T5   | Troll -> War Troll        | Gorgon -> Mighty Gorgon     |
-| T6   | Cyclops                   | Wyvern -> Wyvern Monarch    |
-| T7   | Cyclops                   | Hydra -> Chaos Hydra        |
+| Tier | H2                        | H3                          | HOMMOE unit (sid)                                            |
+|------|---------------------------|-----------------------------|--------------------------------------------------------------|
+| T1   | Goblin                    | Gnoll -> Gnoll Marauder     | Infernal Troglodyte (trogl_upg) -> Faun (elf_tracker)        |
+| T2   | Orc -> Orc Chief          | Lizardman -> Lizard Warrior | Halfling (halfling) -> Vine Iriyad (ent)                     |
+| T3   | Wolf                      | Serpent Fly -> Fire Dragon Fly | Animated Armor (animated_armor) -> Lightweaver (lightweaver) |
+| T4   | Ogre -> Ogre Lord         | Basilisk -> Greater Basilisk | Minotaur Lord (minos_upg) -> Herbomancer (druid)             |
+| T5   | Troll -> War Troll        | Gorgon -> Mighty Gorgon     | Cavalry (sunlight_cavalry) -> Sporemancer (druid_upg)        |
+| T6   | Cyclops                   | Wyvern -> Wyvern Monarch    | Avatar of War (avatar_of_war_upg) -> Waurms (olgoi)          |
+| T7   | Cyclops                   | Hydra -> Chaos Hydra        | Hydra (hydra) -> Chthonic Hydra (hydra_upg)                  |
 
    Faction 9 (Sorceress <-> Conflux):
 
-| Tier | H2                        | H3                          |
-|------|---------------------------|-----------------------------|
-| T1   | Sprite                    | Pixie -> Sprite             |
-| T2   | Air Element               | Air Elemental -> Storm Elemental |
-| T3   | Water Element             | Water Elemental -> Ice Elemental |
-| T4   | Fire Element              | Fire Elemental -> Energy Elemental |
-| T5   | Earth Element             | Earth Elemental -> Magma Elemental |
-| T6   | Unicorn                   | Psychic Elemental -> Magic Elemental |
-| T7   | Phoenix                   | Firebird -> Phoenix         |
+| Tier | H2                        | H3                          | HOMMOE unit (sid)                                         |
+|------|---------------------------|-----------------------------|-----------------------------------------------------------|
+| T1   | Sprite                    | Pixie -> Sprite             | Pixie (pixie) -> Pixie (pixie)                            |
+| T2   | Air Element               | Air Elemental -> Storm Elemental | Hoplet (twinkle) -> Vine Iriyad (ent)                     |
+| T3   | Water Element             | Water Elemental -> Ice Elemental | Lightweaver (lightweaver) -> Temple Griffin (griffin_upg) |
+| T4   | Fire Element              | Fire Elemental -> Energy Elemental | Lich (lich) -> Hierophant (lightweaver_upg)               |
+| T5   | Earth Element             | Earth Elemental -> Magma Elemental | Chanter (wasp_upg) -> Pestilent Lich (lich_upg)           |
+| T6   | Unicorn                   | Psychic Elemental -> Magic Elemental | Couatl (coatl) -> Vampire (vampire)                       |
+| T7   | Phoenix                   | Firebird -> Phoenix         | Phoenix (phoenix) -> Flaming Phoenix (phoenix_upg)        |
 
    The Conflux elementals belong to this faction in Heroes III; all
    of them (basic and extension) convert to the matching Heroes II
@@ -1010,29 +1026,29 @@ quest messages, garrison canTake, event players flags).
 
    Neutral creatures (matched by tier):
 
-| Tier | H2                        | H3                          |
-|------|---------------------------|-----------------------------|
-| T1   | Rogue                     | Rogue ; Halfling ; Peasant  |
-| T2   | Nomad                     | Nomad ; Boar ; Mummy        |
-| T3   | Medusa                    | Troll                       |
-| T3   | Ghost                     | UNDEFINE                    |
-| T4   | Genie                     | UNDEFINE                    |
-| T5   |                           | UNDEFINE                   |
-| T6   |                           | UNDEFINE                   |
-| T7   |                           | Azure Dragon ; Crystal Dragon ; Fairie Dragon ; Rust Dragon ; Enchanter ; Sharpshooter (UNDEFINE) |
+| Tier | H2                        | H3                          | HOMMOE unit (sid)                                                                                                                                                      |
+|------|---------------------------|-----------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| T1   | Rogue                     | Rogue ; Halfling ; Peasant  | Guile Infiltrator (assassin_upg) ; Halfling (halfling) ; Peasant (peasant)                                                                                             |
+| T2   | Nomad                     | Nomad ; Boar ; Mummy        | Temple Griffin (griffin_upg) ; Overgrown Locust (locust_upg) ; Animated Armor (animated_armor)                                                                         |
+| T3   | Medusa                    | Troll                       | Sporemancer (druid_upg)                                                                                                                                                |
+| T3   | Ghost                     | UNDEFINE                    | UNDEFINE                                                                                                                                                               |
+| T4   | Genie                     | UNDEFINE                    | UNDEFINE                                                                                                                                                               |
+| T5   |                           | UNDEFINE                   | UNDEFINE                                                                                                                                                               |
+| T6   |                           | UNDEFINE                   | UNDEFINE                                                                                                                                                               |
+| T7   |                           | Azure Dragon ; Crystal Dragon ; Fairie Dragon ; Rust Dragon ; Enchanter ; Sharpshooter (UNDEFINE) | Lich Dragon (lich_dragon) ; Lich Dragon (lich_dragon) ; Faerie Dragon (fairy_dragon) ; Lich Dragon (lich_dragon) ; Inquisitor (inquisitor) ; Minotaur Lord (minos_upg) |
 
    Random monsters (h3m object class -> fh2m id):
 
-| H3M class | H3M meaning          | FH2M id | FH2M name          |
-|-----------|----------------------|---------|---------------------|
-| 71        | any level            | 67      | Random Monster     |
-| 72        | level 1              | 68      | Random Monster 1   |
-| 73        | level 2              | 69      | Random Monster 2   |
-| 74        | level 3              | 70      | Random Monster 3   |
-| 75        | level 4              | 71      | Random Monster 4   |
-| 162       | level 5              | 71      | Random Monster 4   |
-| 163       | level 6              | 71      | Random Monster 4   |
-| 164       | level 7              | 71      | Random Monster 4   |
+| H3M class | H3M meaning          | FH2M id | FH2M name          | HOMMOE (.map)                                                                    |
+|-----------|----------------------|---------|---------------------|----------------------------------------------------------------------------------|
+| 71        | any level            | 67      | Random Monster     | "random-squad" object + propRandomSquads row { type, id, sids: [creature sids] } |
+| 72        | level 1              | 68      | Random Monster 1   | "random-squad" object + propRandomSquads row { type, id, sids: [creature sids] } |
+| 73        | level 2              | 69      | Random Monster 2   | "random-squad" object + propRandomSquads row { type, id, sids: [creature sids] } |
+| 74        | level 3              | 70      | Random Monster 3   | "random-squad" object + propRandomSquads row { type, id, sids: [creature sids] } |
+| 75        | level 4              | 71      | Random Monster 4   | "random-squad" object + propRandomSquads row { type, id, sids: [creature sids] } |
+| 162       | level 5              | 71      | Random Monster 4   | "random-squad" object + propRandomSquads row { type, id, sids: [creature sids] } |
+| 163       | level 6              | 71      | Random Monster 4   | "random-squad" object + propRandomSquads row { type, id, sids: [creature sids] } |
+| 164       | level 7              | 71      | Random Monster 4   | "random-squad" object + propRandomSquads row { type, id, sids: [creature sids] } |
 
    Heroes II random monsters stop at level 4: the h3m levels 5 to 7
    are converted to the highest Heroes II random level (Random
@@ -1061,109 +1077,110 @@ quest messages, garrison canTake, event players flags).
 
    Knight heroes (H2) <-> Castle heroes (H3):
 
-| Tier | H2                        | H3                          |
-|------|---------------------------|-----------------------------|
-|      | Lord Kilburn              | Orrin ; Adela               |
-|      | Sir Gallant               | Valeska ; Cuthbert          |
-|      | Ector                     | Edric ; Adelaide            |
-|      | Gwenneth                  | Sylvia ; Ingham             |
-|      | Tyro                      | Lord Haart ; Sanya          |
-|      | Ambrose                   | Sorsha ; Loynis             |
-|      | Ruby                      | Christian ; Caitlin         |
-|      | Maximus                   | Tyris                       |
-|      | Dimitry                   | Rion                        |
+| Tier | H2                        | H3                          | HOMMOE hero |
+|------|---------------------------|-----------------------------|-------------|
+|      | Lord Kilburn              | Orrin ; Adela               |             |
+|      | Sir Gallant               | Valeska ; Cuthbert          |             |
+|      | Ector                     | Edric ; Adelaide            |             |
+|      | Gwenneth                  | Sylvia ; Ingham             |             |
+|      | Tyro                      | Lord Haart ; Sanya          |             |
+|      | Ambrose                   | Sorsha ; Loynis             |             |
+|      | Ruby                      | Christian ; Caitlin         |             |
+|      | Maximus                   | Tyris                       |             |
+|      | Dimitry                   | Rion                        |             |
+|        |                             |                               | OE heroes: "<faction>_hero_<1..18>" sids (108 total, own names - see the Heroes section below); placed heroes = hero-spawner objects, spawns[].heroSid / propHeroes.heroSid |
 
    Barbarian heroes (H2) <-> Stronghold/Fortress heroes (H3):
 
-| Tier | H2                        | H3                          |
-|------|---------------------------|-----------------------------|
-|      | Thundax                   | Yog ; Vey ; Drakon ; Rosic  |
-|      | Fineous                   | Gurnisson ; Dessa ; Wystan ; Voy |
-|      | Jojosh                    | Jabarkas ; Terek ; Tazar ; Verdish |
-|      | Crag Hack                 | Crag Hack                   |
-|      | Jezebel                   | Shiva ; Zubin ; Alkin ; Merist |
-|      | Jaclyn                    | Gretchin ; Gundula ; Korbac ; Styg |
-|      | Ergon                     | Krellion ; Oris ; Gerwulf ; Andra |
-|      | Tsabu                     | Tyraxor ; Saurug ; Broghild ; Tiva |
-|      | Atlas                     | Gird ; Bron ; Mirlanda      |
+| Tier | H2                        | H3                          | HOMMOE hero |
+|------|---------------------------|-----------------------------|-------------|
+|      | Thundax                   | Yog ; Vey ; Drakon ; Rosic  |             |
+|      | Fineous                   | Gurnisson ; Dessa ; Wystan ; Voy |             |
+|      | Jojosh                    | Jabarkas ; Terek ; Tazar ; Verdish |             |
+|      | Crag Hack                 | Crag Hack                   |             |
+|      | Jezebel                   | Shiva ; Zubin ; Alkin ; Merist |             |
+|      | Jaclyn                    | Gretchin ; Gundula ; Korbac ; Styg |             |
+|      | Ergon                     | Krellion ; Oris ; Gerwulf ; Andra |             |
+|      | Tsabu                     | Tyraxor ; Saurug ; Broghild ; Tiva |             |
+|      | Atlas                     | Gird ; Bron ; Mirlanda      |             |
 
    Sorceress heroes (H2) <-> Rampart/Conflux heroes (H3):
 
-| Tier | H2                        | H3                          |
-|------|---------------------------|-----------------------------|
-|      | Astra                     | Mephala ; Kyrre ; Aeris ; Fiur ; Gelare |
-|      | Natasha                   | Ufretin ; Coronius ; Pasis ; Kalt ; Grindan |
-|      | Troyan                    | Jenova ; Uland ; Thunar ; Brissa |
-|      | Vatawna                   | Ryland ; Elleshar ; Ignissa ; Ciele |
-|      | Rebecca                   | Thorgrim ; Malcom ; Lacus ; Labetha |
-|      | Gem                       | Gem                         |
-|      | Ariel                     | Ivor ; Melodia ; Monere ; Inteus |
-|      | Carlawn                   | Clancy ; Alagar ; Erdamon ; Aenain |
-|      | Luna                      | Luna                        |
+| Tier | H2                        | H3                          | HOMMOE hero |
+|------|---------------------------|-----------------------------|-------------|
+|      | Astra                     | Mephala ; Kyrre ; Aeris ; Fiur ; Gelare |             |
+|      | Natasha                   | Ufretin ; Coronius ; Pasis ; Kalt ; Grindan |             |
+|      | Troyan                    | Jenova ; Uland ; Thunar ; Brissa |             |
+|      | Vatawna                   | Ryland ; Elleshar ; Ignissa ; Ciele |             |
+|      | Rebecca                   | Thorgrim ; Malcom ; Lacus ; Labetha |             |
+|      | Gem                       | Gem                         |             |
+|      | Ariel                     | Ivor ; Melodia ; Monere ; Inteus |             |
+|      | Carlawn                   | Clancy ; Alagar ; Erdamon ; Aenain |             |
+|      | Luna                      | Luna                        |             |
 
    Warlock heroes (H2) <-> Dungeon/Inferno heroes (H3):
 
-| Tier | H2                        | H3                          |
-|------|---------------------------|-----------------------------|
-|      | Arie                      | Fiona ; Ayden ; Lorelei ; Jaegar |
-|      | Alamar                    | Alamar                      |
-|      | Vesper                    | Rashka ; Xyron ; Arlach ; Malekith |
-|      | Crodo                     | Marius ; Axsis ; Dace ; Jeddite |
-|      | Barok                     | Ignatius ; Olema ; Ajit ; Geon |
-|      | Kastore                   | Octavia ; Calid ; Damacon ; Deemer |
-|      | Agar                      | Calh ; Ash ; Gunnar ; Sephinroth |
-|      | Falagar                   | Pyre ; Zydar ; Synca ; Darkstorn |
-|      | Wrathmont                 | Nymus ; Xarfax ; Shakti     |
+| Tier | H2                        | H3                          | HOMMOE hero |
+|------|---------------------------|-----------------------------|-------------|
+|      | Arie                      | Fiona ; Ayden ; Lorelei ; Jaegar |             |
+|      | Alamar                    | Alamar                      |             |
+|      | Vesper                    | Rashka ; Xyron ; Arlach ; Malekith |             |
+|      | Crodo                     | Marius ; Axsis ; Dace ; Jeddite |             |
+|      | Barok                     | Ignatius ; Olema ; Ajit ; Geon |             |
+|      | Kastore                   | Octavia ; Calid ; Damacon ; Deemer |             |
+|      | Agar                      | Calh ; Ash ; Gunnar ; Sephinroth |             |
+|      | Falagar                   | Pyre ; Zydar ; Synca ; Darkstorn |             |
+|      | Wrathmont                 | Nymus ; Xarfax ; Shakti     |             |
 
    Wizard heroes (H2) <-> Tower heroes (H3):
 
-| Tier | H2                        | H3                          |
-|------|---------------------------|-----------------------------|
-|      | Myra                      | Piquedram ; Astral          |
-|      | Flint                     | Thane ; Serena              |
-|      | Dawn                      | Josephine ; Daremyth        |
-|      | Halon                     | Halon                       |
-|      | Myrini                    | Neela ; Theodorus           |
-|      | Wilfrey                   | Torosar ; Cyra              |
-|      | Sarakin                   | Fafner ; Aine               |
-|      | Kalindra                  | Rissa                       |
-|      | Mandigal                  | Iona                        |
+| Tier | H2                        | H3                          | HOMMOE hero |
+|------|---------------------------|-----------------------------|-------------|
+|      | Myra                      | Piquedram ; Astral          |             |
+|      | Flint                     | Thane ; Serena              |             |
+|      | Dawn                      | Josephine ; Daremyth        |             |
+|      | Halon                     | Halon                       |             |
+|      | Myrini                    | Neela ; Theodorus           |             |
+|      | Wilfrey                   | Torosar ; Cyra              |             |
+|      | Sarakin                   | Fafner ; Aine               |             |
+|      | Kalindra                  | Rissa                       |             |
+|      | Mandigal                  | Iona                        |             |
 
    Necromancer heroes (H2) <-> Necropolis heroes (H3):
 
-| Tier | H2                        | H3                          |
-|------|---------------------------|-----------------------------|
-|      | Zom                       | Straker ; Septienna         |
-|      | Darlana                   | Vokial ; Aislinn            |
-|      | Zam                       | Moandor ; Nimbus            |
-|      | Ranloo                    | Charna ; Thant              |
-|      | Charity                   | Tamika ; Xsi                |
-|      | Rialdo                    | Isra ; Vidomina             |
-|      | Roxana                    | Clavius ; Nagash            |
-|      | Sandro                    | Sandro                      |
-|      | Celia                     | Galthran                    |
+| Tier | H2                        | H3                          | HOMMOE hero |
+|------|---------------------------|-----------------------------|-------------|
+|      | Zom                       | Straker ; Septienna         |             |
+|      | Darlana                   | Vokial ; Aislinn            |             |
+|      | Zam                       | Moandor ; Nimbus            |             |
+|      | Ranloo                    | Charna ; Thant              |             |
+|      | Charity                   | Tamika ; Xsi                |             |
+|      | Rialdo                    | Isra ; Vidomina             |             |
+|      | Roxana                    | Clavius ; Nagash            |             |
+|      | Sandro                    | Sandro                      |             |
+|      | Celia                     | Galthran                    |             |
 
    Campaign and expansion heroes (H2) <-> Heroes III counterparts:
 
-| Tier | H2                        | H3                          |
-|------|---------------------------|-----------------------------|
-|      | Roland                    | Roland                      |
-|      | Lord Corlagon             | UNDEFINE                    |
-|      | Sister Eliza              | UNDEFINE                    |
-|      | Archibald                 | UNDEFINE                    |
-|      | Lord Halton               | UNDEFINE                    |
-|      | Brother Brax              | UNDEFINE                    |
-|      | Solmyr                    | Solmyr                      |
-|      | Dainwin                   | UNDEFINE                    |
-|      | Mog                       | UNDEFINE                    |
-|      | Uncle Ivan                | UNDEFINE                    |
-|      | Joseph                    | UNDEFINE                    |
-|      | Gallavant                 | UNDEFINE                    |
-|      | Elderian                  | UNDEFINE                    |
-|      | Ceallach                  | UNDEFINE                    |
-|      | Drakonia                  | UNDEFINE                    |
-|      | Martine                   | UNDEFINE                    |
-|      | Jarkonas                  | UNDEFINE                    |
+| Tier | H2                        | H3                          | HOMMOE hero |
+|------|---------------------------|-----------------------------|-------------|
+|      | Roland                    | Roland                      |             |
+|      | Lord Corlagon             | UNDEFINE                    |             |
+|      | Sister Eliza              | UNDEFINE                    |             |
+|      | Archibald                 | UNDEFINE                    |             |
+|      | Lord Halton               | UNDEFINE                    |             |
+|      | Brother Brax              | UNDEFINE                    |             |
+|      | Solmyr                    | Solmyr                      |             |
+|      | Dainwin                   | UNDEFINE                    |             |
+|      | Mog                       | UNDEFINE                    |             |
+|      | Uncle Ivan                | UNDEFINE                    |             |
+|      | Joseph                    | UNDEFINE                    |             |
+|      | Gallavant                 | UNDEFINE                    |             |
+|      | Elderian                  | UNDEFINE                    |             |
+|      | Ceallach                  | UNDEFINE                    |             |
+|      | Drakonia                  | UNDEFINE                    |             |
+|      | Martine                   | UNDEFINE                    |             |
+|      | Jarkonas                  | UNDEFINE                    |             |
 
 ████████████████████████████████████████████████████████████████████████
 ██                            Artifacts                             ██
@@ -1175,25 +1192,26 @@ quest messages, garrison canTake, event players flags).
    the ADVENTURE_ARTIFACTS object group starts at Arcane Necklace,
    id 9).
 
-| H3M id | H3M artifact                  | FH2M id | FH2M artifact          |
-|--------|-------------------------------|---------|-------------------------|
-| 0      | Spell Book                    | 82      | Magic Book              |
-| 1      | Spell Scroll                  | 87      | Spell Scroll            |
-| 4      | Ballista                      | 22      | Ballista                |
-| 5      | Ammo Cart                     | 69      | Ammo Cart               |
-| 91     | Golden Bow                    | 64      | Golden Bow              |
-| 97     | Necklace of Swiftness         | 35      | Traveler's Boots        |
-| 98     | Boots of Speed                | 40      | True Compass            |
-| 105    | Pendant of Free Will          | 57      | Pendant of Free Will    |
-| 109    | Everflowing Crystal Cloak     | 77      | Endless Pouch of Crystal|
-| 110    | Ring of Infinite Gems         | 74      | Endless Pouch of Gems   |
-| 111    | Everpouring Vial of Mercury   | 73      | Endless Vial of Mercury |
-| 112    | Inexhaustible Cart of Ore     | 76      | Endless Cart of Ore     |
-| 113    | Eversmoking Ring of Sulfur     | 72      | Endless Pouch of Sulfur |
-| 114    | Inexhaustible Cart of Lumber   | 75      | Endless Cord of Wood    |
-| 115    | Endless Sack of Gold           | 31      | Endless Sack of Gold    |
-| 116    | Endless Bag of Gold           | 32      | Endless Bag of Gold     |
-| 117    | Endless Purse of Gold         | 33      | Endless Purse of Gold   |
+| H3M id | H3M artifact                  | FH2M id | FH2M artifact          | HOMMOE (.map)                                                                                                                                          |
+|--------|-------------------------------|---------|-------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 0      | Spell Book                    | 82      | Magic Book              |                                                                                                                                                        |
+| 1      | Spell Scroll                  | 87      | Spell Scroll            |                                                                                                                                                        |
+| 4      | Ballista                      | 22      | Ballista                |                                                                                                                                                        |
+| 5      | Ammo Cart                     | 69      | Ammo Cart               |                                                                                                                                                        |
+| 91     | Golden Bow                    | 64      | Golden Bow              |                                                                                                                                                        |
+| 97     | Necklace of Swiftness         | 35      | Traveler's Boots        |                                                                                                                                                        |
+| 98     | Boots of Speed                | 40      | True Compass            |                                                                                                                                                        |
+| 105    | Pendant of Free Will          | 57      | Pendant of Free Will    |                                                                                                                                                        |
+| 109    | Everflowing Crystal Cloak     | 77      | Endless Pouch of Crystal|                                                                                                                                                        |
+| 110    | Ring of Infinite Gems         | 74      | Endless Pouch of Gems   |                                                                                                                                                        |
+| 111    | Everpouring Vial of Mercury   | 73      | Endless Vial of Mercury |                                                                                                                                                        |
+| 112    | Inexhaustible Cart of Ore     | 76      | Endless Cart of Ore     |                                                                                                                                                        |
+| 113    | Eversmoking Ring of Sulfur     | 72      | Endless Pouch of Sulfur |                                                                                                                                                        |
+| 114    | Inexhaustible Cart of Lumber   | 75      | Endless Cord of Wood    |                                                                                                                                                        |
+| 115    | Endless Sack of Gold           | 31      | Endless Sack of Gold    |                                                                                                                                                        |
+| 116    | Endless Bag of Gold           | 32      | Endless Bag of Gold     |                                                                                                                                                        |
+| 117    | Endless Purse of Gold         | 33      | Endless Purse of Gold   |                                                                                                                                                        |
+|          |                                  |           |                           | OE artifact sids come from the game Core.zip catalog (reference src/data/artifacts.json, e.g. "ancient_idol_artifact"); no H2/H3 id correspondence yet |
 
    H3M artifacts with no Heroes II equivalent (UNDEFINE): the
    remaining ones (the faction-specific weapons/armor like the
@@ -1240,37 +1258,38 @@ quest messages, garrison canTake, event players flags).
    starting at 0 with Summon Boat) and from the fh2m files (fheroes2
    Spell enumeration, starting at 1 with Fireball).
 
-| H3M id | H3M spell           | FH2M id | FH2M spell           |
-|--------|----------------------|---------|------------------------|
-| 0      | Summon Boat         | 56      | Summon Boat          |
-| 2      | Visions             | 60      | Visions               |
-| 3      | View Earth          | 49      | View Mines           |
-| 5      | View Air            | 53      | View Heroes          |
-| 8      | Dimension Door      | 57      | Dimension Door        |
-| 9      | Town Portal         | 59      | Town Portal           |
-| 14     | Earthquake          | 48      | Earthquake            |
-| 15     | Magic Arrow         | 26      | Magic Arrow           |
-| 17     | Lightning Bolt      | 3       | Lightning Bolt        |
-| 19     | Chain Lightning     | 4       | Chain Lightning       |
-| 21     | Fireball            | 1       | Fireball              |
-| 23     | Meteor Shower       | 30      | Meteor Shower         |
-| 24     | Death Ripple        | 36      | Death Ripple          |
-| 26     | Armageddon          | 28      | Armageddon            |
-| 27     | Shield              | 42      | Shield                |
-| 34     | Anti Magic          | 23      | Anti Magic            |
-| 35     | Dispel              | 24      | Dispel                |
-| 37     | Cure                | 6       | Cure                  |
-| 39     | Animate Dead        | 40      | Animate Dead          |
-| 41     | Bless               | 15      | Bless                 |
-| 42     | Curse               | 19      | Curse                 |
-| 43     | Bloodlust           | 39      | Bloodlust              |
-| 46     | Stone Skin          | 17      | Stoneskin             |
-| 47     | Disrupting Ray      | 35      | Disrupting Ray         |
-| 53     | Haste               | 10      | Haste                 |
-| 54     | Slow                | 12      | Slow                  |
-| 60     | Hypnotize           | 32      | Hypnotize             |
-| 62     | Blind               | 14      | Blind                 |
-| 63     | Teleport            | 5       | Teleport              |
+| H3M id | H3M spell           | FH2M id | FH2M spell           | HOMMOE (.map)                                                                                                    |
+|--------|----------------------|---------|------------------------|------------------------------------------------------------------------------------------------------------------|
+| 0      | Summon Boat         | 56      | Summon Boat          |                                                                                                                  |
+| 2      | Visions             | 60      | Visions               |                                                                                                                  |
+| 3      | View Earth          | 49      | View Mines           |                                                                                                                  |
+| 5      | View Air            | 53      | View Heroes          |                                                                                                                  |
+| 8      | Dimension Door      | 57      | Dimension Door        |                                                                                                                  |
+| 9      | Town Portal         | 59      | Town Portal           |                                                                                                                  |
+| 14     | Earthquake          | 48      | Earthquake            |                                                                                                                  |
+| 15     | Magic Arrow         | 26      | Magic Arrow           |                                                                                                                  |
+| 17     | Lightning Bolt      | 3       | Lightning Bolt        |                                                                                                                  |
+| 19     | Chain Lightning     | 4       | Chain Lightning       |                                                                                                                  |
+| 21     | Fireball            | 1       | Fireball              |                                                                                                                  |
+| 23     | Meteor Shower       | 30      | Meteor Shower         |                                                                                                                  |
+| 24     | Death Ripple        | 36      | Death Ripple          |                                                                                                                  |
+| 26     | Armageddon          | 28      | Armageddon            |                                                                                                                  |
+| 27     | Shield              | 42      | Shield                |                                                                                                                  |
+| 34     | Anti Magic          | 23      | Anti Magic            |                                                                                                                  |
+| 35     | Dispel              | 24      | Dispel                |                                                                                                                  |
+| 37     | Cure                | 6       | Cure                  |                                                                                                                  |
+| 39     | Animate Dead        | 40      | Animate Dead          |                                                                                                                  |
+| 41     | Bless               | 15      | Bless                 |                                                                                                                  |
+| 42     | Curse               | 19      | Curse                 |                                                                                                                  |
+| 43     | Bloodlust           | 39      | Bloodlust              |                                                                                                                  |
+| 46     | Stone Skin          | 17      | Stoneskin             |                                                                                                                  |
+| 47     | Disrupting Ray      | 35      | Disrupting Ray         |                                                                                                                  |
+| 53     | Haste               | 10      | Haste                 |                                                                                                                  |
+| 54     | Slow                | 12      | Slow                  |                                                                                                                  |
+| 60     | Hypnotize           | 32      | Hypnotize             |                                                                                                                  |
+| 62     | Blind               | 14      | Blind                 |                                                                                                                  |
+| 63     | Teleport            | 5       | Teleport              |                                                                                                                  |
+|          |                        |           |                          | OE spell sids (reference src/data/spells.json, e.g. "space_1_magic_early_start"); no H2/H3 id correspondence yet |
 
    H3M spells with no Heroes II equivalent (UNDEFINE): Scuttle
    Boat, Disguise, Fly, Water Walk, Quicksand, Land Mine, Force
@@ -1304,21 +1323,22 @@ quest messages, garrison canTake, event players flags).
    with Pathfinding). Levels are identical in both games (1 Basic,
    2 Advanced, 3 Expert).
 
-| H3M id | H3M skill     | FH2M id | FH2M skill   |
-|--------|---------------|---------|---------------|
-| 0      | Pathfinding   | 1       | Pathfinding   |
-| 1      | Archery       | 2       | Archery       |
-| 2      | Logistics     | 3       | Logistics     |
-| 3      | Scouting      | 4       | Scouting      |
-| 4      | Diplomacy     | 5       | Diplomacy     |
-| 6      | Leadership    | 7       | Leadership    |
-| 7      | Wisdom        | 8       | Wisdom        |
-| 8      | Mysticism     | 9       | Mysticism     |
-| 9      | Luck          | 10      | Luck          |
-| 10     | Ballistics    | 11      | Ballistics    |
-| 11     | Eagle Eye     | 12      | Eagle Eye     |
-| 12     | Necromancy    | 13      | Necromancy    |
-| 13     | Estates       | 14      | Estates      |
+| H3M id | H3M skill     | FH2M id | FH2M skill   | HOMMOE (.map)                                           |
+|--------|---------------|---------|---------------|---------------------------------------------------------|
+| 0      | Pathfinding   | 1       | Pathfinding   |                                                         |
+| 1      | Archery       | 2       | Archery       |                                                         |
+| 2      | Logistics     | 3       | Logistics     |                                                         |
+| 3      | Scouting      | 4       | Scouting      |                                                         |
+| 4      | Diplomacy     | 5       | Diplomacy     |                                                         |
+| 6      | Leadership    | 7       | Leadership    |                                                         |
+| 7      | Wisdom        | 8       | Wisdom        |                                                         |
+| 8      | Mysticism     | 9       | Mysticism     |                                                         |
+| 9      | Luck          | 10      | Luck          |                                                         |
+| 10     | Ballistics    | 11      | Ballistics    |                                                         |
+| 11     | Eagle Eye     | 12      | Eagle Eye     |                                                         |
+| 12     | Necromancy    | 13      | Necromancy    |                                                         |
+| 13     | Estates       | 14      | Estates      |                                                         |
+|          |                 |           |                 | OE skill sids live in the game Core.zip; not mapped yet |
 
    H3M secondary skills with no Heroes II equivalent (Navigation,
    Fire/Air/Water/Earth Magic, Scholar, Tactics, Artillery,
@@ -1330,69 +1350,31 @@ quest messages, garrison canTake, event players flags).
    Navigation described above; all the other Heroes II skills exist in
    Heroes III.
 
-Olden Era (.map / hommoe) values
+Olden Era (.map / hommoe) specifics
 ================================================================
 
-   Values as they appear in the unified JSON files for a "hommoe"
-   source (sourceGame "hommoe") and their equivalents in the .map
-   container (parsed/ written by hommoedecoder.py). OE-specific source
-   data lives in the container header and in blocks 1 (scenario) and 2
-   (adventure); blocks 3/4 (dialogQuestData / commentAiData) are the
-   scripting layer, carried verbatim in the unified "scripts" section.
-   Sources: the local references (references/map-editor-json-tool,
+   The tables above now carry a "HOMMOE (.map)" column with the Olden
+   Era equivalent of each unified value (an empty cell means the
+   conversion is not known yet). This section keeps only the structures
+   that have no row in those tables. Sources: the local references
+   (references/map-editor-json-tool,
    references/olden-era-map-vs-code-inspector) and the real maps in
-   input/*.map; the object-level table is oe_object_correspondence.json
-   and the no-equivalent list is no_olden_era_equivalent.english.txt.
+   input/*.map; the object-level correspondence is data-driven from
+   oe_object_correspondence.json and the no-equivalent list is
+   no_olden_era_equivalent.english.txt.
 
-sourceGame / sourceVersion
+   Container layout: a single gzip stream (magic 1F 8B; the real maps
+   all use FLG=0, MTIME=0, XFL=0, OS=10, reproducible byte-for-byte)
+   holding [varint len][32-hex hash] [varint len][version string]
+   [2-byte separator: 05 00 = 3 blocks, 0D 00 = 4 blocks (bit 0x08)],
+   then N blocks of [varint len + UTF-8 JSON], plus an optional opaque
+   tail. Canonical block names: scenario, adventure, dialogQuestData,
+   commentAiData. Blocks 3/4 are the scripting layer, carried verbatim
+   in the unified "scripts" section; the optional same-name .json
+   sidecar is the editor's trimmed copy of block 4.
+
+Faction display names
 ----------------------------------------------------------------
-
-| JSON unified    | HOMMOE (.map)                                        |
-|-----------------|------------------------------------------------------|
-| "hommoe"        | gzip stream (magic 1F 8B), no inner magic string     |
-| sourceVersion   | container header version string, e.g. "0.72.30"      |
-| e.g. "0.72.30"  | (observed: "0.72.30", "0.80.47", "0.82.08"; the       |
-|                 | separator byte tells the block count: 05 00 = 3      |
-|                 | blocks, 0D 00 = 4 blocks)                            |
-
-difficulty
-----------------------------------------------------------------
-
-| JSON unified | HOMMOE (.map)                                        |
-|--------------|------------------------------------------------------|
-| "Normal"     | block 1 startSettings: three integer indexes,        |
-| (default)    | EconomicDifficulty / NeutralsDifficulty /            |
-|              | AiDifficulty (indexes into Core.zip difficulty       |
-|              | tables, e.g. DB/difficulties_lobby.json); observed   |
-|              | (0, 0, 1) on the real samples. Not a 1:1 mapping of   |
-|              | the unified difficulty: OE splits it in three.       |
-
-Player colors
-----------------------------------------------------------------
-
-| JSON unified | HOMMOE (.map)                                        |
-|--------------|------------------------------------------------------|
-| "Blue",      | block 1 spawns.spawns[] entry per spawner object,    |
-| "Green", ... | with colorId = -1 on all real maps; the color comes  |
-| "Pink"       | from the spawn order (owner 1..N -> Blue, Green,     |
-|              | Red, Yellow, Orange, Purple, Tan, Teal, Pink;        |
-|              | HOMMOE_PLAYER_COLORS in unified.py). Same names as   |
-|              | H3M. spawnType: 0=Player(human), 1=Bot(AI), 2=open   |
-|              | slot. spawnPointType: 0=City, 1=Hero.                |
-
-Races / factions (playerDetails[].race / sourceRace)
-----------------------------------------------------------------
-
-| JSON unified | FH2M           | H3M           | HOMMOE factionSid (block 1 spawns / propCities) |
-|--------------|----------------|---------------|--------------------------------------------------|
-| "Temple"     | "Knight"       | "Castle"      | "human"                                          |
-| "Necropolis" | "Necromancer"  | "Necropolis"  | "undead" (hero sids use the "necro" prefix)      |
-| "Dungeon"    | "Warlock"      | "Dungeon"     | "dungeon"                                        |
-| "Grove"      | "Sorceress"    | "Rampart"     | "nature"                                         |
-| "Hive"       | "Barbarian"    | "Stronghold"  | "demons" (hero sids use "demon")                 |
-| "Schism"     | UNDEFINE (no   | "Inferno"/    | "unfrozen"                                       |
-|              | 7th faction)  | "Fortress"    |                                                  |
-| "Random"     | "Random"       | "Random"      | "" (empty factionSid on real maps)               |
 
    Display names verified against Core.zip localization via the
    reference's factions.ts: human->Temple, undead/necros->Necropolis,
@@ -1414,46 +1396,15 @@ Heroes
    keep their identity only through sourceHeroSid when the source is
    already a .map.
 
-Victory condition type
+Loss condition
 ----------------------------------------------------------------
-
-| JSON unified     | HOMMOE (.map)                                     |
-|------------------|---------------------------------------------------|
-| "defeatEveryone" | adventure.settings.mapWinConditions[] entry with  |
-|                  | typeWinCondition 0 (classic); a fresh RMG map      |
-|                  | ships 0,2,1                                        |
-| "desertion"      | typeWinCondition 1                                |
-| "heroLighting"   | typeWinCondition 2                                |
-| "captureTown"    | typeWinCondition 3 (LostStartCity) or 8 (city      |
-|                  | hold)                                             |
-| "killHero"       | typeWinCondition 4 (guardian's demise,            |
-|                  | LostStartHero)                                    |
-| "finalBattle"    | typeWinCondition 5                                |
-| "tournament"     | typeWinCondition 9                                |
-| "scriptedVictory"| no mapWinConditions entry; a GameVictory action    |
-|                  | in block 4 (commentAiData)                        |
-| other unified    | UNDEFINE (kept as raw int in victoryCondition.    |
-| types            | metadata)                                         |
 
    Loss condition: OE has no structured loss list; "loseEverything" is
    the default unless the scripts use GameLose / SideLose actions
    (unified lossCondition.scriptHasLoseAction).
 
-Terrain (terrain.levels[0].grid[].terrain / sourceTerrain)
+Per-tile layers
 ----------------------------------------------------------------
-
-| JSON unified | HOMMOE (.map)                                        |
-|--------------|------------------------------------------------------|
-| "Grass"      | adventure.tilesMap id 1 (biomes: 1=Grass .. 7=Dirt;  |
-| "Desert"     | 2=Sand/Desert, 3=Deathland/Wasteland, 4=Snow,        |
-| "Wasteland"  | 5=Autumn/Swamp, 6=Lava, 7=Dirt; HOMMOE_TILE_TERRAINS) |
-| "Snow"       | sourceTerrain keeps "tile:<id>"                      |
-| "Swamp"      |                                                      |
-| "Lava"       |                                                      |
-| "Dirt"       |                                                      |
-| "Water"      | tilesMap basin id (2) + waterMap id (observed 7 =    |
-|              | "Water (Grass)"); sourceTerrain "water:<id>"         |
-| "Rock"/"Subterranean"/"Beach" | UNDEFINE (fold into Dirt/basin on OE maps) |
 
    Per-tile: sourceLevel = levelsMap (elevation tier, -1 = basin),
    sourceClimb = climbsMap (slope marker on the lower side of a level
