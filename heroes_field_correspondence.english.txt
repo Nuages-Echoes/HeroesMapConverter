@@ -10,6 +10,11 @@ Values used in the unified JSON format and their equivalents in .fh2m and .h3m
    the .h3m files (as parsed by h3decoder.py). UNDEFINE means the value
    has no direct or obvious equivalent in that format.
 
+   The Olden Era (.map, parsed by hommoedecoder.py, "hommoe" source game)
+   values are documented in the dedicated section at the end of this
+   file ("Olden Era (.map / hommoe) values"): the tables above keep their
+   three columns, the OE equivalents live there.
+
    FH2M values marked with an enum come from the fheroes2 source code;
    the number in parentheses is the raw value stored in the file.
 
@@ -1324,3 +1329,176 @@ quest messages, garrison canTake, event players flags).
    FH2M secondary skills with no h3m equivalent: none besides
    Navigation described above; all the other Heroes II skills exist in
    Heroes III.
+
+Olden Era (.map / hommoe) values
+================================================================
+
+   Values as they appear in the unified JSON files for a "hommoe"
+   source (sourceGame "hommoe") and their equivalents in the .map
+   container (parsed/ written by hommoedecoder.py). OE-specific source
+   data lives in the container header and in blocks 1 (scenario) and 2
+   (adventure); blocks 3/4 (dialogQuestData / commentAiData) are the
+   scripting layer, carried verbatim in the unified "scripts" section.
+   Sources: the local references (references/map-editor-json-tool,
+   references/olden-era-map-vs-code-inspector) and the real maps in
+   input/*.map; the object-level table is oe_object_correspondence.json
+   and the no-equivalent list is no_olden_era_equivalent.english.txt.
+
+sourceGame / sourceVersion
+----------------------------------------------------------------
+
+| JSON unified    | HOMMOE (.map)                                        |
+|-----------------|------------------------------------------------------|
+| "hommoe"        | gzip stream (magic 1F 8B), no inner magic string     |
+| sourceVersion   | container header version string, e.g. "0.72.30"      |
+| e.g. "0.72.30"  | (observed: "0.72.30", "0.80.47", "0.82.08"; the       |
+|                 | separator byte tells the block count: 05 00 = 3      |
+|                 | blocks, 0D 00 = 4 blocks)                            |
+
+difficulty
+----------------------------------------------------------------
+
+| JSON unified | HOMMOE (.map)                                        |
+|--------------|------------------------------------------------------|
+| "Normal"     | block 1 startSettings: three integer indexes,        |
+| (default)    | EconomicDifficulty / NeutralsDifficulty /            |
+|              | AiDifficulty (indexes into Core.zip difficulty       |
+|              | tables, e.g. DB/difficulties_lobby.json); observed   |
+|              | (0, 0, 1) on the real samples. Not a 1:1 mapping of   |
+|              | the unified difficulty: OE splits it in three.       |
+
+Player colors
+----------------------------------------------------------------
+
+| JSON unified | HOMMOE (.map)                                        |
+|--------------|------------------------------------------------------|
+| "Blue",      | block 1 spawns.spawns[] entry per spawner object,    |
+| "Green", ... | with colorId = -1 on all real maps; the color comes  |
+| "Pink"       | from the spawn order (owner 1..N -> Blue, Green,     |
+|              | Red, Yellow, Orange, Purple, Tan, Teal, Pink;        |
+|              | HOMMOE_PLAYER_COLORS in unified.py). Same names as   |
+|              | H3M. spawnType: 0=Player(human), 1=Bot(AI), 2=open   |
+|              | slot. spawnPointType: 0=City, 1=Hero.                |
+
+Races / factions (playerDetails[].race / sourceRace)
+----------------------------------------------------------------
+
+| JSON unified | FH2M           | H3M           | HOMMOE factionSid (block 1 spawns / propCities) |
+|--------------|----------------|---------------|--------------------------------------------------|
+| "Temple"     | "Knight"       | "Castle"      | "human"                                          |
+| "Necropolis" | "Necromancer"  | "Necropolis"  | "undead" (hero sids use the "necro" prefix)      |
+| "Dungeon"    | "Warlock"      | "Dungeon"     | "dungeon"                                        |
+| "Grove"      | "Sorceress"    | "Rampart"     | "nature"                                         |
+| "Hive"       | "Barbarian"    | "Stronghold"  | "demons" (hero sids use "demon")                 |
+| "Schism"     | UNDEFINE (no   | "Inferno"/    | "unfrozen"                                       |
+|              | 7th faction)  | "Fortress"    |                                                  |
+| "Random"     | "Random"       | "Random"      | "" (empty factionSid on real maps)               |
+
+   Display names verified against Core.zip localization via the
+   reference's factions.ts: human->Temple, undead/necros->Necropolis,
+   dungeon->Dungeon, nature->Grove, demons/demon->Hive,
+   unfrozen->Schism, neutral->Neutral. FACTION_ORDER (game order):
+   Temple, Necropolis, Dungeon, Grove, Hive, Schism, Neutral.
+
+Heroes
+----------------------------------------------------------------
+
+   OE has its own 108 heroes (6 factions x 18), identified by sids of
+   the form "<faction>_hero_<N>" (human_hero_1, necro_hero_1,
+   demon_hero_1, dungeon_hero_1, nature_hero_1, unfrozen_hero_1; names
+   from the reference's src/data/heroes.json, e.g. human_hero_1 =
+   "Ister", demon_hero_1 = "Niev"). OE hero names do NOT match H2/H3
+   hero names, so there is no per-hero correspondence: placed heroes
+   are "hero-spawner" objects, the chosen hero is the spawns[].heroSid
+   / propHeroes.heroSid field (empty = random/default). H2/H3 heroes
+   keep their identity only through sourceHeroSid when the source is
+   already a .map.
+
+Victory condition type
+----------------------------------------------------------------
+
+| JSON unified     | HOMMOE (.map)                                     |
+|------------------|---------------------------------------------------|
+| "defeatEveryone" | adventure.settings.mapWinConditions[] entry with  |
+|                  | typeWinCondition 0 (classic); a fresh RMG map      |
+|                  | ships 0,2,1                                        |
+| "desertion"      | typeWinCondition 1                                |
+| "heroLighting"   | typeWinCondition 2                                |
+| "captureTown"    | typeWinCondition 3 (LostStartCity) or 8 (city      |
+|                  | hold)                                             |
+| "killHero"       | typeWinCondition 4 (guardian's demise,            |
+|                  | LostStartHero)                                    |
+| "finalBattle"    | typeWinCondition 5                                |
+| "tournament"     | typeWinCondition 9                                |
+| "scriptedVictory"| no mapWinConditions entry; a GameVictory action    |
+|                  | in block 4 (commentAiData)                        |
+| other unified    | UNDEFINE (kept as raw int in victoryCondition.    |
+| types            | metadata)                                         |
+
+   Loss condition: OE has no structured loss list; "loseEverything" is
+   the default unless the scripts use GameLose / SideLose actions
+   (unified lossCondition.scriptHasLoseAction).
+
+Terrain (terrain.levels[0].grid[].terrain / sourceTerrain)
+----------------------------------------------------------------
+
+| JSON unified | HOMMOE (.map)                                        |
+|--------------|------------------------------------------------------|
+| "Grass"      | adventure.tilesMap id 1 (biomes: 1=Grass .. 7=Dirt;  |
+| "Desert"     | 2=Sand/Desert, 3=Deathland/Wasteland, 4=Snow,        |
+| "Wasteland"  | 5=Autumn/Swamp, 6=Lava, 7=Dirt; HOMMOE_TILE_TERRAINS) |
+| "Snow"       | sourceTerrain keeps "tile:<id>"                      |
+| "Swamp"      |                                                      |
+| "Lava"       |                                                      |
+| "Dirt"       |                                                      |
+| "Water"      | tilesMap basin id (2) + waterMap id (observed 7 =    |
+|              | "Water (Grass)"); sourceTerrain "water:<id>"         |
+| "Rock"/"Subterranean"/"Beach" | UNDEFINE (fold into Dirt/basin on OE maps) |
+
+   Per-tile: sourceLevel = levelsMap (elevation tier, -1 = basin),
+   sourceClimb = climbsMap (slope marker on the lower side of a level
+   boundary), sourceRoadIndex = roadsMap (road TYPE id per tile, 0/1/2
+   - not a direction bitfield like FH2M ROADS objects), rivers are a
+   separate overlay: adventure.rivers[] = [{ sid, randomSeed, nodes:
+   [{ n, s, isWaterfall }] }] (sparse node list, s = shape code 0-14;
+   river tiles do NOT set waterMap). Kept raw in objects.sourceRivers.
+
+Resources
+----------------------------------------------------------------
+
+| JSON unified (FH2M order) | H3M resource subtype | HOMMOE resource sid (resource_* objects, GiveRes) |
+|---------------------------|----------------------|---------------------------------------------------|
+| "wood"                    | 0                    | "wood"                                            |
+| "mercury"                 | 1                    | "mercury"                                         |
+| "ore"                     | 2                    | "ore"                                             |
+| "sulfur"                  | 3                    | "dust"                                            |
+| "crystal"                 | 4                    | "crystals"                                        |
+| "gems"                    | 5                    | "gemstones"                                      |
+| "gold"                    | 6                    | "gold"                                            |
+
+   (BASIC_RESOURCE_IDS in the reference's src/lib/resources.ts.)
+
+Rumors / daily events / scripts
+----------------------------------------------------------------
+
+   OE has no rumors and no timed daily events. The unified "rumors" and
+   "dailyEvents" lists are empty for hommoe sources; H2 rumors vanish
+   and H2 dailyEvents / H3 timed Events convert to unified dailyEvents,
+   which become OE quest triggers (StartTurn + actions) in block 4.
+   The unified "scripts" section carries blocks 3/4 verbatim:
+   scripts.dialogQuestData, scripts.commentAiData ({ comment, aiRolesId,
+   counters[], interruptions[], quests[] }).
+
+Objects
+----------------------------------------------------------------
+
+   Per-object correspondence (unified group/index or h3m class -> OE
+   sid, both directions) is data-driven from oe_object_correspondence.json
+   (see also no_olden_era_equivalent.english.txt for the types with no
+   OE equivalent). OE placement: adventure.objects[] groups { sid,
+   ids[], nodes[], rotations[], levels[] } (levels is a float column),
+   adventure.squads[] for fixed squads, adventure.markers[] for editor
+   zones, adventure.objectsProperties for per-instance rows (propSquads,
+   propRandomSquads, propResParams, propRewardParams, propOwners,
+   propPortals, propCities, propSpawns, propHeroes, propEntities, ...).
+   Grid: node is flat row-major, x = node % sizeX, z = node // sizeX.
