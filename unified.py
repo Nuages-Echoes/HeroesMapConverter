@@ -1516,6 +1516,19 @@ def _hommoe_objects_to_unified(adventure, width):
                     ("selected", []),
                     ("monsterClass", monster_class),
                 ])
+    # Random-item objects: recover the H3 random-artifact class from the
+    # propRandomItems rarity bin (Treasure/Common=0 .. Relic/Legendary=3).
+    for obj_list in tiles.values():
+        for entry in obj_list:
+            if entry.get("sourceSid") != "random-item":
+                continue
+            row = (entry.get("properties") or {}).get("propRandomItems")
+            if not row:
+                continue
+            cls = HOMMOE_RARITY_TO_RANDOM_ARTIFACT_CLASS.get(int(row.get("rarity", 0) or 0))
+            if cls is not None:
+                entry["class"] = cls
+                entry["index"] = {66: 92, 67: 93, 68: 94, 69: 95}[cls]
     result = OrderedDict([("tiles", tiles)])
     if monster_metadata:
         result["monsterMetadata"] = monster_metadata
@@ -4093,6 +4106,17 @@ UNIFIED_TO_HOMMOE_WIN = {
     "defeatEveryone": 0, "captureTown": 8, "killHero": 4,
 }
 
+# H3 random-artifact object classes -> OE ERarity bin (numeric rarity in
+# propRandomItems rows). User mapping: Treasure <-> Common (0),
+# Minor <-> Rare (1), Major <-> Epic (2), Relic <-> Legendary (3).
+# Class 65 "any" gets no row: the game default (rarity 0) applies.
+HOMMOE_RANDOM_ARTIFACT_RARITY = {66: 0, 67: 1, 68: 2, 69: 3}
+# H3 artifact rarity class (H3M_ARTIFACT_CLASSES, 1-4) -> OE ERarity bin,
+# used for specific artifacts with no exact OE match (random-item fallback).
+HOMMOE_ARTIFACT_CLASS_RARITY = {1: 0, 2: 1, 3: 2, 4: 3}
+# reverse: OE ERarity bin -> H3 random-artifact object class
+HOMMOE_RARITY_TO_RANDOM_ARTIFACT_CLASS = {0: 66, 1: 67, 2: 68, 3: 69}
+
 HOMMOE_DEFAULT_VERSION = "0.72.30"
 
 
@@ -4398,6 +4422,7 @@ def unified_to_hommoe(unified):
             next_free = max(next_free, int(oid) + 1)
             group = obj.get("group")
             sid = obj.get("sourceSid")
+            ref = None
             if not sid:
                 if group in ("ROADS", "STREAMS"):
                     # Roads and rivers are stored in the terrain layer
@@ -4426,6 +4451,23 @@ def unified_to_hommoe(unified):
                                                   terrain_name)
                     if sid is None:
                         sid = HOMMOE_GROUP_TO_SID.get(group)
+                if group == "ADVENTURE_ARTIFACTS" and sid == "random-item":
+                    # No exact OE artifact (or a random-artifact class):
+                    # random-item + a propRandomItems row with the right
+                    # rarity bin (Treasure/Common=0 .. Relic/Legendary=3).
+                    from correspondence import H3M_ARTIFACT_CLASSES
+                    h3_class = obj.get("class") if ref is None else ref[0]
+                    rarity = HOMMOE_RANDOM_ARTIFACT_RARITY.get(h3_class)
+                    if rarity is None and h3_class == 5:
+                        art_meta = (objects.get("artifactMetadata") or {}).get(str(oid)) or {}
+                        art = art_meta.get("artifact") or obj.get("subclass")
+                        cls = H3M_ARTIFACT_CLASSES.get(art)
+                        if cls is not None:
+                            rarity = HOMMOE_ARTIFACT_CLASS_RARITY.get(cls)
+                    if rarity is not None:
+                        prop_rows.setdefault("propRandomItems", []).append(OrderedDict([
+                            ("type", 0), ("id", oid), ("rarity", rarity),
+                        ]))
                 if not sid:
                     # No Olden Era equivalent for this object type.
                     HOMMOE_UNMAPPED_OBJECTS.append(OrderedDict([

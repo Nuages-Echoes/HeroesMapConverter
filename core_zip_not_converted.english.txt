@@ -16,7 +16,9 @@ skill_equivalents, oe_item_names, oe_skill_names).
 1. H3 artifacts with no OE artifact of the same name (123)
 ------------------------------------------------------------
 
-   They convert to the OE "random-item" object (lossy). H3 ids 0 (Spell Book)
+   They convert to the OE "random-item" object with a propRandomItems row of the
+   matching rarity (Treasure/Common=0, Minor/Rare=1, Major/Epic=2, Relic/Legendary=3),
+   so the rarity class is kept, only the exact artifact is lost. H3 ids 0 (Spell Book)
    and 1 (Spell Scroll) are special: OE has scroll map objects (scroll_box,
    enchanted_scroll_box, mythic_scroll_box) and magic_scroll items, but the
    spell carried by a scroll still needs the H3 spell -> OE magic sid table.

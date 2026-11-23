@@ -1224,7 +1224,12 @@ quest messages, garrison canTake, event players flags).
 |  124         |  Spellbinder's Hat                   |               |                             |                               Spellbinder’s Hat                                                                                                                                                                                                               |
 |  125         |  Shackles of War                     |               |                             |                               Shackles of War                                                                                                                                                                                                                 |
 |  126         |  Orb of Inhibition                   |               |                             |                               Orb of Inhibition                                                                                                                                                                                                               |
-|              |                                      |               |                             |  OE column: exact Core.zip name match (Core.zip DB/items + Lang/english; sid in oe_object_correspondence.json artifact_equivalents); other H3 artifacts fall back to "random-item" - list in core_zip_not_converted.english.txt                               |
+|              |                                      |               |                             | OE column: exact Core.zip name match (sid in oe_object_correspondence.json artifact_equivalents); other H3 artifacts fall back to "random-item" + a propRandomItems rarity row (see the paragraph below) - list in core_zip_not_converted.english.txt           |
+
+   Rarity mapping (H3 random-artifact classes and the rarity class of
+   unmatched specific artifacts -> OE ERarity bin in propRandomItems):
+   Treasure <-> Common 0, Minor <-> Rare 1, Major <-> Epic 2,
+   Relic <-> Legendary 3; H3 class 65 "any" gets no row (game default).
 
    H3M artifacts with no Heroes II equivalent (UNDEFINE): the
    remaining ones (the faction-specific weapons/armor like the
