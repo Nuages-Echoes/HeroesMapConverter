@@ -884,6 +884,15 @@ OE_DEF_TO_SID = OE_OBJECT_CORRESPONDENCE["def_to_sid"]
 OE_SUPPLEMENT_SCENERY = OE_OBJECT_CORRESPONDENCE["supplement_scenery"]
 OE_CREATURE_EQUIVALENTS = OE_OBJECT_CORRESPONDENCE["creature_equivalents"]
 OE_SUPPLEMENT_EMIT = OE_OBJECT_CORRESPONDENCE["supplement_emit"]
+# h3m artifact id -> OE artifact sid and h3m secondary skill id -> OE
+# skill sid, learned from the game's own Core.zip (DB/items/items/*.json +
+# DB/heroes_skills/skills/skills.json + Lang/english display names, exact
+# name matches); see core_zip_not_converted.english.txt for the rest.
+OE_ARTIFACT_EQUIVALENTS = OE_OBJECT_CORRESPONDENCE["artifact_equivalents"]
+OE_SKILL_EQUIVALENTS = OE_OBJECT_CORRESPONDENCE["skill_equivalents"]
+OE_ARTIFACT_SID_TO_H3 = {}
+for _aid, _asid in OE_ARTIFACT_EQUIVALENTS.items():
+    OE_ARTIFACT_SID_TO_H3.setdefault(_asid, int(_aid))
 # OE unit sid -> h3m creature id (reverse of creatureEquivalents).
 # OE units have a second upgrade variant (<base>_upg_alt, e.g.
 # esquire_upg_alt = Sun's Aegis) that H3 does not have: both _upg and
@@ -1037,6 +1046,12 @@ def _resolve_hommoe_sid(h3_id, anim, subtype, terrain_name):
     animation, subtype) placed on a terrain -> OE sid, or None when the
     reference mapping omits the object (no Olden Era equivalent)."""
     h3 = str(h3_id)
+    if h3 == "5":
+        # Artifact: use the exact Core.zip name match when there is one,
+        # else the stock random-item (lossy, see no_olden_era_equivalent).
+        art_sid = OE_ARTIFACT_EQUIVALENTS.get(str(subtype or 0))
+        if art_sid:
+            return art_sid
     if h3 in OE_EMIT_SID:
         return OE_EMIT_SID[h3]["sid"]
     known = (h3 in OE_DISPATCH or h3 in OE_SCENERY_ROLE
@@ -1223,6 +1238,18 @@ def _hommoe_sid_to_group_index(sid):
         FH2M_TO_H3M_MINES, H3M_TREE_DEF_TO_FH2M_INDEX,
         H3M_MOUNTAIN_DEF_TO_FH2M_INDEX, H3M_TOWN_TYPE_TO_FH2M_RACE,
         FH2M_TOWN_RACE_ORDER, H3M_RANDOM_MONSTER_CLASSES)
+    if sid in OE_ARTIFACT_SID_TO_H3:
+        # Exact Core.zip artifact: recover the h3m artifact id, then the
+        # fh2m ADVENTURE_ARTIFACTS index (same rules as the class-5 branch).
+        h3_art = OE_ARTIFACT_SID_TO_H3[sid]
+        fh2m_art = H3M_TO_FH2M_ARTIFACTS.get(h3_art)
+        if fh2m_art is not None:
+            if 9 <= fh2m_art <= 81:
+                return "ADVENTURE_ARTIFACTS", fh2m_art - 9
+            if fh2m_art == 82:
+                return "ADVENTURE_ARTIFACTS", 73
+            return "ADVENTURE_ARTIFACTS", fh2m_art - 13
+        return "ADVENTURE_ARTIFACTS", None
     candidates = OE_SID_TO_H3.get(sid)
     if not candidates:
         return None, None
@@ -1374,6 +1401,7 @@ def _hommoe_objects_to_unified(adventure, width):
 
     tiles = OrderedDict()
     group_counters = {}
+    artifact_metadata = {}
 
     def add_object(oid, group_name, sid, node, rotation, level, index=None):
         x = int(node) % width if width else 0
@@ -1419,6 +1447,13 @@ def _hommoe_objects_to_unified(adventure, width):
                        rotations[j] if j < len(rotations) else None,
                        levels[j] if j < len(levels) else None,
                        ref_index)
+            if sid_str in OE_ARTIFACT_SID_TO_H3:
+                # Exact Core.zip artifact: keep the h3m artifact id so the
+                # h3m/fh2m writers can place the same artifact back.
+                artifact_metadata[str(oid)] = OrderedDict([
+                    ("artifact", OE_ARTIFACT_SID_TO_H3[sid_str]),
+                    ("radius", 0), ("captureCondition", 0), ("selected", []),
+                ])
 
     # Fixed squads live in a separate id namespace but are monster
     # placements, so they join the MONSTERS group.
@@ -1484,6 +1519,8 @@ def _hommoe_objects_to_unified(adventure, width):
     result = OrderedDict([("tiles", tiles)])
     if monster_metadata:
         result["monsterMetadata"] = monster_metadata
+    if artifact_metadata:
+        result["artifactMetadata"] = artifact_metadata
     # Raw adventure-level data with no unified equivalent, kept as-is.
     if adventure.get("rivers"):
         result["sourceRivers"] = adventure["rivers"]
@@ -4080,11 +4117,25 @@ def _hommoe_event_actions(event, obj_id):
             ]))
     unconverted = []
     if event.get("artifact") not in (None, 0, -1):
-        unconverted.append("artifact={}".format(event.get("artifact")))
+        art_sid = OE_ARTIFACT_EQUIVALENTS.get(str(event.get("artifact")))
+        if art_sid:
+            # blank hero sid = the currently selected (visiting) hero
+            actions.append(OrderedDict([
+                ("comment", ""), ("p", [art_sid, ""]), ("a", "GiveItemHero"),
+            ]))
+        else:
+            unconverted.append("artifact={}".format(event.get("artifact")))
     if event.get("monsterType") not in (None, 0, -1):
         unconverted.append("monster={}x{}".format(event.get("monsterType"), event.get("monsterCount", 0)))
     if event.get("secondarySkill") not in (None, 0):
-        unconverted.append("skill={}/{}".format(event.get("secondarySkill"), event.get("secondarySkillLevel", 0)))
+        skill_sid = OE_SKILL_EQUIVALENTS.get(str(event.get("secondarySkill")))
+        if skill_sid:
+            actions.append(OrderedDict([
+                ("comment", "level {}".format(event.get("secondarySkillLevel", 0))),
+                ("p", [skill_sid]), ("a", "AddSkillAll"),
+            ]))
+        else:
+            unconverted.append("skill={}/{}".format(event.get("secondarySkill"), event.get("secondarySkillLevel", 0)))
     for stat in ("attack", "defense", "knowledge", "spellPower", "experience"):
         if event.get(stat):
             unconverted.append("{}={}".format(stat, event.get(stat)))
@@ -4363,6 +4414,13 @@ def unified_to_hommoe(unified):
                         terrain_name = terrain_by_pos.get(
                             (int(parts[0]), int(parts[1])), "Grass")
                     ref = _unified_obj_h3m_ref(obj, terrain_name)
+                    if group == "ADVENTURE_ARTIFACTS":
+                        # Prefer the exact h3m artifact id kept in the
+                        # artifact metadata (hommoe sources) over the
+                        # fh2m index, which many h3 artifacts lack.
+                        art_meta = (objects.get("artifactMetadata") or {}).get(str(oid)) or {}
+                        if art_meta.get("artifact") is not None:
+                            ref = (5, int(art_meta["artifact"]), None)
                     if ref is not None:
                         sid = _resolve_hommoe_sid(ref[0], ref[2], ref[1],
                                                   terrain_name)
