@@ -887,115 +887,118 @@ quest messages, garrison canTake, event players flags).
    a creature with no equivalent. The h3m random monsters are
    converted through their object class: Random Monster (any level),
    Random Monster 1 to Random Monster 4 (h3m classes 71 to 75 ->
-   fh2m ids 67 to 71).
+   fh2m ids 67 to 71). The HOMMOE unit column gives the Olden Era
+   display names (reference src/data/units.json); the underlying
+   unit sids are kept in oe_object_correspondence.json
+   (creature_equivalents).
 
    Faction 1 (Knight <-> Castle):
 
-| Tier | H2                        | H3                          | HOMMOE unit (sid)                                                  |
-|------|---------------------------|-----------------------------|--------------------------------------------------------------------|
-| T1   | Peasant                   | Pikeman -> Halberdier       | Swordsman (esquire) -> Guard Captain (esquire_upg)                 |
-| T2   | Archer -> Ranger          | Archer -> Marksman          | Crossbowman (crossbowman) -> Austringer (crossbowman_upg)          |
-| T3   | Pikeman -> Veteran Pikeman | Griffin -> Royal Griffin    | Griffin (griffin) -> Temple Griffin (griffin_upg)                  |
-| T4   | Swordsman -> Master Swordsman | Swordsman -> Crusader       | Lightweaver (lightweaver) -> Hierophant (lightweaver_upg)          |
-| T5   | Cavalry -> Champion       | Monk -> Zealot              | Cavalry (sunlight_cavalry) -> Noble Cavalry (sunlight_cavalry_upg) |
-| T6   | Cavalry -> Champion       | Cavalier -> Champion        | Inquisitor (inquisitor) -> Mother Superior (inquisitor_upg)        |
-| T7   | Paladin -> Crusader       | Angel -> Archangel          | Angel (angel) -> Archangel (angel_upg)                             |
+| Tier | H2                        | H3                          | HOMMOE unit                   |
+|------|---------------------------|-----------------------------|-------------------------------|
+| T1   | Peasant                   | Pikeman -> Halberdier       | Swordsman -> Guard Captain    |
+| T2   | Archer -> Ranger          | Archer -> Marksman          | Crossbowman -> Austringer     |
+| T3   | Pikeman -> Veteran Pikeman | Griffin -> Royal Griffin    | Griffin -> Temple Griffin     |
+| T4   | Swordsman -> Master Swordsman | Swordsman -> Crusader       | Lightweaver -> Hierophant     |
+| T5   | Cavalry -> Champion       | Monk -> Zealot              | Cavalry -> Noble Cavalry      |
+| T6   | Cavalry -> Champion       | Cavalier -> Champion        | Inquisitor -> Mother Superior |
+| T7   | Paladin -> Crusader       | Angel -> Archangel          | Angel -> Archangel            |
 
    Faction 2 (Barbarian <-> Stronghold):
 
-| Tier | H2                        | H3                          | HOMMOE unit (sid)                                  |
-|------|---------------------------|-----------------------------|----------------------------------------------------|
-| T1   | Goblin                    | Goblin -> Hobgoblin         | Parasite (trick_demon) -> Pixie (pixie)            |
-| T2   | Orc -> Orc Chief          | Goblin Wolf Rider -> Hobgoblin Wolf Rider | Halfling (halfling) -> Vine Iriyad (ent)           |
-| T3   | Wolf                      | Orc -> Orc Chieftain        | Vine Iriyad (ent) -> Graverobber (graverobber)     |
-| T4   | Ogre -> Ogre Lord         | Ogre -> Ogre Mage           | Volcanic Scorpion (jaw_upg) -> Herbomancer (druid) |
-| T5   | Troll -> War Troll        | Roc -> Thunderbird          | Sporemancer (druid_upg) -> Inquisitor (inquisitor) |
-| T6   | Cyclops                   | Cyclops -> Cyclops King     | Menacing Reaver (godslayer_upg) -> Waurms (olgoi)  |
-| T7   | Cyclops                   | Behemoth -> Ancient Behemoth | Hive Queen (hive_queen) -> Archangel (angel_upg)   |
+| Tier | H2                        | H3                          | HOMMOE unit                      |
+|------|---------------------------|-----------------------------|----------------------------------|
+| T1   | Goblin                    | Goblin -> Hobgoblin         | Parasite -> Pixie                |
+| T2   | Orc -> Orc Chief          | Goblin Wolf Rider -> Hobgoblin Wolf Rider | Halfling -> Vine Iriyad          |
+| T3   | Wolf                      | Orc -> Orc Chieftain        | Vine Iriyad -> Graverobber       |
+| T4   | Ogre -> Ogre Lord         | Ogre -> Ogre Mage           | Volcanic Scorpion -> Herbomancer |
+| T5   | Troll -> War Troll        | Roc -> Thunderbird          | Sporemancer -> Inquisitor        |
+| T6   | Cyclops                   | Cyclops -> Cyclops King     | Menacing Reaver -> Waurms        |
+| T7   | Cyclops                   | Behemoth -> Ancient Behemoth | Hive Queen -> Archangel          |
 
    Faction 3 (Sorceress <-> Rampart):
 
-| Tier | H2                        | H3                          | HOMMOE unit (sid)                                   |
-|------|---------------------------|-----------------------------|-----------------------------------------------------|
-| T1   | Sprite                    | Centaur -> Centaur Captain  | Faun (elf_tracker) -> Faun Archer (elf_tracker_upg) |
-| T2   | Dwarf -> Battle Dwarf     | Dwarf -> Battle Dwarf       | Hoplet (twinkle) -> Dawn Hoplet (twinkle_upg)       |
-| T3   | Elf -> Grand Elf          | Wood Elf -> Grand Elf       | Vine Iriyad (ent) -> Fungal Iriyad (ent_upg)        |
-| T4   | Druid -> Greater Druid    | Pegasus -> Silver Pegasus   | Naiad (aqualotl) -> Vernal Naiad (aqualotl_upg)     |
-| T5   | Druid -> Greater Druid    | Dendroid Guard -> Dendroid Soldier | Herbomancer (druid) -> Sporemancer (druid_upg)      |
-| T6   | Unicorn                   | Unicorn -> War Unicorn      | Qilin (qilin) -> Thunder Qilin (qilin_upg)          |
-| T7   | Phoenix                   | Green Dragon -> Gold Dragon | Phoenix (phoenix) -> Flaming Phoenix (phoenix_upg)  |
+| Tier | H2                        | H3                          | HOMMOE unit                  |
+|------|---------------------------|-----------------------------|------------------------------|
+| T1   | Sprite                    | Centaur -> Centaur Captain  | Faun -> Faun Archer          |
+| T2   | Dwarf -> Battle Dwarf     | Dwarf -> Battle Dwarf       | Hoplet -> Dawn Hoplet        |
+| T3   | Elf -> Grand Elf          | Wood Elf -> Grand Elf       | Vine Iriyad -> Fungal Iriyad |
+| T4   | Druid -> Greater Druid    | Pegasus -> Silver Pegasus   | Naiad -> Vernal Naiad        |
+| T5   | Druid -> Greater Druid    | Dendroid Guard -> Dendroid Soldier | Herbomancer -> Sporemancer   |
+| T6   | Unicorn                   | Unicorn -> War Unicorn      | Qilin -> Thunder Qilin       |
+| T7   | Phoenix                   | Green Dragon -> Gold Dragon | Phoenix -> Flaming Phoenix   |
 
    Faction 4 (Wizard <-> Tower):
 
-| Tier | H2                        | H3                          | HOMMOE unit (sid)                                          |
-|------|---------------------------|-----------------------------|------------------------------------------------------------|
-| T1   | Halfling                  | Gremlin -> Master Gremlin   | Troglodyte (trogl) -> Swordsman (esquire)                  |
-| T2   | Boar                      | Stone Gargoyle -> Obsidian Gargoyle | Hoplet (twinkle) -> Vine Iriyad (ent)                      |
-| T3   | Iron Golem -> Steel Golem | Iron Golem -> Stone Golem   | Griffin (griffin) -> Chanter (wasp_upg)                    |
-| T4   | Roc                       | Mage -> Archmage            | Minotaur Lord (minos_upg) -> Herbomancer (druid)           |
-| T5   | Mage -> Archmage          | Genie -> Master Genie       | Cavalry (sunlight_cavalry) -> Faerie Dragon (fairy_dragon) |
-| T6   | Giant                     | Naga -> Naga Queen          | Chthonic Hydra (hydra_upg) -> Devourer (olgoi_upg)         |
-| T7   | Giant -> Titan            | Giant -> Titan              | Angel (angel) -> Flaming Phoenix (phoenix_upg)             |
+| Tier | H2                        | H3                          | HOMMOE unit                  |
+|------|---------------------------|-----------------------------|------------------------------|
+| T1   | Halfling                  | Gremlin -> Master Gremlin   | Troglodyte -> Swordsman      |
+| T2   | Boar                      | Stone Gargoyle -> Obsidian Gargoyle | Hoplet -> Vine Iriyad        |
+| T3   | Iron Golem -> Steel Golem | Iron Golem -> Stone Golem   | Griffin -> Chanter           |
+| T4   | Roc                       | Mage -> Archmage            | Minotaur Lord -> Herbomancer |
+| T5   | Mage -> Archmage          | Genie -> Master Genie       | Cavalry -> Faerie Dragon     |
+| T6   | Giant                     | Naga -> Naga Queen          | Chthonic Hydra -> Devourer   |
+| T7   | Giant -> Titan            | Giant -> Titan              | Angel -> Flaming Phoenix     |
 
    Faction 5 (Warlock <-> Dungeon):
 
-| Tier | H2                        | H3                          | HOMMOE unit (sid)                                              |
-|------|---------------------------|-----------------------------|----------------------------------------------------------------|
-| T1   | Centaur                   | Troglodyte -> Infernal Troglodyte | Troglodyte (trogl) -> Infernal Troglodyte (trogl_upg)          |
-| T2   | Gargoyle                  | Harpy -> Harpy Hag          | Infiltrator (assassin) -> Guile Infiltrator (assassin_upg)     |
-| T3   | Griffin                   | Beholder -> Evil Eye        | Onyx Dancer (blade_dancer) -> Jasper Dancer (blade_dancer_upg) |
-| T4   | Minotaur -> Minotaur King | Medusa -> Medusa Queen      | Minotaur (minos) -> Minotaur Lord (minos_upg)                  |
-| T5   | Minotaur -> Minotaur King | Minotaur -> Minotaur King   | Medusa (medusa) -> Medusa Sculptor (medusa_upg)                |
-| T6   | Hydra                     | Manticore -> Scorpicore     | Hydra (hydra) -> Chthonic Hydra (hydra_upg)                    |
-| T7   | Red Dragon -> Black Dragon | Red Dragon -> Black Dragon  | Cave Dragon (black_dragon) -> Black Dragon (black_dragon_upg)  |
+| Tier | H2                        | H3                          | HOMMOE unit                       |
+|------|---------------------------|-----------------------------|-----------------------------------|
+| T1   | Centaur                   | Troglodyte -> Infernal Troglodyte | Troglodyte -> Infernal Troglodyte |
+| T2   | Gargoyle                  | Harpy -> Harpy Hag          | Infiltrator -> Guile Infiltrator  |
+| T3   | Griffin                   | Beholder -> Evil Eye        | Onyx Dancer -> Jasper Dancer      |
+| T4   | Minotaur -> Minotaur King | Medusa -> Medusa Queen      | Minotaur -> Minotaur Lord         |
+| T5   | Minotaur -> Minotaur King | Minotaur -> Minotaur King   | Medusa -> Medusa Sculptor         |
+| T6   | Hydra                     | Manticore -> Scorpicore     | Hydra -> Chthonic Hydra           |
+| T7   | Red Dragon -> Black Dragon | Red Dragon -> Black Dragon  | Cave Dragon -> Black Dragon       |
 
    Faction 6 (Necromancer <-> Necropolis):
 
-| Tier | H2                        | H3                          | HOMMOE unit (sid)                                                 |
-|------|---------------------------|-----------------------------|-------------------------------------------------------------------|
-| T1   | Skeleton                  | Skeleton -> Skeleton Warrior | Skeleton (skeleton) -> Skeleton Warrior (skeleton_upg)            |
-| T2   | Zombie -> Mutant Zombie   | Walking Dead -> Zombie Lord | Wight (flicker) -> Wraith (flicker_upg)                           |
-| T3   | Mummy -> Royal Mummy      | Wight -> Wraith             | Undead Pet (pet) -> Barghest (pet_upg)                            |
-| T4   | Vampire -> Vampire Lord   | Vampire -> Vampire Lord     | Graverobber (graverobber) -> Merchant of Death (graverobber_upg)  |
-| T5   | Lich -> Power Lich        | Lich -> Power Lich          | Lich (lich) -> Pestilent Lich (lich_upg)                          |
-| T6   | Lich -> Power Lich        | Black Knight -> Dread Knight | Dread Knight (avatar_of_war) -> Avatar of War (avatar_of_war_upg) |
-| T7   | Bone Dragon               | Bone Dragon -> Ghost Dragon | Vampire (vampire) -> Vampire Lord (vampire_upg)                   |
+| Tier | H2                        | H3                          | HOMMOE unit                      |
+|------|---------------------------|-----------------------------|----------------------------------|
+| T1   | Skeleton                  | Skeleton -> Skeleton Warrior | Skeleton -> Skeleton Warrior     |
+| T2   | Zombie -> Mutant Zombie   | Walking Dead -> Zombie Lord | Wight -> Wraith                  |
+| T3   | Mummy -> Royal Mummy      | Wight -> Wraith             | Undead Pet -> Barghest           |
+| T4   | Vampire -> Vampire Lord   | Vampire -> Vampire Lord     | Graverobber -> Merchant of Death |
+| T5   | Lich -> Power Lich        | Lich -> Power Lich          | Lich -> Pestilent Lich           |
+| T6   | Lich -> Power Lich        | Black Knight -> Dread Knight | Dread Knight -> Avatar of War    |
+| T7   | Bone Dragon               | Bone Dragon -> Ghost Dragon | Vampire -> Vampire Lord          |
 
    Faction 7 (Warlock <-> Inferno):
 
-| Tier | H2                        | H3                          | HOMMOE unit (sid)                                           |
-|------|---------------------------|-----------------------------|-------------------------------------------------------------|
-| T1   | Centaur                   | Imp -> Familiar             | Parasite (trick_demon) -> Warden Parasite (trick_demon_upg) |
-| T2   | Gargoyle                  | Gog -> Magog                | Locust (locust) -> Overgrown Locust (locust_upg)            |
-| T3   | Griffin                   | Hell Hound -> Cerberus      | Hornet (wasp) -> Chanter (wasp_upg)                         |
-| T4   | Minotaur -> Minotaur King | Demon -> Horned Demon       | Scorpion (jaw) -> Volcanic Scorpion (jaw_upg)               |
-| T5   | Minotaur -> Minotaur King | Pit Fiend -> Pit Lord       | Reaver (godslayer) -> Menacing Reaver (godslayer_upg)       |
-| T6   | Hydra                     | Efreet -> Efreet Sultan     | Waurms (olgoi) -> Devourer (olgoi_upg)                      |
-| T7   | Green Dragon -> Red Dragon | Devil -> Arch Devil         | Hive Queen (hive_queen) -> Hive Mother (hive_queen_upg)     |
+| Tier | H2                        | H3                          | HOMMOE unit                   |
+|------|---------------------------|-----------------------------|-------------------------------|
+| T1   | Centaur                   | Imp -> Familiar             | Parasite -> Warden Parasite   |
+| T2   | Gargoyle                  | Gog -> Magog                | Locust -> Overgrown Locust    |
+| T3   | Griffin                   | Hell Hound -> Cerberus      | Hornet -> Chanter             |
+| T4   | Minotaur -> Minotaur King | Demon -> Horned Demon       | Scorpion -> Volcanic Scorpion |
+| T5   | Minotaur -> Minotaur King | Pit Fiend -> Pit Lord       | Reaver -> Menacing Reaver     |
+| T6   | Hydra                     | Efreet -> Efreet Sultan     | Waurms -> Devourer            |
+| T7   | Green Dragon -> Red Dragon | Devil -> Arch Devil         | Hive Queen -> Hive Mother     |
 
    Faction 8 (Barbarian <-> Fortress):
 
-| Tier | H2                        | H3                          | HOMMOE unit (sid)                                            |
-|------|---------------------------|-----------------------------|--------------------------------------------------------------|
-| T1   | Goblin                    | Gnoll -> Gnoll Marauder     | Infernal Troglodyte (trogl_upg) -> Faun (elf_tracker)        |
-| T2   | Orc -> Orc Chief          | Lizardman -> Lizard Warrior | Halfling (halfling) -> Vine Iriyad (ent)                     |
-| T3   | Wolf                      | Serpent Fly -> Fire Dragon Fly | Animated Armor (animated_armor) -> Lightweaver (lightweaver) |
-| T4   | Ogre -> Ogre Lord         | Basilisk -> Greater Basilisk | Minotaur Lord (minos_upg) -> Herbomancer (druid)             |
-| T5   | Troll -> War Troll        | Gorgon -> Mighty Gorgon     | Cavalry (sunlight_cavalry) -> Sporemancer (druid_upg)        |
-| T6   | Cyclops                   | Wyvern -> Wyvern Monarch    | Avatar of War (avatar_of_war_upg) -> Waurms (olgoi)          |
-| T7   | Cyclops                   | Hydra -> Chaos Hydra        | Hydra (hydra) -> Chthonic Hydra (hydra_upg)                  |
+| Tier | H2                        | H3                          | HOMMOE unit                   |
+|------|---------------------------|-----------------------------|-------------------------------|
+| T1   | Goblin                    | Gnoll -> Gnoll Marauder     | Infernal Troglodyte -> Faun   |
+| T2   | Orc -> Orc Chief          | Lizardman -> Lizard Warrior | Halfling -> Vine Iriyad       |
+| T3   | Wolf                      | Serpent Fly -> Fire Dragon Fly | Animated Armor -> Lightweaver |
+| T4   | Ogre -> Ogre Lord         | Basilisk -> Greater Basilisk | Minotaur Lord -> Herbomancer  |
+| T5   | Troll -> War Troll        | Gorgon -> Mighty Gorgon     | Cavalry -> Sporemancer        |
+| T6   | Cyclops                   | Wyvern -> Wyvern Monarch    | Avatar of War -> Waurms       |
+| T7   | Cyclops                   | Hydra -> Chaos Hydra        | Hydra -> Chthonic Hydra       |
 
    Faction 9 (Sorceress <-> Conflux):
 
-| Tier | H2                        | H3                          | HOMMOE unit (sid)                                         |
-|------|---------------------------|-----------------------------|-----------------------------------------------------------|
-| T1   | Sprite                    | Pixie -> Sprite             | Pixie (pixie) -> Pixie (pixie)                            |
-| T2   | Air Element               | Air Elemental -> Storm Elemental | Hoplet (twinkle) -> Vine Iriyad (ent)                     |
-| T3   | Water Element             | Water Elemental -> Ice Elemental | Lightweaver (lightweaver) -> Temple Griffin (griffin_upg) |
-| T4   | Fire Element              | Fire Elemental -> Energy Elemental | Lich (lich) -> Hierophant (lightweaver_upg)               |
-| T5   | Earth Element             | Earth Elemental -> Magma Elemental | Chanter (wasp_upg) -> Pestilent Lich (lich_upg)           |
-| T6   | Unicorn                   | Psychic Elemental -> Magic Elemental | Couatl (coatl) -> Vampire (vampire)                       |
-| T7   | Phoenix                   | Firebird -> Phoenix         | Phoenix (phoenix) -> Flaming Phoenix (phoenix_upg)        |
+| Tier | H2                        | H3                          | HOMMOE unit                   |
+|------|---------------------------|-----------------------------|-------------------------------|
+| T1   | Sprite                    | Pixie -> Sprite             | Pixie -> Pixie                |
+| T2   | Air Element               | Air Elemental -> Storm Elemental | Hoplet -> Vine Iriyad         |
+| T3   | Water Element             | Water Elemental -> Ice Elemental | Lightweaver -> Temple Griffin |
+| T4   | Fire Element              | Fire Elemental -> Energy Elemental | Lich -> Hierophant            |
+| T5   | Earth Element             | Earth Elemental -> Magma Elemental | Chanter -> Pestilent Lich     |
+| T6   | Unicorn                   | Psychic Elemental -> Magic Elemental | Couatl -> Vampire             |
+| T7   | Phoenix                   | Firebird -> Phoenix         | Phoenix -> Flaming Phoenix    |
 
    The Conflux elementals belong to this faction in Heroes III; all
    of them (basic and extension) convert to the matching Heroes II
@@ -1006,16 +1009,16 @@ quest messages, garrison canTake, event players flags).
 
    Neutral creatures (matched by tier):
 
-| Tier | H2                        | H3                          | HOMMOE unit (sid)                                                                                                                                                      |
-|------|---------------------------|-----------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| T1   | Rogue                     | Rogue ; Halfling ; Peasant  | Guile Infiltrator (assassin_upg) ; Halfling (halfling) ; Peasant (peasant)                                                                                             |
-| T2   | Nomad                     | Nomad ; Boar ; Mummy        | Temple Griffin (griffin_upg) ; Overgrown Locust (locust_upg) ; Animated Armor (animated_armor)                                                                         |
-| T3   | Medusa                    | Troll                       | Sporemancer (druid_upg)                                                                                                                                                |
-| T3   | Ghost                     | UNDEFINE                    | UNDEFINE                                                                                                                                                               |
-| T4   | Genie                     | UNDEFINE                    | UNDEFINE                                                                                                                                                               |
-| T5   |                           | UNDEFINE                   | UNDEFINE                                                                                                                                                               |
-| T6   |                           | UNDEFINE                   | UNDEFINE                                                                                                                                                               |
-| T7   |                           | Azure Dragon ; Crystal Dragon ; Fairie Dragon ; Rust Dragon ; Enchanter ; Sharpshooter (UNDEFINE) | Lich Dragon (lich_dragon) ; Lich Dragon (lich_dragon) ; Faerie Dragon (fairy_dragon) ; Lich Dragon (lich_dragon) ; Inquisitor (inquisitor) ; Minotaur Lord (minos_upg) |
+| Tier | H2                        | H3                          | HOMMOE unit                                                                          |
+|------|---------------------------|-----------------------------|--------------------------------------------------------------------------------------|
+| T1   | Rogue                     | Rogue ; Halfling ; Peasant  | Guile Infiltrator ; Halfling ; Peasant                                               |
+| T2   | Nomad                     | Nomad ; Boar ; Mummy        | Temple Griffin ; Overgrown Locust ; Animated Armor                                   |
+| T3   | Medusa                    | Troll                       | Sporemancer                                                                          |
+| T3   | Ghost                     | UNDEFINE                    | UNDEFINE                                                                             |
+| T4   | Genie                     | UNDEFINE                    | UNDEFINE                                                                             |
+| T5   |                           | UNDEFINE                   | UNDEFINE                                                                             |
+| T6   |                           | UNDEFINE                   | UNDEFINE                                                                             |
+| T7   |                           | Azure Dragon ; Crystal Dragon ; Fairie Dragon ; Rust Dragon ; Enchanter ; Sharpshooter (UNDEFINE) | Lich Dragon ; Lich Dragon ; Faerie Dragon ; Lich Dragon ; Inquisitor ; Minotaur Lord |
 
    Random monsters (h3m object class -> fh2m id):
 
