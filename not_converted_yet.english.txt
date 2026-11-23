@@ -1,0 +1,170 @@
+Everything NOT converted yet (for drop / work-on triage)
+========================================================
+
+Status at commit d765078 - golden rule green:
+    python3 main.py            (rc 0)
+    python3 verify_roundtrip.py (rc 0, all .map inputs binary identical)
+    python3 oe_loop_check.py    (rc 0, loop totals below)
+
+Sources: oe_object_correspondence.json, no_olden_era_equivalent.english.txt,
+core_zip_not_converted.english.txt, the local references
+(/workspace/references/...), the game Core.zip committed on this branch,
+and the loop check over all maps in input/.
+
+Cross-check done for this list: all 143 omitted H3 classes were matched by
+exact normalized English name against all 876 OE map-object sids of
+Core.zip DB/map/objects/*.json (198 of them have an English display name in
+Lang/english/texts/mapObjects.json). Result: only 2 exact matches exist and
+both are already covered (h3 58 Redwood Observatory -> watchtower; h3 63
+Pyramid -> barracks_neutral_4, whose display name is "Pyramid" but which
+conflicts with the user mapping Pyramid -> overgrown_grave, so it is NOT
+usable). Among the 88 still-unmapped classes there are ZERO exact matches,
+and a keyword scan of the sids (boat/ship/whirl/siren/mermaid/flotsam/
+ocean/bottle/sea/...) finds only 'chest' and 'spells_in_a_bottle_artifact'
+- i.e. the water-travel objects have no OE stock object at all.
+
+------------------------------------------------------------
+1. H3 object classes with NO Olden Era equivalent: 88 of 143
+------------------------------------------------------------
+
+(143 reference-omitted classes = 36 supplement_emit + 19 supplement_scenery,
+both already converted, + the 88 below. Full list with reasons:
+no_olden_era_equivalent.english.txt section 1.)
+
+1a. Water-travel / water objects (12 classes) - confirmed no OE stock sid
+    h3 8 Boat, 24 Derelict Ship, 29 Flotsam, 52 Mermaids, 59 Ocean Bottle,
+    82 Sea Chest, 85 Shipwreck, 86 Shipwreck Survivor, 87 Shipyard,
+    92 Sirens, 145 Water Treasure, 146 Misc Active (water/creature bank)
+    dropped in the loop check: 234 objects
+    (Flotsam x110, Sea Chest x82, Shipwreck Survivor x18, Boat x18,
+     Sirens x2, Mermaids x2, Ocean Bottle x2)
+
+1b. Creature banks / generators (3)
+    h3 16 Creature Bank, 84 Crypt, 142 Misc Active (resource generator)
+
+1c. Battlefield terrains (12) - OE has no battlefield-terrain object layer
+    h3 21 + 223 Cursed Ground, 46 + 230 Magic Plains, 141 Magical Terrain,
+    224 Evil Fog, 225 Favorable Winds, 226 Fiery Fields, 227 Holy Ground,
+    228 Lucid Pools, 229 Magic Clouds, 231 Rocklands
+    dropped in the loop check: 26 objects (Cursed Ground x19, Magic Plains x7)
+
+1d. Quest / message / dwelling (9)
+    h3 26 Event, 83 Seer Hut, 91 Sign, 93 Spell Scroll, 113 Witch Hut,
+    215 Quest Guard, 216/217/218 Random Dwelling (any/level/faction)
+
+1e. Other (52): mostly "Unidentified" template placeholders (h3 0, 1, 3,
+    40, 123, 156, 165-176, 178-198, 200-203, 205) plus 9 Border Guard,
+    10 Keymaster Tent, 14 Swan Pond, 36 Grail, 50 Market of Time,
+    57 Obelisk, 81 Scholar, 144 Misc Active (highland/rough/snow)
+    dropped in the loop check: Obelisk x19
+
+------------------------------------------------------------
+2. H2-only (fh2m) objects with no H3 reference and no OE equivalent
+------------------------------------------------------------
+
+dropped in the loop check (they only exist in the 6 fh2m test maps):
+  LANDSCAPE_FLAGS, all 14 indexes ............ 142 objects
+  LANDSCAPE_TOWN_BASEMENTS, all 8 indexes ....  71 objects
+  ADVENTURE_WATER 8 / 9 / 12 (Barrel, fheroes2-specific) ... 59 objects
+  ADVENTURE_POWER_UPS 17 (Idol) + 20 .........  30 objects
+  ADVENTURE_MISCELLANEOUS 26-28, 31, 33 ......  (seen in per-map losses)
+  ADVENTURE_ARTIFACTS 76 / 82 / 89 ...........   9 objects
+
+Loop-check total when writing .map: 590 dropped objects in 40 types
+(234 h3 water + 26 h3 battlefield + 19 h3 Obelisk + 59 fh2m water
+ + 142 flags + 71 basements + 30 power-ups + 9 fh2m artifacts).
+
+------------------------------------------------------------
+3. Core.zip catalog gaps (object is placed, but its PAYLOAD is lost)
+------------------------------------------------------------
+
+3a. Artifacts: only 20 of 143 H3 artifacts have an exact-name OE artifact.
+    The other 123 (list: core_zip_not_converted.english.txt section 1)
+    become OE "random-item" + a propRandomItems row of the matching rarity
+    (Treasure/Common=0, Minor/Rare=1, Major/Epic=2, Relic/Legendary=3):
+    the rarity class is kept, the exact artifact is lost.
+    Special cases: h3 0 Spell Book and h3 1 Spell Scroll need the spell
+    table first (3b). H3 class 65 "random artifact (any)" gets no
+    propRandomItems row (game default).
+
+3b. Spells: NOT STARTED. Core.zip DB/magics holds 131 OE spell ids
+    (sids like day_3_magic_haste, schools Daylight/Nightshade/Arcane/
+    Primal). There is no H3 spell-id <-> OE magic-sid table yet, so:
+    spell scroll objects (h3 93), shrines of magic (h3 88-91),
+    propRewardParams entries holding spell sids, and GiveSpell script
+    actions cannot be converted exactly. The H3 school <-> OE school
+    mapping (Fire/Air/Water/Earth vs Daylight/Nightshade/Arcane/Primal)
+    also needs spell-level matching.
+
+3c. Secondary skills: 16 of 28 H3 skills mapped. Unmapped 12:
+    0 Pathfinding, 1 Archery, 5 Navigation, 8 Mysticism, 10 Ballistics,
+    11 Eagle Eye, 14-17 the 4 magic schools (see 3b), 18 Scholar,
+    24 Intelligence. OE-only skills with no H3 counterpart (reverse
+    direction, 15): Abyssal Communion, Arcane/Daylight/Nightshade/Primal
+    Magic, Battle Magic, Battlecraft, Combat, Murmuring, Recruitment,
+    Righteousness, Summon Avatar, Summon Swarm, Thaumaturgy,
+    Triumvirate's Strength.
+
+3d. Reverse direction (OE -> H2/H3): ~297 of 317 OE named items have no H3
+    artifact name -> they become random artifacts; OE-only skills -> ?.
+
+------------------------------------------------------------
+4. Lossy-by-design collapses (converted, but not 1:1)
+------------------------------------------------------------
+
+  - Scenery sprite variants -> one OE sid per family/biome
+    (e.g. all pine variants -> pinetree_1 / pinetree_snow_1); the way back
+    recovers the family, not the exact variant.
+  - Specific H3 artifacts -> OE random-item (see 3a); random artifact
+    classes 65-69 -> random-item + rarity row.
+  - Fixed and random monsters -> OE random-squad with a propSquads /
+    propRandomSquads row (unit sids + tier kept; H3 quantity split lost).
+  - Towns and heroes -> OE city-spawner / hero-spawner: the H2 town race /
+    hero class is not kept per object.
+  - Roads and rivers are not OE objects: they live in the terrain layer
+    (roadsMap bitfield, rivers node lists).
+  - H3 Event / Sign / Seer Hut / Quest Guard -> OE quest script triggers
+    when the metadata fits: message -> Print, resources -> GiveRes,
+    artifact -> GiveItemHero, skill -> AddSkillAll/AddSkillHero.
+    Monster rewards, stat bonuses and unmatched artifact/skill ids are
+    kept only in the trigger's comment field.
+  - Den of Thieves AND Cover of Darkness both -> insaras_eye;
+    Refugee Camp / Freelancers Guild / Mercenary Camp -> mercenary_guild.
+  - OE _upg vs _upg_alt: both reverse to the same H3 creature id; forward
+    (H3 -> OE) picks one at random, so .map output is non-deterministic
+    for upgraded units.
+  - Player colors: OE colorId is -1 in all real maps, so the color is
+    assigned from the spawn order (first 6 = H2 order); the real color
+    table lives in Core.zip and is not extracted yet.
+
+------------------------------------------------------------
+5. Structural / container-level gaps
+------------------------------------------------------------
+
+  - headerHash is written as "0"*32 (the game's hash algorithm is unknown).
+  - hommoe -> unified still drops: scenario/adventure "settings" (except
+    mapWinConditions), customAreasPainting (~27.6 KB in Broken_Alliance),
+    descBlocks, views, spawn flags (isAlive/isLocked/playerId/
+    isCityDefined), takenHeroes, orphan objectsProperties rows, and the
+    container header fields (gzipHeader/headerHash/separator/trailingData).
+    Blocks 3/4 ARE carried raw in the unified "scripts" section.
+  - unified -> .map regenerates only the H2/H3 event patterns; OE-native
+    script features (counters, SetQuestMarker, NodeRevealed, interruptions,
+    aiRolesId, dialogs) are parsed hommoe -> unified raw but are not
+    regenerated from unified yet.
+  - hommoe -> fh2m uses an anchor-shift heuristic for object coordinates.
+  - Sidecar .json: passthrough byte-identical when the input .map has one;
+    generated only when it carries meaningful data.
+  - Known doc/data inconsistency still open: Faction 9 (Conflux) creature
+    cells in heroes_field_correspondence.english.txt and h3 ids 112-125 in
+    oe_object_correspondence.json still carry the reference's scrambled
+    values (only Factions 2/4/8 were corrected).
+
+------------------------------------------------------------
+6. How to regenerate the numbers
+------------------------------------------------------------
+
+    python3 main.py && python3 verify_roundtrip.py && python3 oe_loop_check.py
+    (per-map and total drop lists: oe_loop_check.py output;
+     omit/emit tables: oe_object_correspondence.json;
+     artifact/skill gaps: core_zip_not_converted.english.txt)
