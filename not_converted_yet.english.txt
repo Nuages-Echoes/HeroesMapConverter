@@ -24,6 +24,17 @@ ocean/bottle/sea/...) finds only 'chest' and 'spells_in_a_bottle_artifact'
 - i.e. the water-travel objects have no OE stock object at all.
 
 ------------------------------------------------------------
+0. Decision log
+------------------------------------------------------------
+
+  DROPPED by user decision (accepted loss, do not work on):
+    - water-travel / water objects: section 1a (h3 classes 8, 24, 29, 52,
+      59, 82, 85, 86, 87, 92, 145, 146) and the fh2m ADVENTURE_WATER
+      indexes in section 2 - OE has no stock sid for them.
+    - fh2m LANDSCAPE_FLAGS (all 14 indexes) and LANDSCAPE_TOWN_BASEMENTS
+      (all 8 indexes) - H2-only decorations, no OE equivalent.
+
+------------------------------------------------------------
 1. H3 object classes with NO Olden Era equivalent: 88 of 143
 ------------------------------------------------------------
 
@@ -31,7 +42,7 @@ ocean/bottle/sea/...) finds only 'chest' and 'spells_in_a_bottle_artifact'
 both already converted, + the 88 below. Full list with reasons:
 no_olden_era_equivalent.english.txt section 1.)
 
-1a. Water-travel / water objects (12 classes) - confirmed no OE stock sid
+1a. Water-travel / water objects (12 classes) - [DROPPED BY DECISION, see section 0] - confirmed no OE stock sid
     h3 8 Boat, 24 Derelict Ship, 29 Flotsam, 52 Mermaids, 59 Ocean Bottle,
     82 Sea Chest, 85 Shipwreck, 86 Shipwreck Survivor, 87 Shipyard,
     92 Sirens, 145 Water Treasure, 146 Misc Active (water/creature bank)
@@ -63,12 +74,12 @@ no_olden_era_equivalent.english.txt section 1.)
 ------------------------------------------------------------
 
 dropped in the loop check (they only exist in the 6 fh2m test maps):
-  LANDSCAPE_FLAGS, all 14 indexes ............ 142 objects
-  LANDSCAPE_TOWN_BASEMENTS, all 8 indexes ....  71 objects
-  ADVENTURE_WATER 8 / 9 / 12 (Barrel, fheroes2-specific) ... 59 objects
-  ADVENTURE_POWER_UPS 17 (Idol) + 20 .........  30 objects
-  ADVENTURE_MISCELLANEOUS 26-28, 31, 33 ......  (seen in per-map losses)
-  ADVENTURE_ARTIFACTS 76 / 82 / 89 ...........   9 objects
+  LANDSCAPE_FLAGS, all 14 indexes ............ 142 objects  [DROPPED BY DECISION]
+  LANDSCAPE_TOWN_BASEMENTS, all 8 indexes ....  71 objects  [DROPPED BY DECISION]
+  ADVENTURE_WATER 8 / 9 / 12 (Barrel, fheroes2-specific) ... 59 objects  [DROPPED BY DECISION]
+  ADVENTURE_POWER_UPS 17 (Idol) + 20 .........  30 objects  (still open)
+  ADVENTURE_MISCELLANEOUS 26-28, 31, 33 ......  (seen in per-map losses)  (still open)
+  ADVENTURE_ARTIFACTS 76 / 82 / 89 ...........   9 objects  (still open)
 
 Loop-check total when writing .map: 590 dropped objects in 40 types
 (234 h3 water + 26 h3 battlefield + 19 h3 Obelisk + 59 fh2m water
@@ -161,7 +172,69 @@ Loop-check total when writing .map: 590 dropped objects in 40 types
     values (only Factions 2/4/8 were corrected).
 
 ------------------------------------------------------------
-6. How to regenerate the numbers
+6. Creature banks - evidence pack for the upcoming conversion
+------------------------------------------------------------
+
+H3 side (h3decoder.py + h3_names in oe_object_correspondence.json):
+  - bank classes: 6 Pandora Box, 16 Creature Bank (subtype = bank type),
+    25 Dragon Utopia, 84 Crypt, 146 Misc Active (water; creature banks).
+    Classes 24 Derelict Ship / 85 Shipwreck also route to the fh2m
+    ADVENTURE_DWELLINGS group but are water-travel -> DROPPED (section 0).
+    h3decoder maps classes 16/24/25/84/85 -> fh2m group ADVENTURE_DWELLINGS.
+  - per-instance payload in h3m: the "Guarded" structure = a message +
+    an optional 7-slot monster guard stack (+4 trailing bytes);
+    Pandora's Box additionally carries pandoraMetadata. The REWARD is
+    defined by the bank type (class+subclass), not stored per instance.
+  - H2 has no creature banks (fh2m ADVENTURE_DWELLINGS are plain dwellings).
+
+OE side (committed Core.zip):
+  - pandora_box: map object in DB/map/objects/3_resources.json (display
+    name "Pandora's Box"), logic DB/objects_logic/chests/pandora_box.json.
+  - guarded banks (event_banks entries WITH guardUnits) - the H3
+    creature-bank analogs; map objects all in DB/map/objects/
+    4_interactables.json (tag=Interact), logic under
+    DB/objects_logic/event_banks/:
+      guarded_res_banks (20): abandoned_mansion "Abandoned Mansion",
+        abnormal_structure "Abnormal Structure", alvars_eye "Alvar Outpost",
+        black_tower "Black Tower", circle_of_life "Circle of Life",
+        cursed_old_house "Cursed Old House", dragon_utopia "Dragon Utopia",
+        iridescent_abbey "Iridescent Abbey", legions_memorial
+        "Legion's Memorial", mereas_shrine "Mearea's Altar",
+        overgrown_grave "Ancient Crypt", prismatic_lair "Prismatic Nest",
+        raiders_camp "Raiders' Camp", research_laboratory
+        "Research Laboratory", shady_den "Trophy Hunter's Den",
+        testing_grounds, troglodyte_throne "Troglodyte Throne",
+        twilight_bloom "Twilight Bloom", uncanny_rite "Uncanny Rite",
+        unstable_ruins "Overgrown Vori Ruins"
+      guarded_unit_banks (9): boreal_call "Boreal Call", jousting_range
+        "Colosseum", petrified_memorial "Petrified Memorial",
+        point_of_balance "Point of Balance", ritual_pyre "Ritual Pyre",
+        the_gorge "Carrion Pile", underground_lair "Underground Labyrinth",
+        unforgotten_grave "Tomb of Vigilance", vanguard
+    each logic entry has variants[] (1-5) with guardUnits
+    [{sid, amount}] (up to 7 slots, may include _upg/_upg_alt sids) and
+    rewardSet.rewards[] (SideResReward parameters [resource, amount, ...],
+    HeroRandomItemsReward parameters [rarity, ...], HeroUnitsReward
+    parameters [unitSid, amount], ...).
+  - how a .map stores a bank (evidence from the real input maps):
+    an objects[] group {sid, ids, nodes} plus objectsProperties rows:
+      propVariants     {selectedVar: -1 = random variant, N = variant N}
+      propSquads       {unitProps: [{sid, count}...]} = guard override
+      propRewardParams {parameters: [...]}            = reward override
+      propActionsAfter {actions: [...]}               = script on clear
+    Broken_Alliance: overgrown_grave x3 (selectedVar=-1, empty reward),
+      petrified_memorial x2; all_cats_go_to_heaven: circle_of_life x3
+      (propSquads custom guards + selectedVar=0 + propActionsAfter
+      DialogOne); c_M1: abandoned_mansion x1.
+  - note: many NON-guarded event_banks are already mapped to H3 objects
+    (gardener, knowledge_garden, fountain, wind_rose, watchtower,
+    flattering_mirror, quixs_path, stables, fort, college_of_wonder,
+    orb_observatory, armory_automaton, university, peasant_cart,
+    gingerbread_house, learning_stone, mercenary_guild, ...) - the guarded
+    banks listed above are the ones still without an H3 equivalent.
+
+------------------------------------------------------------
+7. How to regenerate the numbers
 ------------------------------------------------------------
 
     python3 main.py && python3 verify_roundtrip.py && python3 oe_loop_check.py
