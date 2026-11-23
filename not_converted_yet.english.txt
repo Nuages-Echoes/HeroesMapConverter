@@ -172,8 +172,33 @@ Loop-check total when writing .map: 590 dropped objects in 40 types
     values (only Factions 2/4/8 were corrected).
 
 ------------------------------------------------------------
-6. Creature banks - evidence pack for the upcoming conversion
+6. Creature banks - evidence pack + Pandora's Box status
 ------------------------------------------------------------
+
+PANDORA'S BOX (h3 class 6 <-> OE sid pandora_box): CONVERTED, both ways.
+  - h3m pandoraMetadata (guard message + 7 guard slots, experience, mana,
+    morale, luck, resources, primary skills, secondary skills, artifacts,
+    spells, creatures) is kept raw in unified objects.pandoraMetadata.
+  - unified -> .map: emits the pandora_box group plus propVariants
+    (selectedVar -1), propSquads (guards), propRewardParams (reward slots
+    "res:amount" / item sid / skill sid) and propActionsAfter (Print for
+    the message, GiveExpHero, GiveManaHero, GiveStatsHero for
+    primaries/morale/luck, GiveUnitHero for creatures - action shapes from
+    the reference actions.ts). Verified on "all for one.h3m".
+  - .map -> unified: synthesizes pandoraMetadata from those prop rows and
+    sets class=6 on the object; .map -> unified -> .map keeps the props
+    byte-identical (raw passthrough).
+  - unified -> h3m: a "pandora" encoder branch in _encode_h3m_objects
+    mirrors the pandoraBox parser; field-for-field round-trip verified for
+    AB/SoD and RoE widths.
+  - residual losses (documented, not guessed): H3 spell ids have no OE
+    magic-sid table yet (kept as sourceSpellSids); artifacts/skills
+    without an OE sid (123/143 artifacts, 12/28 skills) stay in the
+    unified pandoraMetadata only; OE AddSkill actions carry no level, so
+    the H3 skill level is kept in unified only; the guard creature
+    55 -> hive_queen_upg(_alt) -> reverse 111 collision comes from the
+    known faction-scrambled creature table (Fortress Hydra 110/111 also
+    map to hive_queen*), not from this code.
 
 H3 side (h3decoder.py + h3_names in oe_object_correspondence.json):
   - bank classes: 6 Pandora Box, 16 Creature Bank (subtype = bank type),

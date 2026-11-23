@@ -1384,6 +1384,240 @@ def _hommoe_main_town(spawn, adventure, width):
     ])
 
 
+def _to_int(value, default=0):
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default
+
+
+def _oe_unit_sid_for_h3(creature):
+    """OE unit sid for an h3m creature id; OE has two upgrades per unit
+    (<base>_upg and <base>_upg_alt) while H3 has one, so pick one at
+    random (same rule as the monster writer branch)."""
+    sid = OE_CREATURE_EQUIVALENTS.get(str(creature))
+    if sid and sid.endswith("_upg") \
+            and (sid + "_alt") in OE_UNIT_SID_TO_H3_CREATURE:
+        sid = _random.choice((sid, sid + "_alt"))
+    return sid
+
+
+def _hommoe_pandora_props(prop_rows, oid, pm):
+    """Emit the objectsProperties rows for an OE pandora_box placement
+    from an h3m pandoraMetadata entry (mirror of _hommoe_pandora_to_metadata).
+
+    Evidence: propVariants.selectedVar -1 = random logic variant (shape of
+    the real rows in Broken_Alliance); propSquads.unitProps is the guard
+    stack (real row in all_cats_go_to_heaven); propRewardParams.parameters
+    slots are "-", "resource:amount" or a bare item/skill sid (reference
+    map-editor-json-tool reward-params.ts, confirmed on real maps);
+    propActionsAfter carries script actions (all_cats, c_M1) - used here
+    for everything a slot cannot express (message, experience, mana,
+    stats, creatures), with the action parameter shapes from the
+    reference actions.ts. Spells and artifact/skill ids without an OE sid
+    cannot be represented yet (no H3<->OE spell table; only 20/143
+    artifacts and 16/28 skills have one) and stay in the unified
+    pandoraMetadata only.
+    """
+    prop_rows.setdefault("propVariants", []).append(OrderedDict([
+        ("type", 0), ("id", oid), ("selectedVar", -1),
+        ("typeVariant", 0), ("fraction", 0), ("unitVersion", 0),
+    ]))
+    guard = pm.get("guard") or {}
+    unit_props = []
+    for slot in (guard.get("creatures") or []):
+        creature = slot.get("creature")
+        count = slot.get("count") or 0
+        if creature is None or count <= 0:
+            continue
+        unit_sid = _oe_unit_sid_for_h3(creature)
+        if unit_sid:
+            unit_props.append(OrderedDict([
+                ("sid", unit_sid), ("count", int(count)),
+            ]))
+    if unit_props:
+        prop_rows.setdefault("propSquads", []).append(OrderedDict([
+            ("type", 0), ("id", oid), ("isMainGuard", False),
+            ("isStartBattleImmediately", False), ("reactionType", 2),
+            ("weeklyIncrementBonus", 0.0), ("unitProps", unit_props),
+        ]))
+    params = []
+    resources = pm.get("resources") or {}
+    for name in ("wood", "mercury", "ore", "sulfur", "crystal", "gems", "gold"):
+        amount = resources.get(name) or 0
+        if amount:
+            params.append("%s:%d" % (UNIFIED_TO_HOMMOE_RESOURCE[name], amount))
+    for art in (pm.get("artifacts") or []):
+        art_sid = OE_ARTIFACT_EQUIVALENTS.get(str(art))
+        if art_sid:
+            params.append(art_sid)
+    for sk in (pm.get("secondarySkills") or []):
+        sk_sid = OE_SKILL_EQUIVALENTS.get(str(sk.get("id")))
+        if sk_sid:
+            params.append(sk_sid)
+    if params:
+        prop_rows.setdefault("propRewardParams", []).append(OrderedDict([
+            ("type", 0), ("id", oid), ("parameters", params),
+        ]))
+    actions = []
+    message = guard.get("message") or ""
+    if message:
+        actions.append(OrderedDict([
+            ("comment", ""), ("p", [message]), ("a", "Print"),
+        ]))
+    exp = pm.get("experience") or 0
+    if exp:
+        actions.append(OrderedDict([
+            ("comment", ""), ("p", [str(exp), ""]), ("a", "GiveExpHero"),
+        ]))
+    mana = pm.get("mana") or 0
+    if mana:
+        actions.append(OrderedDict([
+            ("comment", ""), ("p", ["", str(mana)]), ("a", "GiveManaHero"),
+        ]))
+    primaries = pm.get("primarySkills") or {}
+    stat_map = {"attack": "offence", "defense": "defence",
+                "spellPower": "spellPower", "knowledge": "intelligence"}
+    for h3_name, oe_stat in stat_map.items():
+        amount = primaries.get(h3_name) or 0
+        if amount:
+            actions.append(OrderedDict([
+                ("comment", ""), ("p", [oe_stat, "", str(amount)]),
+                ("a", "GiveStatsHero"),
+            ]))
+    if pm.get("morale"):
+        actions.append(OrderedDict([
+            ("comment", ""), ("p", ["moral", "", str(pm["morale"])]),
+            ("a", "GiveStatsHero"),
+        ]))
+    if pm.get("luck"):
+        actions.append(OrderedDict([
+            ("comment", ""), ("p", ["luck", "", str(pm["luck"])]),
+            ("a", "GiveStatsHero"),
+        ]))
+    for cr in (pm.get("creatures") or []):
+        creature = cr.get("creature")
+        count = cr.get("count") or 0
+        if creature is None or count <= 0:
+            continue
+        unit_sid = _oe_unit_sid_for_h3(creature)
+        if unit_sid:
+            actions.append(OrderedDict([
+                ("comment", ""), ("p", [unit_sid, str(count), ""]),
+                ("a", "GiveUnitHero"),
+            ]))
+    if actions:
+        prop_rows.setdefault("propActionsAfter", []).append(OrderedDict([
+            ("type", 0), ("id", oid), ("repeat", False), ("sides", ""),
+            ("actions", actions),
+        ]))
+
+
+def _hommoe_pandora_to_metadata(props):
+    """Build an h3m-style pandoraMetadata entry from an OE pandora_box's
+    objectsProperties rows (mirror of _hommoe_pandora_props)."""
+    import re
+    meta = OrderedDict()
+    guard = None
+    squad_row = props.get("propSquads")
+    if squad_row:
+        slots = []
+        for u in (squad_row.get("unitProps") or [])[:7]:
+            slots.append(OrderedDict([
+                ("creature", OE_UNIT_SID_TO_H3_CREATURE.get(u.get("sid"))),
+                ("count", _to_int(u.get("count"))),
+            ]))
+        while len(slots) < 7:
+            slots.append(OrderedDict([("creature", None), ("count", 0)]))
+        guard = OrderedDict([("message", ""), ("creatures", slots)])
+    meta["guard"] = guard
+    meta["experience"] = 0
+    meta["mana"] = 0
+    meta["morale"] = 0
+    meta["luck"] = 0
+    resources = OrderedDict((n, 0) for n in
+                            ("wood", "mercury", "ore", "sulfur",
+                             "crystal", "gems", "gold"))
+    primaries = OrderedDict((n, 0) for n in
+                            ("attack", "defense", "spellPower", "knowledge"))
+    artifacts = []
+    skills = []
+    creatures = []
+    source_spell_sids = []
+    rp = props.get("propRewardParams")
+    if rp:
+        oe_to_h3_res = {v: k for k, v in UNIFIED_TO_HOMMOE_RESOURCE.items()}
+        skill_sid_to_h3 = {v: k for k, v in OE_SKILL_EQUIVALENTS.items()}
+        for slot in (rp.get("parameters") or []):
+            if not slot or slot == "-":
+                continue
+            m = re.match(r"^([A-Za-z]+):(\d+)$", slot)
+            if m:
+                h3_name = oe_to_h3_res.get(m.group(1))
+                if h3_name:
+                    resources[h3_name] = int(m.group(2))
+                continue
+            if slot in OE_ARTIFACT_SID_TO_H3:
+                artifacts.append(OE_ARTIFACT_SID_TO_H3[slot])
+            elif slot in skill_sid_to_h3:
+                skills.append(OrderedDict([
+                    ("id", _to_int(skill_sid_to_h3[slot])), ("level", 1),
+                ]))
+            else:
+                # OE spell sid (day_3_magic_haste...): no H3<->OE spell
+                # id table yet, keep the raw sid.
+                source_spell_sids.append(slot)
+    stat_to_h3 = {"offence": ("primaries", "attack"),
+                  "defence": ("primaries", "defense"),
+                  "spellPower": ("primaries", "spellPower"),
+                  "intelligence": ("primaries", "knowledge"),
+                  "moral": ("morale", None), "luck": ("luck", None)}
+    skill_sid_to_h3 = {v: k for k, v in OE_SKILL_EQUIVALENTS.items()}
+    for table in ("propActionsBefore", "propActionsAfter"):
+        row = props.get(table)
+        for act in ((row or {}).get("actions") or []):
+            name = act.get("a")
+            p = act.get("p") or []
+            if name == "Print" and p and guard is not None:
+                guard["message"] = p[0]
+            elif name == "GiveExpHero" and p:
+                meta["experience"] = _to_int(p[0])
+            elif name in ("GiveManaHero", "ChangeManaHero") and len(p) >= 2:
+                meta["mana"] = _to_int(p[1])
+            elif name == "GiveStatsHero" and len(p) >= 3:
+                key = stat_to_h3.get(p[0])
+                if key:
+                    bucket, field = key
+                    if field:
+                        primaries[field] = _to_int(p[2])
+                    else:
+                        meta[bucket] = _to_int(p[2])
+            elif name == "GiveUnitHero" and len(p) >= 2:
+                creatures.append(OrderedDict([
+                    ("creature", OE_UNIT_SID_TO_H3_CREATURE.get(p[0])),
+                    ("count", _to_int(p[1])),
+                ]))
+            elif name in ("AddSkillHero", "AddSkillAll") and p \
+                    and p[0] in skill_sid_to_h3:
+                skills.append(OrderedDict([
+                    ("id", _to_int(skill_sid_to_h3[p[0]])), ("level", 1),
+                ]))
+            elif name == "GiveItemHero" and p and p[0] in OE_ARTIFACT_SID_TO_H3:
+                artifacts.append(OE_ARTIFACT_SID_TO_H3[p[0]])
+    meta["resources"] = resources
+    meta["primarySkills"] = primaries
+    meta["secondarySkills"] = skills
+    meta["artifacts"] = artifacts
+    meta["spells"] = []
+    meta["creatures"] = creatures
+    if source_spell_sids:
+        meta["sourceSpellSids"] = source_spell_sids
+    variants = props.get("propVariants")
+    if variants and variants.get("selectedVar") is not None:
+        meta["sourceSelectedVar"] = variants.get("selectedVar")
+    return meta
+
+
 def _hommoe_objects_to_unified(adventure, width):
     """
     Convert the adventure block's object groups into the unified objects
@@ -1529,11 +1763,25 @@ def _hommoe_objects_to_unified(adventure, width):
             if cls is not None:
                 entry["class"] = cls
                 entry["index"] = {66: 92, 67: 93, 68: 94, 69: 95}[cls]
+    # Pandora's Box objects (sid pandora_box): recover the h3m class 6 and
+    # a pandoraMetadata entry from the objectsProperties rows, so the box
+    # content survives the trip to h3m/fh2m as well.
+    pandora_metadata = OrderedDict()
+    for obj_list in tiles.values():
+        for entry in obj_list:
+            if entry.get("sourceSid") != "pandora_box":
+                continue
+            entry["class"] = 6
+            entry["subclass"] = 0
+            pandora_metadata[str(entry.get("id"))] = _hommoe_pandora_to_metadata(
+                entry.get("properties") or {})
     result = OrderedDict([("tiles", tiles)])
     if monster_metadata:
         result["monsterMetadata"] = monster_metadata
     if artifact_metadata:
         result["artifactMetadata"] = artifact_metadata
+    if pandora_metadata:
+        result["pandoraMetadata"] = pandora_metadata
     # Raw adventure-level data with no unified equivalent, kept as-is.
     if adventure.get("rivers"):
         result["sourceRivers"] = adventure["rivers"]
@@ -4468,6 +4716,13 @@ def unified_to_hommoe(unified):
                         prop_rows.setdefault("propRandomItems", []).append(OrderedDict([
                             ("type", 0), ("id", oid), ("rarity", rarity),
                         ]))
+                if sid == "pandora_box":
+                    # Pandora's Box: emit the prop rows (variant, guards,
+                    # reward slots, script actions) from the h3m pandora
+                    # metadata kept in the unified objects section.
+                    pandora_meta = (objects.get("pandoraMetadata") or {}).get(str(oid))
+                    if pandora_meta:
+                        _hommoe_pandora_props(prop_rows, oid, pandora_meta)
                 if not sid:
                     # No Olden Era equivalent for this object type.
                     HOMMOE_UNMAPPED_OBJECTS.append(OrderedDict([
@@ -5061,7 +5316,13 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
             else:
                 terrain_pos = (raw_x, raw_y)
             entry = None
-            if group == "MONSTERS":
+            pandora_meta = (objects_section.get("pandoraMetadata") or {}).get(str(obj_id))
+            if pandora_meta is not None:
+                # Pandora's Box (h3m class 6): the full box content is
+                # carried in the pandoraMetadata map; the catalog entry
+                # (6, 0) is AVA0128.def in the reference catalog.
+                entry = ("pandora", (x, y, z), (6, 0), pandora_meta)
+            elif group == "MONSTERS":
                 creature = index + 1
                 m = monster_meta.get(str(obj_id)) or {}
                 count = m.get("count") or 0
@@ -5558,6 +5819,68 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
                 # (the same rule as the decorative class 113) - the
                 # parser reads them for every class 113 instance.
                 buffer.write(struct.pack("<I", 0xFFFFFFFF))
+        elif kind_name == "pandora":
+            # Pandora's Box layout, mirroring the pandoraBox parser:
+            # optional guard (message + 7 creature slots + 4 bytes), then
+            # experience, mana, morale, luck, resources, primary skills,
+            # secondary skills, artifacts, spells, creatures, 8 trailing
+            # bytes.
+            meta = payload or {}
+            guard = meta.get("guard")
+            if guard:
+                buffer.write(struct.pack("<B", 1))
+                msg = (guard.get("message") or "").encode("cp1252", errors="replace")
+                buffer.write(struct.pack("<i", len(msg)))
+                buffer.write(msg)
+                slots = list((guard.get("creatures") or [])[:7])
+                while len(slots) < 7:
+                    slots.append({"creature": None, "count": 0})
+                has = any(s.get("creature") is not None
+                          and (s.get("count") or 0) > 0 for s in slots)
+                buffer.write(struct.pack("<B", 1 if has else 0))
+                if has:
+                    for s in slots:
+                        write_creature_slot(s.get("creature"),
+                                            _to_int(s.get("count")))
+                buffer.write(b"\x00" * 4)
+            else:
+                buffer.write(struct.pack("<B", 0))
+            buffer.write(struct.pack("<I", _to_int(meta.get("experience")) & 0xFFFFFFFF))
+            buffer.write(struct.pack("<H", _to_int(meta.get("mana")) & 0xFFFF))
+            buffer.write(struct.pack("<b", _to_int(meta.get("morale"))))
+            buffer.write(struct.pack("<b", _to_int(meta.get("luck"))))
+            res = meta.get("resources") or {}
+            buffer.write(struct.pack("<7h", *[
+                _to_int(res.get(n)) for n in
+                ("wood", "mercury", "ore", "sulfur", "crystal", "gems", "gold")]))
+            pr = meta.get("primarySkills") or {}
+            buffer.write(struct.pack("<4B", *[
+                _to_int(pr.get(n)) & 0xFF for n in
+                ("attack", "defense", "spellPower", "knowledge")]))
+            skills = [s for s in (meta.get("secondarySkills") or [])
+                      if isinstance(s, dict)]
+            n = min(len(skills), 255)
+            buffer.write(struct.pack("<B", n))
+            for sk in skills[:n]:
+                buffer.write(struct.pack("<BB",
+                                         _to_int(sk.get("id")) & 0xFF,
+                                         _to_int(sk.get("level")) & 0xFF))
+            arts = [a for a in (meta.get("artifacts") or []) if isinstance(a, int)]
+            n = min(len(arts), 255)
+            buffer.write(struct.pack("<B", n))
+            for a in arts[:n]:
+                write_artifact_id(a)
+            spells = [s for s in (meta.get("spells") or []) if isinstance(s, int)]
+            n = min(len(spells), 255)
+            buffer.write(struct.pack("<B", n))
+            for s in spells[:n]:
+                buffer.write(struct.pack("<B", s & 0xFF))
+            crs = meta.get("creatures") or []
+            n = min(len(crs), 255)
+            buffer.write(struct.pack("<B", n))
+            for cr in crs[:n]:
+                write_creature_slot(cr.get("creature"), _to_int(cr.get("count")))
+            buffer.write(b"\x00" * 8)
         elif kind_name == "hero":
             # RoE hero layout: owner, type, then the customization
             # flags (name, experience, face, skills, creatures,
