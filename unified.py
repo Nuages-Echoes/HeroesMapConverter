@@ -766,6 +766,28 @@ HOMMOE_FACTION_NAMES = {
     "neutral": "Neutral",
 }
 
+# unified race -> Olden Era factionSid (Races table, HOMMOE column of
+# heroes_field_correspondence.english.txt, given there as OE display names;
+# sids via HOMMOE_FACTION_NAMES): Knight/Barbarian -> Temple ("human"),
+# Sorceress/Conflux -> Grove ("nature"), Warlock -> Dungeon ("dungeon"),
+# Wizard -> Schism ("unfrozen"), Necromancer -> Necropolis ("undead"),
+# Inferno/Fortress -> Hive ("demons"), Random -> "" (empty on real maps).
+UNIFIED_TO_HOMMOE_FACTION_SID = {
+    "Random": "",
+    "Knight": "human",
+    "Barbarian": "human",
+    "Sorceress": "nature",
+    "Warlock": "dungeon",
+    "Wizard": "unfrozen",
+    "Necromancer": "undead",
+    "Inferno": "demons",
+    "Fortress": "demons",
+    "Conflux": "nature",
+}
+# OE display names (unified race of a hommoe source) map back to their sid.
+for _sid, _display in HOMMOE_FACTION_NAMES.items():
+    UNIFIED_TO_HOMMOE_FACTION_SID[_display] = _sid
+
 # Olden Era tilesMap biome id -> unified terrain (biome ids from Core.zip
 # DB/map/tiles/tiles.json: 1=Grass, 2=Sand, 3=Deathland, 4=Snow, 5=Autumn,
 # 6=Lava, 7=Dirt; see /workspace/references/map-editor-json-tool/src/lib/map-grid/terrain-colors.ts).
@@ -4176,6 +4198,21 @@ def _hommoe_generate_scripts(unified, width):
     return scripting, prop_entities
 
 
+def _hommoe_faction_sid(detail):
+    """Unified playerDetails[] entry -> Olden Era spawn factionSid.
+
+    A hommoe source keeps the raw sid in sourceRace; other sources go
+    through the Races table mapping (sourceRace first, it preserves the
+    h3-only Inferno/Fortress/Conflux values, then the normalized race).
+    """
+    source_race = detail.get("sourceRace")
+    if source_race in HOMMOE_FACTION_NAMES:
+        return source_race
+    race = detail.get("race") or "Random"
+    return UNIFIED_TO_HOMMOE_FACTION_SID.get(source_race or "",
+                                              UNIFIED_TO_HOMMOE_FACTION_SID.get(race, ""))
+
+
 def unified_to_hommoe(unified):
     """
     Convert a map in the unified format into the JSON structure expected by
@@ -4208,7 +4245,7 @@ def unified_to_hommoe(unified):
             ("playerId", ""),
             ("spawnPointType", 0 if detail.get("mainTown") else 1),
             ("isCityDefined", bool(detail.get("mainTown"))),
-            ("factionSid", ""),
+            ("factionSid", _hommoe_faction_sid(detail)),
             ("isHeroDefined", bool(detail.get("sourceHeroSid"))),
             ("heroSid", detail.get("sourceHeroSid", "")),
             ("colorId", -1),
