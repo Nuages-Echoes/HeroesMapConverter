@@ -4240,13 +4240,24 @@ def unified_to_hommoe(unified):
     # --- block 1: scenario ---
     player_details = unified.get("playerDetails") or []
     players = unified.get("players") or {}
+    human_colors = players.get("humanColors") or []
+    computer_colors = players.get("computerColors") or []
+    available_colors = players.get("availableColors") or []
     spawns = []
-    for index, detail in enumerate(player_details):
+    for detail in player_details:
         color = detail.get("color")
-        human = color in (players.get("humanColors") or [])
-        available = color in (players.get("availableColors") or [])
+        # Only real players get a block 1 spawn entry: the game counts every
+        # spawns[] entry as a player slot, so empty H2/H3 player slots must
+        # not be written (real .map files only ever carry spawnType 0/1;
+        # see the reference's h3-import/ownership.ts, which maps canHuman to
+        # spawnType 0/1 for actual players only).
+        if color not in human_colors and color not in computer_colors \
+                and color not in available_colors and not detail.get("available"):
+            continue
+        human = color in human_colors
+        available = color in available_colors
         spawn = OrderedDict([
-            ("owner", index + 1),
+            ("owner", len(spawns) + 1),
             ("spawnType", 0 if human else (1 if available else 2)),
             ("playerId", ""),
             ("spawnPointType", 0 if detail.get("mainTown") else 1),
