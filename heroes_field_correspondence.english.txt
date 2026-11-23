@@ -881,7 +881,9 @@ quest messages, garrison canTake, event players flags).
    Heroes II faction with its primary Heroes III counterpart, Faction
    7 to 9 pair the Heroes II factions with the Heroes III factions
    that have no Heroes II equivalent (Inferno, Fortress, Conflux),
-   plus the neutral creatures. Within a faction, each tier matches
+   plus the neutral creatures. The third name in each group title
+   is the Olden Era faction of the group, following the Races
+   table above. Within a faction, each tier matches
    the H2 creatures with the H3 creatures of the same tier. The
    upgrade chains are written with '->' inside a cell. UNDEFINE marks
    a creature with no equivalent. The h3m random monsters are
@@ -892,7 +894,7 @@ quest messages, garrison canTake, event players flags).
    unit sids are kept in oe_object_correspondence.json
    (creature_equivalents).
 
-   Faction 1 (Knight <-> Castle):
+   Faction 1 (Knight <-> Castle <-> Temple):
 
 | Tier | H2                        | H3                          | HOMMOE unit                   |
 |------|---------------------------|-----------------------------|-------------------------------|
@@ -904,7 +906,7 @@ quest messages, garrison canTake, event players flags).
 | T6   | Cavalry -> Champion       | Cavalier -> Champion        | Inquisitor -> Mother Superior |
 | T7   | Paladin -> Crusader       | Angel -> Archangel          | Angel -> Archangel            |
 
-   Faction 2 (Barbarian <-> Stronghold):
+   Faction 2 (Barbarian <-> Stronghold <-> Temple):
 
 | Tier | H2                        | H3                          | HOMMOE unit                      |
 |------|---------------------------|-----------------------------|----------------------------------|
@@ -916,7 +918,7 @@ quest messages, garrison canTake, event players flags).
 | T6   | Cyclops                   | Cyclops -> Cyclops King     | Menacing Reaver -> Waurms        |
 | T7   | Cyclops                   | Behemoth -> Ancient Behemoth | Hive Queen -> Archangel          |
 
-   Faction 3 (Sorceress <-> Rampart):
+   Faction 3 (Sorceress <-> Rampart <-> Grove):
 
 | Tier | H2                        | H3                          | HOMMOE unit                  |
 |------|---------------------------|-----------------------------|------------------------------|
@@ -928,7 +930,7 @@ quest messages, garrison canTake, event players flags).
 | T6   | Unicorn                   | Unicorn -> War Unicorn      | Qilin -> Thunder Qilin       |
 | T7   | Phoenix                   | Green Dragon -> Gold Dragon | Phoenix -> Flaming Phoenix   |
 
-   Faction 4 (Wizard <-> Tower):
+   Faction 4 (Wizard <-> Tower <-> Schism):
 
 | Tier | H2                        | H3                          | HOMMOE unit                  |
 |------|---------------------------|-----------------------------|------------------------------|
@@ -940,7 +942,7 @@ quest messages, garrison canTake, event players flags).
 | T6   | Giant                     | Naga -> Naga Queen          | Chthonic Hydra -> Devourer   |
 | T7   | Giant -> Titan            | Giant -> Titan              | Angel -> Flaming Phoenix     |
 
-   Faction 5 (Warlock <-> Dungeon):
+   Faction 5 (Warlock <-> Dungeon <-> Dungeon):
 
 | Tier | H2                        | H3                          | HOMMOE unit                       |
 |------|---------------------------|-----------------------------|-----------------------------------|
@@ -952,7 +954,7 @@ quest messages, garrison canTake, event players flags).
 | T6   | Hydra                     | Manticore -> Scorpicore     | Hydra -> Chthonic Hydra           |
 | T7   | Red Dragon -> Black Dragon | Red Dragon -> Black Dragon  | Cave Dragon -> Black Dragon       |
 
-   Faction 6 (Necromancer <-> Necropolis):
+   Faction 6 (Necromancer <-> Necropolis <-> Necropolis):
 
 | Tier | H2                        | H3                          | HOMMOE unit                      |
 |------|---------------------------|-----------------------------|----------------------------------|
@@ -964,7 +966,7 @@ quest messages, garrison canTake, event players flags).
 | T6   | Lich -> Power Lich        | Black Knight -> Dread Knight | Dread Knight -> Avatar of War    |
 | T7   | Bone Dragon               | Bone Dragon -> Ghost Dragon | Vampire -> Vampire Lord          |
 
-   Faction 7 (Warlock <-> Inferno):
+   Faction 7 (Warlock <-> Inferno <-> Hive):
 
 | Tier | H2                        | H3                          | HOMMOE unit                   |
 |------|---------------------------|-----------------------------|-------------------------------|
@@ -976,7 +978,7 @@ quest messages, garrison canTake, event players flags).
 | T6   | Hydra                     | Efreet -> Efreet Sultan     | Waurms -> Devourer            |
 | T7   | Green Dragon -> Red Dragon | Devil -> Arch Devil         | Hive Queen -> Hive Mother     |
 
-   Faction 8 (Barbarian <-> Fortress):
+   Faction 8 (Barbarian <-> Fortress <-> Hive):
 
 | Tier | H2                        | H3                          | HOMMOE unit                   |
 |------|---------------------------|-----------------------------|-------------------------------|
@@ -988,7 +990,7 @@ quest messages, garrison canTake, event players flags).
 | T6   | Cyclops                   | Wyvern -> Wyvern Monarch    | Avatar of War -> Waurms       |
 | T7   | Cyclops                   | Hydra -> Chaos Hydra        | Hydra -> Chthonic Hydra       |
 
-   Faction 9 (Sorceress <-> Conflux):
+   Faction 9 (Sorceress <-> Conflux <-> Grove):
 
 | Tier | H2                        | H3                          | HOMMOE unit                   |
 |------|---------------------------|-----------------------------|-------------------------------|
@@ -1007,7 +1009,7 @@ quest messages, garrison canTake, event players flags).
    Element, Earth/Magma Elemental -> Earth Element. The other Conflux
    creatures convert by tier.
 
-   Neutral creatures (matched by tier):
+   Neutral creatures (Neutral, matched by tier):
 
 | Tier | H2                        | H3                          | HOMMOE unit                                                                          |
 |------|---------------------------|-----------------------------|--------------------------------------------------------------------------------------|
