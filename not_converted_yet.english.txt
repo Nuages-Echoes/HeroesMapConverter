@@ -265,7 +265,7 @@ OE side (committed Core.zip):
   HotA adds per-instance guardsPresetIndex (i32), upgradedStackPresence
   (i8), artifactCount (u32) + artifact ids (reference skipHotaCreatureBank;
   our parser does not decode HotA yet). Class 16 subtypes 0-6 use defs
-  AVXbnk10..70.def (no name table locally). Test map "all for one.h3m"
+  AVXbnk10..70.def (names above). Test map "all for one.h3m"
   has class-16 subtypes 0,1,2,3,4 and two class-84 Crypts. H3 class 25
   already resolves to OE dragon_utopia (emit table) but currently without
   prop rows; 24/85/146 are water -> DROPPED (section 0).
@@ -285,13 +285,26 @@ OE side (committed Core.zip):
   propSquads 5 slots, selectedVar 0, propActionsAfter DialogOne);
   c_M1 abandoned_mansion x1 (selectedVar 0).
 
+  H3 bank class/subtype numbers (VCMI config/objects/creatureBanks.json
+  from github.com/vcmi/vcmi, saved at /workspace/references/
+  creatureBanks.vcmi.json; matches the local AVXbnk10..70 catalog defs):
+    class 16: 0 Cyclops Stockpile, 1 Dwarven Treasury, 2 Griffin
+      Conservatory, 3 Imp Cache, 4 Medusa Stores, 5 Naga Bank,
+      6 Dragon Fly Hive
+    class 84 subtype 0 = Crypt; class 25 = Dragon Utopia;
+    class 24 = Derelict Ship, class 85 = Shipwreck (water -> DROPPED)
+  SoD has exactly these 11 banks (7 of class 16 + 84 + 25 + 24 + 85);
+  Mansion/Red Tower/Experimental Shop/Ivory Tower/Ruins/Beholders'
+  Sanctuary/Black Tower/Ancient Altar/Churchyard/Spit/Wolf Raider
+  Picket are HotA-only banks, not present in SoD maps.
+
   USER-PROVIDED bank mappings (authoritative, supersede the divined
   guesses below):
-    Cyclops Stockpile <-> iridescent_abbey
-    Dragon Fly Hive <-> circle_of_life
-    Imp Cache -> circle_of_life   (same OE sid as Dragon Fly Hive: several
-      H3 banks can share one OE sid; the reverse direction will pick the
-      first indexed one)
+    (16, 0) Cyclops Stockpile <-> iridescent_abbey
+    (16, 6) Dragon Fly Hive <-> circle_of_life
+    (16, 3) Imp Cache -> circle_of_life   (same OE sid as Dragon Fly
+      Hive: several H3 banks can share one OE sid; the reverse direction
+      will pick the first indexed one)
 
   Divined H3<->OE bank matches (OE guards from Core.zip via the local
   OE_UNIT_SID_TO_H3_CREATURE table; H3 bank guards from heroes.thelazy.net
