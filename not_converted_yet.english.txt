@@ -119,6 +119,40 @@ no_olden_era_equivalent.english.txt section 1.)
     h3 26 Event, 83 Seer Hut, 91 Sign, 93 Spell Scroll, 113 Witch Hut,
     215 Quest Guard, 216/217/218 Random Dwelling (any/level/faction)
 
+1d-note. How events/messages convert today (evidence: h3decoder.py,
+    unified.py, a real conversion of "all for one.h3m"):
+  * h3m parse: class-26 ground event payload -> objects.eventMetadata[<id>]
+    (message, guard, experience, mana, morale, luck, resources x7,
+    primarySkills x4, secondarySkills, artifacts, spells, creatures,
+    players mask, applyToComputer, removeAfterVisit); the map-level Events
+    section -> top-level dailyEvents[] (name/message/colors/firstDay/
+    repeatPeriod/resources). Signs/ocean bottles (59/91) -> signMetadata,
+    seer huts (83) -> seerMetadata, witch huts (113) -> witchhutMetadata,
+    scholars (81) -> scholarMetadata, shrines (88-90) -> shrineMetadata,
+    pandora (6) -> pandoraMetadata. In objects.tiles the object itself keeps
+    {id, group, index, sprite, class, subclass} (26/59/83/91/93/113 all land
+    in group ADVENTURE_MISCELLANEOUS).
+  * unified -> .map: the event object is emitted under the generic
+    HOMMOE_GROUP_TO_SID fallback sid ("windmill") + a propEntities row
+    {type:0, id, sid:"event_<id>"}; _hommoe_generate_scripts writes one
+    commentAiData quest "event_<id>" with an ObjectInteractionAfter
+    trigger on entity "event_<id>" (repeat = isRecurringEvent) and actions
+    from _hommoe_event_actions: message -> Print, resources -> GiveRes,
+    mapped artifact -> GiveItemHero [sid,""], mapped skill -> AddSkillAll;
+    monster/primaries/morale/luck/mana and unmapped artifact/skill ids go
+    ONLY into the trigger comment (lost as data). dailyEvents -> quests
+    "daily_event_<i>" with StartTurn [week,day] + Print/GiveRes.
+  * .map -> unified: objects come back raw (sourceSid + all prop rows);
+    dialogQuestData/commentAiData are carried RAW under unified["scripts"]
+    and are NOT decoded into eventMetadata - so in the full loop a class-26
+    object returns as a fallback-sid object and its event payload is lost.
+  * OE-side candidates in Core.zip for the remaining 1d classes:
+    scroll sids scroll_box / enchanted_scroll_box / mythic_scroll_box
+    (6_artifacts.json) for h3 93; shrines altar_of_magic_1-4 already emit
+    for 88-90; random-* spawn sids exist; NO stock sign / seer hut /
+    witch hut / quest guard / random dwelling object (checked all
+    DB/map/objects/*.json + display names).
+
 1e. Other (52): mostly "Unidentified" template placeholders (h3 0, 1, 3,
     40, 123, 156, 165-176, 178-198, 200-203, 205) plus 9 Border Guard,
     10 Keymaster Tent, 14 Swan Pond, 36 Grail, 50 Market of Time,
