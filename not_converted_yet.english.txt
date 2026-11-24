@@ -258,6 +258,33 @@ OE side (committed Core.zip):
     gingerbread_house, learning_stone, mercenary_guild, ...) - the guarded
     banks listed above are the ones still without an H3 equivalent.
 
+  H3 payload facts (h3decoder.py OBJECT_CLASS_KINDS: bank kinds are
+  classes 16, 24, 25, 84, 85): "Banks have no per-object data outside of
+  HotA" - a SoD/AB bank instance is just (class, subtype); guards and
+  reward come from the bank TYPE in game data, not from the map.
+  HotA adds per-instance guardsPresetIndex (i32), upgradedStackPresence
+  (i8), artifactCount (u32) + artifact ids (reference skipHotaCreatureBank;
+  our parser does not decode HotA yet). Class 16 subtypes 0-6 use defs
+  AVXbnk10..70.def (no name table locally). Test map "all for one.h3m"
+  has class-16 subtypes 0,1,2,3,4 and two class-84 Crypts. H3 class 25
+  already resolves to OE dragon_utopia (emit table) but currently without
+  prop rows; 24/85/146 are water -> DROPPED (section 0).
+
+  OE bank logic detail (Core.zip, per guarded bank): variants[] (1-5)
+  with guardUnits [{sid, amount}] (up to 7 slots, incl _upg/_upg_alt) and
+  rewardSet.rewards[] - SideResReward/HeroRandomItemsReward for
+  guarded_res_banks, HeroUnitsReward for guarded_unit_banks; each bank
+  also has a battle arena config DB/arenas/.../battleArena_interactObject_
+  <sid>.json. In a .map, a bank = objects[] group {sid, ids, nodes} plus
+  propVariants {selectedVar: -1 random | N fixed} (always present),
+  propRewardParams {parameters: []} (= variant default; slots
+  "-"/"res:amount"/sid override), optional propSquads guard override and
+  propActionsAfter script. Real placements: Broken_Alliance
+  overgrown_grave x3 + petrified_memorial x2 (selectedVar -1, no propSquads
+  -> the variant's own guards); all_cats circle_of_life x3 (custom
+  propSquads 5 slots, selectedVar 0, propActionsAfter DialogOne);
+  c_M1 abandoned_mansion x1 (selectedVar 0).
+
 ------------------------------------------------------------
 7. How to regenerate the numbers
 ------------------------------------------------------------
