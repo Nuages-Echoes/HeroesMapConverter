@@ -299,12 +299,18 @@ OE side (committed Core.zip):
   Picket are HotA-only banks, not present in SoD maps.
 
   USER-PROVIDED bank mappings (authoritative, supersede the divined
-  guesses below):
-    (16, 0) Cyclops Stockpile <-> iridescent_abbey
-    (16, 6) Dragon Fly Hive <-> circle_of_life
-    (16, 3) Imp Cache -> circle_of_life   (same OE sid as Dragon Fly
-      Hive: several H3 banks can share one OE sid; the reverse direction
-      will pick the first indexed one)
+  guesses below). Complete SoD land-bank set (water 24/85 dropped):
+    (16, 0) Cyclops Stockpile  <-> iridescent_abbey   (first "->" then "<->")
+    (16, 1) Dwarven Treasury   <-> twilight_bloom
+    (16, 2) Griffin Conservatory <-> iridescent_abbey
+    (16, 3) Imp Cache          ->  circle_of_life
+    (16, 4) Medusa Stores      ->  troglodyte_throne
+    (16, 5) Naga Bank          <-> unstable_ruins ("Overgrown Vori Ruins")
+    (16, 6) Dragon Fly Hive    <-> circle_of_life
+    (84, 0) Crypt              <-> abandoned_mansion
+    (25, 0) Dragon Utopia      <-> dragon_utopia
+  Several H3 banks share one OE sid (iridescent_abbey, circle_of_life);
+  the reverse direction will pick the first indexed one.
 
   Divined H3<->OE bank matches (OE guards from Core.zip via the local
   OE_UNIT_SID_TO_H3_CREATURE table; H3 bank guards from heroes.thelazy.net
