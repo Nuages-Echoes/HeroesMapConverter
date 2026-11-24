@@ -786,6 +786,17 @@
   "avxptw_3.def": "portal_1"
  },
  "dispatch": {
+  "16": {
+   "subtypes": {
+    "0": "iridescent_abbey",
+    "1": "twilight_bloom",
+    "2": "iridescent_abbey",
+    "3": "circle_of_life",
+    "4": "troglodyte_throne",
+    "5": "unstable_ruins",
+    "6": "circle_of_life"
+   }
+  },
   "17": {
    "exact": {
     "avg2ela.def": "barracks_nature_3",
@@ -1123,6 +1134,11 @@
     "ore": "resource_ore",
     "sulf": "resource_dust",
     "wood": "resource_wood"
+   }
+  },
+  "84": {
+   "subtypes": {
+    "0": "abandoned_mansion"
    }
   },
   "98": {
@@ -2008,11 +2024,6 @@
    "reason": "unmapped_template_object_id_15"
   },
   {
-   "h3Id": 16,
-   "h3Name": "Creature Bank",
-   "reason": "creature_bank_deferred"
-  },
-  {
    "h3Id": 21,
    "h3Name": "Cursed Ground",
    "reason": "unmapped_template_object_id_21"
@@ -2181,11 +2192,6 @@
    "h3Id": 83,
    "h3Name": "Seer Hut",
    "reason": "seer_hut_omitted_no_stock_interactable"
-  },
-  {
-   "h3Id": 84,
-   "h3Name": "Crypt",
-   "reason": "crypt_bank_deferred"
   },
   {
    "h3Id": 85,

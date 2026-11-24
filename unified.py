@@ -944,6 +944,20 @@ for _h3, _d in OE_DISPATCH.items():
 for _h3, _exact in OE_SCENERY_DISPATCH.items():
     for _def, _sid in _exact.items():
         _index_hommoe_sid(_sid, _h3, def_name=_def)
+
+# Creature-bank OE sids (H3 classes 16/24/25/84/85; user-provided mapping in
+# oe_object_correspondence.json dispatch subtypes - see
+# not_converted_yet.english.txt section 6). The game editor always seeds
+# propVariants + propRewardParams rows for these sids (reference
+# map-write.ts SIDS_WITH_VARIANTS_AND_REWARD_PARAMS).
+HOMMOE_BANK_SIDS = set()
+for _cls in (16, 24, 25, 84, 85):
+    _h = str(_cls)
+    if _h in OE_DISPATCH:
+        HOMMOE_BANK_SIDS.update((OE_DISPATCH[_h].get("subtypes") or {}).values())
+    if _h in OE_EMIT_SID:
+        HOMMOE_BANK_SIDS.add(OE_EMIT_SID[_h]["sid"])
+
 OE_H3_NAMES = OE_OBJECT_CORRESPONDENCE["h3_names"]
 
 
@@ -1769,12 +1783,19 @@ def _hommoe_objects_to_unified(adventure, width):
     pandora_metadata = OrderedDict()
     for obj_list in tiles.values():
         for entry in obj_list:
-            if entry.get("sourceSid") != "pandora_box":
-                continue
-            entry["class"] = 6
-            entry["subclass"] = 0
-            pandora_metadata[str(entry.get("id"))] = _hommoe_pandora_to_metadata(
-                entry.get("properties") or {})
+            sid = entry.get("sourceSid")
+            if sid == "pandora_box":
+                entry["class"] = 6
+                entry["subclass"] = 0
+                pandora_metadata[str(entry.get("id"))] = _hommoe_pandora_to_metadata(
+                    entry.get("properties") or {})
+            elif sid in HOMMOE_BANK_SIDS:
+                # Creature bank: recover the h3m class/subtype from the
+                # correspondence (first indexed candidate).
+                cands = OE_SID_TO_H3.get(sid) or []
+                if cands:
+                    entry["class"] = cands[0][0]
+                    entry["subclass"] = cands[0][1] or 0
     result = OrderedDict([("tiles", tiles)])
     if monster_metadata:
         result["monsterMetadata"] = monster_metadata
@@ -4723,6 +4744,20 @@ def unified_to_hommoe(unified):
                     pandora_meta = (objects.get("pandoraMetadata") or {}).get(str(oid))
                     if pandora_meta:
                         _hommoe_pandora_props(prop_rows, oid, pandora_meta)
+                if sid in HOMMOE_BANK_SIDS:
+                    # Creature bank: seed the propVariants + propRewardParams
+                    # rows the game editor always adds for bank sids
+                    # (selectedVar -1 = random logic variant, empty parameters
+                    # = the variant's own reward; shapes of the real rows in
+                    # Broken_Alliance / c_M1). SoD banks carry no per-instance
+                    # guards, so no propSquads is synthesized here.
+                    prop_rows.setdefault("propVariants", []).append(OrderedDict([
+                        ("type", 0), ("id", oid), ("selectedVar", -1),
+                        ("typeVariant", 0), ("fraction", 0), ("unitVersion", 0),
+                    ]))
+                    prop_rows.setdefault("propRewardParams", []).append(OrderedDict([
+                        ("type", 0), ("id", oid), ("parameters", []),
+                    ]))
                 if not sid:
                     # No Olden Era equivalent for this object type.
                     HOMMOE_UNMAPPED_OBJECTS.append(OrderedDict([
@@ -5316,8 +5351,17 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
             else:
                 terrain_pos = (raw_x, raw_y)
             entry = None
+            if obj.get("class") in (16, 24, 25, 84, 85):
+                # Creature bank (hommoe source): SoD banks carry no
+                # per-instance data, so a plain generic instance with the
+                # bank's (class, subtype) is enough. Def names come from
+                # the catalog (AVXbnk10..70, AVXgyne0...).
+                entry = ("generic", (x, y, z),
+                         (int(obj["class"]), int(obj.get("subclass") or 0)), None)
             pandora_meta = (objects_section.get("pandoraMetadata") or {}).get(str(obj_id))
-            if pandora_meta is not None:
+            if entry is not None:
+                pass  # a creature bank was already set above
+            elif pandora_meta is not None:
                 # Pandora's Box (h3m class 6): the full box content is
                 # carried in the pandoraMetadata map; the catalog entry
                 # (6, 0) is AVA0128.def in the reference catalog.

@@ -50,8 +50,8 @@ no_olden_era_equivalent.english.txt section 1.)
     (Flotsam x110, Sea Chest x82, Shipwreck Survivor x18, Boat x18,
      Sirens x2, Mermaids x2, Ocean Bottle x2)
 
-1b. Creature banks / generators (3)
-    h3 16 Creature Bank, 84 Crypt, 142 Misc Active (resource generator)
+1b. Creature banks / generators - banks 16/84/25 CONVERTED (see section
+    6), only h3 142 Misc Active (resource generator) remains unmapped
 
 1c. Battlefield terrains (12) - OE has no battlefield-terrain object layer
     h3 21 + 223 Cursed Ground, 46 + 230 Magic Plains, 141 Magical Terrain,
@@ -172,8 +172,16 @@ Loop-check total when writing .map: 590 dropped objects in 40 types
     values (only Factions 2/4/8 were corrected).
 
 ------------------------------------------------------------
-6. Creature banks - evidence pack + Pandora's Box status
+6. Creature banks - CONVERTED (user-provided mapping) + Pandora's Box
 ------------------------------------------------------------
+
+  STATUS: the 9 SoD land banks (classes 16/0-6, 84, 25) now convert to
+  their OE sids in both directions (dispatch subtypes in
+  oe_object_correspondence.json; writer seeds propVariants+propRewardParams
+  rows, hommoe->unified recovers class/subclass, h3m encoder emits a
+  generic bank instance). Verified on "all for one.h3m" (6 banks + 2
+  crypts) and c_M1 (abandoned_mansion -> h3m class 84). Water banks
+  24/85 stay DROPPED (section 0).
 
 PANDORA'S BOX (h3 class 6 <-> OE sid pandora_box): CONVERTED, both ways.
   - h3m pandoraMetadata (guard message + 7 guard slots, experience, mana,
