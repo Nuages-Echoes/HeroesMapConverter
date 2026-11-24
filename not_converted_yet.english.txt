@@ -33,6 +33,11 @@ ocean/bottle/sea/...) finds only 'chest' and 'spells_in_a_bottle_artifact'
       indexes in section 2 - OE has no stock sid for them.
     - fh2m LANDSCAPE_FLAGS (all 14 indexes) and LANDSCAPE_TOWN_BASEMENTS
       (all 8 indexes) - H2-only decorations, no OE equivalent.
+    - h3 class 142 "Misc Active Object (resource generator)" - no-payload SoD
+      misc passable-terrain class (position + subtype + 5 bytes only), 0
+      instances in all test maps, no local source names its subtypes; the real
+      resource generators (h3 53 mines, 112 Windmill, 109 Water Wheel) are
+      already converted. Evidence: section 1b-note.
 
 ------------------------------------------------------------
 1. H3 object classes with NO Olden Era equivalent: 88 of 143
@@ -51,7 +56,8 @@ no_olden_era_equivalent.english.txt section 1.)
      Sirens x2, Mermaids x2, Ocean Bottle x2)
 
 1b. Creature banks / generators - banks 16/84/25 CONVERTED (see section
-    6), only h3 142 Misc Active (resource generator) remains unmapped
+    6), only h3 142 Misc Active (resource generator) remains unmapped -
+    [DROPPED BY DECISION, see section 0]
 
 1b-note. h3 142 "Misc Active Object (resource generator)" - investigation
     (evidence for the triage; nothing implemented for 142 yet)
@@ -93,10 +99,9 @@ no_olden_era_equivalent.english.txt section 1.)
     105 (Wagon) + 39 (Lean To), abandoned_corpse -> 22 (Corpse),
     gingerbread_house -> 109 (Water Wheel). Still unmapped: crow_nest,
     goblin_cache, monty_hall, mystical_tower, storage_* x7, village.
-  * Recommendation: 142 carries no payload, so only the subtype (def) would
-    be lost; no test map uses it. Keep it DROPPED, or map it onto the
-    unmapped OE resource_banks above (needs a per-sid user decision, like
-    the creature banks).
+  * DECISION (user): keep 142 DROPPED - see section 0. The unmapped OE
+    resource_banks above stay unconverted in the reverse direction for now
+    (listed in section 3d).
 
 1c. Battlefield terrains (12) - OE has no battlefield-terrain object layer
     h3 21 + 223 Cursed Ground, 46 + 230 Magic Plains, 141 Magical Terrain,
