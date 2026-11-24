@@ -981,10 +981,11 @@ for _h3, _exact in OE_SCENERY_DISPATCH.items():
 # map-write.ts SIDS_WITH_VARIANTS_AND_REWARD_PARAMS).
 # OE sids that get propVariants + propRewardParams rows seeded on fresh
 # placement (the game editor's SIDS_WITH_VARIANTS_AND_REWARD_PARAMS):
-# the creature-bank classes (16/24/25/84/85) and the seer-hut sid
-# lost_library (user mapping h3 83 -> lost_library).
+# the creature-bank classes (16/24/25/84/85), the seer-hut sid
+# lost_library (user mapping h3 83 -> lost_library) and the witch-hut sid
+# wise_owl (user mapping h3 113 -> wise_owl).
 HOMMOE_BANK_SIDS = set()
-for _cls in (16, 24, 25, 84, 85, 83):
+for _cls in (16, 24, 25, 84, 85, 83, 113):
     _h = str(_cls)
     if _h in OE_DISPATCH:
         HOMMOE_BANK_SIDS.update((OE_DISPATCH[_h].get("subtypes") or {}).values())
@@ -1758,6 +1759,7 @@ def _hommoe_objects_to_unified(adventure, width):
     # fh2m monsters 67-71).
     from correspondence import H3M_TO_FH2M_MONSTERS, H3M_RANDOM_MONSTER_CLASSES
     monster_metadata = OrderedDict()
+    witchhut_metadata = OrderedDict()
     for tile_key, obj_list in tiles.items():
         for entry in obj_list:
             if entry.get("group") != "MONSTERS":
@@ -1823,12 +1825,22 @@ def _hommoe_objects_to_unified(adventure, width):
                 pandora_metadata[str(entry.get("id"))] = _hommoe_pandora_to_metadata(
                     entry.get("properties") or {})
             elif sid in HOMMOE_BANK_SIDS:
-                # Creature bank: recover the h3m class/subtype from the
+                # Bank / variant sid: recover the h3m class/subtype from the
                 # correspondence (first indexed candidate).
                 cands = OE_SID_TO_H3.get(sid) or []
                 if cands:
                     entry["class"] = cands[0][0]
                     entry["subclass"] = cands[0][1] or 0
+                if sid == "wise_owl":
+                    # Witch hut: the taught skill rides in propRewardParams
+                    # parameters as a bare OE skill sid (random when empty).
+                    rp = (entry.get("properties") or {}).get("propRewardParams") or {}
+                    params = rp.get("parameters") or []
+                    skill = None
+                    if params and str(params[0]) in OE_SKILL_SID_TO_H3:
+                        skill = OE_SKILL_SID_TO_H3[str(params[0])]
+                    witchhut_metadata[str(entry.get("id"))] = OrderedDict([
+                        ("skill", skill)])
     result = OrderedDict([("tiles", tiles)])
     if monster_metadata:
         result["monsterMetadata"] = monster_metadata
@@ -1836,6 +1848,8 @@ def _hommoe_objects_to_unified(adventure, width):
         result["artifactMetadata"] = artifact_metadata
     if pandora_metadata:
         result["pandoraMetadata"] = pandora_metadata
+    if witchhut_metadata:
+        result["witchhutMetadata"] = witchhut_metadata
     # Raw adventure-level data with no unified equivalent, kept as-is.
     if adventure.get("rivers"):
         result["sourceRivers"] = adventure["rivers"]
@@ -4999,18 +5013,28 @@ def unified_to_hommoe(unified):
                     if pandora_meta:
                         _hommoe_pandora_props(prop_rows, oid, pandora_meta)
                 if sid in HOMMOE_BANK_SIDS:
-                    # Creature bank: seed the propVariants + propRewardParams
-                    # rows the game editor always adds for bank sids
-                    # (selectedVar -1 = random logic variant, empty parameters
-                    # = the variant's own reward; shapes of the real rows in
-                    # Broken_Alliance / c_M1). SoD banks carry no per-instance
-                    # guards, so no propSquads is synthesized here.
+                    # Bank / variant sid: seed the propVariants +
+                    # propRewardParams rows the game editor always adds for
+                    # these sids (selectedVar -1 = random logic variant,
+                    # empty parameters = the variant's own reward; shapes of
+                    # the real rows in Broken_Alliance / c_M1). SoD banks
+                    # carry no per-instance guards, so no propSquads is
+                    # synthesized here. Witch hut (wise_owl): a fixed h3
+                    # skill rides in parameters as a bare OE skill sid.
+                    reward_params = []
+                    if sid == "wise_owl":
+                        wh_meta = (objects.get("witchhutMetadata") or {}).get(str(oid)) or {}
+                        skill = wh_meta.get("skill")
+                        if skill is not None:
+                            sk_sid = OE_SKILL_EQUIVALENTS.get(str(skill))
+                            if sk_sid:
+                                reward_params = [sk_sid]
                     prop_rows.setdefault("propVariants", []).append(OrderedDict([
                         ("type", 0), ("id", oid), ("selectedVar", -1),
                         ("typeVariant", 0), ("fraction", 0), ("unitVersion", 0),
                     ]))
                     prop_rows.setdefault("propRewardParams", []).append(OrderedDict([
-                        ("type", 0), ("id", oid), ("parameters", []),
+                        ("type", 0), ("id", oid), ("parameters", reward_params),
                     ]))
                 if not sid:
                     bf_class = obj.get("class")
@@ -5630,7 +5654,12 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
             else:
                 terrain_pos = (raw_x, raw_y)
             entry = None
-            if obj.get("class") == 83:
+            if obj.get("class") == 113:
+                # Witch hut (hommoe source, sid wise_owl): the taught skill
+                # comes from witchhutMetadata (AB/SoD 4-byte skill bitmask).
+                wh_meta = (objects_section.get("witchhutMetadata") or {}).get(str(obj_id)) or {}
+                entry = ("witchHut", (x, y, z), (113, int(obj.get("subclass") or 0)), wh_meta)
+            if entry is None and obj.get("class") == 83:
                 # Seer hut (hommoe source, sid lost_library): the quest and
                 # reward come from seerMetadata when present (h3m sources
                 # keep raw anyway), else an empty quest/reward is written.
@@ -6153,6 +6182,13 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
                 # (the same rule as the decorative class 113) - the
                 # parser reads them for every class 113 instance.
                 buffer.write(struct.pack("<I", 0xFFFFFFFF))
+        elif kind_name == "witchHut":
+            # Witch hut: AB/SoD carry a 4-byte skill bitmask (0xFFFFFFFF =
+            # random skill); RoE carries no skill bytes (random at start).
+            if version_ab:
+                skill = (payload or {}).get("skill")
+                bits = 0xFFFFFFFF if skill is None else (1 << (int(skill) & 31))
+                buffer.write(struct.pack("<I", bits & 0xFFFFFFFF))
         elif kind_name == "seerHut":
             # Seer hut layout, mirroring the h3decoder seerHut parser:
             # quest (RoE: one questArtifact byte), reward, 2 trailing bytes.

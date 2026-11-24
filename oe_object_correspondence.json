@@ -786,6 +786,11 @@
   "avxptw_3.def": "portal_1"
  },
  "dispatch": {
+  "113": {
+   "subtypes": {
+    "0": "wise_owl"
+   }
+  },
   "16": {
    "subtypes": {
     "0": "iridescent_abbey",
@@ -2264,11 +2269,6 @@
    "h3Id": 110,
    "h3Name": "Watering Hole",
    "reason": "unmapped_template_object_id_110"
-  },
-  {
-   "h3Id": 113,
-   "h3Name": "Witch Hut",
-   "reason": "witch_hut_deferred"
   },
   {
    "h3Id": 114,

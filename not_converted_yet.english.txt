@@ -137,8 +137,19 @@ no_olden_era_equivalent.english.txt section 1.)
       is an XP bank (exp_banks/lost_library.json, 6000/8000/10000 XP
       variants), so the h3 seer quest/reward payload (seerMetadata) is NOT
       converted to OE and comes back empty - only the object type survives.
-    Remaining unmapped: 93 Spell Scroll, 113 Witch Hut,
-    215 Quest Guard, 216/217/218 Random Dwelling (any/level/faction)
+    h3 113 Witch Hut - CONVERTED (user mapping Witch Hut <-> wise_owl):
+      dispatch subtype 0 -> sid wise_owl (a skill bank: skill_banks/
+      wise_owl.json, EachHeroOneTime, HeroSkillAdditionReward per variant);
+      wise_owl is in SIDS_WITH_VARIANTS_AND_REWARD_PARAMS so the writer
+      seeds propVariants{selectedVar:-1} + propRewardParams, putting the
+      mapped OE skill sid in parameters when the h3 hut has a fixed skill
+      (else empty = random, like the real maps). Reverse restores class 113
+      and witchhutMetadata from the propRewardParams parameters; the h3m
+      writer gained a witchHut encoder branch (AB/SoD 4-byte skill bitmask,
+      0xFFFFFFFF = random; RoE carries no skill bytes - verified both
+      widths). 7/7 witch huts of "all for one.h3m" round-trip.
+    Remaining unmapped: 93 Spell Scroll, 215 Quest Guard,
+    216/217/218 Random Dwelling (any/level/faction) - see 1d-note2
 
 1d-note. How events/messages convert today (evidence: h3decoder.py,
     unified.py, a real conversion of "all for one.h3m"):
@@ -177,6 +188,29 @@ no_olden_era_equivalent.english.txt section 1.)
     for 88-90; random-* spawn sids exist; NO stock sign / seer hut /
     witch hut / quest guard / random dwelling object (checked all
     DB/map/objects/*.json + display names).
+
+1d-note2. h3 216/217/218 Random Dwelling (any / preset level / preset
+    alignment) - research for the triage decision:
+  * h3m payload (h3decoder randomDwelling branch + h3m2json corpus
+    parse_od_random_dwelling.c): owner u32 (0xFF none); classes 216/217
+    add castle_absod_id u32 (target town for the "same as" alignment; when
+    0, a 2-byte town bitfield follows); classes 216/218 add minLevel u8 +
+    maxLevel u8 (0-based). So 216 = both, 217 = absod only, 218 = levels
+    only. No test map of input/ contains classes 216/217/218.
+  * The reference map-editor-json-tool marks all three omit
+    ("random_dwelling_*_unsupported" - its decoder does not parse them);
+    VCMI's config/objects/generic.json does define randomDwelling templates
+    for 216-218 (external confirmation of the class ids).
+  * OE side: the only random spawners are 7_spawns.json random-city /
+    random-hero / random-squad / random-res / random-item / random-hire
+    (all already mapped to h3 77/70/71-75/76/65-69/213). Dwellings in OE
+    are fixed barracks_* templates; no dwelling template carries a random
+    flag (only scenery has randomRotation). So OE stock has NO random
+    dwelling object - the OE RMG places dwellings itself.
+  * fh2m: no random-dwelling mapping in the correspondence tables.
+  * Options: DROP (like the water objects), or map to a fixed OE dwelling
+    (barracks_neutral_*) losing the randomness, or to random-hire
+    (mercenary_guild logic). Awaiting user decision.
 
 1e. Other (52): mostly "Unidentified" template placeholders (h3 0, 1, 3,
     40, 123, 156, 165-176, 178-198, 200-203, 205) plus 9 Border Guard,
