@@ -67,6 +67,7 @@ def main():
     only = [a for a in sys.argv[1:] if not a.startswith("-")]
     total_lost = collections.Counter()
     total_unmapped = collections.Counter()
+    total_painted = collections.Counter()
     for file_name in sorted(os.listdir(INPUT_DIR)):
         lower = file_name.lower()
         if lower.endswith(".h3m"):
@@ -86,6 +87,10 @@ def main():
             ref = U._unified_obj_h3m_ref(o)
             key = ("h3 class %s" % ref[0]) if ref else (o.get("group"), o.get("index"))
             total_unmapped[key] += 1
+        for o in U.HOMMOE_BATTLEFIELD_PAINTED:
+            key = "h3 class %s -> biome %s (tilesMap %s)" % (
+                o.get("class"), o.get("biome"), o.get("biomeId"))
+            total_painted[key] += 1
         u_oe = convert_to_unified(parse_hommoe(os.path.join(LOOP_DIR, base + ".map")),
                                   "hommoe")
         back_ext = ".h3m" if game == "h3m" else ".fh2m"
@@ -98,6 +103,16 @@ def main():
         types_back, refs_back, var_back = inventories(u_back)
         lost = refs_src - refs_back
         gained = refs_back - refs_src
+        # Battlefield-terrain objects were converted into a tile biome
+        # repaint instead of being dropped: do not count them as lost.
+        for o in U.HOMMOE_BATTLEFIELD_PAINTED:
+            ref = U._unified_obj_h3m_ref(o)
+            if ref:
+                key = ("h3", ref[0], ref[1])
+                if lost.get(key):
+                    lost[key] -= 1
+                    if lost[key] <= 0:
+                        del lost[key]
         var_lost = var_src - var_back
         print("== %s (%s): objects %d -> %d, lost ref-types %d (%d objs), "
               "gained %d (%d objs), sprite variants changed %d" % (
@@ -117,6 +132,9 @@ def main():
         print("%6d  %s %s" % (n, key, name))
     print("\n== TOTAL objects dropped when writing .map (no OE equivalent) ==")
     for key, n in total_unmapped.most_common(40):
+        print("%6d  %s" % (n, key))
+    print("\n== TOTAL battlefield-terrain objects converted to a tile biome ==")
+    for key, n in total_painted.most_common(40):
         print("%6d  %s" % (n, key))
     return 0
 

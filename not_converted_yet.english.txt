@@ -103,11 +103,17 @@ no_olden_era_equivalent.english.txt section 1.)
     resource_banks above stay unconverted in the reverse direction for now
     (listed in section 3d).
 
-1c. Battlefield terrains (12) - OE has no battlefield-terrain object layer
-    h3 21 + 223 Cursed Ground, 46 + 230 Magic Plains, 141 Magical Terrain,
-    224 Evil Fog, 225 Favorable Winds, 226 Fiery Fields, 227 Holy Ground,
-    228 Lucid Pools, 229 Magic Clouds, 231 Rocklands
-    dropped in the loop check: 26 objects (Cursed Ground x19, Magic Plains x7)
+1c. Battlefield terrains (12) - OE has no battlefield-terrain object layer,
+    so the user mapped them to TILE BIOMES (battles use the tile's biome):
+    CONVERTED (user mapping, unified.py HOMMOE_BATTLEFIELD_CLASS_TO_BIOME):
+    h3 21+223 Cursed Ground -> Wasteland (tilesMap 3), 46+230 Magic Plains
+    -> Grass (1), 224 Evil Fog -> Lava (6), 225 Favorable Winds -> Grass,
+    226 Fiery Fields -> Lava, 227 Holy Ground -> Grass, 228 Lucid Pools ->
+    Grass, 229 Magic Clouds -> Grass, 231 Rocklands -> Dirt (7).
+    The object itself is dropped (no OE sid); the tile is repainted.
+    Loop check: 26 objects converted (Cursed Ground x19, Magic Plains x7).
+    Reverse (.map -> h3m) yields the PLAIN biome, not the magical object
+    (lossy, see section 4). Only h3 141 Magical Terrain stays unmapped.
 
 1d. Quest / message / dwelling (9)
     h3 26 Event, 83 Seer Hut, 91 Sign, 93 Spell Scroll, 113 Witch Hut,
@@ -184,6 +190,9 @@ Loop-check total when writing .map: 590 dropped objects in 40 types
     hero class is not kept per object.
   - Roads and rivers are not OE objects: they live in the terrain layer
     (roadsMap bitfield, rivers node lists).
+  - H3 battlefield terrains (21/46/223-231 except 141) -> OE tile biome
+    repaint (user mapping, section 1c); the way back gives the plain
+    biome, never the magical-terrain object.
   - H3 Event / Sign / Seer Hut / Quest Guard -> OE quest script triggers
     when the metadata fits: message -> Print, resources -> GiveRes,
     artifact -> GiveItemHero, skill -> AddSkillAll/AddSkillHero.

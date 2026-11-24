@@ -802,6 +802,30 @@ HOMMOE_TILE_TERRAINS = {
     7: "Dirt",
 }
 
+# H3 battlefield-terrain object classes -> Olden Era biome (user-provided
+# mapping). Olden Era has no battlefield-terrain object layer: a battle
+# uses the biome of the tile it is fought on, so these objects convert by
+# repainting their tile's tilesMap biome; the object itself has no OE sid
+# and is not emitted (it is recorded in HOMMOE_BATTLEFIELD_PAINTED instead
+# of HOMMOE_UNMAPPED_OBJECTS). Biome names resolve to tilesMap ids through
+# UNIFIED_TO_HOMMOE_TILE. h3 141 (Magical Terrain) is NOT in this table
+# and stays dropped.
+HOMMOE_BATTLEFIELD_CLASS_TO_BIOME = {
+    21: "Wasteland", 223: "Wasteland",   # Cursed Ground
+    46: "Grass", 230: "Grass",           # Magic Plains
+    224: "Lava",                          # Evil Fog
+    225: "Grass",                         # Favorable Winds
+    226: "Lava",                          # Fiery Fields
+    227: "Grass",                         # Holy Ground
+    228: "Grass",                         # Lucid Pools
+    229: "Grass",                         # Magic Clouds
+    231: "Dirt",                          # Rocklands
+}
+
+# Battlefield-terrain objects converted into a tilesMap biome repaint by
+# unified_to_hommoe; reset on each call, consumed by oe_loop_check.py.
+HOMMOE_BATTLEFIELD_PAINTED = []
+
 # Olden Era win conditions: adventure.settings.mapWinConditions[] entries,
 # keyed by typeWinCondition. Enum from the game's own RMG (see
 # /workspace/references/map-editor-json-tool/src/lib/rmg/win-conditions.ts
@@ -4676,6 +4700,7 @@ def unified_to_hommoe(unified):
             cell.get("terrain", "Grass")
 
     del HOMMOE_UNMAPPED_OBJECTS[:]
+    del HOMMOE_BATTLEFIELD_PAINTED[:]
     objects = unified.get("objects") or {}
     groups = {}
     order = []
@@ -4759,6 +4784,31 @@ def unified_to_hommoe(unified):
                         ("type", 0), ("id", oid), ("parameters", []),
                     ]))
                 if not sid:
+                    bf_class = obj.get("class")
+                    if bf_class in HOMMOE_BATTLEFIELD_CLASS_TO_BIOME:
+                        # Battlefield terrain -> repaint the tile's tilesMap
+                        # biome (OE battles use the tile biome; there is no
+                        # OE object for magical terrain). The reverse
+                        # direction yields the plain biome, not the object.
+                        bf_biome = HOMMOE_BATTLEFIELD_CLASS_TO_BIOME[bf_class]
+                        biome_id = UNIFIED_TO_HOMMOE_TILE.get(bf_biome, 1)
+                        try:
+                            _bx, _by, _bz = tile_key.split("_")
+                            _bidx = int(_by) * width + int(_bx)
+                            if 0 <= _bidx < total:
+                                tiles_map[_bidx] = biome_id
+                        except (ValueError, IndexError):
+                            pass
+                        HOMMOE_BATTLEFIELD_PAINTED.append(OrderedDict([
+                            ("group", group),
+                            ("class", bf_class),
+                            ("subclass", obj.get("subclass")),
+                            ("sprite", obj.get("sprite")),
+                            ("tile", tile_key),
+                            ("biome", bf_biome),
+                            ("biomeId", biome_id),
+                        ]))
+                        continue
                     # No Olden Era equivalent for this object type.
                     HOMMOE_UNMAPPED_OBJECTS.append(OrderedDict([
                         ("group", group),

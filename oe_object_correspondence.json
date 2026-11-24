@@ -2026,7 +2026,7 @@
   {
    "h3Id": 21,
    "h3Name": "Cursed Ground",
-   "reason": "unmapped_template_object_id_21"
+   "reason": "converted_to_tile_biome_Wasteland (object dropped, tile repainted; user mapping)"
   },
   {
    "h3Id": 23,
@@ -2106,7 +2106,7 @@
   {
    "h3Id": 46,
    "h3Name": "Magic Plains",
-   "reason": "unmapped_template_object_id_46"
+   "reason": "converted_to_tile_biome_Grass (object dropped, tile repainted; user mapping)"
   },
   {
    "h3Id": 47,
@@ -2636,47 +2636,47 @@
   {
    "h3Id": 223,
    "h3Name": "Cursed Ground",
-   "reason": "unmapped_template_object_id_223"
+   "reason": "converted_to_tile_biome_Wasteland (object dropped, tile repainted; user mapping)"
   },
   {
    "h3Id": 224,
    "h3Name": "Evil Fog",
-   "reason": "unmapped_template_object_id_224"
+   "reason": "converted_to_tile_biome_Lava (object dropped, tile repainted; user mapping)"
   },
   {
    "h3Id": 225,
    "h3Name": "Favorable Winds",
-   "reason": "unmapped_template_object_id_225"
+   "reason": "converted_to_tile_biome_Grass (object dropped, tile repainted; user mapping)"
   },
   {
    "h3Id": 226,
    "h3Name": "Fiery Fields",
-   "reason": "unmapped_template_object_id_226"
+   "reason": "converted_to_tile_biome_Lava (object dropped, tile repainted; user mapping)"
   },
   {
    "h3Id": 227,
    "h3Name": "Holy Ground",
-   "reason": "unmapped_template_object_id_227"
+   "reason": "converted_to_tile_biome_Grass (object dropped, tile repainted; user mapping)"
   },
   {
    "h3Id": 228,
    "h3Name": "Lucid Pools",
-   "reason": "unmapped_template_object_id_228"
+   "reason": "converted_to_tile_biome_Grass (object dropped, tile repainted; user mapping)"
   },
   {
    "h3Id": 229,
    "h3Name": "Magic Clouds",
-   "reason": "unmapped_template_object_id_229"
+   "reason": "converted_to_tile_biome_Grass (object dropped, tile repainted; user mapping)"
   },
   {
    "h3Id": 230,
    "h3Name": "Magic Plains",
-   "reason": "unmapped_template_object_id_230"
+   "reason": "converted_to_tile_biome_Grass (object dropped, tile repainted; user mapping)"
   },
   {
    "h3Id": 231,
    "h3Name": "Rocklands",
-   "reason": "unmapped_template_object_id_231"
+   "reason": "converted_to_tile_biome_Dirt (object dropped, tile repainted; user mapping)"
   }
  ],
  "role_biome_sid": {
