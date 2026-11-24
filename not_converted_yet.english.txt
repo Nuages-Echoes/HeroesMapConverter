@@ -148,8 +148,8 @@ no_olden_era_equivalent.english.txt section 1.)
       writer gained a witchHut encoder branch (AB/SoD 4-byte skill bitmask,
       0xFFFFFFFF = random; RoE carries no skill bytes - verified both
       widths). 7/7 witch huts of "all for one.h3m" round-trip.
-    Remaining unmapped: 93 Spell Scroll, 215 Quest Guard,
-    216/217/218 Random Dwelling (any/level/faction) - see 1d-note2
+    Remaining unmapped: 93 Spell Scroll, 215 Quest Guard.
+    216/217/218 Random Dwelling are now CONVERTED - see 1d-note2e.
 
 1d-note. How events/messages convert today (evidence: h3decoder.py,
     unified.py, a real conversion of "all for one.h3m"):
@@ -208,9 +208,52 @@ no_olden_era_equivalent.english.txt section 1.)
     flag (only scenery has randomRotation). So OE stock has NO random
     dwelling object - the OE RMG places dwellings itself.
   * fh2m: no random-dwelling mapping in the correspondence tables.
-  * Options: DROP (like the water objects), or map to a fixed OE dwelling
-    (barracks_neutral_*) losing the randomness, or to random-hire
-    (mercenary_guild logic). Awaiting user decision.
+  * Options considered: DROP (like the water objects), or map to a fixed
+    OE dwelling losing the randomness, or to random-hire. DECIDED and
+    IMPLEMENTED: converter-side resolution - see 1d-note2e.
+
+1d-note2e. Random dwellings 216/217/218 + dwelling player links -
+    IMPLEMENTED (h3decoder.py + unified.py + oe_loop_check.py):
+  * h3decoder keeps the random-dwelling payload in a new
+    randomDwellingMetadata map (owner u32, castleAbsodId for 216/217,
+    towns bitfield when absod==0, minLevel/maxLevel for 216/218) and the
+    town absod objectID in townMetadata.objectID (AB/SoD; RoE maps have
+    none). h3m->h3m stays byte-exact via the raw object passthrough.
+  * Forward (unified_to_hommoe): a 216/217/218 object resolves to a fixed
+    barracks_<faction>_<tier> sid - faction from castle_absodId (the
+    target town's faction via townMetadata.objectID / object index, race
+    through H3M_TOWN_TYPE_TO_FH2M_RACE + UNIFIED_TO_HOMMOE_FACTION_SID),
+    else a random set bit of the towns bitfield, else fully random;
+    tier = random in [minLevel, maxLevel] (0-based, clamped 0-6) + 1,
+    else random 1-7. Every conversion is recorded in
+    HOMMOE_RANDOM_DWELLINGS and reported by oe_loop_check.py. LOSSY BY
+    DESIGN: OE has no random dwelling, so "random" is resolved once at
+    conversion time and the city link is replaced by the resolved faction
+    (the player link below is kept).
+  * Player link: ownableMetadata owner (h3 color byte 0-7, 255 none) ->
+    a propOwners row {type:0, id, owner} with the 0-BASED player index
+    (compact 1-based spawn numbering - 1; see 1d-note2c). Written for
+    every ownable object (dwellings, mines) and for 216/217/218 owners;
+    neutral (255 / invalid) gets no row (OE default = neutral). Hommoe
+    sources keep their own propOwners rows via the properties
+    passthrough (no duplicates). Reverse (_hommoe_owners_to_unified):
+    propOwners owner o -> playerDetails[o] color -> h3 color byte ->
+    ownableMetadata; -1/absent = neutral. The h3m encoder's ownable
+    branch now writes that owner word instead of a fixed 0xFF.
+  * The writer now emits the real spawn colorId (index into
+    HOMMOE_PLAYER_COLORS, fh2m Yellow aliased to Tan) instead of -1, so
+    player colors survive the round trip (verified synthetically:
+    Red/Blue -> colorId 2/0 -> back to owner bytes 0/1).
+  * Reverse of a barracks_* sid recovers the exact h3m dwelling subtype
+    from the def (dispatch exact tables <-> H3M_DWELLING_DEFS), so the
+    faction survives the trip back to h3m/fh2m (class 17 subclass), not
+    just a per-group counter.
+  * Verified with a synthetic map (no input/ map contains 216-218):
+    class 216 + castleAbsodId=<Castle town> + levels 2-3 + owner Blue ->
+    barracks_human_3..4 + propOwners owner 1; class 17 owner Red ->
+    barracks_* + propOwners owner 0; mine owner 255 -> no row; reverse
+    recovers ownableMetadata {Blue:1, Red:0, neutral} and h3m classes
+    (17, dwelling subtype) per barracks def.
 
 1d-note2b. "Dwelling linked to a specific castle" - evidence (Core.zip +
     references): the H3 side DOES have it: castle_absod_id on 216/217 is
