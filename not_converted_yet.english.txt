@@ -285,6 +285,35 @@ OE side (committed Core.zip):
   propSquads 5 slots, selectedVar 0, propActionsAfter DialogOne);
   c_M1 abandoned_mansion x1 (selectedVar 0).
 
+  Divined H3<->OE bank matches (OE guards from Core.zip via the local
+  OE_UNIT_SID_TO_H3_CREATURE table; H3 bank guards from heroes.thelazy.net
+  wiki = EXTERNAL source, subtype numbering beyond 0-6 is not locally
+  documented - the catalog only has AVXbnk10..70 = subtypes 0-6):
+    H3 Dragon Utopia (class 25; guards dragons/Black Dragons)
+      -> dragon_utopia (guards Black/Red Dragon) - name + guards exact;
+         already emit-mapped (25 -> dragon_utopia), needs prop rows
+    H3 Crypt (class 84; Skeletons/Wights/Vampires)
+      -> unforgotten_grave "Tomb of Vigilance" (guards Wight/Wraith) by
+         guards; overgrown_grave "Ancient Crypt" is the name match but is
+         already taken by the user's Pyramid mapping and its guard
+         (animated_armor) does not match
+    H3 Griffin Conservatory -> jousting_range "Colosseum" (Griffin guards)
+    H3 Beholders' Sanctuary -> alvars_eye (Beholder + Evil Eye, exact)
+    H3 Ivory Tower (Arch Magi) -> abnormal_structure (Arch Mage guards)
+    H3 Mansion (Vampire Lords) -> abandoned_mansion (name + Vampire Lord)
+    H3 Dwarven Treasury (Dwarves/Battle Dwarves) -> circle_of_life
+         (Battle Dwarf among guards)
+    H3 Medusa Stores (Medusas) -> petrified_memorial or troglodyte_throne
+    H3 Naga Bank (Nagas) -> uncanny_rite (Naga among guards)
+    H3 Experimental Shop (Steel Golems) -> boreal_call (Iron/Stone Golem)
+    H3 Red Tower (Fire/Energy Elementals) -> iridescent_abbey (elementals)
+    H3 Ruins (Wights/Wraiths/Skeleton Warriors) -> cursed_old_house
+    no OE guard match: Cyclops Stockpile, Dragon Fly Hive
+    HotA-only banks (Black Tower, Ancient Altar, Churchyard, Spit, Wolf
+    Raider Picket) are not in SoD maps - skip
+    water banks (Derelict Ship 24, Shipwreck 85, Pirate Cavern, Temple of
+    the Sea) -> DROPPED with water (section 0)
+
 ------------------------------------------------------------
 7. How to regenerate the numbers
 ------------------------------------------------------------
