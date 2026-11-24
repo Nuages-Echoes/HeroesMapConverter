@@ -309,6 +309,14 @@
   "98": "Boots of Speed",
   "99": "Cape of Velocity"
  },
+ "converted_random_dwellings": {
+  "classes": [
+   216,
+   217,
+   218
+  ],
+  "rule": "barracks_<faction>_<tier>; faction from castle_absod_id (target town) or towns bitfield, else random; tier from min/max level, else random; owner -> propOwners row (0-based). Reverse yields a regular class-17 dwelling (randomness/city link not representable in OE)."
+ },
  "creature_equivalents": {
   "0": "esquire",
   "1": "esquire_upg",
@@ -2604,21 +2612,6 @@
    "h3Id": 215,
    "h3Name": "Quest Guard",
    "reason": "quest_guard_payload_deferred"
-  },
-  {
-   "h3Id": 216,
-   "h3Name": "Random Dwelling",
-   "reason": "random_dwelling_decoder_unsupported"
-  },
-  {
-   "h3Id": 217,
-   "h3Name": "Random Dwelling Lvl",
-   "reason": "random_dwelling_lvl_unsupported"
-  },
-  {
-   "h3Id": 218,
-   "h3Name": "Random Dwelling Faction",
-   "reason": "random_dwelling_faction_unsupported"
   },
   {
    "h3Id": 219,

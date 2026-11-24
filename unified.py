@@ -826,6 +826,101 @@ HOMMOE_BATTLEFIELD_CLASS_TO_BIOME = {
 # unified_to_hommoe; reset on each call, consumed by oe_loop_check.py.
 HOMMOE_BATTLEFIELD_PAINTED = []
 
+# H3 random dwelling classes (216/217/218). OE dwellings have no city link
+# and no random flag (all 69 barracks_* templates are fixed faction/tier/
+# units, DB/objects_logic/hires/barracks.json), so the converter resolves
+# the random choice at conversion time: faction from castle_absod_id (the
+# target town's faction) or from the towns alignment bitfield, tier from
+# min/max level; the owner (player link) is kept as a propOwners row.
+# Evidence: not_converted_yet.english.txt 1d-note2b/2c/2d.
+HOMMOE_RANDOM_DWELLING_CLASSES = {216, 217, 218}
+
+# Random dwellings converted by unified_to_hommoe; reset on each call,
+# consumed by oe_loop_check.py.
+HOMMOE_RANDOM_DWELLINGS = []
+
+
+def _hommoe_owner_prop_value(owner, color_owner):
+    """h3m owner byte (color index 0-7, 255 = none) -> propOwners.owner
+    value (0-based player index, the GME convention; -1/absent = neutral),
+    through the compact 1-based owner numbering built for block 1 spawns.
+    Returns None when the object stays neutral (no propOwners row)."""
+    if not isinstance(owner, int) or owner < 0 or owner >= 8:
+        return None
+    if owner >= len(H3M_PLAYER_COLORS):
+        return None
+    compact = color_owner.get(H3M_PLAYER_COLORS[owner])
+    if compact is None:
+        return None
+    return compact - 1
+
+
+def _hommoe_random_dwelling_sid(obj, objects):
+    """Resolve an h3 random dwelling (class 216/217/218) to a fixed OE
+    barracks_<faction>_<tier> sid, resolving the h3 "random" at conversion
+    time: faction from castle_absod_id (target town's faction) or the
+    towns alignment bitfield, else fully random; tier from min/max level
+    (0-based levels -> tiers 1-7), else random. Recorded in
+    HOMMOE_RANDOM_DWELLINGS."""
+    from correspondence import H3M_TOWN_TYPE_TO_FH2M_RACE
+    rd = (objects.get("randomDwellingMetadata") or {}).get(str(obj.get("id"))) or {}
+    faction_sid = None
+    resolved_from = None
+    absod = rd.get("castleAbsodId")
+    if absod:
+        town_meta = objects.get("townMetadata") or {}
+        target = None
+        for _tile_key, obj_list in (objects.get("tiles") or {}).items():
+            for t in obj_list:
+                if t.get("group") != "KINGDOM_TOWNS":
+                    continue
+                tm = town_meta.get(str(t.get("id"))) or {}
+                # AB/SoD: castle_absod_id references the town's absod
+                # objectID; RoE: it references the object index.
+                if tm.get("objectID") == absod or t.get("id") == absod:
+                    target = (t, tm)
+                    break
+            if target:
+                break
+        if target is not None:
+            t, tm = target
+            town_type = tm.get("type")
+            if town_type is None and t.get("class") == 98:
+                town_type = t.get("subclass")
+            race = H3M_TOWN_TYPE_TO_FH2M_RACE.get(town_type) if town_type is not None else None
+            if race:
+                faction_sid = UNIFIED_TO_HOMMOE_FACTION_SID.get(race)
+                resolved_from = "town:%s" % absod
+    if faction_sid is None:
+        bf = rd.get("townBitfield")
+        bits = [i for i in range(9) if isinstance(bf, int) and (bf & (1 << i))]
+        if bits:
+            race = H3M_TOWN_TYPE_TO_FH2M_RACE.get(_random.choice(bits))
+            if race:
+                faction_sid = UNIFIED_TO_HOMMOE_FACTION_SID.get(race)
+                resolved_from = "bitfield"
+    if faction_sid is None:
+        # class 218 (or unresolved link): fully random faction
+        faction_sid = _random.choice(list(HOMMOE_FACTION_NAMES))
+        resolved_from = "random"
+    if rd.get("minLevel") is not None and rd.get("maxLevel") is not None:
+        lo = max(0, min(6, int(rd["minLevel"])))
+        hi = max(lo, min(6, int(rd["maxLevel"])))
+        tier = _random.randint(lo, hi) + 1
+    else:
+        tier = _random.randint(1, 7)
+    sid = "barracks_%s_%d" % (faction_sid, tier)
+    HOMMOE_RANDOM_DWELLINGS.append(OrderedDict([
+        ("id", obj.get("id")),
+        ("class", obj.get("class")),
+        ("sid", sid),
+        ("factionSid", faction_sid),
+        ("tier", tier),
+        ("resolvedFrom", resolved_from),
+        ("owner", rd.get("owner")),
+    ]))
+    return sid
+
 # Olden Era win conditions: adventure.settings.mapWinConditions[] entries,
 # keyed by typeWinCondition. Enum from the game's own RMG (see
 # /workspace/references/map-editor-json-tool/src/lib/rmg/win-conditions.ts
@@ -1349,6 +1444,16 @@ def _hommoe_sid_to_group_index(sid):
                 break
     elif group == "ADVENTURE_DWELLINGS" and subtype is not None:
         index = H3M_TO_FH2M_DWELLINGS.get(subtype)
+    elif group == "ADVENTURE_DWELLINGS" and def_name:
+        # barracks_* sid: the dispatch exact tables key h3m defs to barracks
+        # sids; the same def is the class-17 catalog entry in
+        # H3M_DWELLING_DEFS, so the def recovers the dwelling subtype (and
+        # with it the faction) instead of a per-group counter.
+        from correspondence import H3M_DWELLING_DEFS
+        def_to_sub = {v[0].lower(): k for k, v in H3M_DWELLING_DEFS.items()}
+        sub = def_to_sub.get((def_name or "").lower())
+        if sub is not None:
+            index = H3M_TO_FH2M_DWELLINGS.get(sub)
     elif group == "ADVENTURE_MISCELLANEOUS":
         # Misc interactables (witch hut 113 -> MISC_26, ...): invert the
         # fh2m misc table so a hommoe-sourced object lands back on its
@@ -1867,6 +1972,40 @@ def _hommoe_objects_to_unified(adventure, width):
     return result
 
 
+def _hommoe_owners_to_unified(unified):
+    """Recover h3m-style ownableMetadata owners from propOwners rows.
+    propOwners.owner is a 0-based player index while block 1 spawns (and
+    unified playerDetails) are 1-based, so stored owner o maps to
+    playerDetails[o]; -1/absent means neutral and needs no row on the h3m
+    side (owner 0xFF). Only dwelling/mine objects carry it in practice
+    (random-city/random-hero use propOwners too, but they are not ownable
+    h3m classes). Evidence: not_converted_yet.english.txt 1d-note2c/2d."""
+    objects = unified.get("objects") or {}
+    tiles = objects.get("tiles") or {}
+    details = unified.get("playerDetails") or []
+    if not details or not tiles:
+        return
+    ownable = OrderedDict()
+    for _tile_key, obj_list in tiles.items():
+        for entry in obj_list:
+            if entry.get("group") not in ("ADVENTURE_DWELLINGS", "ADVENTURE_MINES"):
+                continue
+            row = (entry.get("properties") or {}).get("propOwners")
+            if not isinstance(row, dict):
+                continue
+            stored = row.get("owner")
+            if not isinstance(stored, int) or stored < 0 or stored >= len(details):
+                continue
+            color = FH2M_TO_H3M_COLOR_ALIAS.get(details[stored].get("color"),
+                                                details[stored].get("color"))
+            if color in H3M_PLAYER_COLORS:
+                ownable[str(entry.get("id"))] = OrderedDict([
+                    ("owner", H3M_PLAYER_COLORS.index(color)),
+                ])
+    if ownable:
+        objects["ownableMetadata"] = ownable
+
+
 _HOMMOE_STAT_ACTION_TO_FIELD = {
     "offence": ("primarySkills", "attack"),
     "defence": ("primarySkills", "defense"),
@@ -2245,6 +2384,7 @@ def convert_hommoe_to_unified(map_data):
     ])
 
     unified["objects"] = _hommoe_objects_to_unified(adventure, width)
+    _hommoe_owners_to_unified(unified)
     _hommoe_quests_to_events(unified)
 
     return unified
@@ -4851,6 +4991,7 @@ def unified_to_hommoe(unified):
     computer_colors = players.get("computerColors") or []
     available_colors = players.get("availableColors") or []
     spawns = []
+    color_owner = {}
     for detail in player_details:
         color = detail.get("color")
         # Only real players get a block 1 spawn entry: the game counts every
@@ -4863,6 +5004,13 @@ def unified_to_hommoe(unified):
             continue
         human = color in human_colors
         available = color in available_colors
+        # Real OE maps carry the player's colorId (index into
+        # HOMMOE_PLAYER_COLORS); write it so the reverse conversion maps the
+        # spawn back to the original H2/H3 color (fh2m "Yellow" aliases to
+        # H3 "Tan", see FH2M_TO_H3M_COLOR_ALIAS). -1 when unknown.
+        oe_color = FH2M_TO_H3M_COLOR_ALIAS.get(color, color)
+        color_id = HOMMOE_PLAYER_COLORS.index(oe_color) \
+            if oe_color in HOMMOE_PLAYER_COLORS else -1
         spawn = OrderedDict([
             ("owner", len(spawns) + 1),
             ("spawnType", 0 if human else (1 if available else 2)),
@@ -4872,11 +5020,12 @@ def unified_to_hommoe(unified):
             ("factionSid", _hommoe_faction_sid(detail)),
             ("isHeroDefined", bool(detail.get("sourceHeroSid"))),
             ("heroSid", detail.get("sourceHeroSid", "")),
-            ("colorId", -1),
+            ("colorId", color_id),
             ("isAlive", True),
             ("isLocked", False),
         ])
         spawns.append(spawn)
+        color_owner[color] = len(spawns)
     scenario = OrderedDict([
         ("title", name),
         ("template", ""),
@@ -4940,6 +5089,7 @@ def unified_to_hommoe(unified):
 
     del HOMMOE_UNMAPPED_OBJECTS[:]
     del HOMMOE_BATTLEFIELD_PAINTED[:]
+    del HOMMOE_RANDOM_DWELLINGS[:]
     objects = unified.get("objects") or {}
     groups = {}
     order = []
@@ -4995,6 +5145,11 @@ def unified_to_hommoe(unified):
                     if ref is not None:
                         sid = _resolve_hommoe_sid(ref[0], ref[2], ref[1],
                                                   terrain_name)
+                    if sid is None and obj.get("class") in HOMMOE_RANDOM_DWELLING_CLASSES:
+                        # Random dwelling (216/217/218): resolve to a fixed
+                        # barracks_<faction>_<tier> (see 1d-note2b/2d); the
+                        # owner rides along as a propOwners row below.
+                        sid = _hommoe_random_dwelling_sid(obj, objects)
                     if sid is None:
                         sid = HOMMOE_GROUP_TO_SID.get(group)
                 if group == "ADVENTURE_ARTIFACTS" and sid == "random-item":
@@ -5081,6 +5236,29 @@ def unified_to_hommoe(unified):
                         ("tile", tile_key),
                     ]))
                     continue
+            # Player link for ownable objects (dwellings, mines, ...): the
+            # h3m ownableMetadata owner byte maps to a propOwners row
+            # (0-based player index; absent = neutral). Evidence:
+            # not_converted_yet.english.txt 1d-note2c/2d. Hommoe-sourced
+            # objects already carry their propOwners row in "properties"
+            # (passthrough below), so no duplicate row is added.
+            own_meta = (objects.get("ownableMetadata") or {}).get(str(oid)) or {}
+            if own_meta.get("owner") is not None:
+                stored_owner = _hommoe_owner_prop_value(own_meta.get("owner"),
+                                                         color_owner)
+                if stored_owner is not None \
+                        and not (obj.get("properties") or {}).get("propOwners"):
+                    prop_rows.setdefault("propOwners", []).append(OrderedDict([
+                        ("type", 0), ("id", oid), ("owner", stored_owner),
+                    ]))
+            if obj.get("class") in HOMMOE_RANDOM_DWELLING_CLASSES:
+                rd_meta = (objects.get("randomDwellingMetadata") or {}).get(str(oid)) or {}
+                stored_owner = _hommoe_owner_prop_value(rd_meta.get("owner"),
+                                                         color_owner)
+                if stored_owner is not None:
+                    prop_rows.setdefault("propOwners", []).append(OrderedDict([
+                        ("type", 0), ("id", oid), ("owner", stored_owner),
+                    ]))
             node = None
             try:
                 x, y, _z = tile_key.split("_")
@@ -5630,6 +5808,7 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
     objects_section = unified.get("objects") or {}
     tiles = objects_section.get("tiles") or {}
     monster_meta = objects_section.get("monsterMetadata") or {}
+    ownable_meta = objects_section.get("ownableMetadata") or {}
     resource_meta = objects_section.get("resourceMetadata") or {}
     artifact_meta = objects_section.get("artifactMetadata") or {}
     map_width = (unified.get("mapSize") or {}).get("width", 72)
@@ -5891,14 +6070,16 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
                 if h3m_mine is not None:
                     def_name = fh2m_mine_def_name(index)
                     entry = ("ownable", (x, y, z),
-                             (h3m_mine[0], h3m_mine[1], def_name), None)
+                             (h3m_mine[0], h3m_mine[1], def_name),
+                             ownable_meta.get(str(obj_id)) or None)
             elif group == "ADVENTURE_DWELLINGS":
                 # The fh2m dwelling index maps to the h3m ownable
                 # dwelling (class 17, subclass = dwelling id).
                 from correspondence import FH2M_TO_H3M_DWELLINGS
                 h3m_dwelling = FH2M_TO_H3M_DWELLINGS.get(index)
                 if h3m_dwelling is not None:
-                    entry = ("ownable", (x, y, z), h3m_dwelling, None)
+                    entry = ("ownable", (x, y, z), h3m_dwelling,
+                             ownable_meta.get(str(obj_id)) or None)
             elif group in ("LANDSCAPE_TREES", "LANDSCAPE_MOUNTAINS",
                           "LANDSCAPE_ROCKS", "LANDSCAPE_MISCELLANEOUS",
                           "LANDSCAPE_WATER"):
@@ -6161,7 +6342,14 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
                 buffer.write(struct.pack("<I", 0xFFFFFFFF))
             # other decorative objects: no per-instance data
         elif kind_name == "ownable":
-            buffer.write(struct.pack("<I", 0xFF))  # neutral owner
+            # Owner word (0xFF = neutral); recovered from the unified
+            # ownableMetadata when the source carried one (h3m ownable
+            # classes / OE propOwners rows).
+            owner = payload.get("owner") if isinstance(payload, dict) else None
+            if isinstance(owner, int) and 0 <= owner < 8:
+                buffer.write(struct.pack("<I", owner))
+            else:
+                buffer.write(struct.pack("<I", 0xFF))  # neutral owner
         elif kind_name == "shrine":
             # RoE shrine layout is one spell byte + 3 padding bytes; the
             # real maps use 0xFF (random spell) there.

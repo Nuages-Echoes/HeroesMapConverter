@@ -68,6 +68,7 @@ def main():
     total_lost = collections.Counter()
     total_unmapped = collections.Counter()
     total_painted = collections.Counter()
+    total_rdw = collections.Counter()
     for file_name in sorted(os.listdir(INPUT_DIR)):
         lower = file_name.lower()
         if lower.endswith(".h3m"):
@@ -91,6 +92,10 @@ def main():
             key = "h3 class %s -> biome %s (tilesMap %s)" % (
                 o.get("class"), o.get("biome"), o.get("biomeId"))
             total_painted[key] += 1
+        for o in U.HOMMOE_RANDOM_DWELLINGS:
+            key = "h3 class %s -> %s (from %s)" % (
+                o.get("class"), o.get("sid"), o.get("resolvedFrom"))
+            total_rdw[key] += 1
         u_oe = convert_to_unified(parse_hommoe(os.path.join(LOOP_DIR, base + ".map")),
                                   "hommoe")
         back_ext = ".h3m" if game == "h3m" else ".fh2m"
@@ -135,6 +140,9 @@ def main():
         print("%6d  %s" % (n, key))
     print("\n== TOTAL battlefield-terrain objects converted to a tile biome ==")
     for key, n in total_painted.most_common(40):
+        print("%6d  %s" % (n, key))
+    print("\n== TOTAL random dwellings converted to a fixed barracks sid ==")
+    for key, n in total_rdw.most_common(40):
         print("%6d  %s" % (n, key))
     return 0
 

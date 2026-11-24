@@ -1203,6 +1203,7 @@ def parse_h3m_objects(raw_objects, level_ab, level_sod, artifact_id_bytes,
     hero_metadata = OrderedDict()
     sign_metadata = OrderedDict()
     ownable_metadata = OrderedDict()
+    random_dwelling_metadata = OrderedDict()
     town_metadata = OrderedDict()
     event_metadata = OrderedDict()
     shrine_metadata = OrderedDict()
@@ -1330,8 +1331,12 @@ def parse_h3m_objects(raw_objects, level_ab, level_sod, artifact_id_bytes,
                 ('owner', struct.unpack('<I', owner_data)[0]),
             ])
         elif kind_name == 'town':
+            town_absod = None
             if level_ab:
-                safe_read(buffer, 4)  # objectID
+                absod_data = safe_read(buffer, 4)  # objectID (absod id; random dwellings reference it)
+                if len(absod_data) < 4:
+                    break
+                town_absod = struct.unpack('<I', absod_data)[0]
             owner_data = safe_read(buffer, 1)
             if len(owner_data) < 1:
                 break
@@ -1346,6 +1351,8 @@ def parse_h3m_objects(raw_objects, level_ab, level_sod, artifact_id_bytes,
                 ('customName', town_name),
                 ('type', obj_subclass if obj_class == 98 else None),
             ])
+            if town_absod is not None:
+                town_meta['objectID'] = town_absod
             has_creatures = safe_read(buffer, 1)[0]
             if has_creatures:
                 creatures = []
@@ -1644,15 +1651,31 @@ def parse_h3m_objects(raw_objects, level_ab, level_sod, artifact_id_bytes,
                 ('spell', None if struct.unpack('<I', spell_data)[0] == 0xFF else struct.unpack('<I', spell_data)[0]),
             ])
         elif kind_name == 'randomDwelling':
-            safe_read(buffer, 4)  # owner
+            # Payload kept in randomDwellingMetadata so the OE writer can
+            # resolve the faction (castle_absod_id -> town, else the towns
+            # bitfield) and tier (min/max level) and the player link (owner)
+            # when converting to an OE barracks_* object.
+            rd_meta = OrderedDict()
+            owner_data = safe_read(buffer, 4)  # owner (0xFF none)
+            if len(owner_data) < 4:
+                break
+            rd_meta['owner'] = struct.unpack('<I', owner_data)[0]
             if obj_class in (216, 217):
                 object_id_data = safe_read(buffer, 4)
                 if len(object_id_data) < 4:
                     break
-                if struct.unpack('<I', object_id_data)[0] == 0:
-                    safe_read(buffer, 2)  # towns bitfield
+                rd_meta['castleAbsodId'] = struct.unpack('<I', object_id_data)[0]
+                if rd_meta['castleAbsodId'] == 0:
+                    bf_data = safe_read(buffer, 2)  # towns bitfield
+                    if len(bf_data) < 2:
+                        break
+                    rd_meta['townBitfield'] = struct.unpack('<H', bf_data)[0]
             if obj_class in (216, 218):
-                safe_read(buffer, 2)  # minLevel, maxLevel
+                lvl_data = safe_read(buffer, 2)  # minLevel, maxLevel
+                if len(lvl_data) < 2:
+                    break
+                rd_meta['minLevel'], rd_meta['maxLevel'] = struct.unpack('<BB', lvl_data)
+            random_dwelling_metadata[str(object_id)] = rd_meta
         elif kind_name == 'abandonedMine':
             safe_read(buffer, 4)  # owner
             safe_read(buffer, 4)  # potentialResources bitfield
@@ -1719,6 +1742,8 @@ def parse_h3m_objects(raw_objects, level_ab, level_sod, artifact_id_bytes,
         result['signMetadata'] = sign_metadata
     if ownable_metadata:
         result['ownableMetadata'] = ownable_metadata
+    if random_dwelling_metadata:
+        result['randomDwellingMetadata'] = random_dwelling_metadata
     if town_metadata:
         result['townMetadata'] = town_metadata
     if event_metadata:
