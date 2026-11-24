@@ -1349,6 +1349,15 @@ def _hommoe_sid_to_group_index(sid):
                 break
     elif group == "ADVENTURE_DWELLINGS" and subtype is not None:
         index = H3M_TO_FH2M_DWELLINGS.get(subtype)
+    elif group == "ADVENTURE_MISCELLANEOUS":
+        # Misc interactables (witch hut 113 -> MISC_26, ...): invert the
+        # fh2m misc table so a hommoe-sourced object lands back on its
+        # original fh2m index.
+        from correspondence import FH2M_TO_H3M_MISC
+        misc_reverse = {(v[0], v[1]): k for k, v in FH2M_TO_H3M_MISC.items()}
+        key = misc_reverse.get((h3_id, subtype or 0)) or misc_reverse.get((h3_id, None))
+        if key is not None and key.startswith("MISC_") and key[5:].isdigit():
+            index = int(key[5:])
     elif group == "LANDSCAPE_TREES" and def_name:
         index = H3M_TREE_DEF_TO_FH2M_INDEX.get(def_name)
     elif group == "LANDSCAPE_MOUNTAINS" and def_name:
