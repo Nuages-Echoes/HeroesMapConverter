@@ -285,6 +285,14 @@ OE side (committed Core.zip):
   propSquads 5 slots, selectedVar 0, propActionsAfter DialogOne);
   c_M1 abandoned_mansion x1 (selectedVar 0).
 
+  USER-PROVIDED bank mappings (authoritative, supersede the divined
+  guesses below):
+    Cyclops Stockpile <-> iridescent_abbey
+    Dragon Fly Hive <-> circle_of_life
+    Imp Cache -> circle_of_life   (same OE sid as Dragon Fly Hive: several
+      H3 banks can share one OE sid; the reverse direction will pick the
+      first indexed one)
+
   Divined H3<->OE bank matches (OE guards from Core.zip via the local
   OE_UNIT_SID_TO_H3_CREATURE table; H3 bank guards from heroes.thelazy.net
   wiki = EXTERNAL source, subtype numbering beyond 0-6 is not locally
@@ -301,8 +309,9 @@ OE side (committed Core.zip):
     H3 Beholders' Sanctuary -> alvars_eye (Beholder + Evil Eye, exact)
     H3 Ivory Tower (Arch Magi) -> abnormal_structure (Arch Mage guards)
     H3 Mansion (Vampire Lords) -> abandoned_mansion (name + Vampire Lord)
-    H3 Dwarven Treasury (Dwarves/Battle Dwarves) -> circle_of_life
-         (Battle Dwarf among guards)
+    H3 Dwarven Treasury (Dwarves/Battle Dwarves) -> circle_of_life was
+         the guard-based guess, but circle_of_life is now USER-MAPPED to
+         Dragon Fly Hive / Imp Cache - Dwarven Treasury unmatched for now
     H3 Medusa Stores (Medusas) -> petrified_memorial or troglodyte_throne
     H3 Naga Bank (Nagas) -> uncanny_rite (Naga among guards)
     H3 Experimental Shop (Steel Golems) -> boreal_call (Iron/Stone Golem)
