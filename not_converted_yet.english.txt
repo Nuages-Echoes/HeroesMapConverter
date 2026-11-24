@@ -274,6 +274,59 @@ no_olden_era_equivalent.english.txt section 1.)
   reference's own importer skips 216-218 entirely, so there is no stock
   precedent to copy for this field.
 
+1d-note2d. "Can an OE dwelling be linked to a PLAYER (who has a faction)?"
+    - YES. Two independent pieces of local evidence:
+    - Format: propOwners is a GENERIC per-object table, not city-only -
+      reference map-parser.ts:213 has no object-type restriction, and
+      map-extract.ts:288-294 joins propOwners rows to ANY object
+      (type 0) or zone (type 1) by id; the map-save.ts 'setObjectOwner'
+      edit (line 229-230) is generic over entityType. In the reference
+      editor UI the owner dropdown is only rendered for random-city /
+      random-hero (MapGridCellContent.tsx:777, 844), and among the 5
+      input/ test maps only Broken_Alliance.map carries propOwners
+      rows (3x random-city, owner:-1) - but nothing in the schema or
+      the writer restricts it to those sids; barracks templates
+      themselves carry no owner (barracks.json is fixed
+      fraction/tier/units), so ownership is per-instance = a propOwners
+      row. Absence semantics: without a row GME reads a random-city as
+      Player 1's (map-write.ts:1482); other objects (mines, barracks)
+      default to neutral - so for a barracks: no row = unflagged,
+      owner 0..N-1 = flagged by Player N+1, -1 = explicitly neutral
+      (propOwners.owner is 0-BASED, see 1d-note2c).
+    - Game mechanics: Core.zip Lang tutorial_M_11_1/2/3 - "Some
+      interactive objects on the map have an owner - the player who
+      last interacted with them", marked with a flag colored by the
+      controlling player, "Ownable objects include cities as well as
+      other key structures, such as:" - and tutorial_M_11_5:
+      "Creature dwellings - ... While flagged, these dwellings
+      passively increase the weekly growth of the corresponding
+      creatures in all your cities." (+ tutorial_C3_3: "Your flag must
+      be active at the beginning of the week for this growth bonus").
+      That bonus is exactly the cityUnitsIncrementFromBarrack bonus on
+      every barracks_* template in DB/objects_logic/hires/barracks.json
+      ("This city's dwellings produce +{2}% units"). So in OE a dwelling
+      is flaggable by a player, and the map-file record of that initial
+      owner is the propOwners row.
+    - H3 side has the same link: h3m-The-Corpus.txt - META_OBJECT_
+      DWELLING / DWELLING_ABSOD / LIGHTHOUSE / RESOURCE_GENERATOR /
+      SHIPYARD all carry [uint32] owner (0xFF none) (our h3decoder maps
+      classes 17/18/19/20/42/87/53 to kind 'ownable' ->
+      ownable_metadata[oid]['owner']), and the random dwellings
+      216/217/218 carry owner u32 as their FIRST payload field
+      (0xFF none; h3m2json maps it to the player list) - currently
+      parsed but discarded (h3decoder.py randomDwelling branch).
+    - Converter consequence: h3 dwelling owner (color byte 0-7,
+      0xFF none) <-> propOwners row on the emitted OE barracks, after
+      the compact player renumbering of 1d-note2c (h3 color c ->
+      final 1-based owner o -> stored 0-based owner o-1; 0xFF -> -1).
+      Reverse: OE propOwners owner o -> h3 owner byte via the inverse
+      renumbering, -1 -> 0xFF. So a random dwelling's h3 "owner" can be
+      preserved on an OE barracks via propOwners - but note OE owner
+      means "flagged by" (drives the city growth bonus), while h3 216-
+      218 faction alignment uses castle_absod_id/town bitfield instead
+      (see 1d-note2b): the two links are different fields on both
+      sides, dwelling->city does not exist in OE, dwelling->player does.
+
 1e. Other (52): mostly "Unidentified" template placeholders (h3 0, 1, 3,
     40, 123, 156, 165-176, 178-198, 200-203, 205) plus 9 Border Guard,
     10 Keymaster Tent, 14 Swan Pond, 36 Grail, 50 Market of Time,
