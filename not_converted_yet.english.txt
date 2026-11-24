@@ -126,7 +126,18 @@ no_olden_era_equivalent.english.txt section 1.)
     h3 91 Sign + 59 Ocean Bottle - [DROPPED BY DECISION, see section 0]:
       no OE object is emitted (previously they fell back to a "windmill"
       placeholder); the message stays in unified signMetadata only.
-    Remaining unmapped: 83 Seer Hut, 93 Spell Scroll, 113 Witch Hut,
+    h3 83 Seer Hut - CONVERTED (user mapping Seer Hut <-> lost_library):
+      dispatch subtypes 0/1/2 -> sid lost_library (all three appearance
+      variants map to the one OE sid); lost_library is in the game's
+      SIDS_WITH_VARIANTS_AND_REWARD_PARAMS, so the writer seeds
+      propVariants{selectedVar:-1} + propRewardParams{parameters:[]} like
+      for banks; the reverse restores class 83 (subclass 0) from the sid
+      and the h3m writer gained a seerHut encoder branch (quest+reward
+      round-trip verified for AB/SoD and RoE widths). LOSSY: lost_library
+      is an XP bank (exp_banks/lost_library.json, 6000/8000/10000 XP
+      variants), so the h3 seer quest/reward payload (seerMetadata) is NOT
+      converted to OE and comes back empty - only the object type survives.
+    Remaining unmapped: 93 Spell Scroll, 113 Witch Hut,
     215 Quest Guard, 216/217/218 Random Dwelling (any/level/faction)
 
 1d-note. How events/messages convert today (evidence: h3decoder.py,

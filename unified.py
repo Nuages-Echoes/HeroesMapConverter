@@ -979,8 +979,12 @@ for _h3, _exact in OE_SCENERY_DISPATCH.items():
 # not_converted_yet.english.txt section 6). The game editor always seeds
 # propVariants + propRewardParams rows for these sids (reference
 # map-write.ts SIDS_WITH_VARIANTS_AND_REWARD_PARAMS).
+# OE sids that get propVariants + propRewardParams rows seeded on fresh
+# placement (the game editor's SIDS_WITH_VARIANTS_AND_REWARD_PARAMS):
+# the creature-bank classes (16/24/25/84/85) and the seer-hut sid
+# lost_library (user mapping h3 83 -> lost_library).
 HOMMOE_BANK_SIDS = set()
-for _cls in (16, 24, 25, 84, 85):
+for _cls in (16, 24, 25, 84, 85, 83):
     _h = str(_cls)
     if _h in OE_DISPATCH:
         HOMMOE_BANK_SIDS.update((OE_DISPATCH[_h].get("subtypes") or {}).values())
@@ -5626,7 +5630,13 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
             else:
                 terrain_pos = (raw_x, raw_y)
             entry = None
-            if obj.get("class") in (16, 24, 25, 84, 85):
+            if obj.get("class") == 83:
+                # Seer hut (hommoe source, sid lost_library): the quest and
+                # reward come from seerMetadata when present (h3m sources
+                # keep raw anyway), else an empty quest/reward is written.
+                seer_meta = (objects_section.get("seerMetadata") or {}).get(str(obj_id)) or {}
+                entry = ("seerHut", (x, y, z), (83, int(obj.get("subclass") or 0)), seer_meta)
+            if entry is None and obj.get("class") in (16, 24, 25, 84, 85):
                 # Creature bank (hommoe source): SoD banks carry no
                 # per-instance data, so a plain generic instance with the
                 # bank's (class, subtype) is enough. Def names come from
@@ -6143,6 +6153,84 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
                 # (the same rule as the decorative class 113) - the
                 # parser reads them for every class 113 instance.
                 buffer.write(struct.pack("<I", 0xFFFFFFFF))
+        elif kind_name == "seerHut":
+            # Seer hut layout, mirroring the h3decoder seerHut parser:
+            # quest (RoE: one questArtifact byte), reward, 2 trailing bytes.
+            meta = payload or {}
+            quest = meta.get("quest")
+            if not version_ab:
+                qa = meta.get("questArtifact")
+                buffer.write(struct.pack("<B", 0xFF if qa is None else qa & 0xFF))
+            elif not quest or not quest.get("type"):
+                buffer.write(struct.pack("<B", 0))  # empty quest
+            else:
+                qtype = int(quest.get("type")) & 0xFF
+                buffer.write(struct.pack("<B", qtype))
+                if qtype == 1:
+                    buffer.write(struct.pack("<I", _to_int(quest.get("level")) & 0xFFFFFFFF))
+                elif qtype == 2:
+                    pr = quest.get("primarySkills") or {}
+                    buffer.write(struct.pack("<4B", *[
+                        _to_int(pr.get(n)) & 0xFF for n in
+                        ("attack", "defense", "spellPower", "knowledge")]))
+                elif qtype == 3 and version_ab:
+                    buffer.write(struct.pack("<I", _to_int(quest.get("heroObjectID")) & 0xFFFFFFFF))
+                elif qtype == 4 and version_ab:
+                    buffer.write(struct.pack("<I", _to_int(quest.get("monsterObjectID")) & 0xFFFFFFFF))
+                elif qtype == 5:
+                    arts = [a for a in (quest.get("artifacts") or []) if isinstance(a, int)]
+                    buffer.write(struct.pack("<B", min(len(arts), 255)))
+                    for a in arts[:255]:
+                        write_artifact_id(a)
+                elif qtype == 6:
+                    crs = [c for c in (quest.get("creatures") or []) if isinstance(c, dict)]
+                    buffer.write(struct.pack("<B", min(len(crs), 255)))
+                    for c in crs[:255]:
+                        write_creature_slot(c.get("creature"), _to_int(c.get("count")))
+                elif qtype == 7:
+                    res = quest.get("resources") or {}
+                    buffer.write(struct.pack("<7i", *[
+                        _to_int(res.get(n)) for n in
+                        ("wood", "mercury", "ore", "sulfur", "crystal", "gems", "gold")]))
+                elif qtype == 8:
+                    buffer.write(struct.pack("<B", _to_int(quest.get("hero")) & 0xFF))
+                elif qtype == 9:
+                    buffer.write(struct.pack("<B", _to_int(quest.get("player")) & 0xFF))
+                buffer.write(struct.pack("<I", _to_int(quest.get("deadline")) & 0xFFFFFFFF))
+                for msg_name in ("firstVisitMessage", "nextVisitMessage", "completedMessage"):
+                    mb = (quest.get(msg_name) or "").encode("cp1252", errors="replace")
+                    buffer.write(struct.pack("<i", len(mb)))
+                    buffer.write(mb)
+            reward = meta.get("reward")
+            if not reward or not reward.get("type") or int(reward.get("type")) in (0, 0xFF):
+                buffer.write(struct.pack("<B", 0))  # no reward
+            else:
+                rtype = int(reward.get("type")) & 0xFF
+                buffer.write(struct.pack("<B", rtype))
+                if rtype == 1:
+                    buffer.write(struct.pack("<I", _to_int(reward.get("experience")) & 0xFFFFFFFF))
+                elif rtype == 2:
+                    buffer.write(struct.pack("<I", _to_int(reward.get("spellPoints")) & 0xFFFFFFFF))
+                elif rtype == 3:
+                    buffer.write(struct.pack("<b", _to_int(reward.get("morale"))))
+                elif rtype == 4:
+                    buffer.write(struct.pack("<b", _to_int(reward.get("luck"))))
+                elif rtype == 5:
+                    buffer.write(struct.pack("<B", _to_int(reward.get("resourceType")) & 0xFF))
+                    buffer.write(struct.pack("<I", _to_int(reward.get("amount")) & 0xFFFFFFFF))
+                elif rtype == 6:
+                    buffer.write(struct.pack("<B", _to_int(reward.get("primarySkill")) & 0xFF))
+                    buffer.write(struct.pack("<B", _to_int(reward.get("value")) & 0xFF))
+                elif rtype == 7:
+                    buffer.write(struct.pack("<B", _to_int(reward.get("secondarySkill")) & 0xFF))
+                    buffer.write(struct.pack("<B", _to_int(reward.get("level")) & 0xFF))
+                elif rtype == 8:
+                    write_artifact_id(reward.get("artifact"))
+                elif rtype == 9:
+                    buffer.write(struct.pack("<B", _to_int(reward.get("spell")) & 0xFF))
+                elif rtype == 10:
+                    write_creature_slot(reward.get("creature"), _to_int(reward.get("count")))
+            buffer.write(b"\x00" * 2)
         elif kind_name == "event":
             # Ground event layout, mirroring the h3decoder 'event' parser:
             # optional guard (message + no creatures + 4 bytes), then

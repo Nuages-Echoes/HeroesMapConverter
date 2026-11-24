@@ -1136,6 +1136,13 @@
     "wood": "resource_wood"
    }
   },
+  "83": {
+   "subtypes": {
+    "0": "lost_library",
+    "1": "lost_library",
+    "2": "lost_library"
+   }
+  },
   "84": {
    "subtypes": {
     "0": "abandoned_mansion"
@@ -2187,11 +2194,6 @@
    "h3Id": 82,
    "h3Name": "Sea Chest",
    "reason": "sea_chest_water_travel_omit"
-  },
-  {
-   "h3Id": 83,
-   "h3Name": "Seer Hut",
-   "reason": "seer_hut_omitted_no_stock_interactable"
   },
   {
    "h3Id": 85,
