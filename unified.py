@@ -927,6 +927,11 @@ for _cid, _usid in OE_CREATURE_EQUIVALENTS.items():
 for _usid, _cid in list(OE_UNIT_SID_TO_H3_CREATURE.items()):
     if _usid.endswith("_upg"):
         OE_UNIT_SID_TO_H3_CREATURE.setdefault(_usid + "_alt", _cid)
+# OE skill sid -> h3m secondary skill id (reverse of OE_SKILL_EQUIVALENTS),
+# used when decoding OE quest actions back into eventMetadata.
+OE_SKILL_SID_TO_H3 = {}
+for _sid_h3, _sid in OE_SKILL_EQUIVALENTS.items():
+    OE_SKILL_SID_TO_H3.setdefault(_sid, int(_sid_h3))
 OE_H3_TERRAIN_BIOME = OE_OBJECT_CORRESPONDENCE["h3_terrain_biome"]
 OE_OMIT_CLASSES = {str(o["h3Id"]) for o in OE_OBJECT_CORRESPONDENCE["omit"]}
 
@@ -1835,6 +1840,203 @@ def _hommoe_objects_to_unified(adventure, width):
     return result
 
 
+_HOMMOE_STAT_ACTION_TO_FIELD = {
+    "offence": ("primarySkills", "attack"),
+    "defence": ("primarySkills", "defense"),
+    "spellPower": ("primarySkills", "spellPower"),
+    "intelligence": ("primarySkills", "knowledge"),
+    "luck": ("luck", None),
+    "moral": ("morale", None),
+}
+
+
+def _hommoe_actions_to_event(actions, repeat):
+    """Decode one quest trigger's actions into an h3m eventMetadata entry
+    (the reverse of _hommoe_event_actions)."""
+    evt = OrderedDict([
+        ("message", ""),
+        ("experience", None),
+        ("mana", 0),
+        ("morale", 0),
+        ("luck", 0),
+        ("resources", OrderedDict((n, 0) for n in
+            ("wood", "mercury", "ore", "sulfur", "crystal", "gems", "gold"))),
+        ("primarySkills", OrderedDict((n, 0) for n in
+            ("attack", "defense", "spellPower", "knowledge"))),
+        ("secondarySkills", []),
+        ("artifacts", []),
+        ("spells", []),
+        ("creatures", []),
+        ("players", 0xFF),
+        ("applyToComputer", True),
+        ("removeAfterVisit", not repeat),
+    ])
+    msgs = []
+    unconverted = []
+    for a in actions:
+        if not isinstance(a, dict):
+            continue
+        name = a.get("a")
+        p = a.get("p") or []
+        if name == "Print" and p:
+            msgs.append(str(p[0]))
+        elif name == "GiveRes" and len(p) >= 2:
+            res = HOMMOE_TO_UNIFIED_RESOURCE.get(str(p[0]))
+            if res:
+                evt["resources"][res] = int(p[1])
+            else:
+                unconverted.append("GiveRes:%s" % p[0])
+        elif name == "GiveItemHero" and p:
+            sid = str(p[0])
+            if sid in OE_ARTIFACT_SID_TO_H3:
+                evt["artifacts"].append(OE_ARTIFACT_SID_TO_H3[sid])
+            else:
+                unconverted.append("GiveItemHero:%s" % sid)
+        elif name in ("AddSkillAll", "AddSkillHero") and p:
+            sid = str(p[0])
+            if sid in OE_SKILL_SID_TO_H3:
+                level = 0
+                cmt = str(a.get("comment") or "")
+                if cmt.startswith("level ") and cmt[6:].isdigit():
+                    level = int(cmt[6:])
+                evt["secondarySkills"].append(OrderedDict([
+                    ("id", OE_SKILL_SID_TO_H3[sid]), ("level", level)]))
+            else:
+                unconverted.append("AddSkill:%s" % sid)
+        elif name == "GiveExpHero" and p:
+            evt["experience"] = int(p[0])
+        elif name in ("GiveManaHero", "ChangeManaHero") and len(p) >= 2:
+            evt["mana"] = int(p[1])
+        elif name == "GiveStatsHero" and len(p) >= 3:
+            mapping = _HOMMOE_STAT_ACTION_TO_FIELD.get(str(p[0]))
+            if mapping:
+                section, field = mapping
+                if field:
+                    evt[section][field] = int(p[2])
+                else:
+                    evt[section] = int(p[2])
+            else:
+                unconverted.append("GiveStatsHero:%s" % p[0])
+        elif name == "GiveUnitHero" and len(p) >= 2:
+            sid = str(p[0])
+            if sid in OE_UNIT_SID_TO_H3_CREATURE:
+                evt["creatures"].append(OrderedDict([
+                    ("creature", OE_UNIT_SID_TO_H3_CREATURE[sid]),
+                    ("count", int(p[1]))]))
+            else:
+                unconverted.append("GiveUnitHero:%s" % sid)
+        elif name:
+            unconverted.append(str(name))
+    evt["message"] = "\n".join(msgs)
+    if unconverted:
+        evt["comment"] = "unconverted actions: " + ", ".join(unconverted)
+    return evt
+
+
+def _hommoe_actions_to_daily(actions, week, day, repeat):
+    """Decode a StartTurn "daily_event_<i>" quest into a unified dailyEvents
+    entry (the reverse of the daily-event quests _hommoe_generate_scripts
+    writes). The repeat period is lost forward (only repeat/no-repeat is
+    kept), so a repeating quest maps back to a 7-day period."""
+    entry = OrderedDict([
+        ("name", ""),
+        ("message", ""),
+        ("humanColors", list(H3M_PLAYER_COLORS)),
+        ("computerColors", list(H3M_PLAYER_COLORS)),
+        ("firstOccurrenceDay", (week - 1) * 7 + day),
+        ("repeatPeriodInDays", 7 if repeat else 0),
+        ("resources", OrderedDict((n, 0) for n in
+            ("wood", "mercury", "ore", "sulfur", "crystal", "gems", "gold"))),
+    ])
+    msgs = []
+    for a in actions:
+        if not isinstance(a, dict):
+            continue
+        name = a.get("a")
+        p = a.get("p") or []
+        if name == "Print" and p:
+            msgs.append(str(p[0]))
+        elif name == "GiveRes" and len(p) >= 2:
+            res = HOMMOE_TO_UNIFIED_RESOURCE.get(str(p[0]))
+            if res:
+                entry["resources"][res] = int(p[1])
+    entry["message"] = "\n".join(msgs)
+    return entry
+
+
+def _hommoe_quests_to_events(unified):
+    """Reverse of _hommoe_generate_scripts: decode the commentAiData /
+    dialogQuestData quests back into unified eventMetadata (h3m class 26
+    ground events on the objects whose propEntities sid the quest triggers
+    on) and dailyEvents (the StartTurn "daily_event_<i>" quests).
+
+    Only quests carrying the sids our own forward pass generates
+    ("event_<id>" entities, "daily_event_<i>" quest sids) are converted;
+    native OE scripts stay raw in unified["scripts"]."""
+    objects = unified.get("objects") or {}
+    tiles = objects.get("tiles") or {}
+    scripts = unified.get("scripts") or {}
+    obj_by_id = {}
+    for tile_key, obj_list in tiles.items():
+        for o in obj_list:
+            if o.get("id") is not None:
+                obj_by_id[int(o["id"])] = o
+    entity_to_oid = {}
+    for oid, o in obj_by_id.items():
+        pe = (o.get("properties") or {}).get("propEntities")
+        if isinstance(pe, dict) and pe.get("sid"):
+            entity_to_oid[str(pe["sid"])] = oid
+    event_metadata = objects.setdefault("eventMetadata", OrderedDict())
+    daily = unified.setdefault("dailyEvents", [])
+    for block_name in ("commentAiData", "dialogQuestData"):
+        block = scripts.get(block_name)
+        if not isinstance(block, dict):
+            continue
+        quests = block.get("quests") or []
+        if isinstance(quests, dict):
+            quests = quests.get("quests") or []
+        for q in quests:
+            if not isinstance(q, dict):
+                continue
+            qsid = str(q.get("sid") or "")
+            for sub in q.get("subQuests") or []:
+                if not isinstance(sub, dict):
+                    continue
+                for trig in sub.get("triggers") or []:
+                    if not isinstance(trig, dict):
+                        continue
+                    conds = trig.get("conditions") or []
+                    actions = trig.get("actions") or []
+                    repeat = bool(trig.get("repeat"))
+                    for cond in conds:
+                        if not isinstance(cond, dict):
+                            continue
+                        if cond.get("c") == "ObjectInteractionAfter":
+                            p = cond.get("p") or []
+                            entity = str(p[0]) if p else ""
+                            if not (entity.startswith("event_")
+                                    and entity[6:].isdigit()):
+                                continue
+                            oid = entity_to_oid.get(entity)
+                            if oid is None or oid not in obj_by_id:
+                                continue
+                            event_metadata[str(oid)] = _hommoe_actions_to_event(
+                                actions, repeat)
+                            o = obj_by_id[oid]
+                            # The forward pass emitted the event object under
+                            # the generic misc fallback sid; restore the h3m
+                            # class 26 identity here.
+                            o["class"] = 26
+                            o["subclass"] = 0
+                            o["sprite"] = "AVZevnt0.def"
+                            o["group"] = "ADVENTURE_MISCELLANEOUS"
+                        elif cond.get("c") == "StartTurn" and qsid.startswith("daily_event_"):
+                            p = cond.get("p") or []
+                            if len(p) >= 2 and str(p[0]).isdigit() and str(p[1]).isdigit():
+                                daily.append(_hommoe_actions_to_daily(
+                                    actions, int(p[0]), int(p[1]), repeat))
+
+
 def convert_hommoe_to_unified(map_data):
     """
     Convert the JSON produced by parse_hommoe into the unified format.
@@ -2016,6 +2218,7 @@ def convert_hommoe_to_unified(map_data):
     ])
 
     unified["objects"] = _hommoe_objects_to_unified(adventure, width)
+    _hommoe_quests_to_events(unified)
 
     return unified
 
@@ -4393,6 +4596,15 @@ UNIFIED_TO_HOMMOE_RESOURCE = {
     "wood": "wood", "mercury": "mercury", "ore": "ore", "sulfur": "dust",
     "crystal": "crystals", "gems": "gemstones", "gold": "gold",
 }
+# reverse of UNIFIED_TO_HOMMOE_RESOURCE (OE resource sid -> unified name)
+HOMMOE_TO_UNIFIED_RESOURCE = {v: k for k, v in UNIFIED_TO_HOMMOE_RESOURCE.items()}
+
+# h3m classes dropped by decision when writing OE: OE has no message-bearer
+# object for them. 91 Sign (user decision), 59 Ocean Bottle (dropped with
+# the water-travel group, decision log in not_converted_yet.english.txt).
+# Their signMetadata message stays in the unified JSON but no OE object or
+# quest is emitted for them.
+HOMMOE_DROPPED_MESSAGE_CLASSES = {59, 91}
 
 # unified victory label -> typeWinCondition (reverse of HOMMOE_WIN_CONDITIONS)
 UNIFIED_TO_HOMMOE_WIN = {
@@ -4727,6 +4939,19 @@ def unified_to_hommoe(unified):
                     # reference's stock city/hero sids.
                     sid = HOMMOE_GROUP_TO_SID.get(group)
                 else:
+                    if obj.get("class") in HOMMOE_DROPPED_MESSAGE_CLASSES:
+                        # Sign / ocean bottle: dropped by decision - OE has
+                        # no message-bearer object for them (the message
+                        # stays in the unified signMetadata only).
+                        HOMMOE_UNMAPPED_OBJECTS.append(OrderedDict([
+                            ("group", group),
+                            ("index", obj.get("index")),
+                            ("class", obj.get("class")),
+                            ("subclass", obj.get("subclass")),
+                            ("sprite", obj.get("sprite")),
+                            ("tile", tile_key),
+                        ]))
+                        continue
                     parts = tile_key.split("_")
                     terrain_name = "Grass"
                     if len(parts) == 3:
@@ -5409,8 +5634,13 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
                 entry = ("generic", (x, y, z),
                          (int(obj["class"]), int(obj.get("subclass") or 0)), None)
             pandora_meta = (objects_section.get("pandoraMetadata") or {}).get(str(obj_id))
+            event_meta = (objects_section.get("eventMetadata") or {}).get(str(obj_id))
             if entry is not None:
                 pass  # a creature bank was already set above
+            elif event_meta is not None and obj.get("class") == 26:
+                # Ground event (h3m class 26) restored from an OE quest: the
+                # payload is carried in the eventMetadata map.
+                entry = ("event", (x, y, z), (26, 0), event_meta)
             elif pandora_meta is not None:
                 # Pandora's Box (h3m class 6): the full box content is
                 # carried in the pandoraMetadata map; the catalog entry
@@ -5913,6 +6143,57 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
                 # (the same rule as the decorative class 113) - the
                 # parser reads them for every class 113 instance.
                 buffer.write(struct.pack("<I", 0xFFFFFFFF))
+        elif kind_name == "event":
+            # Ground event layout, mirroring the h3decoder 'event' parser:
+            # optional guard (message + no creatures + 4 bytes), then
+            # experience, mana, morale, luck, resources, primary skills,
+            # secondary skills, artifacts, spells, creatures, 8 trailing
+            # bytes, players, applyToComputer, removeAfterVisit, 4 bytes.
+            meta = payload or {}
+            msg = meta.get("message") or ""
+            if msg:
+                mb = msg.encode("cp1252", errors="replace")
+                buffer.write(struct.pack("<B", 1))
+                buffer.write(struct.pack("<i", len(mb)))
+                buffer.write(mb)
+                buffer.write(struct.pack("<B", 0))  # no guard creatures
+                buffer.write(b"\x00" * 4)
+            else:
+                buffer.write(struct.pack("<B", 0))
+            buffer.write(struct.pack("<I", _to_int(meta.get("experience")) & 0xFFFFFFFF))
+            buffer.write(struct.pack("<H", _to_int(meta.get("mana")) & 0xFFFF))
+            buffer.write(struct.pack("<b", _to_int(meta.get("morale"))))
+            buffer.write(struct.pack("<b", _to_int(meta.get("luck"))))
+            res = meta.get("resources") or {}
+            buffer.write(struct.pack("<7h", *[
+                _to_int(res.get(n)) for n in
+                ("wood", "mercury", "ore", "sulfur", "crystal", "gems", "gold")]))
+            pr = meta.get("primarySkills") or {}
+            buffer.write(struct.pack("<4B", *[
+                _to_int(pr.get(n)) & 0xFF for n in
+                ("attack", "defense", "spellPower", "knowledge")]))
+            skills = [sk for sk in (meta.get("secondarySkills") or []) if isinstance(sk, dict)]
+            buffer.write(struct.pack("<B", min(len(skills), 255)))
+            for sk in skills[:255]:
+                buffer.write(struct.pack("<BB", _to_int(sk.get("id")) & 0xFF,
+                                         _to_int(sk.get("level")) & 0xFF))
+            arts = [a for a in (meta.get("artifacts") or []) if isinstance(a, int)]
+            buffer.write(struct.pack("<B", min(len(arts), 255)))
+            for a in arts[:255]:
+                write_artifact_id(a)
+            spells = [sp for sp in (meta.get("spells") or []) if isinstance(sp, int)]
+            buffer.write(struct.pack("<B", min(len(spells), 255)))
+            for sp in spells[:255]:
+                buffer.write(struct.pack("<B", sp & 0xFF))
+            crs = [c for c in (meta.get("creatures") or []) if isinstance(c, dict)]
+            buffer.write(struct.pack("<B", min(len(crs), 255)))
+            for cr in crs[:255]:
+                write_creature_slot(cr.get("creature"), _to_int(cr.get("count")))
+            buffer.write(b"\x00" * 8)
+            buffer.write(struct.pack("<B", _to_int(meta.get("players", 0xFF)) & 0xFF))
+            buffer.write(struct.pack("<B", 1 if meta.get("applyToComputer", True) else 0))
+            buffer.write(struct.pack("<B", 1 if meta.get("removeAfterVisit") else 0))
+            buffer.write(b"\x00" * 4)
         elif kind_name == "pandora":
             # Pandora's Box layout, mirroring the pandoraBox parser:
             # optional guard (message + 7 creature slots + 4 bytes), then

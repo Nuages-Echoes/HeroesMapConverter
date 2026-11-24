@@ -1513,10 +1513,10 @@ def parse_h3m_objects(raw_objects, level_ab, level_sod, artifact_id_bytes,
             evt['mana'] = struct.unpack('<H', safe_read(buffer, 2))[0]
             evt['morale'] = struct.unpack('<b', safe_read(buffer, 1))[0]
             evt['luck'] = struct.unpack('<b', safe_read(buffer, 1))[0]
-            if len(msg_len_data) < 4:
-                break
-            msg_len = struct.unpack('<i', msg_len_data)[0]
-
+            # No separate message length here: the event message is the
+            # guard block's message (pandora layout); the earlier
+            # msg_len_data reference was a stale variable from the sign
+            # branch and read nothing.
             resources = struct.unpack('<7h', safe_read(buffer, 2 * 7))
             evt['resources'] = OrderedDict([
                 ('wood', resources[0]), ('mercury', resources[1]),

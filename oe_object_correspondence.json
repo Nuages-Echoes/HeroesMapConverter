@@ -2156,7 +2156,7 @@
   {
    "h3Id": 59,
    "h3Name": "Ocean Bottle",
-   "reason": "ocean_bottle_omit"
+   "reason": "dropped_by_decision_no_oe_message_bearer_object (sign message kept in unified signMetadata only)"
   },
   {
    "h3Id": 62,
@@ -2211,7 +2211,7 @@
   {
    "h3Id": 91,
    "h3Name": "Sign",
-   "reason": "sign_message_deferred"
+   "reason": "dropped_by_decision_no_oe_message_bearer_object (sign message kept in unified signMetadata only)"
   },
   {
    "h3Id": 92,

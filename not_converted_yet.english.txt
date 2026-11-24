@@ -31,6 +31,9 @@ ocean/bottle/sea/...) finds only 'chest' and 'spells_in_a_bottle_artifact'
     - water-travel / water objects: section 1a (h3 classes 8, 24, 29, 52,
       59, 82, 85, 86, 87, 92, 145, 146) and the fh2m ADVENTURE_WATER
       indexes in section 2 - OE has no stock sid for them.
+    - h3 91 Sign (message-bearer; OE has no sign object) - the sign
+      message stays in the unified signMetadata but no OE object/quest is
+      emitted (unified.py HOMMOE_DROPPED_MESSAGE_CLASSES = {59, 91}).
     - fh2m LANDSCAPE_FLAGS (all 14 indexes) and LANDSCAPE_TOWN_BASEMENTS
       (all 8 indexes) - H2-only decorations, no OE equivalent.
     - h3 class 142 "Misc Active Object (resource generator)" - no-payload SoD
@@ -116,7 +119,14 @@ no_olden_era_equivalent.english.txt section 1.)
     (lossy, see section 4). Only h3 141 Magical Terrain stays unmapped.
 
 1d. Quest / message / dwelling (9)
-    h3 26 Event, 83 Seer Hut, 91 Sign, 93 Spell Scroll, 113 Witch Hut,
+    h3 26 Event - CONVERTED both ways now (see 1d-note): forward emits the
+      object + propEntities + commentAiData quest; the reverse
+      (_hommoe_quests_to_events) decodes event_<id>/daily_event_<i> quests
+      back into objects.eventMetadata + class 26 and dailyEvents.
+    h3 91 Sign + 59 Ocean Bottle - [DROPPED BY DECISION, see section 0]:
+      no OE object is emitted (previously they fell back to a "windmill"
+      placeholder); the message stays in unified signMetadata only.
+    Remaining unmapped: 83 Seer Hut, 93 Spell Scroll, 113 Witch Hut,
     215 Quest Guard, 216/217/218 Random Dwelling (any/level/faction)
 
 1d-note. How events/messages convert today (evidence: h3decoder.py,
@@ -143,9 +153,13 @@ no_olden_era_equivalent.english.txt section 1.)
     ONLY into the trigger comment (lost as data). dailyEvents -> quests
     "daily_event_<i>" with StartTurn [week,day] + Print/GiveRes.
   * .map -> unified: objects come back raw (sourceSid + all prop rows);
-    dialogQuestData/commentAiData are carried RAW under unified["scripts"]
-    and are NOT decoded into eventMetadata - so in the full loop a class-26
-    object returns as a fallback-sid object and its event payload is lost.
+    dialogQuestData/commentAiData are carried raw under unified["scripts"]
+    AND decoded by _hommoe_quests_to_events for our own generated sids only
+    ("event_<id>" ObjectInteractionAfter entities -> objects.eventMetadata
+    + class 26 on the object; "daily_event_<i>" StartTurn quests ->
+    dailyEvents). Native OE quests on arbitrary entities stay raw only.
+    The h3m writer gained a matching "event" encoder branch (payload
+    field-for-field verified against the parser for AB/SoD and RoE widths).
   * OE-side candidates in Core.zip for the remaining 1d classes:
     scroll sids scroll_box / enchanted_scroll_box / mythic_scroll_box
     (6_artifacts.json) for h3 93; shrines altar_of_magic_1-4 already emit
@@ -255,7 +269,8 @@ Loop-check total when writing .map: 590 dropped objects in 40 types
   - unified -> .map regenerates only the H2/H3 event patterns; OE-native
     script features (counters, SetQuestMarker, NodeRevealed, interruptions,
     aiRolesId, dialogs) are parsed hommoe -> unified raw but are not
-    regenerated from unified yet.
+    regenerated from unified yet. Reverse: only event_<id>/daily_event_<i>
+    quests are decoded (section 1d-note); native OE quests stay raw.
   - hommoe -> fh2m uses an anchor-shift heuristic for object coordinates.
   - Sidecar .json: passthrough byte-identical when the input .map has one;
     generated only when it carries meaningful data.
