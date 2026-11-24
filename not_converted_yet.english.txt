@@ -1,10 +1,12 @@
 Everything NOT converted yet (for drop / work-on triage)
 ========================================================
 
-Status at commit d765078 - golden rule green:
+Status at commit a27f844 - golden rule green:
     python3 main.py            (rc 0)
-    python3 verify_roundtrip.py (rc 0, all .map inputs binary identical)
-    python3 oe_loop_check.py    (rc 0, loop totals below)
+    python3 verify_roundtrip.py (rc 0, all 12 round-trips binary identical)
+    python3 oe_loop_check.py    (rc 0; current totals: 569 objects dropped
+    in 40 types when writing .map, 26 battlefield-terrain objects painted
+    to a tile biome, 0 random dwellings in the test maps - see 1d-note2e)
 
 Sources: oe_object_correspondence.json, no_olden_era_equivalent.english.txt,
 core_zip_not_converted.english.txt, the local references
@@ -388,9 +390,12 @@ dropped in the loop check (they only exist in the 6 fh2m test maps):
   ADVENTURE_MISCELLANEOUS 26-28, 31, 33 ......  (seen in per-map losses)  (still open)
   ADVENTURE_ARTIFACTS 76 / 82 / 89 ...........   9 objects  (still open)
 
-Loop-check total when writing .map: 590 dropped objects in 40 types
-(234 h3 water + 26 h3 battlefield + 19 h3 Obelisk + 59 fh2m water
- + 142 flags + 71 basements + 30 power-ups + 9 fh2m artifacts).
+Loop-check total when writing .map (commit a27f844): 569 dropped objects
+in 40 types (h3 water ~234, h3 57 Obelisk 19, h3 59/91 message-bearers 3,
+fh2m water 59, flags 142, basements 71, power-ups 30, fh2m artifacts 9,
+h3 92 Sirens / 10 Keymaster / 9 Border Guard etc.); the 26 former
+h3 battlefield-terrain objects are no longer dropped but painted to a
+tile biome (section 1c), and 216/217/218 are converted (1d-note2e).
 
 ------------------------------------------------------------
 3. Core.zip catalog gaps (object is placed, but its PAYLOAD is lost)
