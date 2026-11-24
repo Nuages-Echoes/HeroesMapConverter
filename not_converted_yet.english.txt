@@ -464,28 +464,132 @@ tile biome (section 1c), and 216/217/218 are converted (1d-note2e).
     table lives in Core.zip and is not extracted yet.
 
 ------------------------------------------------------------
-5. Structural / container-level gaps
+5. Structural / container-level gaps - MEASURED ANALYSIS (commit
+   6e96794, all numbers measured on the 5 input/*.map files + the local
+   references; nothing implemented yet, this section is the triage base)
 ------------------------------------------------------------
 
-  - headerHash is written as "0"*32 (the game's hash algorithm is unknown).
-  - hommoe -> unified still drops: scenario/adventure "settings" (except
-    mapWinConditions), customAreasPainting (~27.6 KB in Broken_Alliance),
-    descBlocks, views, spawn flags (isAlive/isLocked/playerId/
-    isCityDefined), takenHeroes, orphan objectsProperties rows, and the
-    container header fields (gzipHeader/headerHash/separator/trailingData).
-    Blocks 3/4 ARE carried raw in the unified "scripts" section.
-  - unified -> .map regenerates only the H2/H3 event patterns; OE-native
-    script features (counters, SetQuestMarker, NodeRevealed, interruptions,
-    aiRolesId, dialogs) are parsed hommoe -> unified raw but are not
-    regenerated from unified yet. Reverse: only event_<id>/daily_event_<i>
-    quests are decoded (section 1d-note); native OE quests stay raw.
-  - hommoe -> fh2m uses an anchor-shift heuristic for object coordinates.
-  - Sidecar .json: passthrough byte-identical when the input .map has one;
-    generated only when it carries meaningful data.
-  - Known doc/data inconsistency still open: Faction 9 (Conflux) creature
-    cells in heroes_field_correspondence.english.txt and h3 ids 112-125 in
-    oe_object_correspondence.json still carry the reference's scrambled
-    values (only Factions 2/4/8 were corrected).
+5a. Container header (hommoedecoder.py write_hommoe / unified_to_hommoe):
+  * headerHash: all 5 test maps carry a per-map 32-hex string (e.g.
+    Broken_Alliance 169d5c1f..., template 11868446..., synthetic
+    0123456789abcdef...), ALWAYS equal to scenario.hashSum. The
+    reference (map-write.ts:18-24, 2518-2545) proves it is NOT a content
+    checksum: brute-forced md5/sha1/sha256/sha512 over block combinations
+    found no match, and resaving an unchanged map through GME produces a
+    NEW hash - it is an opaque per-map identity the game keys map
+    recognition on (a fixed cloned value makes maps collide and be
+    silently unrecognized; the reference mints crypto.randomUUID().hex).
+    Our writer emits the placeholder "0"*32 for h2/h3 -> .map outputs
+    (unified_to_hommoe line ~4923). RECOMMENDATION: mint a fresh random
+    32-hex per output map (non-deterministic, accepted like _upg_alt);
+    .map -> .map stays byte-exact via raw passthrough either way.
+  * version: real maps 0.72.30 (Broken_Alliance, all_cats, c_M1),
+    0.80.47 (olden_era_template), 0.82.08 (synthetic); writer uses
+    HOMMOE_DEFAULT_VERSION "0.72.30" - matches the majority.
+  * separator: 05 00 = 3 blocks, 0d 00 = 4 blocks (bit 0x08). Writer
+    already derives it from the block count (unified.py ~5363). All 5
+    test maps conform; trailingData is 0 bytes in all 5.
+  * gzip header: real maps FLG=0 MTIME=0 XFL=0 OS=10 - exactly our
+    write_gzip canonical header; the synthetic map (XFL=2 OS=3) keeps its
+    own via gzipHeader passthrough. No gap.
+
+5b. Block inventory (raw JSON sizes):
+  Broken_Alliance: scenario 3973, adventure 352821, dialogQuestData 47
+  all_cats: scenario 2770, adventure 95104, dialogQuestData 47,
+            commentAiData 16466
+  c_M1: scenario 1953, adventure 92154, dialogQuestData 47,
+        commentAiData 7867
+  template: scenario 1666, adventure 7073, dialogQuestData 47
+  synthetic: scenario 637, adventure 806, dialogQuestData 52,
+             commentAiData 118
+  dialogQuestData is the SAME empty {dialogs:{lines:[]},quests:{quests:[]}}
+  (47 B) in all 5 maps. Blocks 3/4 are carried raw in unified "scripts"
+  and re-emitted verbatim, so .map -> unified -> .map loses nothing there.
+
+5c. Scenario (block 1) fields - what hommoe -> unified keeps vs drops:
+  KEPT: title/desc (sourceNameDescSids), spawns (owner, spawnType,
+    spawnPointType, isCityDefined, factionSid, isHeroDefined, heroSid,
+    colorId), startSettings (sourceStartSettings), banInfoData
+    (sourceBanInfoData), sizeX/sizeZ, endController (sourceEndController).
+  DROPPED (measured on Broken_Alliance): template "", gameMode 0,
+    economicDifficulties/aiDifficulties/neutralDifficulties/
+    quickStartDifficulties (6-bool arrays, ALL TRUE in every real map -
+    reference FULL_DIFFICULTIES comment), campaignInfo (all-empty sids),
+    descBlocks (810 B: localization-block list - text/spacer/size/
+    players/difficulty entries referencing map_broken_alliance_desc...
+    sids), dateTime {"value": 134335101333455731}, displayWinCondition,
+    hashSum, maxAlliancesCount/maxSidesCount, myControlledFractions,
+    mapCreationType, heroesInfos.
+  Spawn flags: isAlive=true everywhere, playerId="" everywhere;
+    isLocked VARIES (Broken_Alliance: 4 true / 3 false) but the writer
+    always emits isLocked:false - real loss on hommoe -> other formats.
+    colorId is -1 in ALL real test maps (color comes from spawn order);
+    we now write the real colorId for h2/h3 sources (1d-note2e), which is
+    a superset of what real maps carry.
+
+5d. Adventure (block 2) fields:
+  KEPT: tilesMap/waterMap/levelsMap/climbsMap/roadsMap (terrain, with
+    sourceTileId/sourceLevel/sourceClimb/sourceRoadIndex per cell),
+    objects/squads/markers, areas (sourceAreas - 55 KB in Broken_Alliance,
+    re-emitted verbatim), rivers (sourceRivers), objectsProperties rows
+    ATTACHED to an object (via entry["properties"] passthrough),
+    settings.mapWinConditions only.
+  DROPPED: descBlocks (810 B, same as scenario's), views (109 B - one
+    default 6x6 view), keyObjects (14 object ids in Broken_Alliance),
+    objectValuesOverrides {"list": []}, settings' other 30 keys
+    (heroCountMin/Max/Increment, enableHeroHireBan, disable* flags,
+    idSidesWithoutTimer/..., isTournamentRules, bonuses, gameMode,
+    difficulty arrays duplicated, enableCustomAI/customAISid,
+    factionLawsExpModifier, astrologyExpModifier, maxAlliancesCount),
+    banInfoData (dup of block 1's), takenHeroes (["human_hero_14"]),
+    haveCustomAreas, customAreasPainting (27648 B = sizeX*sizeZ area-id
+    grid in Broken_Alliance; 6912 B in the others - one byte per tile),
+    generatorChecksum, cliffRandomSeed (writer hardcodes 0).
+  objectsFreeId/squadsFreeId/markersFreeId are recomputed (next_free).
+  ORPHAN objectsProperties rows (id matches no object/squad/marker) are
+    lost in hommoe -> unified -> other formats: Broken_Alliance 4 rows
+    (propVariants 1, propRewardParams 2, propGrowthUnits 1), c_M1 6 rows
+    (propPortals 2, propRewardParams 4). 27 prop tables exist in real
+    maps; the always-empty ones in the test maps: propsName (c_M1 has 1),
+    propComments, propRandomHires, propResources, propDialogWindows,
+    propQuestNames, propMainObjects, propActionsLegacy, propAiIntetactions,
+    propCitiesHold, propQuestMarkers.
+
+5e. Scripts (block 4 commentAiData) - measured feature inventory:
+  all_cats_go_to_heaven (16.5 KB): aiRolesId, counters (9), quests with
+    activeOnStart/hidden/sharing/subQuests (13)/triggers (18) each with
+    conditions (30) + conditionsLogic + actions (140). Conditions seen:
+    StartTurn, NodeRevealed, DifficultyCustomMap, Counter, HeroKill.
+    Actions seen: CounterSet, CounterPlus, ChangeCampaignOneStep, Print,
+    GiveUnitHero, RemoveUnitHero, GiveStatsHero, ChangeManaHero,
+    AddBuffHeroDays, AddSpellHero, RemoveRes, Dialog, GiveRes, NextQuest,
+    CurrentSubQuestDone, MoveCamera, ResurrectHero, TriggerClearCustom,
+    GameVictory, DeleteEntity.
+  c_M1 (7.9 KB): counters (4); conditions add UnitOwnHero, SquadKill,
+    ResCounter, Difficulty; actions add SetQuestMarker, RemoveItem,
+    SetAchievement, NextSubQuest, GameLose.
+  interruptions: empty in both. dialogQuestData: empty everywhere.
+  Current state: blocks 3/4 pass through raw (lossless .map <-> unified);
+  h2/h3 -> .map can only GENERATE the event patterns (Print/GiveRes/
+  GiveItemHero/AddSkill*/Give*/... via _hommoe_generate_scripts), never
+  native quest features (counters, SetQuestMarker, NodeRevealed,
+  Dialog, campaign actions...); .map -> h3m/fh2m DECODES only our own
+  event_<id>/daily_event_<i> quests back to unified eventMetadata
+  (_hommoe_quests_to_events) - native OE quests stay raw and are dropped
+  on the way to h2/h3.
+
+5f. Other structural notes:
+  * hommoe -> fh2m object coordinates use an anchor-shift heuristic
+    (pre-existing, documented in unified.py).
+  * Sidecar .json: byte-identical passthrough when the input .map has
+    one; generated (BOM, tab-indented, defaults stripped) only when the
+    map has a commentAiData block.
+  * Writer defaults for h2/h3 -> .map emit a fixed scenario/adventure key
+    set: no difficulty arrays, campaignInfo, descBlocks, dateTime,
+    views, keyObjects, takenHeroes, customAreasPainting, generatorChecksum,
+    cliffRandomSeed (0), haveCustomAreas - the reference's from-scratch
+    maps use template.map + FULL_DIFFICULTIES (all true) + a fresh
+    generateMapHash().
 
 ------------------------------------------------------------
 6. Creature banks - CONVERTED (user-provided mapping) + Pandora's Box
