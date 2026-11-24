@@ -231,6 +231,49 @@ no_olden_era_equivalent.english.txt section 1.)
     barracks_<thatFaction>_<tier> - loses the "random" only when the h3
     alignment itself is random (absod_id 0 / bitfield).
 
+1d-note2c. "Linked to a player" option - YES, OE has one: the
+    objectsProperties.propOwners table, rows {type, id, owner} joined to
+    any object (type 0) or zone (type 1) by id. Evidence:
+    - reference map-parser.ts:213: propOwners?: Array<{type?, id?,
+      owner?}> with the comment "Explicit player-index ownership
+      override. -1 observed meaning neutral/unowned."
+    - reference map-write.ts:1482-1488: for a hand-placed random-city,
+      "Without a propOwners row GME read the city as Player 1's and
+      wrote owner 0 back on save" - so a row is REQUIRED to say "None";
+      map-write.ts:1499 upsertPropOwner() ("Set (or create) the
+      propOwners row of an object: the player it belongs to"); the
+      random-hero default row is tryAppendRow('propOwners',
+      {type:0, id:newId, owner:1}); map-save.ts:457-461 verifies an owner
+      edit lands in the rebuilt propOwners table.
+    - INDEXING SUBTLETY: propOwners.owner is 0-BASED (stored 0 = Player
+      1, -1 = None) - MapGridCellContent.tsx:777 comment: "propOwners
+      counts players from 0, so stored 0 is the Player 1 GME shows,
+      while Block 1 spawns and the hero code above start at 1."
+      Block 1 spawns[].owner and propSpawns.owner are 1-BASED
+      (1 = Player 1). extract-oe-corpus-raw.ts:49-55 confirms
+      propSpawns.owner (player starts, city-spawner/hero-spawner only)
+      and propOwners (neutral-object ownership override) are two
+      separate tables.
+    - reference h3-import: ownership.ts renumbers the H3 owner byte
+      (0-7, 255 = neutral) into COMPACT 1..N owners with the human
+      always at owner 1 (1-based, used for spawns[]/propSpawns);
+      convert-h3m-to-map.ts:709 writes propOwners {type:0, id} (owner
+      key absent) for neutral/unowned towns.
+    - GME UI: the random-city cell inspector (MapGridCellContent.tsx)
+      exposes owner options [-1, 0..playersCount-1] = None / Player 1..N.
+    - real test maps: only Broken_Alliance.map carries propOwners rows:
+      3 rows, all on random-city objects, all owner:-1 (neutral).
+      c_M1, all_cats_go_to_heaven, olden_era_template and
+      synthetic_oemap_4blocks have none.
+  Consequence for h3 216/217/218 (their payload carries an owner u32,
+  0xFF = none - reference h3m-object-walk.ts:444-455 skipRandomDwelling
+  parses it): IF they are ever converted to an OE barracks_*, the h3
+  owner would map to a propOwners row on the emitted object written
+  0-BASED (h3 owner byte 0-7 -> stored owner 0-7; 0xFF none -> -1),
+  NOT to propSpawns (that table is only for player starts). Note the
+  reference's own importer skips 216-218 entirely, so there is no stock
+  precedent to copy for this field.
+
 1e. Other (52): mostly "Unidentified" template placeholders (h3 0, 1, 3,
     40, 123, 156, 165-176, 178-198, 200-203, 205) plus 9 Border Guard,
     10 Keymaster Tent, 14 Swan Pond, 36 Grail, 50 Market of Time,
