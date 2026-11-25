@@ -1956,7 +1956,29 @@ def _hommoe_objects_to_unified(adventure, width):
                         skill = OE_SKILL_SID_TO_H3[str(params[0])]
                     witchhut_metadata[str(entry.get("id"))] = OrderedDict([
                         ("skill", skill)])
+    # Prop rows whose id matches no placed object/squad/marker ("orphan"
+    # rows, e.g. left over from deleted objects): kept raw under
+    # sourceOrphanProps so unified -> .map re-emits them (5d).
+    known_ids = set()
+    for group in adventure.get("objects", []) or []:
+        known_ids.update(group.get("ids") or [])
+    for squad in adventure.get("squads", []) or []:
+        known_ids.update(squad.get("ids") or [])
+    for marker in adventure.get("markers", []) or []:
+        if isinstance(marker.get("id"), int):
+            known_ids.add(marker["id"])
+    orphan_props = OrderedDict()
+    all_props = adventure.get("objectsProperties") or {}
+    for table, rows in all_props.items():
+        if not isinstance(rows, list):
+            continue
+        for row in rows:
+            if isinstance(row, dict) and isinstance(row.get("id"), int) \
+                    and row["id"] not in known_ids:
+                orphan_props.setdefault(table, []).append(row)
     result = OrderedDict([("tiles", tiles)])
+    if orphan_props:
+        result["sourceOrphanProps"] = orphan_props
     if monster_metadata:
         result["monsterMetadata"] = monster_metadata
     if artifact_metadata:
@@ -2247,6 +2269,27 @@ def convert_hommoe_to_unified(map_data):
         unified["sourceStartSettings"] = scenario["startSettings"]
     if scenario.get("banInfoData"):
         unified["sourceBanInfoData"] = scenario["banInfoData"]
+    # Raw scenario/adventure fields with no unified equivalent, kept as-is
+    # so unified -> .map can re-emit them verbatim (5c/5d in
+    # not_converted_yet.english.txt). hashSum is excluded: the writer
+    # re-mints the per-map identity (see 5a).
+    kept_scen = {"title", "desc", "spawns", "startSettings", "banInfoData",
+                 "sizeX", "sizeZ", "endController"}
+    scen_extra = OrderedDict((k, v) for k, v in scenario.items()
+                             if k not in kept_scen and k != "hashSum")
+    if scen_extra:
+        unified["sourceScenarioExtra"] = scen_extra
+    if scenario.get("spawns"):
+        # Verbatim spawns block (isLocked/colorId/playerId/takenHeroes...).
+        unified["sourceSpawnsRaw"] = scenario["spawns"]
+    kept_adv = {"fileMapName", "mapName", "mapNameFromLoc", "mapDesc",
+                "mapDescFromLoc", "sizeX_", "sizeZ_", "tilesMap", "levelsMap",
+                "climbsMap", "roadsMap", "waterMap", "objects", "squads",
+                "markers", "areas", "rivers", "objectsProperties"}
+    adv_extra = OrderedDict((k, v) for k, v in adventure.items()
+                            if k not in kept_adv)
+    if adv_extra:
+        unified["sourceAdventureExtra"] = adv_extra
 
     # Players: one spawn entry per side (owner is 1-based).
     spawns = (scenario.get("spawns") or {}).get("spawns", [])
@@ -4792,6 +4835,29 @@ HOMMOE_RARITY_TO_RANDOM_ARTIFACT_CLASS = {0: 66, 1: 67, 2: 68, 3: 69}
 
 HOMMOE_DEFAULT_VERSION = "0.72.30"
 
+# Default adventure.settings for H2/H3 -> .map outputs: the key set and
+# values are copied from the reference's bundled template.map
+# (src-tauri/resources/template.map); the writer fills in mapWinConditions
+# from the unified victory condition and the difficulty arrays are all-true
+# (FULL_DIFFICULTIES in map-write.ts: every real sample map has them
+# populated, the template ships them empty).
+HOMMOE_SETTINGS_DEFAULT = OrderedDict([
+    ("heroCountMin", 5), ("heroCountMax", 10), ("heroCountIncrement", 1),
+    ("enableHeroHireBan", False), ("enableCustomHeroMaxLevel", False),
+    ("customHeroMaxLevel", -1), ("disableAutoBattleAgainstEnemyHeroes", False),
+    ("disableWeekEffect", False), ("disableFactionLaws", False),
+    ("disableMagicGuild", False), ("disableMagicCustomLearning", False),
+    ("cantRewriteTurnMode", False),
+    ("idSidesWithoutTimer", []), ("idSidesWithoutNotification", []),
+    ("idSidesWithoutCameraFollowing", []), ("isTournamentRules", True),
+    ("bonuses", []),
+    ("gameMode", 0), ("endController", 0), ("isScenario", False),
+    ("economicDifficulties", [True] * 6), ("aiDifficulties", [True] * 6),
+    ("neutralDifficulties", [True] * 6), ("quickStartDifficulties", [True] * 6),
+    ("enableCustomAI", False), ("customAISid", ""),
+    ("factionLawsExpModifier", 1.0), ("astrologyExpModifier", 1.0),
+])
+
 
 def _hommoe_event_actions(event, obj_id):
     """Build OE script actions for an H2/H3 event object's metadata.
@@ -5068,6 +5134,31 @@ def unified_to_hommoe(unified):
         ("gameVersion", ""),
         ("isScenario", False),
     ])
+    if unified.get("sourceGame") == "hommoe":
+        # Lossless passthrough of the raw source fields (AGENTS.md): merge
+        # the scenario keys with no unified equivalent and re-emit the
+        # original spawns block verbatim (isLocked / colorId / playerId /
+        # takenHeroes are kept exactly - 5c).
+        for k, v in (unified.get("sourceScenarioExtra") or {}).items():
+            scenario[k] = v  # override the base placeholders (gameMode, ...)
+        raw_spawns = unified.get("sourceSpawnsRaw")
+        if isinstance(raw_spawns, dict) and raw_spawns.get("spawns") is not None:
+            scenario["spawns"] = raw_spawns
+    else:
+        # H2/H3 source: emit the reference template's key set (its
+        # buildBlankMap spreads src-tauri/resources/template.map); the
+        # difficulty arrays are all-true per FULL_DIFFICULTIES (every real
+        # sample map has them populated, the template ships them empty).
+        scenario["economicDifficulties"] = [True] * 6
+        scenario["aiDifficulties"] = [True] * 6
+        scenario["neutralDifficulties"] = [True] * 6
+        scenario["quickStartDifficulties"] = [True] * 6
+        scenario["campaignInfo"] = OrderedDict([
+            ("missionNameSid", ""), ("missionDescSid", ""),
+            ("campaignSid", ""), ("campaignDescSid", ""),
+            ("hubIconSid", ""), ("missionIconSid", ""),
+        ])
+        scenario["dateTime"] = OrderedDict([("value", 134321555864529128)])
 
     # --- block 2: adventure ---
     levels = (unified.get("terrain") or {}).get("levels") or []
@@ -5379,18 +5470,23 @@ def unified_to_hommoe(unified):
     # scripts: passthrough for hommoe sources, generated events otherwise
     scripts = unified.get("scripts") or {}
     extra_prop_entities = []
+    has_scripts = False
     if unified.get("sourceGame") == "hommoe" and scripts.get("commentAiData"):
         scripting = scripts["commentAiData"]
         dialog_quest = scripts.get("dialogQuestData") or OrderedDict([
             ("dialogs", OrderedDict([("lines", [])])),
             ("quests", OrderedDict([("quests", [])])),
         ])
+        has_scripts = True  # the source .map had a block 4: keep the shape
     else:
         scripting, extra_prop_entities = _hommoe_generate_scripts(unified, width)
         dialog_quest = OrderedDict([
             ("dialogs", OrderedDict([("lines", [])])),
             ("quests", OrderedDict([("quests", [])])),
         ])
+        # real editors never emit an empty 4th chunk (map-write.ts), so only
+        # set the 0x08 separator bit when quests were actually generated
+        has_scripts = bool(scripting.get("quests"))
     if extra_prop_entities:
         prop_rows.setdefault("propEntities", []).extend(extra_prop_entities)
 
@@ -5430,8 +5526,41 @@ def unified_to_hommoe(unified):
         ("customAreasPainting", []),
         ("generatorChecksum", 0),
     ])
+    if unified.get("sourceGame") == "hommoe":
+        # Lossless passthrough of the raw adventure fields (5d):
+        # descBlocks, views, keyObjects, objectValuesOverrides, the full
+        # settings, banInfoData, takenHeroes, haveCustomAreas,
+        # customAreasPainting, generatorChecksum, cliffRandomSeed...
+        adv_extra = unified.get("sourceAdventureExtra") or {}
+        for k, v in adv_extra.items():
+            adventure[k] = v  # override the base placeholders (views, ...)
+        # full raw settings (incl. the original mapWinConditions)
+        # orphan objectsProperties rows (id matches no object) re-emitted
+        for table, rows in (objects.get("sourceOrphanProps") or {}).items():
+            objects_properties.setdefault(table, []).extend(rows)
+    else:
+        # H2/H3 source: reference-template defaults. views[0] follows the
+        # GME viewport rule confirmed across every real sample map:
+        # secSizeX/secSizeZ = ceil(size/16) (map-write.ts buildBlankMap).
+        adventure["views"] = [OrderedDict([
+            ("name", ""), ("minSecX", 0), ("minSecZ", 0),
+            ("secSizeX", max(1, -(-width // 16))),
+            ("secSizeZ", max(1, -(-height // 16))),
+            ("isUnderground", False), ("stack", -1),
+        ])]
+        adventure["keyObjects"] = []
+        adventure["objectValuesOverrides"] = OrderedDict([("list", [])])
+        adventure["takenHeroes"] = []
+        adventure["haveCustomAreas"] = False
+        adventure["customAreasPainting"] = []
+        adventure["generatorChecksum"] = ""
+        settings = OrderedDict(HOMMOE_SETTINGS_DEFAULT)
+        settings["mapWinConditions"] = map_win_conditions
+        settings["gameMode"] = scenario["gameMode"]
+        settings["endController"] = scenario["endController"]
+        settings["isScenario"] = scenario["isScenario"]
+        adventure["settings"] = settings
 
-    has_scripts = bool(scripting.get("quests")) or unified.get("sourceGame") == "hommoe"
     separator = [0x0D, 0x00] if has_scripts else [0x05, 0x00]
 
     blocks = [
