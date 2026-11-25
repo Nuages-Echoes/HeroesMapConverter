@@ -441,6 +441,60 @@ tile biome (section 1c), and 216/217/218 are converted (1d-note2e).
     spells (h3 88-90 dropped), spell scroll objects (h3 93 unmapped), and
     hero starting-spell bitfields other than the fh2m path.
 
+  3b-note2. The "still not covered" spell cases, with local evidence
+    (Core.zip + references + real maps):
+  * OE spell-reward vocabulary has exactly TWO object-level mechanisms
+    (DB/objects_logic/event_banks/magic_banks + campaign_objects):
+    - altar_of_magic_1..4 (placeable map objects): rewardType
+      HeroMagicRandomAdditionReward, parameters [school, "rank: weight",
+      ...] e.g. ["night","1: 60","2: 40"] = random spell of that school
+      with rank weights; one reward per variant, hero selects among them
+      (selectionWindowType "spellsRewardSet", OnlySelected).
+    - custom_altar_of_magic_1..4 (in map-write.ts SIDS_WITH_REWARD_PARAMS_ONLY):
+      rewardType HeroMagicPropAdditionReward; the per-instance spell sid
+      list rides in propRewardParams.parameters (the 3-sid rows measured
+      on all_cats/c_M1) = "teach one of these specific spells".
+    pandora_box uses HeroMagicMassAdditionReward (several spells).
+    (Script-level alternative, already implemented: AddSpellHero action.)
+  * propRewardParams spell lists on OE altars (24 rows in all_cats/c_M1)
+    are campaign objects; there is NO h3 stock "magic altar" class, so
+    reverse mapping targets events(26)/seer(83)/shrine(88-90)/scroll(93)
+    only if desired.
+  * Seer hut (h3 83) spell reward: h3 reward_type 9 = spell (corpus line
+    760; all-for-one's seer has spell 8 = Dimension Door). We map 83 ->
+    lost_library, whose rewardType is HeroExpReward (XP only), so a spell
+    reward is dropped by design. OE alternative for a spell-reward seer:
+    custom_altar_of_magic_<rank> with propRewardParams [spell sid]
+    (loses the quest/XP part instead).
+  * Shrines h3 88/89/90 (Shrine of Magic Incantation/Gesture/Thought):
+    corpus META_OBJECT_SHRINE carries [u32] spell (0xFF = random of the
+    shrine's level 1/2/3). OE has no "shrine of magic" sid (mereas_shrine
+    gives gold; fickle/sacrificial shrines have no variants in logic).
+    Closest stock: altar_of_magic_1..4 with rank weights set to the
+    shrine level; a fixed spell (SoD) overrides via propRewardParams.
+    Currently 88-90 are dropped (ADVENTURE_POWER_UPS).
+  * Spell scroll h3 93: h3 scroll carries a specific spell
+    (artifactMetadata.spell, 0xFF random). OE scroll boxes
+    scroll_box/enchanted_scroll_box/mythic_scroll_box (chests) give
+    HeroItemReward with a per-spell scroll ITEM sid
+    "enchanted_magic_scroll_artifact_<spellSid>" (rarity tier by box).
+    No custom_chest/custom_scroll sid exists (51 custom_* sids, none
+    chest/scroll), so a SPECIFIC spell cannot be given as a scroll item;
+    the faithful mapping is custom_altar_of_magic_<rank> +
+    propRewardParams [spell sid] (grants the spell directly, lossy in
+    form). Random scrolls (0xFF) -> scroll_box/enchanted/mythic by rank.
+  * Hero starting spells: h3m SoD hero object has a 9-byte spells bitfield
+    -> unified heroMetadata.spells; the fh2m writer already maps it via
+    H3M_TO_FH2M_SPELLS. OE side: spawn heroSid / propHeroes
+    {type,id,isDefined,heroSid} reference CATALOG heroes only
+    (map-parser.ts:145 - no per-instance spell list); each catalog hero
+    has fixed startMagics [{sidConfig, level, isLearned}] (DB/heroes/*).
+    So a custom h3 hero spellbook is not expressible per spawn: options
+    are picking the catalog hero whose startMagics best match, or losing
+    the spells. Reverse OE->h3: build the bitfield from the catalog
+    hero's startMagics sids (exact for the 11, else random same rank).
+
+
 3c. Secondary skills: 16 of 28 H3 skills mapped. Unmapped 12:
     0 Pathfinding, 1 Archery, 5 Navigation, 8 Mysticism, 10 Ballistics,
     11 Eagle Eye, 14-17 the 4 magic schools (see 3b), 18 Scholar,
