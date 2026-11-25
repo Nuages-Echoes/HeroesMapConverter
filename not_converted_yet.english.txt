@@ -1,7 +1,7 @@
 Everything NOT converted yet (for drop / work-on triage)
 ========================================================
 
-Status at commit 763a84e - golden rule green:
+Status at commit 2d72b9a - golden rule green:
     python3 main.py            (rc 0)
     python3 verify_roundtrip.py (rc 0, all 12 round-trips binary identical)
     python3 oe_loop_check.py    (rc 0; current totals: 569 objects dropped
@@ -11,7 +11,9 @@ Status at commit 763a84e - golden rule green:
     3b-note3) and hero standard startMagics (3b-note4); both left the
     "dropped" list unchanged because shrines previously emitted as scroll
     boxes (emit table) - the loop-check lost/gained ref-types now just
-    swap shrine classes randomly, like _upg_alt.
+    swap shrine classes randomly, like _upg_alt. Also CONVERTED since:
+    h3 14 Swan Pond <-> OE beer_fountain and h3 81 Scholar -> OE
+    pandora_box with the reward kept (405a71b, 2d72b9a - see 1f).
 
 Sources: oe_object_correspondence.json, no_olden_era_equivalent.english.txt,
 core_zip_not_converted.english.txt, the local references
@@ -56,6 +58,9 @@ ocean/bottle/sea/...) finds only 'chest' and 'spells_in_a_bottle_artifact'
       spell bitfield is dropped on the way to OE (propHeroes carries
       only the heroSid), and OE -> h3 rebuilds the SoD 9-byte bitfield
       from the catalog startMagics. See 3b-note4.
+    - h3 14 Swan Pond <-> OE beer_fountain (user decision) - 1f.
+    - h3 81 Scholar -> OE pandora_box, reward kept under the normal
+      pandora conversion rules (user decision) - 1f.
     - h3 class 142 "Misc Active Object (resource generator)" - no-payload SoD
       misc passable-terrain class (position + subtype + 5 bytes only), 0
       instances in all test maps, no local source names its subtypes; the real
@@ -392,9 +397,62 @@ no_olden_era_equivalent.english.txt section 1.)
 
 1e. Other (52): mostly "Unidentified" template placeholders (h3 0, 1, 3,
     40, 123, 156, 165-176, 178-198, 200-203, 205) plus 9 Border Guard,
-    10 Keymaster Tent, 14 Swan Pond, 36 Grail, 50 Market of Time,
-    57 Obelisk, 81 Scholar, 144 Misc Active (highland/rough/snow)
+    10 Keymaster Tent, 36 Grail, 50 Market of Time, 57 Obelisk,
+    144 Misc Active (highland/rough/snow)
     dropped in the loop check: Obelisk x19
+    CONVERTED since (1f): 14 Swan Pond -> beer_fountain, 81 Scholar ->
+    pandora_box.
+
+------------------------------------------------------------
+1f. User mappings DONE (14 Swan Pond, 81 Scholar) + investigation of
+   the remaining unmapped classes (evidence: Core.zip DB/map/objects/*.json,
+   DB/objects_logic/**, the reference's src/data/map-objects.json names)
+------------------------------------------------------------
+
+  CONVERTED (commits 405a71b, 2d72b9a):
+  - h3 14 Swan Pond <-> OE beer_fountain. Forward: emit 14 -> beer_fountain
+    + empty propRewardParams row (SIDS_WITH_REWARD_PARAMS_ONLY). Reverse:
+    beer_fountain -> class 14 (fh2m POWER_UPS 17 via the new POWER_17 ->
+    (14, 0) entry). Evidence: Core.zip buff_banks/beer_fountain.json =
+    HeroBuffReward [beer_fountain_buff, UntilNextWeek, 0], EachHeroOneTime.
+  - h3 81 Scholar -> OE pandora_box, reward kept under the normal pandora
+    rules: type 0 primary -> GiveStatsHero +1 (value byte = skill index
+    0-3 per h3m2json.php), type 1 skill -> propRewardParams skill sid,
+    type 2 spell -> propRewardParams spell sid (random same rank if not
+    one of the 11 exact), 0xFF random -> empty parameters. Reverse comes
+    back as h3 class 6 (scholar identity lost, reward kept).
+
+  INVESTIGATION of the remaining open classes (candidate OE sids):
+  - h3 9 Border Guard (subclass = color) -> candidate `town_gate`
+    (Interact "Town Gate"); no "border*" sid exists in the OE catalog.
+  - h3 10 Keymaster Tent (AVXkey<c>) -> NO candidate (no tent/keymaster
+    sid in DB/map/objects).
+  - h3 36 Grail -> NO candidate (no grail sid; the buried-grail mechanic
+    does not exist in OE object catalogs).
+  - h3 50 Market of Time -> candidate `market` (Interact; logic in
+    DB/objects_logic/markets/markets.json); also `unit_trade_lab_*`,
+    `alchemy_lab` for the resource-trade labs.
+  - h3 57 Obelisk -> NO candidate (no obelisk sid; H2 side: MISC 15).
+  - h3 93 Spell Scroll -> scroll_box / enchanted_scroll_box /
+    mythic_scroll_box (Chest; HeroItemReward enchanted_magic_scroll_
+    artifact_<spellSid>) - see 3b-note2; a SPECIFIC spell is not
+    expressible (no custom scroll sid), random by box tier.
+  - h3 144 Misc Active (stat boosts / schools) -> buff banks:
+    mysterious_stone / pile_of_books / quixs_path / stables (all
+    HeroBuffReward UntilNextWeek), beer_fountain, fountain
+    (MovePointsAdditionReward 40), knowledge_garden (HeroStatsReward
+    intelligence +1), mana_well (ManaPercentSettingReward).
+  - h3 215 Quest Guard -> NO object sid; OE quests are commentAiData
+    scripts (only fx_quest_mark_* FX markers exist as objects).
+  - fh2m POWER_UPS 20 "Tree of Knowledge" -> candidate OE
+    `tree_of_knowledge` (Interact "Tree of Knowledge", bank
+    HeroExpToLevelUpReward ['true'] = gain a level, matching H2).
+  - fh2m MISC 27/28/31/33 -> H2-only objects, no h3 counterpart and no
+    local name table; candidates unknown without fheroes2's editor list.
+  - fh2m ARTIFACTS 76/82/89 -> h3 PoL artifacts 89/95/102, no exact OE
+    name match (nearest-name suggestions in artifact_equivalents_nearest);
+    default stays random-item + rarity row.
+  - h3 38 Idol of Fortune already maps to OE `fountain` (emit table).
 
 ------------------------------------------------------------
 2. H2-only (fh2m) objects with no H3 reference and no OE equivalent
@@ -404,7 +462,8 @@ dropped in the loop check (they only exist in the 6 fh2m test maps):
   LANDSCAPE_FLAGS, all 14 indexes ............ 142 objects  [DROPPED BY DECISION]
   LANDSCAPE_TOWN_BASEMENTS, all 8 indexes ....  71 objects  [DROPPED BY DECISION]
   ADVENTURE_WATER 8 / 9 / 12 (Barrel, fheroes2-specific) ... 59 objects  [DROPPED BY DECISION]
-  ADVENTURE_POWER_UPS 17 (Idol) + 20 .........  30 objects  (still open)
+  ADVENTURE_POWER_UPS 17 (Idol -> h3 14 -> beer_fountain, 1f) + 20
+    (Tree of Knowledge -> candidate OE tree_of_knowledge, 1f)  30 objects
   ADVENTURE_MISCELLANEOUS 26-28, 31, 33 ......  (seen in per-map losses)  (still open)
   ADVENTURE_ARTIFACTS 76 / 82 / 89 ...........   9 objects  (still open)
 
