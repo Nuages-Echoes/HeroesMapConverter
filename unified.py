@@ -1029,25 +1029,44 @@ OE_SKILL_SID_TO_H3 = {}
 for _sid_h3, _sid in OE_SKILL_EQUIVALENTS.items():
     OE_SKILL_SID_TO_H3.setdefault(_sid, int(_sid_h3))
 # All OE skill sids (Core.zip DB/heroes_skills/skills/skills.json + Lang
-# display names, oe_skill_names): 16 of the 31 have an exact H3 counterpart
-# (skill_equivalents), the other 15 are OE-only (Abyssal Communion, the four
-# magic schools, Battle Magic, Battlecraft, Combat, Murmuring, Recruitment,
-# Righteousness, Summon Avatar, Summon Swarm, Thaumaturgy, Triumvirate's
-# Strength) - user decision: they are set to a RANDOM H3 skill on the way
-# to H2/H3 (see _h3_skill_from_oe_sid).
+# display names, oe_skill_names). User decision: the OE faction skills
+# (skill_faction_*) are EXCLUDED from conversion in both directions - they
+# are never emitted H3->OE and decode to None OE->H3 (this also drops the
+# former h3 12 Necromancy <-> skill_faction_undead exact match). Every
+# OTHER skill conversion is random: an unmapped h3 skill gets a random
+# convertible OE sid (_oe_skill_sid), an OE-only non-faction skill gets a
+# random h3 skill (_h3_skill_from_oe_sid).
 OE_SKILL_NAMES = OE_OBJECT_CORRESPONDENCE.get("oe_skill_names") or {}
 OE_SKILL_SIDS = set(OE_SKILL_NAMES)
+OE_SKILL_EXCLUDED_PREFIX = "skill_faction_"
+OE_SKILL_SIDS_CONVERTIBLE = sorted(
+    s for s in OE_SKILL_SIDS if not s.startswith(OE_SKILL_EXCLUDED_PREFIX))
 
 
 def _h3_skill_from_oe_sid(sid):
     """OE skill sid -> h3m secondary skill id: exact Core.zip name match
-    when one of the 16 exists, else a random h3 skill (user decision: OE
-    skills with no counterpart are set randomly). Returns None when the
-    sid is not a known OE skill."""
+    when mapped, else a random h3 skill for OE-only non-faction sids (user
+    decision: all other conversions are random). Returns None for the
+    excluded skill_faction_* sids and for unknown sids."""
+    if sid.startswith(OE_SKILL_EXCLUDED_PREFIX):
+        return None
     if sid in OE_SKILL_SID_TO_H3:
         return OE_SKILL_SID_TO_H3[sid]
     if sid in OE_SKILL_SIDS:
         return _random.randrange(len(H3M_SECONDARY_SKILL_NAMES))
+    return None
+
+
+def _oe_skill_sid(h3_skill):
+    """h3m secondary skill id -> OE skill sid: exact Core.zip name match
+    when mapped, else a random convertible OE skill sid (user decision:
+    unmapped skills convert randomly; skill_faction_* are never emitted).
+    Returns None only when the convertible pool is empty."""
+    sid = OE_SKILL_EQUIVALENTS.get(str(h3_skill))
+    if sid and not sid.startswith(OE_SKILL_EXCLUDED_PREFIX):
+        return sid
+    if OE_SKILL_SIDS_CONVERTIBLE:
+        return _random.choice(OE_SKILL_SIDS_CONVERTIBLE)
     return None
 # Spell catalog from Core.zip DB/magics + Lang magic.json (see
 # oe_object_correspondence.json spell_equivalents / oe_spell_sids):
@@ -1775,7 +1794,9 @@ def _hommoe_pandora_props(prop_rows, oid, pm):
         if art_sid:
             params.append(art_sid)
     for sk in (pm.get("secondarySkills") or []):
-        sk_sid = OE_SKILL_EQUIVALENTS.get(str(sk.get("id")))
+        # exact name match, else a random convertible OE skill sid (user
+        # decision: unmapped skills convert randomly, skill_faction_* never)
+        sk_sid = _oe_skill_sid(sk.get("id"))
         if sk_sid:
             params.append(sk_sid)
     for sp in (pm.get("spells") or []):
@@ -2300,9 +2321,14 @@ def _hommoe_actions_to_event(actions, repeat):
                 if cmt.startswith("level ") and cmt[6:].isdigit():
                     level = int(cmt[6:])
                 # exact name match, else a random h3 skill (user decision:
-                # OE-only skills have no H3 counterpart and are randomized)
-                evt["secondarySkills"].append(OrderedDict([
-                    ("id", _h3_skill_from_oe_sid(sid)), ("level", level)]))
+                # all other skill conversions are random); None = the
+                # excluded skill_faction_* sids
+                h3_skill = _h3_skill_from_oe_sid(sid)
+                if h3_skill is not None:
+                    evt["secondarySkills"].append(OrderedDict([
+                        ("id", h3_skill), ("level", level)]))
+                else:
+                    unconverted.append("AddSkill:%s" % sid)
             else:
                 unconverted.append("AddSkill:%s" % sid)
         elif name == "GiveExpHero" and p:
@@ -5113,7 +5139,9 @@ def _hommoe_event_actions(event, obj_id):
     if event.get("monsterType") not in (None, 0, -1):
         unconverted.append("monster={}x{}".format(event.get("monsterType"), event.get("monsterCount", 0)))
     if event.get("secondarySkill") not in (None, 0):
-        skill_sid = OE_SKILL_EQUIVALENTS.get(str(event.get("secondarySkill")))
+        # exact name match, else a random convertible OE skill sid (user
+        # decision: unmapped skills convert randomly, skill_faction_* never)
+        skill_sid = _oe_skill_sid(event.get("secondarySkill"))
         if skill_sid:
             actions.append(OrderedDict([
                 ("comment", "level {}".format(event.get("secondarySkillLevel", 0))),
@@ -5545,7 +5573,10 @@ def unified_to_hommoe(unified):
                         wh_meta = (objects.get("witchhutMetadata") or {}).get(str(oid)) or {}
                         skill = wh_meta.get("skill")
                         if skill is not None:
-                            sk_sid = OE_SKILL_EQUIVALENTS.get(str(skill))
+                            # exact name match, else a random convertible OE
+                            # skill sid (user decision: unmapped skills
+                            # convert randomly, skill_faction_* never)
+                            sk_sid = _oe_skill_sid(skill)
                             if sk_sid:
                                 reward_params = [sk_sid]
                     prop_rows.setdefault("propVariants", []).append(OrderedDict([

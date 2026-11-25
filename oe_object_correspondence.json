@@ -4143,7 +4143,6 @@
   }
  },
  "skill_equivalents": {
-  "12": "skill_faction_undead",
   "13": "skill_economy",
   "19": "skill_tactics",
   "2": "skill_logistic",

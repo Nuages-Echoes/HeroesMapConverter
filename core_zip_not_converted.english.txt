@@ -8,7 +8,7 @@ name (artifacts) or on the skill name (secondary skills). Everything below has
 no such match; the converter falls back to the coarser OE object (random-item /
 random-squad / dropped) or keeps the raw id in metadata.
 
-Converted exactly (for reference): 20 of 143 H3 artifacts, 16 of 28 H3 secondary
+Converted exactly (for reference): 20 of 143 H3 artifacts, 15 of 28 H3 secondary
 skills. Tables: oe_object_correspondence.json (artifact_equivalents,
 skill_equivalents, oe_item_names, oe_skill_names).
 
@@ -148,7 +148,12 @@ skill_equivalents, oe_item_names, oe_skill_names).
    h3 164  Plate of Dying Light
 
 ------------------------------------------------------------
-2. H3 secondary skills with no obvious OE skill (12)
+2. H3 secondary skills with no obvious OE skill (13) - DONE at random
+   fidelity (user decision): each converts to a RANDOM convertible OE
+   skill sid H3->OE (_oe_skill_sid); the 6 skill_faction_* OE sids are
+   EXCLUDED from conversion both ways (the old Necromancy <->
+   skill_faction_undead exact match was removed with them, so h3 12 is
+   now in this random list too).
 ------------------------------------------------------------
 
    H3 id  H3 skill         note
@@ -162,25 +167,29 @@ skill_equivalents, oe_item_names, oe_skill_names).
    15     Air Magic        OE has 4 schools too (Daylight/Nightshade/Arcane/Primal Magic); which H3 school maps to which needs spell-level matching (not done yet)
    16     Water Magic      OE has 4 schools too (Daylight/Nightshade/Arcane/Primal Magic); which H3 school maps to which needs spell-level matching (not done yet)
    17     Earth Magic      OE has 4 schools too (Daylight/Nightshade/Arcane/Primal Magic); which H3 school maps to which needs spell-level matching (not done yet)
+   12     Necromancy       (exact match removed with the skill_faction_* exclusion)
    18     Scholar          
    24     Intelligence     
 
-   OE-only skills with no H3 counterpart (reverse direction):
-     skill_faction_unfrozen       Abyssal Communion
+   OE-only skills with no H3 counterpart (reverse direction): the 10
+   non-faction ones convert to a RANDOM H3 skill (_h3_skill_from_oe_sid);
+   the 6 skill_faction_* ones are EXCLUDED (decode to None):
+     [excluded] skill_faction_unfrozen  Abyssal Communion
      skill_magic_space            Arcane Magic
      skill_battlemage             Battle Magic
      skill_formation              Battlecraft
      skill_battle_artistry        Combat
      skill_magic_day              Daylight Magic
-     skill_faction_nature         Murmuring
+     [excluded] skill_faction_nature    Murmuring
      skill_magic_night            Nightshade Magic
      skill_magic_primal           Primal Magic
      skill_trainer                Recruitment
-     skill_faction_humans         Righteousness
+     [excluded] skill_faction_humans    Righteousness
      skill_summoner               Summon Avatar
-     skill_faction_demons         Summon Swarm
+     [excluded] skill_faction_demons    Summon Swarm
      skill_wisdom                 Thaumaturgy
-     skill_faction_dungeon        Triumvirate’s Strength
+     [excluded] skill_faction_dungeon   Triumvirate’s Strength
+     [excluded] skill_faction_undead   Necromancy (was exact-mapped to h3 12)
 
 ------------------------------------------------------------
 3. OE items/spells with no H3 counterpart
@@ -195,7 +204,12 @@ skill_equivalents, oe_item_names, oe_skill_names).
    (unified.py _h3_spell_from_oe_sid / _hommoe_spell_sid and the random-item
    prop rows). The 15 OE-only secondary skills (no H3 counterpart) are set to a
    RANDOM H3 skill on the way to H2/H3 (unified.py _h3_skill_from_oe_sid, user
-   decision).
+   decision). The 6 skill_faction_* OE skills are EXCLUDED from conversion both
+   ways (user decision; this also dropped the h3 12 Necromancy <->
+   skill_faction_undead exact match), and every other unmapped skill converts
+   randomly in both directions (_oe_skill_sid / _h3_skill_from_oe_sid):
+   15/28 H3 skills exact, the other 13 -> random convertible OE sid; 10
+   OE-only non-faction skills -> random H3 skill.
 
 ------------------------------------------------------------
 4. Still-unmapped H3 object classes (unchanged)
