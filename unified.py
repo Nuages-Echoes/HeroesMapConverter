@@ -1028,6 +1028,61 @@ for _usid, _cid in list(OE_UNIT_SID_TO_H3_CREATURE.items()):
 OE_SKILL_SID_TO_H3 = {}
 for _sid_h3, _sid in OE_SKILL_EQUIVALENTS.items():
     OE_SKILL_SID_TO_H3.setdefault(_sid, int(_sid_h3))
+# Spell catalog from Core.zip DB/magics + Lang magic.json (see
+# oe_object_correspondence.json spell_equivalents / oe_spell_sids):
+# 11 exact English-name matches h3 spell id -> OE spell sid; the other OE
+# sids carry school/rank/name for the random-same-rank fallback (user
+# decision: spell rewards are NOT converted 1:1 - an unmatched spell
+# becomes a random OE spell of the same rank, and vice versa).
+OE_SPELL_EQUIVALENTS = {int(k): v for k, v in
+                        (OE_OBJECT_CORRESPONDENCE.get("spell_equivalents") or {}).items()}
+OE_SPELL_SID_TO_H3 = {v: k for k, v in OE_SPELL_EQUIVALENTS.items()}
+OE_SPELL_INFO = OE_OBJECT_CORRESPONDENCE.get("oe_spell_sids") or {}
+# OE base (non "_special"/masterful) spell sids bucketed by rank 1-5
+OE_SPELL_BY_RANK = {}
+for _sid, _info in OE_SPELL_INFO.items():
+    if _sid.endswith("_special"):
+        continue
+    _rank = _info.get("rank")
+    if isinstance(_rank, int):
+        OE_SPELL_BY_RANK.setdefault(_rank, []).append(_sid)
+# h3 spell ids bucketed by level (H3M_SPELL_LEVELS, SPTRAITS order)
+from correspondence import H3M_SPELL_LEVELS
+H3_SPELL_BY_LEVEL = {}
+for _i, _lv in enumerate(H3M_SPELL_LEVELS):
+    H3_SPELL_BY_LEVEL.setdefault(_lv, []).append(_i)
+
+
+def _hommoe_spell_sid(h3_spell):
+    """h3 spell id -> OE spell sid: exact Core.zip name match when one of
+    the 11 exists, else a random OE spell of the same rank (user decision).
+    Returns None when no candidate exists."""
+    if h3_spell in OE_SPELL_EQUIVALENTS:
+        return OE_SPELL_EQUIVALENTS[h3_spell]
+    if 0 <= h3_spell < len(H3M_SPELL_LEVELS):
+        rank = H3M_SPELL_LEVELS[h3_spell]
+    else:
+        rank = 1
+    cands = OE_SPELL_BY_RANK.get(rank) or []
+    if not cands:
+        cands = [sid for sid in OE_SPELL_INFO if not sid.endswith("_special")]
+    return _random.choice(cands) if cands else None
+
+
+def _h3_spell_from_oe_sid(sid):
+    """OE spell sid -> h3 spell id: exact match when known, else a random
+    h3 spell of the same level (mirror of the forward fallback).
+    Returns None for unknown sids."""
+    if sid in OE_SPELL_SID_TO_H3:
+        return OE_SPELL_SID_TO_H3[sid]
+    info = OE_SPELL_INFO.get(sid)
+    if not info:
+        return None
+    rank = info.get("rank")
+    cands = H3_SPELL_BY_LEVEL.get(rank) if isinstance(rank, int) else None
+    if not cands:
+        cands = list(range(len(H3M_SPELL_LEVELS)))
+    return _random.choice(cands)
 OE_H3_TERRAIN_BIOME = OE_OBJECT_CORRESPONDENCE["h3_terrain_biome"]
 OE_OMIT_CLASSES = {str(o["h3Id"]) for o in OE_OBJECT_CORRESPONDENCE["omit"]}
 
@@ -2106,6 +2161,15 @@ def _hommoe_actions_to_event(actions, repeat):
                     evt[section] = int(p[2])
             else:
                 unconverted.append("GiveStatsHero:%s" % p[0])
+        elif name == "AddSpellHero" and p:
+            sid = str(p[0])
+            h3_spell = _h3_spell_from_oe_sid(sid)
+            if h3_spell is not None:
+                # exact name match, or a random h3 spell of the same level
+                # (mirror of the forward fallback)
+                evt["spells"].append(h3_spell)
+            else:
+                unconverted.append("AddSpellHero:%s" % sid)
         elif name == "GiveUnitHero" and len(p) >= 2:
             sid = str(p[0])
             if sid in OE_UNIT_SID_TO_H3_CREATURE:
@@ -4899,6 +4963,20 @@ def _hommoe_event_actions(event, obj_id):
             ]))
         else:
             unconverted.append("skill={}/{}".format(event.get("secondarySkill"), event.get("secondarySkillLevel", 0)))
+    for sp in event.get("spells") or []:
+        # Spell reward: exact OE sid for the 11 name matches, else a random
+        # OE spell of the same rank (user decision - spells are not 1:1).
+        # The original h3 spell id rides in the action comment.
+        if isinstance(sp, int) and 0 <= sp < len(H3M_SPELL_LEVELS):
+            sp_sid = _hommoe_spell_sid(sp)
+            if sp_sid:
+                # blank hero sid = the currently selected (visiting) hero
+                actions.append(OrderedDict([
+                    ("comment", "h3 spell {}".format(sp)),
+                    ("p", [sp_sid, ""]), ("a", "AddSpellHero"),
+                ]))
+            else:
+                unconverted.append("spell={}".format(sp))
     for stat in ("attack", "defense", "knowledge", "spellPower", "experience"):
         if event.get(stat):
             unconverted.append("{}={}".format(stat, event.get(stat)))

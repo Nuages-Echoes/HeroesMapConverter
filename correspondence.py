@@ -4342,6 +4342,19 @@ H3M_SECONDARY_SKILL_NAMES = [
     "Sorcery", "Resistance", "First Aid",
 ]
 
+# H3 spell id (SPTRAITS.TXT order = H3M_SPELL_NAMES) -> spell level 1-5.
+# Source: Heroes 3 wiki "List of spells" table (heroes.thelazy.net/index.php/List_of_spells,
+# fetched for this branch; cross-checked against the OE rank of the 11 exact name matches).
+H3M_SPELL_LEVELS = [
+    1, 2, 2, 1, 2, 1, 5, 4, 5, 4,   # 0-9  Summon Boat..Town Portal
+    2, 3, 3, 2, 3, 1, 2, 2, 5, 4,   # 10-19 Quicksand..Chain Lightning
+    3, 3, 4, 4, 2, 3, 4, 1, 3, 4,   # 20-29 Frost Ring..Fire Shield
+    2, 1, 1, 3, 3, 1, 5, 1, 4, 3,   # 30-39 Protect Air..Animate Dead
+    5, 1, 1, 1, 2, 2, 1, 2, 4, 3,   # 40-49 Sacrifice..Mirth
+    4, 2, 3, 1, 1, 4, 4, 5, 4, 4,   # 50-59 Sorrow..Berserk
+    3, 3, 2, 3, 2, 4, 5, 5, 5, 5,   # 60-69 Hypnotize..Air Elemental
+]
+
 
 # Heroes III hero identifiers, in the game order used by the h3m
 # files (Hero Settings section: 156 entries, one per hero).

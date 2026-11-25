@@ -1992,6 +1992,663 @@
   "skill_trainer": "Recruitment",
   "skill_wisdom": "Thaumaturgy"
  },
+ "oe_spell_sids": {
+  "bonus_magic_astral_summon_1": {
+   "name": "skill_summoner_name_1",
+   "rank": 4,
+   "school": "Neutral"
+  },
+  "bonus_magic_astral_summon_2": {
+   "name": "skill_summoner_name_2",
+   "rank": 4,
+   "school": "Neutral"
+  },
+  "bonus_magic_astral_summon_3": {
+   "name": "skill_summoner_name_3",
+   "rank": 4,
+   "school": "Neutral"
+  },
+  "bonus_magic_astral_summon_4": {
+   "name": "skill_summoner_name_4",
+   "rank": 4,
+   "school": "Neutral"
+  },
+  "bonus_magic_astral_summon_5": {
+   "name": "skill_summoner_name_5",
+   "rank": 4,
+   "school": "Neutral"
+  },
+  "bonus_magic_astral_summon_nature_1": {
+   "name": "skill_summoner_name_1",
+   "rank": 4,
+   "school": "Neutral"
+  },
+  "bonus_magic_astral_summon_nature_2": {
+   "name": "skill_summoner_name_2",
+   "rank": 4,
+   "school": "Neutral"
+  },
+  "bonus_magic_astral_summon_nature_3": {
+   "name": "skill_summoner_name_3",
+   "rank": 4,
+   "school": "Neutral"
+  },
+  "bonus_magic_astral_summon_nature_4": {
+   "name": "skill_summoner_name_4",
+   "rank": 4,
+   "school": "Neutral"
+  },
+  "bonus_magic_astral_summon_nature_5": {
+   "name": "skill_summoner_name_5",
+   "rank": 4,
+   "school": "Neutral"
+  },
+  "bonus_magic_astral_summon_unfrozen_1": {
+   "name": "skill_summoner_name_1",
+   "rank": 4,
+   "school": "Neutral"
+  },
+  "bonus_magic_astral_summon_unfrozen_2": {
+   "name": "skill_summoner_name_2",
+   "rank": 4,
+   "school": "Neutral"
+  },
+  "bonus_magic_astral_summon_unfrozen_3": {
+   "name": "skill_summoner_name_3",
+   "rank": 4,
+   "school": "Neutral"
+  },
+  "bonus_magic_astral_summon_unfrozen_4": {
+   "name": "skill_summoner_name_4",
+   "rank": 4,
+   "school": "Neutral"
+  },
+  "bonus_magic_astral_summon_unfrozen_5": {
+   "name": "skill_summoner_name_5",
+   "rank": 4,
+   "school": "Neutral"
+  },
+  "bonus_magic_kill_summon": {
+   "name": "Dispel Summon",
+   "rank": 1,
+   "school": "Neutral"
+  },
+  "bonus_magic_pure_bolt": {
+   "name": "Magic Arrow",
+   "rank": 1,
+   "school": "Neutral"
+  },
+  "change_use_necromancy": {
+   "name": "Necromancer Will",
+   "rank": 1,
+   "school": "Neutral"
+  },
+  "day_10_magic_second_song": {
+   "name": "Song of Power",
+   "rank": 3,
+   "school": "Daylight"
+  },
+  "day_11_magic_masterful_parry": {
+   "name": "Riposte",
+   "rank": 3,
+   "school": "Daylight"
+  },
+  "day_12_magic_radiant_armor": {
+   "name": "Radiant Armor",
+   "rank": 4,
+   "school": "Daylight"
+  },
+  "day_13_magic_holy_arms": {
+   "name": "Heavenly Blades",
+   "rank": 4,
+   "school": "Daylight"
+  },
+  "day_14_magic_vengeance": {
+   "name": "Vengeance",
+   "rank": 4,
+   "school": "Daylight"
+  },
+  "day_15_magic_judgement": {
+   "name": "Judgement",
+   "rank": 5,
+   "school": "Daylight"
+  },
+  "day_16_magic_arinas_chosen": {
+   "name": "Arina’s Chosen",
+   "rank": 5,
+   "school": "Daylight"
+  },
+  "day_16_magic_arinas_chosen_special": {
+   "name": "Masterful Arina’s Chosen",
+   "rank": 5,
+   "school": "Daylight"
+  },
+  "day_17_magic_clear_view": {
+   "name": "From a Bird’s Eye",
+   "rank": 2,
+   "school": "Daylight"
+  },
+  "day_18_magic_farsight": {
+   "name": "Clear Fog",
+   "rank": 4,
+   "school": "Daylight"
+  },
+  "day_1_magic_healing_water": {
+   "name": "Healing Water",
+   "rank": 1,
+   "school": "Daylight"
+  },
+  "day_1_magic_healing_water_special": {
+   "name": "Masterful Healing Water",
+   "rank": 1,
+   "school": "Daylight"
+  },
+  "day_2_magic_sharp_edge": {
+   "name": "Blessing",
+   "rank": 1,
+   "school": "Daylight"
+  },
+  "day_2_magic_sharp_edge_special": {
+   "name": "Masterful Blessing",
+   "rank": 1,
+   "school": "Daylight"
+  },
+  "day_3_magic_haste": {
+   "name": "Haste",
+   "rank": 1,
+   "school": "Daylight"
+  },
+  "day_3_magic_haste_special": {
+   "name": "Masterful Haste",
+   "rank": 1,
+   "school": "Daylight"
+  },
+  "day_4_magic_favorable_wind": {
+   "name": "Favorable Wind",
+   "rank": 2,
+   "school": "Daylight"
+  },
+  "day_5_magic_shorten_shadow": {
+   "name": "Shorten Shadow",
+   "rank": 1,
+   "school": "Daylight"
+  },
+  "day_6_magic_cleansing_ray": {
+   "name": "Weakening Ray",
+   "rank": 2,
+   "school": "Daylight"
+  },
+  "day_7_magic_inner_light": {
+   "name": "Inner Light",
+   "rank": 2,
+   "school": "Daylight"
+  },
+  "day_8_magic_taunt": {
+   "name": "Taunt",
+   "rank": 3,
+   "school": "Daylight"
+  },
+  "day_9_magic_arinas_hymn": {
+   "name": "Arina’s Touch",
+   "rank": 3,
+   "school": "Daylight"
+  },
+  "day_9_magic_arinas_hymn_special": {
+   "name": "Masterful Arina’s Touch",
+   "rank": 3,
+   "school": "Daylight"
+  },
+  "kara_darkness": {
+   "name": "kara_darkness_name",
+   "rank": 1,
+   "school": "Neutral"
+  },
+  "kara_death": {
+   "name": "kara_death_name",
+   "rank": 1,
+   "school": "Neutral"
+  },
+  "kara_mana": {
+   "name": "kara_mana_name",
+   "rank": 1,
+   "school": "Neutral"
+  },
+  "kara_silence": {
+   "name": "kara_silence_name",
+   "rank": 1,
+   "school": "Neutral"
+  },
+  "kara_speed": {
+   "name": "kara_speed_name",
+   "rank": 1,
+   "school": "Neutral"
+  },
+  "kara_weakness": {
+   "name": "kara_weakness_name",
+   "rank": 1,
+   "school": "Neutral"
+  },
+  "neutral_1_magic_back_to_city": {
+   "name": "Back to Town!",
+   "rank": 1,
+   "school": "Neutral"
+  },
+  "neutral_1_magic_back_to_garrison": {
+   "name": "Back to Foothold!",
+   "rank": 1,
+   "school": "Neutral"
+  },
+  "neutral_1_magic_mana_restore": {
+   "name": "Mana Rite",
+   "rank": 1,
+   "school": "Neutral"
+  },
+  "neutral_1_magic_mana_transfer": {
+   "name": "Mana Transfusion",
+   "rank": 1,
+   "school": "Neutral"
+  },
+  "neutral_1_magic_units_replace": {
+   "name": "Relocation",
+   "rank": 1,
+   "school": "Neutral"
+  },
+  "neutral_magic_dimension_door": {
+   "name": "Dimension Door",
+   "rank": 4,
+   "school": "Neutral"
+  },
+  "neutral_magic_light_gate": {
+   "name": "Gate of Light",
+   "rank": 3,
+   "school": "Neutral"
+  },
+  "neutral_magic_pocket_dimension": {
+   "name": "Pocket Dimension",
+   "rank": 4,
+   "school": "Neutral"
+  },
+  "neutral_magic_second_sight": {
+   "name": "Second Wind",
+   "rank": 2,
+   "school": "Neutral"
+  },
+  "neutral_magic_shadow_form": {
+   "name": "Shadowflight",
+   "rank": 2,
+   "school": "Neutral"
+  },
+  "neutral_magic_town_portal": {
+   "name": "Town Portal",
+   "rank": 3,
+   "school": "Neutral"
+  },
+  "night_10_magic_silence": {
+   "name": "Silence",
+   "rank": 3,
+   "school": "Nightshade"
+  },
+  "night_11_magic_vulnerability": {
+   "name": "Vulnerability",
+   "rank": 4,
+   "school": "Nightshade"
+  },
+  "night_11_magic_vulnerability_special": {
+   "name": "Masterful Vulnerability",
+   "rank": 4,
+   "school": "Nightshade"
+  },
+  "night_12_magic_summon_starchild": {
+   "name": "Summon Starchild",
+   "rank": 4,
+   "school": "Nightshade"
+  },
+  "night_13_magic_berserker": {
+   "name": "Berserk",
+   "rank": 4,
+   "school": "Nightshade"
+  },
+  "night_13_magic_berserker_special": {
+   "name": "Masterful Berserk",
+   "rank": 4,
+   "school": "Nightshade"
+  },
+  "night_14_magic_nairas_kiss": {
+   "name": "Naira’s Kiss",
+   "rank": 5,
+   "school": "Nightshade"
+  },
+  "night_15_magic_deaths_call": {
+   "name": "Coup de Grâce",
+   "rank": 5,
+   "school": "Nightshade"
+  },
+  "night_16_magic_shadow_army": {
+   "name": "Shadow Army",
+   "rank": 5,
+   "school": "Nightshade"
+  },
+  "night_17_magic_read_minds": {
+   "name": "Read Minds",
+   "rank": 2,
+   "school": "Nightshade"
+  },
+  "night_18_magic_nairas_veil": {
+   "name": "Naira’s Veil",
+   "rank": 3,
+   "school": "Nightshade"
+  },
+  "night_1_magic_unnatural_calm": {
+   "name": "Unnatural Calm",
+   "rank": 1,
+   "school": "Nightshade"
+  },
+  "night_1_magic_unnatural_calm_special": {
+   "name": "Masterful Unnatural Calm",
+   "rank": 1,
+   "school": "Nightshade"
+  },
+  "night_2_magic_web": {
+   "name": "Web",
+   "rank": 2,
+   "school": "Nightshade"
+  },
+  "night_2_magic_web_special": {
+   "name": "Masterful Web",
+   "rank": 2,
+   "school": "Nightshade"
+  },
+  "night_3_magic_enlarge_shadow": {
+   "name": "Enlarge Shadow",
+   "rank": 1,
+   "school": "Nightshade"
+  },
+  "night_4_magic_despair": {
+   "name": "Despair",
+   "rank": 1,
+   "school": "Nightshade"
+  },
+  "night_4_magic_despair_special": {
+   "name": "Masterful Despair",
+   "rank": 1,
+   "school": "Nightshade"
+  },
+  "night_5_magic_shade_cloak": {
+   "name": "Shade Cloak",
+   "rank": 2,
+   "school": "Nightshade"
+  },
+  "night_6_magic_deaths_grip": {
+   "name": "Umbral Grip",
+   "rank": 2,
+   "school": "Nightshade"
+  },
+  "night_6_magic_deaths_grip_special": {
+   "name": "Masterful Umbral Grip",
+   "rank": 2,
+   "school": "Nightshade"
+  },
+  "night_7_magic_fatal_decay": {
+   "name": "Fatal Decay",
+   "rank": 1,
+   "school": "Nightshade"
+  },
+  "night_8_magic_sleep": {
+   "name": "Sleep",
+   "rank": 3,
+   "school": "Nightshade"
+  },
+  "night_9_magic_twilight": {
+   "name": "Twilight",
+   "rank": 3,
+   "school": "Nightshade"
+  },
+  "night_bonus_magic_1_magic": {
+   "name": "Dusk Dampening",
+   "rank": 1,
+   "school": "Neutral"
+  },
+  "primal_10_magic_primordial_purity": {
+   "name": "Anti‑Magic",
+   "rank": 4,
+   "school": "Primal"
+  },
+  "primal_11_magic_armageddon": {
+   "name": "Armageddon",
+   "rank": 5,
+   "school": "Primal"
+  },
+  "primal_12_magic_chain_lightning": {
+   "name": "Chain Lightning",
+   "rank": 4,
+   "school": "Primal"
+  },
+  "primal_12_magic_chain_lightning_special": {
+   "name": "Masterful Chain Lightning",
+   "rank": 4,
+   "school": "Primal"
+  },
+  "primal_13_magic_avalanche": {
+   "name": "Circle of Winter",
+   "rank": 4,
+   "school": "Primal"
+  },
+  "primal_14_magic_hksmillas_rampage": {
+   "name": "Hksmilla’s Rampage",
+   "rank": 5,
+   "school": "Primal"
+  },
+  "primal_15_magic_summon_primal_remnant": {
+   "name": "Summon Primal Remnant",
+   "rank": 5,
+   "school": "Primal"
+  },
+  "primal_16_magic_stone_fangs": {
+   "name": "Stone Fangs",
+   "rank": 3,
+   "school": "Primal"
+  },
+  "primal_17_magic_groundsight": {
+   "name": "Groundsight",
+   "rank": 1,
+   "school": "Primal"
+  },
+  "primal_18_magic_primordial_chaos": {
+   "name": "Primordial Chaos",
+   "rank": 4,
+   "school": "Primal"
+  },
+  "primal_1_magic_thunderbolt": {
+   "name": "Lightning Bolt",
+   "rank": 1,
+   "school": "Primal"
+  },
+  "primal_2_magic_thick_hide": {
+   "name": "Thick Hide",
+   "rank": 1,
+   "school": "Primal"
+  },
+  "primal_3_magic_wean": {
+   "name": "Wean",
+   "rank": 2,
+   "school": "Primal"
+  },
+  "primal_4_magic_fire_globe": {
+   "name": "Fireball",
+   "rank": 2,
+   "school": "Primal"
+  },
+  "primal_4_magic_fire_globe_special": {
+   "name": "Masterful Fireball",
+   "rank": 2,
+   "school": "Primal"
+  },
+  "primal_5_magic_crystal_crown": {
+   "name": "Crystal Crown",
+   "rank": 2,
+   "school": "Primal"
+  },
+  "primal_6_magic_ice_bolt": {
+   "name": "Ice Bolt",
+   "rank": 2,
+   "school": "Primal"
+  },
+  "primal_6_magic_ice_bolt_special": {
+   "name": "Masterful Ice Bolt",
+   "rank": 2,
+   "school": "Primal"
+  },
+  "primal_7_magic_wall_of_flame": {
+   "name": "Firewall",
+   "rank": 3,
+   "school": "Primal"
+  },
+  "primal_7_magic_wall_of_flame_special": {
+   "name": "Masterful Firewall",
+   "rank": 3,
+   "school": "Primal"
+  },
+  "primal_8_magic_cave_in": {
+   "name": "Cave In",
+   "rank": 3,
+   "school": "Primal"
+  },
+  "primal_8_magic_cave_in_special": {
+   "name": "Masterful Cave In",
+   "rank": 3,
+   "school": "Primal"
+  },
+  "primal_9_magic_earths_rage": {
+   "name": "Earth’s Rage",
+   "rank": 3,
+   "school": "Primal"
+  },
+  "primal_bonus_magic_1_magic": {
+   "name": "Spell Eruption",
+   "rank": 1,
+   "school": "Neutral"
+  },
+  "space_10_magic_mirror_copy": {
+   "name": "Mirror Copy",
+   "rank": 4,
+   "school": "Arcane"
+  },
+  "space_10_magic_mirror_copy_special": {
+   "name": "Masterful Mirror Copy",
+   "rank": 3,
+   "school": "Arcane"
+  },
+  "space_11_magic_decimate": {
+   "name": "Guillotine",
+   "rank": 1,
+   "school": "Arcane"
+  },
+  "space_11_magic_decimate_special": {
+   "name": "Masterful Guillotine",
+   "rank": 1,
+   "school": "Arcane"
+  },
+  "space_12_magic_rewind": {
+   "name": "Rewind Life",
+   "rank": 4,
+   "school": "Arcane"
+  },
+  "space_12_magic_rewind_special": {
+   "name": "Masterful Rewind Life",
+   "rank": 4,
+   "school": "Arcane"
+  },
+  "space_13_magic_black_hole": {
+   "name": "Black Hole",
+   "rank": 5,
+   "school": "Arcane"
+  },
+  "space_14_magic_doreaths_tide": {
+   "name": "Doreath’s Tide",
+   "rank": 5,
+   "school": "Arcane"
+  },
+  "space_15_magic_trap_snare": {
+   "name": "Spatial Snare",
+   "rank": 4,
+   "school": "Arcane"
+  },
+  "space_16_magic_reality_distortion": {
+   "name": "Reality Distortion",
+   "rank": 5,
+   "school": "Arcane"
+  },
+  "space_17_magic_reinforcements": {
+   "name": "Reinforcements",
+   "rank": 2,
+   "school": "Arcane"
+  },
+  "space_18_magic_assemble": {
+   "name": "Assemble!",
+   "rank": 3,
+   "school": "Arcane"
+  },
+  "space_1_magic_early_start": {
+   "name": "Early Start",
+   "rank": 1,
+   "school": "Arcane"
+  },
+  "space_1_magic_early_start_special": {
+   "name": "Masterful Early Start",
+   "rank": 1,
+   "school": "Arcane"
+  },
+  "space_2_magic_energy_explosion": {
+   "name": "Energy Explosion",
+   "rank": 2,
+   "school": "Arcane"
+  },
+  "space_3_magic_energyze": {
+   "name": "Energize",
+   "rank": 1,
+   "school": "Arcane"
+  },
+  "space_4_magic_optical_illusion": {
+   "name": "Optical Illusion",
+   "rank": 1,
+   "school": "Arcane"
+  },
+  "space_5_magic_trap_jaws": {
+   "name": "Temporal Spheres",
+   "rank": 3,
+   "school": "Arcane"
+  },
+  "space_6_magic_blink": {
+   "name": "Blink",
+   "rank": 2,
+   "school": "Arcane"
+  },
+  "space_6_magic_blink_special": {
+   "name": "Masterful Blink",
+   "rank": 2,
+   "school": "Arcane"
+  },
+  "space_7_magic_shackles": {
+   "name": "Shackles",
+   "rank": 3,
+   "school": "Arcane"
+  },
+  "space_8_magic_carapace": {
+   "name": "Carapace",
+   "rank": 2,
+   "school": "Arcane"
+  },
+  "space_8_magic_carapace_special": {
+   "name": "Masterful Carapace",
+   "rank": 2,
+   "school": "Arcane"
+  },
+  "space_9_magic_impending_fate": {
+   "name": "Impending Fate",
+   "rank": 3,
+   "school": "Arcane"
+  }
+ },
  "omit": [
   {
    "h3Id": 0,
@@ -2879,6 +3536,19 @@
   "6": "skill_leadership",
   "7": "skill_mastery",
   "9": "skill_luck"
+ },
+ "spell_equivalents": {
+  "15": "bonus_magic_pure_bolt",
+  "16": "primal_6_magic_ice_bolt",
+  "17": "primal_1_magic_thunderbolt",
+  "19": "primal_12_magic_chain_lightning",
+  "21": "primal_4_magic_fire_globe",
+  "26": "primal_11_magic_armageddon",
+  "34": "primal_10_magic_primordial_purity",
+  "53": "day_3_magic_haste",
+  "59": "night_13_magic_berserker",
+  "8": "neutral_magic_dimension_door",
+  "9": "neutral_magic_town_portal"
  },
  "supplement_emit": {
   "106": {
