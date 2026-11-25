@@ -87,6 +87,9 @@ The conversion translates only the anchor. For fh2m sources the
 - `input/` holds the test maps; `output/` holds the regenerated reference
   maps. `make_variant.py` builds debug variants from `outputunified/` to
   isolate load crashes — prefer it over hand-editing maps.
+- for H2 related issues, use https://github.com/ihhub/fheroes2 first
+- for H3 related issues, use https://github.com/HeroWO-js/h3m2json and https://github.com/vcmi first
+- for Olden Era related issues, use https://github.com/mimiasei/map-editor-json-tool and https://github.com/IgorIziyoAlhasov/olden-era-map-vs-code-inspector first
 
 ## Known limitations — do not "fix" silently
 
