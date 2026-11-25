@@ -968,7 +968,7 @@ _HOMMOE_ADVENTURE_MISC_TOKENS = (
     "portal", "market", "trading", "shrine", "altar", "magic_amplifier", "magic_wheel",
     "storage", "windmill", "prison", "arena", "dragon", "mana_well", "observatory",
     "learning", "wise_owl", "mystical_tower", "knowledge", "lost_library",
-    "circle_of_life", "unit_trade", "random-hire", "monty", "grave",
+    "circle_of_life", "unit_trade", "random-hire", "monty", "grave", "scroll",
 )
 # Sid fragments identifying decorative scenery.
 _HOMMOE_SCENERY_TOKENS = (
@@ -1004,6 +1004,12 @@ OE_DEF_TO_SID = OE_OBJECT_CORRESPONDENCE["def_to_sid"]
 OE_SUPPLEMENT_SCENERY = OE_OBJECT_CORRESPONDENCE["supplement_scenery"]
 OE_CREATURE_EQUIVALENTS = OE_OBJECT_CORRESPONDENCE["creature_equivalents"]
 OE_SUPPLEMENT_EMIT = OE_OBJECT_CORRESPONDENCE["supplement_emit"]
+# OE scroll boxes (Core.zip DB/map/objects/6_artifacts.json). User
+# decision: h3 93 Spell Scroll -> a RANDOM one of these (a specific spell
+# is not expressible - there is no custom scroll sid, the scroll boxes
+# grant a random scroll item of their tier); the reverse maps each box
+# sid back to h3 93.
+OE_SCROLL_BOX_SIDS = ("scroll_box", "enchanted_scroll_box", "mythic_scroll_box")
 # h3m artifact id -> OE artifact sid and h3m secondary skill id -> OE
 # skill sid, learned from the game's own Core.zip (DB/items/items/*.json +
 # DB/heroes_skills/skills/skills.json + Lang/english display names, exact
@@ -1263,6 +1269,11 @@ for _role, _by_biome in OE_ROLE_BIOME_SID.items():
                 _index_hommoe_sid(_sid, _c)
 for _h3, _row in OE_SUPPLEMENT_EMIT.items():
     _index_hommoe_sid(_row["sid"], _h3)
+# Reverse of the Spell Scroll mapping (user decision): each OE scroll box
+# sid -> h3 93 (inserted first so the boxes do not reverse to the shrine
+# classes 88-90 like the reference's emit table had them).
+for _sid in OE_SCROLL_BOX_SIDS:
+    OE_SID_TO_H3.setdefault(_sid, []).insert(0, (93, 0, None))
 
 # Reverse table for scenery sids: OE sid -> a representative unified
 # (group, index) of the landscape family that produces it. Built by running
@@ -1337,6 +1348,11 @@ def _resolve_hommoe_sid(h3_id, anim, subtype, terrain_name):
         # the source had one, is dropped: the altar draws a random spell
         # of its own school/rank (see altar_of_magic_shrines note).
         return _random.choice(HOMMOE_ALTAR_SIDS) if HOMMOE_ALTAR_SIDS else None
+    if h3 == "93":
+        # User decision: Spell Scroll -> a RANDOM OE scroll box (a specific
+        # spell is not expressible, no custom scroll sid); the spell id
+        # stays in the unified artifactMetadata only.
+        return _random.choice(OE_SCROLL_BOX_SIDS)
     if h3 in OE_EMIT_SID:
         return OE_EMIT_SID[h3]["sid"]
     known = (h3 in OE_DISPATCH or h3 in OE_SCENERY_ROLE

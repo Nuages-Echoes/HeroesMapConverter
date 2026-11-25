@@ -95,9 +95,18 @@ ocean/bottle/sea/...) finds only 'chest' and 'spells_in_a_bottle_artifact'
       instances in all test maps, no local source names its subtypes; the real
       resource generators (h3 53 mines, 112 Windmill, 109 Water Wheel) are
       already converted. Evidence: section 1b-note.
+    - The unmapped OE resource banks (crow_nest, goblin_cache,
+      mystical_tower, storage_* x7, village - resource_banks with no H3
+      counterpart) are DROPPED for now (user decision): they stay raw in
+      the unified properties on .map -> .map, but convert to nothing on
+      the way to H2/H3. See 1b-note.
+    - h3 93 Spell Scroll -> a RANDOM OE scroll box (scroll_box /
+      enchanted_scroll_box / mythic_scroll_box) and reverse (user
+      decision) - see 1d.
 
 ------------------------------------------------------------
-1. H3 object classes with NO Olden Era equivalent: 88 of 143
+1. H3 object classes with NO Olden Era equivalent: 87 of 143 (93 Spell
+   Scroll was since converted to a random OE scroll box, user decision)
 ------------------------------------------------------------
 
 (143 reference-omitted classes = 36 supplement_emit + 19 supplement_scenery,
@@ -155,8 +164,12 @@ no_olden_era_equivalent.english.txt section 1.)
     H3: windmill -> 112, gardener -> 55 (Mystical Garden), peasant_cart ->
     105 (Wagon) + 39 (Lean To), abandoned_corpse -> 22 (Corpse),
     gingerbread_house -> 109 (Water Wheel). Still unmapped: crow_nest,
-    goblin_cache, monty_hall, mystical_tower, storage_* x7, village.
+    goblin_cache, mystical_tower, storage_* x7, village (monty_hall is
+    now used by the Sphinx mapping, section 2).
   * DECISION (user): keep 142 DROPPED - see section 0. The unmapped OE
+    resource banks above (crow_nest, goblin_cache, mystical_tower,
+    storage_* x7, village) are DROPPED for now (no H3 counterpart; they
+    stay unconverted in the OE -> H2/H3 direction - section 0).
     resource_banks above stay unconverted in the reverse direction for now
     (listed in section 3d).
 
@@ -203,7 +216,14 @@ no_olden_era_equivalent.english.txt section 1.)
       writer gained a witchHut encoder branch (AB/SoD 4-byte skill bitmask,
       0xFFFFFFFF = random; RoE carries no skill bytes - verified both
       widths). 7/7 witch huts of "all for one.h3m" round-trip.
-    Remaining unmapped: 93 Spell Scroll, 215 Quest Guard.
+    Remaining unmapped: 215 Quest Guard (dropped by decision, section 0).
+    h3 93 Spell Scroll - CONVERTED (user decision): -> a RANDOM OE scroll
+      box (scroll_box / enchanted_scroll_box / mythic_scroll_box, unified.py
+      OE_SCROLL_BOX_SIDS branch in _resolve_hommoe_sid); a specific spell is
+      not expressible (no custom scroll sid), the spell id stays in the
+      unified artifactMetadata only. Reverse: each box sid -> h3 93
+      (inserted first in OE_SID_TO_H3, ahead of the old emit 88-90 shrine
+      claims), and h3 93 -> fh2m ADVENTURE_ARTIFACTS 74 (Spell Scroll).
     216/217/218 Random Dwelling are now CONVERTED - see 1d-note2e.
 
 1d-note. How events/messages convert today (evidence: h3decoder.py,

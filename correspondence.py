@@ -4138,6 +4138,7 @@ H3M_TO_FH2M_INTERACTIVE = {
     # and editor classes.
     80: ("ADVENTURE_POWER_UPS", 19),         # sanctuary -> Temple
     99: ("ADVENTURE_MISCELLANEOUS", 32),     # trading post -> Trading Post
+    93: ("ADVENTURE_ARTIFACTS", 74),         # spell scroll -> Spell Scroll (fh2m artifact 87)
     41: ("ADVENTURE_POWER_UPS", 21),         # library of enlightenment -> Xanadu
     104: ("ADVENTURE_POWER_UPS", 21),        # university -> Xanadu
     7: ("ADVENTURE_MISCELLANEOUS", 32),      # black market -> Trading Post

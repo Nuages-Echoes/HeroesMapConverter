@@ -3511,11 +3511,6 @@
    "reason": "unmapped_template_object_id_92"
   },
   {
-   "h3Id": 93,
-   "h3Name": "Spell Scroll",
-   "reason": "spell_scroll_deferred"
-  },
-  {
    "h3Id": 96,
    "h3Name": "Temple",
    "reason": "unmapped_template_object_id_96"

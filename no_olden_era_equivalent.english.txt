@@ -10,7 +10,8 @@ OE object mapping source: oe_object_correspondence.json
 (reference mapping + evidence-cited supplements).
 
 ------------------------------------------------------------
-1. H3 object classes with no known OE equivalent (88 remaining of 143 omitted)
+1. H3 object classes with no known OE equivalent (87 remaining of 143 omitted;
+   93 Spell Scroll was since converted to a random OE scroll box)
 ------------------------------------------------------------
 
   h3Id  name                              reason
@@ -42,7 +43,6 @@ OE object mapping source: oe_object_correspondence.json
   87     Shipyard                           shipyard_requires_boat_omit
   91     Sign                               sign_message_deferred
   92     Sirens                             unmapped_template_object_id_92
-  93     Spell Scroll                       spell_scroll_deferred
   113    Witch Hut                          witch_hut_deferred
   123    Unidentified                       unmapped_template_object_id_123
   141    Magical Terrain (cracked ice/dune  unmapped_template_object_id_141
