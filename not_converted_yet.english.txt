@@ -1,12 +1,17 @@
 Everything NOT converted yet (for drop / work-on triage)
 ========================================================
 
-Status at commit a27f844 - golden rule green:
+Status at commit 763a84e - golden rule green:
     python3 main.py            (rc 0)
     python3 verify_roundtrip.py (rc 0, all 12 round-trips binary identical)
     python3 oe_loop_check.py    (rc 0; current totals: 569 objects dropped
     in 40 types when writing .map, 26 battlefield-terrain objects painted
-    to a tile biome, 0 random dwellings in the test maps - see 1d-note2e)
+    to a tile biome, 0 random dwellings in the test maps - see 1d-note2e).
+    Since then CONVERTED: altar_of_magic <-> h3 shrines 88/89/90 (random,
+    3b-note3) and hero standard startMagics (3b-note4); both left the
+    "dropped" list unchanged because shrines previously emitted as scroll
+    boxes (emit table) - the loop-check lost/gained ref-types now just
+    swap shrine classes randomly, like _upg_alt.
 
 Sources: oe_object_correspondence.json, no_olden_era_equivalent.english.txt,
 core_zip_not_converted.english.txt, the local references
