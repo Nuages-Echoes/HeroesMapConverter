@@ -5868,6 +5868,18 @@ def unified_to_hommoe(unified):
         adventure["haveCustomAreas"] = False
         adventure["customAreasPainting"] = []
         adventure["generatorChecksum"] = ""
+        # A fresh GME map always carries one zone covering the whole map
+        # (template.map areas[0]: id 0, keyObjectId -1, rootNode 0,
+        # nodes 0..n-1, neighbors [], biome Grass, areasVersion 1). The
+        # game's minimap/thumbnail renderer (MapData.por in the
+        # BhMapPreview path) indexes per-node area data and throws
+        # IndexOutOfRangeException when areas is empty.
+        adventure["areas"] = [OrderedDict([
+            ("id", 0), ("keyObjectId", -1), ("rootNode", 0),
+            ("nodes", list(range(total))),
+            ("neighbors", []), ("biome", "Grass"),
+        ])]
+        adventure["areasVersion"] = 1
         settings = OrderedDict(HOMMOE_SETTINGS_DEFAULT)
         settings["mapWinConditions"] = map_win_conditions
         settings["gameMode"] = scenario["gameMode"]

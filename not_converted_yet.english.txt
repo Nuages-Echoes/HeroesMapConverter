@@ -714,6 +714,12 @@ tile biome (section 1c), and 216/217/218 are converted (1d-note2e).
     happened with converted maps before unified_to_hommoe mapped h3m
     Cobblestone -> 2 / other roads -> 1 and kept hommoe sources verbatim;
     the h3m/fh2m connection bitfield must never be written there).
+  - areas must never be empty: a fresh GME map (template.map) carries one
+    zone covering the whole map (areas[0]: id 0, keyObjectId -1,
+    rootNode 0, nodes 0..n-1, neighbors [], biome Grass, areasVersion 1)
+    and the thumbnail renderer crashes with IndexOutOfRangeException in
+    MapData.por when areas is []. H2/H3 -> .map now emits that template
+    default; hommoe sources keep sourceAreas verbatim.
   - H3 battlefield terrains (21/46/223-231 except 141) -> OE tile biome
     repaint (user mapping, section 1c); the way back gives the plain
     biome, never the magical-terrain object.
