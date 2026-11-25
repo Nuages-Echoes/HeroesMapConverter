@@ -1401,6 +1401,10 @@
    "kind": "interactable",
    "sid": "altar_of_magic_1"
   },
+  "81": {
+   "kind": "interactable",
+   "sid": "pandora_box"
+  },
   "88": {
    "kind": "interactable",
    "sid": "scroll_box"
@@ -3477,11 +3481,6 @@
    "reason": "unmapped_template_object_id_78"
   },
   {
-   "h3Id": 81,
-   "h3Name": "Scholar",
-   "reason": "scholar_deferred"
-  },
-  {
    "h3Id": 82,
    "h3Name": "Sea Chest",
    "reason": "sea_chest_water_travel_omit"
@@ -4350,6 +4349,11 @@
    "evidence": "Core.zip DB/map/objects/4_interactables.json (placeable Interact) + DB/objects_logic/event_banks/buff_banks/beer_fountain.json: HeroBuffReward [beer_fountain_buff, UntilNextWeek, 0], visitType EachHeroOneTime. beer_fountain is in the reference map-write.ts SIDS_WITH_REWARD_PARAMS_ONLY, so the writer seeds an empty propRewardParams row (shape of the real Broken_Alliance rows). Reverse: beer_fountain -> h3 class 14 via the emit table; the fh2m side is ADVENTURE_POWER_UPS 17 (H3M_TO_FH2M_INTERACTIVE, the Idol).",
    "h3Name": "Swan Pond",
    "sid": "beer_fountain"
+  },
+  "81_scholar": {
+   "h3Name": "Scholar",
+   "reward": "scholarMetadata {rewardType, rewardValue} is converted through the pandora reward rules (_hommoe_scholar_to_pandora_meta): type 0 primary -> GiveStatsHero +1 of that stat (Reward_PrimarySkill byte = skill index 0-3, h3m2json.php), type 1 secondary skill -> propRewardParams skill sid (OE_SKILL_EQUIVALENTS), type 2 spell -> propRewardParams spell sid (_hommoe_spell_sid, random same rank when unmatched), 0xFF random -> empty parameters. Reverse: pandora_box maps back to h3 class 6 (the scholar identity is lost, the reward content is kept).",
+   "sid": "pandora_box"
   }
  }
 }

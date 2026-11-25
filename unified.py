@@ -1672,6 +1672,38 @@ def _oe_unit_sid_for_h3(creature):
     return sid
 
 
+def _hommoe_scholar_to_pandora_meta(sch):
+    """h3m scholarMetadata -> a pandoraMetadata-shaped dict so the h3
+    Scholar (class 81, user mapping -> OE pandora_box) keeps its reward
+    under the normal pandora conversion rules. rewardType: 0 = primary
+    skill (rewardValue = skill index 0-3, h3m2json.php
+    Reward_ScholarPrimarySkill), 1 = secondary skill (SSTRAITS index),
+    2 = spell id, 0xFF = random."""
+    resources = OrderedDict((n, 0) for n in
+                            ("wood", "mercury", "ore", "sulfur",
+                             "crystal", "gems", "gold"))
+    primaries = OrderedDict((n, 0) for n in
+                            ("attack", "defense", "spellPower", "knowledge"))
+    pm = OrderedDict([
+        ("guard", None),
+        ("experience", 0), ("mana", 0), ("morale", 0), ("luck", 0),
+        ("resources", resources),
+        ("primarySkills", primaries),
+        ("artifacts", []), ("secondarySkills", []), ("spells", []),
+        ("creatures", []),
+    ])
+    rt = sch.get("rewardType")
+    rv = sch.get("rewardValue")
+    if rt == 0 and isinstance(rv, int) and 0 <= rv <= 3:
+        primaries[("attack", "defense", "spellPower", "knowledge")[rv]] = 1
+    elif rt == 1 and isinstance(rv, int) and rv != 0xFF:
+        pm["secondarySkills"] = [OrderedDict([("id", rv), ("level", 1)])]
+    elif rt == 2 and isinstance(rv, int) and rv != 0xFF:
+        pm["spells"] = [rv]
+    # 0xFF random: everything stays zero/empty (empty parameters row).
+    return pm
+
+
 def _hommoe_pandora_props(prop_rows, oid, pm):
     """Emit the objectsProperties rows for an OE pandora_box placement
     from an h3m pandoraMetadata entry (mirror of _hommoe_pandora_to_metadata).
@@ -1725,6 +1757,13 @@ def _hommoe_pandora_props(prop_rows, oid, pm):
         sk_sid = OE_SKILL_EQUIVALENTS.get(str(sk.get("id")))
         if sk_sid:
             params.append(sk_sid)
+    for sp in (pm.get("spells") or []):
+        # Spell reward (pandora box HeroMagicMassAdditionReward / scholar
+        # type 2): bare OE spell sid in parameters; exact for the 11 name
+        # matches, else random same rank (user decision).
+        sp_sid = _hommoe_spell_sid(sp) if isinstance(sp, int) else None
+        if sp_sid:
+            params.append(sp_sid)
     if params:
         prop_rows.setdefault("propRewardParams", []).append(OrderedDict([
             ("type", 0), ("id", oid), ("parameters", params),
@@ -5455,6 +5494,12 @@ def unified_to_hommoe(unified):
                     # reward slots, script actions) from the h3m pandora
                     # metadata kept in the unified objects section.
                     pandora_meta = (objects.get("pandoraMetadata") or {}).get(str(oid))
+                    if pandora_meta is None:
+                        # Scholar (h3 class 81, user mapping -> pandora_box):
+                        # convert its reward through the same pandora rules.
+                        sch_meta = (objects.get("scholarMetadata") or {}).get(str(oid))
+                        if sch_meta is not None:
+                            pandora_meta = _hommoe_scholar_to_pandora_meta(sch_meta)
                     if pandora_meta:
                         _hommoe_pandora_props(prop_rows, oid, pandora_meta)
                 if sid in HOMMOE_BANK_SIDS:
