@@ -1261,6 +1261,10 @@
    "kind": "interactable",
    "sid": "grass_log_1"
   },
+  "14": {
+   "kind": "interactable",
+   "sid": "beer_fountain"
+  },
   "162": {
    "kind": "random_squad",
    "sid": "random-squad"
@@ -3313,11 +3317,6 @@
    "reason": "unmapped_template_object_id_13"
   },
   {
-   "h3Id": 14,
-   "h3Name": "Swan Pond",
-   "reason": "unmapped_template_object_id_14"
-  },
-  {
    "h3Id": 15,
    "h3Name": "Cover of Darkness",
    "reason": "unmapped_template_object_id_15"
@@ -3953,6 +3952,9 @@
    "reason": "converted_to_tile_biome_Dirt (object dropped, tile repainted; user mapping)"
   }
  ],
+ "reward_params_only_sids": [
+  "beer_fountain"
+ ],
  "role_biome_sid": {
   "ground": {
    "dead": "dead_meadow",
@@ -4342,5 +4344,12 @@
   "177": "pool",
   "204": "tree",
   "222": "shrub"
+ },
+ "user_object_mappings": {
+  "14_swan_pond": {
+   "evidence": "Core.zip DB/map/objects/4_interactables.json (placeable Interact) + DB/objects_logic/event_banks/buff_banks/beer_fountain.json: HeroBuffReward [beer_fountain_buff, UntilNextWeek, 0], visitType EachHeroOneTime. beer_fountain is in the reference map-write.ts SIDS_WITH_REWARD_PARAMS_ONLY, so the writer seeds an empty propRewardParams row (shape of the real Broken_Alliance rows). Reverse: beer_fountain -> h3 class 14 via the emit table; the fh2m side is ADVENTURE_POWER_UPS 17 (H3M_TO_FH2M_INTERACTIVE, the Idol).",
+   "h3Name": "Swan Pond",
+   "sid": "beer_fountain"
+  }
  }
 }

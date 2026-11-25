@@ -4034,6 +4034,8 @@ FH2M_TO_H3M_MISC = {
     # converts to the Heroes II Gazebo); the other power-ups stay
     # dropped or map through the shrines.
     "POWER_11": (100, 0),  # Gazebo -> learning stone
+    "POWER_17": (14, 0),   # Idol -> Swan Pond (user pairing; the OE side of
+                           # h3 14 is beer_fountain, see oe_object_correspondence.json)
     # Power-up pairings (per user decision): the Heroes II
     # power-ups map to their h3m counterparts.
     "POWER_0": (48, 0),    # Artesian Spring -> Magic Spring

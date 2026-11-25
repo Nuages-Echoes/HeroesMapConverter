@@ -1098,6 +1098,12 @@ HOMMOE_CUSTOM_ALTAR_SIDS = list(_ALTAR_SHRINE.get("custom_altar_sids") or [])
 HOMMOE_ALTAR_ALL_SIDS = HOMMOE_ALTAR_SIDS + HOMMOE_CUSTOM_ALTAR_SIDS
 HOMMOE_ALTAR_H3_CLASSES = [str(c) for c in (_ALTAR_SHRINE.get("h3_shrine_classes")
                                              or [88, 89, 90])]
+# Sids for which the game editor always seeds an (empty) propRewardParams
+# row: the altar_of_magic_* sids plus the per-user-mapped ones
+# (reward_params_only_sids, e.g. beer_fountain for h3 14 Swan Pond) -
+# all in the reference map-write.ts SIDS_WITH_REWARD_PARAMS_ONLY.
+HOMMOE_REWARD_PARAMS_SIDS = HOMMOE_ALTAR_SIDS + list(
+    OE_OBJECT_CORRESPONDENCE.get("reward_params_only_sids") or [])
 
 
 def _h3_hero_spells_bitfield(hero_sid):
@@ -5415,9 +5421,9 @@ def unified_to_hommoe(unified):
                         sid = _hommoe_random_dwelling_sid(obj, objects)
                     if sid is None:
                         sid = HOMMOE_GROUP_TO_SID.get(group)
-                if sid in HOMMOE_ALTAR_SIDS \
+                if sid in HOMMOE_REWARD_PARAMS_SIDS \
                         and not (obj.get("properties") or {}).get("propRewardParams"):
-                    # altar_of_magic_*: the game editor always seeds a
+                    # altar_of_magic_* / beer_fountain / ...: the game editor always seeds a
                     # propRewardParams row for these sids
                     # (SIDS_WITH_REWARD_PARAMS_ONLY in the reference
                     # map-write.ts); real maps carry it with EMPTY
