@@ -2309,6 +2309,120 @@ _HOMMOE_STAT_ACTION_TO_FIELD = {
     "moral": ("morale", None),
 }
 
+# OE Dialog* action types: p[0] is a dialog flow sid resolved from the
+# game's Core.zip (DB/dialogs/dialogs/...), never from the .map itself
+# (block 3 dialogQuestData is an empty shell in every shipped map, and
+# the game runs quests from block 4 - see map-write.ts embedScenarioInContainer).
+HOMMOE_DIALOG_ACTIONS = ("Dialog", "DialogOne", "DialogIfHero", "DialogIfRes",
+                         "DialogIfCounter", "DialogIfItem", "DialogOneIfHero",
+                         "DialogOneIfRes", "DialogOneIfCounter", "RandomDialog")
+# OE local-counter actions (p = [counterSid, ...]): H2/H3 have no counters,
+# so these only ever surface as notes on the decoded event.
+HOMMOE_COUNTER_ACTIONS = ("CounterSet", "CounterPlus", "CounterMinus", "CounterSetRandom")
+
+
+def _hommoe_structured_condition(c):
+    if not isinstance(c, dict):
+        return c
+    out = OrderedDict([
+        ("type", str(c.get("c", ""))),
+        ("params", [str(v) for v in (c.get("p") or [])]),
+        ("comment", str(c.get("comment") or "")),
+    ])
+    if "counter" in c:
+        out["counter"] = c["counter"]
+    return out
+
+
+def _hommoe_structured_action(a):
+    if not isinstance(a, dict):
+        return a
+    out = OrderedDict([
+        ("type", str(a.get("a", ""))),
+        ("params", [str(v) for v in (a.get("p") or [])]),
+        ("comment", str(a.get("comment") or "")),
+    ])
+    if "break" in a:
+        out["break"] = a["break"]
+    return out
+
+
+def _hommoe_structured_trigger(t):
+    return OrderedDict([
+        ("comment", str(t.get("comment") or "")),
+        ("repeat", bool(t.get("repeat", False))),
+        ("conditionsLogic", str(t.get("conditionsLogic") or "And")),
+        ("conditions", [_hommoe_structured_condition(c) for c in (t.get("conditions") or [])]),
+        ("actions", [_hommoe_structured_action(a) for a in (t.get("actions") or [])]),
+    ])
+
+
+def _hommoe_structured_quest(q):
+    return OrderedDict([
+        ("sid", str(q.get("sid") or "")),
+        ("name", str(q.get("name") or "")),
+        ("desc", str(q.get("desc") or "")),
+        ("main", bool(q.get("main", False))),
+        ("hidden", bool(q.get("hidden", False))),
+        ("activeOnStart", bool(q.get("activeOnStart", False))),
+        ("comment", str(q.get("comment") or "")),
+        ("sharing", str(q.get("sharing") or "")),
+        ("subQuestGroups", q.get("subQuestGroups") or []),
+        ("subQuests", [OrderedDict([
+            ("sid", str(s.get("sid") or "")),
+            ("name", str(s.get("name") or "")),
+            ("desc", str(s.get("desc") or "")),
+            ("hidden", bool(s.get("hidden", False))),
+            ("activeOnStart", bool(s.get("activeOnStart", False))),
+            ("comment", str(s.get("comment") or "")),
+            ("triggers", [_hommoe_structured_trigger(t) for t in (s.get("triggers") or [])]),
+        ]) for s in (q.get("subQuests") or []) if isinstance(s, dict)]),
+    ])
+
+
+def _hommoe_structured_interruption(i):
+    return OrderedDict([
+        ("sid", str(i.get("sid") or "")),
+        ("interruption", str(i.get("interruption") or "")),
+        ("activeOnStart", bool(i.get("activeOnStart", False))),
+        ("params", [str(v) for v in (i.get("p") or [])]),
+        ("actions", [_hommoe_structured_action(a) for a in (i.get("actions") or [])]),
+    ])
+
+
+def _hommoe_scripting_to_structured(scripts):
+    """Readable, normalized view of the raw .map scripting blocks
+    (dialogQuestData + commentAiData): counters, interruptions and quests
+    with every trigger condition/action type, params and comment decoded.
+    The raw blocks stay in unified["scripts"] for the lossless .map->.map
+    passthrough; this key is the inspection / H2-H3 mapping view."""
+    out = OrderedDict()
+    b4 = scripts.get("commentAiData")
+    if isinstance(b4, dict):
+        out["comment"] = b4.get("comment", "")
+        out["aiRolesId"] = b4.get("aiRolesId", "")
+        out["counters"] = [OrderedDict([
+            ("sid", str(c.get("sid") or "")),
+            ("value", c.get("value", 0)),
+            ("comment", str(c.get("comment") or "")),
+            ("sharing", str(c.get("sharing") or "")),
+            ("minValue", c.get("minValue", -2147483648)),
+            ("maxValue", c.get("maxValue", 2147483647)),
+        ]) for c in (b4.get("counters") or []) if isinstance(c, dict)]
+        out["interruptions"] = [_hommoe_structured_interruption(i)
+                                for i in (b4.get("interruptions") or []) if isinstance(i, dict)]
+        out["quests"] = [_hommoe_structured_quest(q)
+                         for q in (b4.get("quests") or []) if isinstance(q, dict)]
+    b3 = scripts.get("dialogQuestData")
+    if isinstance(b3, dict):
+        dialogs = b3.get("dialogs") or {}
+        out["dialogLines"] = dialogs.get("lines") or []
+        quests = b3.get("quests") or {}
+        qlist = quests.get("quests") if isinstance(quests, dict) else quests
+        out["dialogQuests"] = [_hommoe_structured_quest(q)
+                               for q in (qlist or []) if isinstance(q, dict)]
+    return out
+
 
 def _hommoe_actions_to_event(actions, repeat):
     """Decode one quest trigger's actions into an h3m eventMetadata entry
@@ -2340,6 +2454,13 @@ def _hommoe_actions_to_event(actions, repeat):
         p = a.get("p") or []
         if name == "Print" and p:
             msgs.append(str(p[0]))
+        elif name in HOMMOE_DIALOG_ACTIONS and p:
+            # dialog flow sid resolved from the game's Core.zip, not from
+            # the .map - keep it as a message marker
+            msgs.append("dialog:%s" % p[0])
+        elif name in HOMMOE_COUNTER_ACTIONS and p:
+            # H2/H3 events have no counters; note the counter op instead
+            unconverted.append("%s:%s" % (name, ",".join(str(x) for x in p)))
         elif name == "GiveRes" and len(p) >= 2:
             res = HOMMOE_TO_UNIFIED_RESOURCE.get(str(p[0]))
             if res:
@@ -2436,6 +2557,8 @@ def _hommoe_actions_to_daily(actions, week, day, repeat):
         p = a.get("p") or []
         if name == "Print" and p:
             msgs.append(str(p[0]))
+        elif name in HOMMOE_DIALOG_ACTIONS and p:
+            msgs.append("dialog:%s" % p[0])
         elif name == "GiveRes" and len(p) >= 2:
             res = HOMMOE_TO_UNIFIED_RESOURCE.get(str(p[0]))
             if res:
@@ -2452,7 +2575,9 @@ def _hommoe_quests_to_events(unified):
 
     Only quests carrying the sids our own forward pass generates
     ("event_<id>" entities, "daily_event_<i>" quest sids) are converted;
-    native OE scripts stay raw in unified["scripts"]."""
+    native OE scripts stay raw in unified["scripts"] and are decoded into
+    the structured unified["oeScripting"] view by
+    _hommoe_scripting_to_structured."""
     objects = unified.get("objects") or {}
     tiles = objects.get("tiles") or {}
     scripts = unified.get("scripts") or {}
@@ -2500,8 +2625,13 @@ def _hommoe_quests_to_events(unified):
                             oid = entity_to_oid.get(entity)
                             if oid is None or oid not in obj_by_id:
                                 continue
-                            event_metadata[str(oid)] = _hommoe_actions_to_event(
-                                actions, repeat)
+                            evt = _hommoe_actions_to_event(actions, repeat)
+                            extra = [str(c.get("c")) for c in conds
+                                     if isinstance(c, dict) and c is not cond]
+                            if extra:
+                                note = "extra conditions: " + ", ".join(extra)
+                                evt["comment"] = (evt["comment"] + "; " if evt.get("comment") else "") + note
+                            event_metadata[str(oid)] = evt
                             o = obj_by_id[oid]
                             # The forward pass emitted the event object under
                             # the generic misc fallback sid; restore the h3m
@@ -2681,6 +2811,13 @@ def convert_hommoe_to_unified(map_data):
         scripts["commentAiData"] = blocks["commentAiData"]
     if scripts:
         unified["scripts"] = scripts
+        # Structured (readable) view of the same native OE scripting:
+        # counters, interruptions, quests with all condition/action types,
+        # and the block-3 dialog lines/quests. Raw passthrough above keeps
+        # .map -> .map lossless; this key is what .map -> H2/H3 can see.
+        structured = _hommoe_scripting_to_structured(scripts)
+        if structured:
+            unified["oeScripting"] = structured
 
     # Terrain: tilesMap biome ids; a nonzero waterMap id means Water.
     grid = []
@@ -5176,7 +5313,24 @@ def _hommoe_event_actions(event, obj_id):
     unconverted = []
     message = event.get("message") or ""
     if message:
-        actions.append(OrderedDict([("comment", ""), ("p", [message]), ("a", "Print")]))
+        # Messages decoded from native OE Dialog actions carry a
+        # "dialog:<sid>" marker; emit them back as DialogOne actions so the
+        # Core.zip flow reference survives. Plain h2/h3 text stays Print -
+        # the only self-contained text channel in a .map (Dialog sids are
+        # resolved from the game's Core.zip, not from the map file).
+        lines = [ln for ln in str(message).split("\n") if ln]
+        if any(ln.startswith("dialog:") for ln in lines):
+            for ln in lines:
+                if ln.startswith("dialog:"):
+                    actions.append(OrderedDict([
+                        ("comment", ""), ("p", [ln[7:]]), ("a", "DialogOne"),
+                    ]))
+                else:
+                    actions.append(OrderedDict([
+                        ("comment", ""), ("p", [ln]), ("a", "Print"),
+                    ]))
+        else:
+            actions.append(OrderedDict([("comment", ""), ("p", [message]), ("a", "Print")]))
     resources = event.get("resources") or {}
     for name, value in resources.items():
         oe_res = UNIFIED_TO_HOMMOE_RESOURCE.get(name)

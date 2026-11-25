@@ -886,19 +886,38 @@ tile biome (section 1c), and 216/217/218 are converted (1d-note2e).
   interruptions: empty in both. dialogQuestData: empty everywhere.
   Current state (5e): blocks 3/4 pass through raw - lossless
   .map -> unified -> .map (verified content-equal on all 4 real maps,
-  block count/separator included). h2/h3 -> .map GENERATES full event
-  quests via _hommoe_event_actions: message -> Print, resources ->
-  GiveRes, experience -> GiveExpHero, primary skills/morale/luck ->
-  GiveStatsHero, mana -> ChangeManaHero, artifact -> GiveItemHero (exact
-  sid else random same-rarity-bin, _hommoe_artifact_sid), monster ->
-  GiveUnitHero, secondary skill -> AddSkillAll, spells -> AddSpellHero,
-  removeAfterVisit -> DeleteEntity (daily events use the same builder);
+  block count/separator included). Additionally the native scripting is
+  decoded into a structured unified["oeScripting"] view
+  (_hommoe_scripting_to_structured): counters (sid/value/comment/sharing/
+  min/max), interruptions, and every quest/subQuest/trigger with all
+  condition types (params + counter extra field + comment), all action
+  types (params + break + comment) and conditionsLogic - so .map -> h2/h3
+  can actually SEE native counters/Dialog/etc. even though h2/h3 have no
+  fields for them. .map -> h3m/fh2m still maps only our own
+  event_<id>/daily_event_<i> quests to unified eventMetadata/dailyEvents
+  (_hommoe_quests_to_events; Dialog* actions decode to a "dialog:<sid>"
+  message marker, Counter* actions and extra trigger conditions are noted
+  in the event comment, DeleteEntity -> removeAfterVisit); native quests
+  otherwise stay raw in unified["scripts"] + structured in oeScripting.
+  h2/h3 -> .map GENERATES full event quests via _hommoe_event_actions:
+  message -> Print, resources -> GiveRes, experience -> GiveExpHero,
+  primary skills/morale/luck -> GiveStatsHero, mana -> ChangeManaHero,
+  artifact -> GiveItemHero (exact sid else random same-rarity-bin,
+  _hommoe_artifact_sid), monster -> GiveUnitHero, secondary skill ->
+  AddSkillAll, spells -> AddSpellHero, removeAfterVisit -> DeleteEntity
+  (daily events use the same builder).
+  Dialog/Print decision (measured, map-editor-json-tool registries +
+  PR #283): the game runs a map's quests from BLOCK 4 only (separator
+  bit 0x08); block 3 dialogQuestData is an empty shell in every shipped
+  map incl. official ones, and Dialog/DialogOne p[0] is a dialog flow sid
+  resolved from the game's Core.zip (DB/dialogs/dialogs[/custom_maps]),
+  which a .map-only converter cannot ship. Print is the only map-local
+  text action and is log-only ("debugging only - no in-game effect").
+  So h2/h3 event messages stay Print (safe, lossless in the file);
+  emitting DialogOne for them would reference non-existent Core flows.
   STILL OPEN by design: native OE quest features (counters, SetQuestMarker,
-  NodeRevealed, Dialog, campaign actions...) are never generated from
-  h2/h3, and .map -> h3m/fh2m DECODES only our own event_<id>/
-  daily_event_<i> quests back to unified eventMetadata
-  (_hommoe_quests_to_events, incl. DeleteEntity -> removeAfterVisit) -
-  native OE quests stay raw and are dropped on the way to h2/h3.
+  NodeRevealed, campaign actions...) are never GENERATED from h2/h3 - the
+  h2/h3 sources carry no counters/dialogs/markers to generate from.
 
 5f. Other structural notes:
   * hommoe -> fh2m object coordinates use an anchor-shift heuristic
