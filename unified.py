@@ -1028,6 +1028,27 @@ for _usid, _cid in list(OE_UNIT_SID_TO_H3_CREATURE.items()):
 OE_SKILL_SID_TO_H3 = {}
 for _sid_h3, _sid in OE_SKILL_EQUIVALENTS.items():
     OE_SKILL_SID_TO_H3.setdefault(_sid, int(_sid_h3))
+# All OE skill sids (Core.zip DB/heroes_skills/skills/skills.json + Lang
+# display names, oe_skill_names): 16 of the 31 have an exact H3 counterpart
+# (skill_equivalents), the other 15 are OE-only (Abyssal Communion, the four
+# magic schools, Battle Magic, Battlecraft, Combat, Murmuring, Recruitment,
+# Righteousness, Summon Avatar, Summon Swarm, Thaumaturgy, Triumvirate's
+# Strength) - user decision: they are set to a RANDOM H3 skill on the way
+# to H2/H3 (see _h3_skill_from_oe_sid).
+OE_SKILL_NAMES = OE_OBJECT_CORRESPONDENCE.get("oe_skill_names") or {}
+OE_SKILL_SIDS = set(OE_SKILL_NAMES)
+
+
+def _h3_skill_from_oe_sid(sid):
+    """OE skill sid -> h3m secondary skill id: exact Core.zip name match
+    when one of the 16 exists, else a random h3 skill (user decision: OE
+    skills with no counterpart are set randomly). Returns None when the
+    sid is not a known OE skill."""
+    if sid in OE_SKILL_SID_TO_H3:
+        return OE_SKILL_SID_TO_H3[sid]
+    if sid in OE_SKILL_SIDS:
+        return _random.randrange(len(H3M_SECONDARY_SKILL_NAMES))
+    return None
 # Spell catalog from Core.zip DB/magics + Lang magic.json (see
 # oe_object_correspondence.json spell_equivalents / oe_spell_sids):
 # 11 exact English-name matches h3 spell id -> OE spell sid; the other OE
@@ -1856,7 +1877,6 @@ def _hommoe_pandora_to_metadata(props):
     rp = props.get("propRewardParams")
     if rp:
         oe_to_h3_res = {v: k for k, v in UNIFIED_TO_HOMMOE_RESOURCE.items()}
-        skill_sid_to_h3 = {v: k for k, v in OE_SKILL_EQUIVALENTS.items()}
         for slot in (rp.get("parameters") or []):
             if not slot or slot == "-":
                 continue
@@ -1868,10 +1888,14 @@ def _hommoe_pandora_to_metadata(props):
                 continue
             if slot in OE_ARTIFACT_SID_TO_H3:
                 artifacts.append(OE_ARTIFACT_SID_TO_H3[slot])
-            elif slot in skill_sid_to_h3:
-                skills.append(OrderedDict([
-                    ("id", _to_int(skill_sid_to_h3[slot])), ("level", 1),
-                ]))
+            elif slot in OE_SKILL_SIDS:
+                # exact name match, else a random h3 skill (user decision:
+                # OE-only skills have no H3 counterpart and are randomized)
+                h3_skill = _h3_skill_from_oe_sid(slot)
+                if h3_skill is not None:
+                    skills.append(OrderedDict([
+                        ("id", h3_skill), ("level", 1),
+                    ]))
             else:
                 # OE spell sid (day_3_magic_haste...): no H3<->OE spell
                 # id table yet, keep the raw sid.
@@ -1881,7 +1905,6 @@ def _hommoe_pandora_to_metadata(props):
                   "spellPower": ("primaries", "spellPower"),
                   "intelligence": ("primaries", "knowledge"),
                   "moral": ("morale", None), "luck": ("luck", None)}
-    skill_sid_to_h3 = {v: k for k, v in OE_SKILL_EQUIVALENTS.items()}
     for table in ("propActionsBefore", "propActionsAfter"):
         row = props.get(table)
         for act in ((row or {}).get("actions") or []):
@@ -1907,10 +1930,12 @@ def _hommoe_pandora_to_metadata(props):
                     ("count", _to_int(p[1])),
                 ]))
             elif name in ("AddSkillHero", "AddSkillAll") and p \
-                    and p[0] in skill_sid_to_h3:
-                skills.append(OrderedDict([
-                    ("id", _to_int(skill_sid_to_h3[p[0]])), ("level", 1),
-                ]))
+                    and str(p[0]) in OE_SKILL_SIDS:
+                h3_skill = _h3_skill_from_oe_sid(str(p[0]))
+                if h3_skill is not None:
+                    skills.append(OrderedDict([
+                        ("id", h3_skill), ("level", 1),
+                    ]))
             elif name == "GiveItemHero" and p and p[0] in OE_ARTIFACT_SID_TO_H3:
                 artifacts.append(OE_ARTIFACT_SID_TO_H3[p[0]])
     meta["resources"] = resources
@@ -2114,8 +2139,10 @@ def _hommoe_objects_to_unified(adventure, width):
                     rp = (entry.get("properties") or {}).get("propRewardParams") or {}
                     params = rp.get("parameters") or []
                     skill = None
-                    if params and str(params[0]) in OE_SKILL_SID_TO_H3:
-                        skill = OE_SKILL_SID_TO_H3[str(params[0])]
+                    if params and str(params[0]) in OE_SKILL_SIDS:
+                        # exact name match, else a random h3 skill (user
+                        # decision: OE-only skills are randomized)
+                        skill = _h3_skill_from_oe_sid(str(params[0]))
                     witchhut_metadata[str(entry.get("id"))] = OrderedDict([
                         ("skill", skill)])
     # Placed heroes (propHeroes rows on hero-spawner / city-spawner /
@@ -2267,13 +2294,15 @@ def _hommoe_actions_to_event(actions, repeat):
                 unconverted.append("GiveItemHero:%s" % sid)
         elif name in ("AddSkillAll", "AddSkillHero") and p:
             sid = str(p[0])
-            if sid in OE_SKILL_SID_TO_H3:
+            if sid in OE_SKILL_SIDS:
                 level = 0
                 cmt = str(a.get("comment") or "")
                 if cmt.startswith("level ") and cmt[6:].isdigit():
                     level = int(cmt[6:])
+                # exact name match, else a random h3 skill (user decision:
+                # OE-only skills have no H3 counterpart and are randomized)
                 evt["secondarySkills"].append(OrderedDict([
-                    ("id", OE_SKILL_SID_TO_H3[sid]), ("level", level)]))
+                    ("id", _h3_skill_from_oe_sid(sid)), ("level", level)]))
             else:
                 unconverted.append("AddSkill:%s" % sid)
         elif name == "GiveExpHero" and p:

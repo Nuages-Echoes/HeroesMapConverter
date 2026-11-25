@@ -188,8 +188,14 @@ skill_equivalents, oe_item_names, oe_skill_names).
 
    OE has 317 named items; only 20 share an H3 artifact name. The rest are OE-only
    (they convert to H2/H3 as random artifacts). OE spells (DB/magics, sids like
-   day_3_magic_haste) have no H3 spell id table yet either - spell conversion is
-   the next step after artifacts/skills.
+   day_3_magic_haste) have no H3 spell id table either; only 11/70 exact name
+   matches exist. User decision: artifacts and spells are DONE at this
+   random-fallback fidelity ("random is good") - unmatched items randomize to a
+   same-rarity H3 artifact, unmatched spells to a same-rank one, both directions
+   (unified.py _h3_spell_from_oe_sid / _hommoe_spell_sid and the random-item
+   prop rows). The 15 OE-only secondary skills (no H3 counterpart) are set to a
+   RANDOM H3 skill on the way to H2/H3 (unified.py _h3_skill_from_oe_sid, user
+   decision).
 
 ------------------------------------------------------------
 4. Still-unmapped H3 object classes (unchanged)
