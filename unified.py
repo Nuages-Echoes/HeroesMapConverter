@@ -968,7 +968,7 @@ _HOMMOE_ADVENTURE_MISC_TOKENS = (
     "portal", "market", "trading", "shrine", "altar", "magic_amplifier", "magic_wheel",
     "storage", "windmill", "prison", "arena", "dragon", "mana_well", "observatory",
     "learning", "wise_owl", "mystical_tower", "knowledge", "lost_library",
-    "circle_of_life", "unit_trade", "random-hire",
+    "circle_of_life", "unit_trade", "random-hire", "monty", "grave",
 )
 # Sid fragments identifying decorative scenery.
 _HOMMOE_SCENERY_TOKENS = (
@@ -1211,8 +1211,8 @@ for _h3, _exact in OE_SCENERY_DISPATCH.items():
 # map-write.ts SIDS_WITH_VARIANTS_AND_REWARD_PARAMS).
 # OE sids that get propVariants + propRewardParams rows seeded on fresh
 # placement (the game editor's SIDS_WITH_VARIANTS_AND_REWARD_PARAMS):
-# the creature-bank classes (16/24/25/84/85), the seer-hut sid
-# lost_library (user mapping h3 83 -> lost_library) and the witch-hut sid
+# the creature-bank classes (16/24/25/84/85), the seer/sphinx sid
+# monty_hall (user mapping h3 83 -> monty_hall) and the witch-hut sid
 # wise_owl (user mapping h3 113 -> wise_owl).
 HOMMOE_BANK_SIDS = set()
 for _cls in (16, 24, 25, 84, 85, 83, 113):
@@ -6272,7 +6272,7 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
                 wh_meta = (objects_section.get("witchhutMetadata") or {}).get(str(obj_id)) or {}
                 entry = ("witchHut", (x, y, z), (113, int(obj.get("subclass") or 0)), wh_meta)
             if entry is None and obj.get("class") == 83:
-                # Seer hut (hommoe source, sid lost_library): the quest and
+                # Seer hut (hommoe source, sid monty_hall): the quest and
                 # reward come from seerMetadata when present (h3m sources
                 # keep raw anyway), else an empty quest/reward is written.
                 seer_meta = (objects_section.get("seerMetadata") or {}).get(str(obj_id)) or {}

@@ -80,6 +80,12 @@ ocean/bottle/sea/...) finds only 'chest' and 'spells_in_a_bottle_artifact'
     - h3 14 Swan Pond <-> OE beer_fountain (user decision) - 1f.
     - h3 81 Scholar -> OE pandora_box, reward kept under the normal
       pandora conversion rules (user decision) - 1f.
+    - fh2m-only leftovers mapped by the user (see section 2): Witch's Hut
+      <-> wise_owl (h3 113), Daemon Cave -> overgrown_grave "Ancient
+      Crypt" (h3 2), Sphinx -> monty_hall "The Monty Hall" (h3 83,
+      supersedes the earlier lost_library seer mapping), Trading Post ->
+      market (h3 99), Idol of Fortune -> beer_fountain (h3 14), Tree of
+      Knowledge <-> tree_of_knowledge (h3 102).
     - h3 9 Border Guard, 10 Keymaster Tent, 36 Grail, 50 Market of Time,
       57 Obelisk, 215 Quest Guard: DROPPED in the H3 -> OE direction
       (user decision; they were already in the omit table - verified
@@ -174,7 +180,8 @@ no_olden_era_equivalent.english.txt section 1.)
     h3 91 Sign + 59 Ocean Bottle - [DROPPED BY DECISION, see section 0]:
       no OE object is emitted (previously they fell back to a "windmill"
       placeholder); the message stays in unified signMetadata only.
-    h3 83 Seer Hut - CONVERTED (user mapping Seer Hut <-> lost_library):
+    h3 83 Seer Hut - CONVERTED (user mapping Seer Hut <-> lost_library,
+      SUPERSEDED: now -> monty_hall "The Monty Hall", see section 2):
       dispatch subtypes 0/1/2 -> sid lost_library (all three appearance
       variants map to the one OE sid); lost_library is in the game's
       SIDS_WITH_VARIANTS_AND_REWARD_PARAMS, so the writer seeds
@@ -478,10 +485,23 @@ dropped in the loop check (they only exist in the 6 fh2m test maps):
   LANDSCAPE_FLAGS, all 14 indexes ............ 142 objects  [DROPPED BY DECISION]
   LANDSCAPE_TOWN_BASEMENTS, all 8 indexes ....  71 objects  [DROPPED BY DECISION]
   ADVENTURE_WATER 8 / 9 / 12 (Barrel, fheroes2-specific) ... 59 objects  [DROPPED BY DECISION]
-  ADVENTURE_POWER_UPS 17 (Idol -> h3 14 -> beer_fountain, 1f) + 20
-    (Tree of Knowledge -> candidate OE tree_of_knowledge, 1f)  30 objects
-  ADVENTURE_MISCELLANEOUS 26-28, 31, 33 ......  (seen in per-map losses)  (still open)
-  ADVENTURE_ARTIFACTS 76 / 82 / 89 ...........   9 objects  (still open)
+  ADVENTURE_ARTIFACTS 46 / 72 / 76 / 82 / 87 / 89  ~10 objects  (still open;
+    default random-item + rarity row, artifacts accepted at random fidelity)
+
+  CONVERTED since (user mappings, fh2m index -> h3 class -> OE sid):
+  ADVENTURE_MISCELLANEOUS 26 Witch's Hut   -> h3 113 -> wise_owl      (both ways)
+  ADVENTURE_MISCELLANEOUS 27/28 Daemon Cave -> h3 2   -> overgrown_grave "Ancient Crypt"
+  ADVENTURE_MISCELLANEOUS 31 Sphinx         -> h3 83  -> monty_hall "The Monty Hall"
+  ADVENTURE_MISCELLANEOUS 32/33 Trading Post-> h3 99  -> market
+  ADVENTURE_POWER_UPS 17 Idol of Fortune    -> h3 14  -> beer_fountain
+  ADVENTURE_POWER_UPS 20 Tree of Knowledge  -> h3 102 -> tree_of_knowledge (both ways)
+  (correspondence.py FH2M_TO_H3M_MISC MISC_27/28/31/32/33 + POWER_20;
+  oe_object_correspondence.json emit "2" -> overgrown_grave, dispatch "83"
+  -> monty_hall - SUPERSEDES the earlier Seer Hut <-> lost_library mapping,
+  and the reverse overgrown_grave now resolves to h3 2 -> fh2m Daemon Cave
+  instead of h3 63 Pyramid; h3 63 still forwards to overgrown_grave;
+  supplement_emit "99" was moved before "221" so reverse market -> h3 99
+  -> fh2m MISC 32)
 
 Loop-check total when writing .map (commit a27f844): 569 dropped objects
 in 40 types (h3 water ~234, h3 57 Obelisk 19, h3 59/91 message-bearers 3,

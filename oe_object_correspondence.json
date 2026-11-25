@@ -1177,9 +1177,9 @@
   },
   "83": {
    "subtypes": {
-    "0": "lost_library",
-    "1": "lost_library",
-    "2": "lost_library"
+    "0": "monty_hall",
+    "1": "monty_hall",
+    "2": "monty_hall"
    }
   },
   "84": {
@@ -1279,7 +1279,7 @@
   },
   "2": {
    "kind": "interactable",
-   "sid": "sacrificial_shrine"
+   "sid": "overgrown_grave"
   },
   "22": {
    "kind": "interactable",
@@ -4217,6 +4217,10 @@
    "evidence": "same as class 33 (vertical garrison)",
    "sid": "garrisons"
   },
+  "99": {
+   "evidence": "inspector object-categories markets-and-trade: market|marketplace|trading_post; real maps use 'market' (listed before 221 so the reverse market -> h3 99 -> fh2m MISC 32, which has the fh2m mapping)",
+   "sid": "market"
+  },
   "221": {
    "evidence": "same as class 99 (SoD trading post)",
    "sid": "market"
@@ -4316,12 +4320,8 @@
   "97": {
    "evidence": "user-provided H3<->OE mapping; OE sid 'insaras_eye' has display name \"Insara's Eye\" in map-objects.json",
    "sid": "insaras_eye"
-  },
-  "99": {
-   "evidence": "inspector object-categories markets-and-trade: market|marketplace|trading_post; real maps use 'market'",
-   "sid": "market"
   }
- },
+},
  "supplement_scenery": {
   "114": "shrub",
   "115": "shrub",

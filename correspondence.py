@@ -3992,9 +3992,10 @@ FH2M_TO_H3M_MISC = {
     # MISC: windmills -> windmill (112), lean-tos -> lean-to (39),
     # signs -> sign (91), water wheels -> water wheel (109),
     # witch's hut -> witch hut (113), stone liths -> two-way
-    # monolith (45), daemon caves -> subterranean gate? no: dropped,
-    # sphinx -> seer hut (83) [the sphinx riddle], magic garden ->
-    # ... dropped, trading post -> market of trading? (7) dropped.
+    # monolith (45), daemon caves -> altar of sacrifice (2),
+    # sphinx -> seer hut (83), trading posts -> trading post (99)
+    # (user pairings; the OE side of 2 is overgrown_grave "Ancient
+    # Crypt", of 83 is monty_hall "The Monty Hall", of 99 is market).
     "MISC_4": (112, 0),   # Windmill, grass
     "MISC_5": (112, 0),   # Windmill, snow
     "MISC_6": (112, 0),   # Windmill, dirt
@@ -4008,7 +4009,12 @@ FH2M_TO_H3M_MISC = {
     "MISC_23": (109, 0),  # Water wheel, snow
     "MISC_24": (109, 0),  # Water wheel, generic
     "MISC_25": (105, 0),  # Wagon -> wagon
-    "MISC_26": (113, 0),  # Witch's Hut, swamp
+    "MISC_26": (113, 0),  # Witch's Hut, swamp (OE side: wise_owl)
+    "MISC_27": (2, 0),    # Daemon Cave -> altar of sacrifice (OE: overgrown_grave)
+    "MISC_28": (2, 0),    # Daemon Cave, variant -> altar of sacrifice
+    "MISC_31": (83, 0),   # Sphinx -> seer hut (OE: monty_hall)
+    "MISC_32": (99, 0),   # Trading Post -> trading post (OE: market)
+    "MISC_33": (99, 0),   # Trading Post, variant -> trading post
     # The Stone Liths are the Heroes II teleportation portals (two-way
     # only in H2): they convert to the h3m two-way monolith (45), the
     # H3 land teleporter. All variants map to the same color
@@ -4053,6 +4059,7 @@ FH2M_TO_H3M_MISC = {
     "POWER_13": (51, 0),   # Mercenary Camp -> Mercenary Camp
     "POWER_18": (61, 0),   # Standing Stones -> Star Axis
     "POWER_19": (96, 0),   # Temple -> Temple
+    "POWER_20": (102, 0),  # Tree of Knowledge -> tree of knowledge (OE: tree_of_knowledge)
     "POWER_21": (41, 0),   # Xanadu -> Library of Enlightenment
     "POWER_22": (4, 0),     # Arena -> Arena
     # TREASURES: Genie's Lamp -> Refugee Camp (the h3m creature
