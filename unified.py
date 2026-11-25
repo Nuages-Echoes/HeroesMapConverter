@@ -1083,6 +1083,17 @@ def _h3_spell_from_oe_sid(sid):
     if not cands:
         cands = list(range(len(H3M_SPELL_LEVELS)))
     return _random.choice(cands)
+# OE altar_of_magic_* <-> H3 shrine classes 88/89/90, converted to each
+# other RANDOMLY (user decision; see altar_of_magic_shrines in
+# oe_object_correspondence.json for the Core.zip evidence).
+_ALTAR_SHRINE = OE_OBJECT_CORRESPONDENCE.get("altar_of_magic_shrines") or {}
+HOMMOE_ALTAR_SIDS = list(_ALTAR_SHRINE.get("altar_sids") or [])
+HOMMOE_CUSTOM_ALTAR_SIDS = list(_ALTAR_SHRINE.get("custom_altar_sids") or [])
+HOMMOE_ALTAR_ALL_SIDS = HOMMOE_ALTAR_SIDS + HOMMOE_CUSTOM_ALTAR_SIDS
+HOMMOE_ALTAR_H3_CLASSES = [str(c) for c in (_ALTAR_SHRINE.get("h3_shrine_classes")
+                                             or [88, 89, 90])]
+
+
 OE_H3_TERRAIN_BIOME = OE_OBJECT_CORRESPONDENCE["h3_terrain_biome"]
 OE_OMIT_CLASSES = {str(o["h3Id"]) for o in OE_OBJECT_CORRESPONDENCE["omit"]}
 
@@ -1251,6 +1262,13 @@ def _resolve_hommoe_sid(h3_id, anim, subtype, terrain_name):
         art_sid = OE_ARTIFACT_EQUIVALENTS.get(str(subtype or 0))
         if art_sid:
             return art_sid
+    if h3 in HOMMOE_ALTAR_H3_CLASSES:
+        # User decision: the H3 shrines 88/89/90 convert to a RANDOM
+        # OE altar_of_magic_* (no 1:1 - the OE altars are per-school while
+        # the H3 shrines are per-level). The shrine's fixed spell, when
+        # the source had one, is dropped: the altar draws a random spell
+        # of its own school/rank (see altar_of_magic_shrines note).
+        return _random.choice(HOMMOE_ALTAR_SIDS) if HOMMOE_ALTAR_SIDS else None
     if h3 in OE_EMIT_SID:
         return OE_EMIT_SID[h3]["sid"]
     known = (h3 in OE_DISPATCH or h3 in OE_SCENERY_ROLE
@@ -1449,6 +1467,12 @@ def _hommoe_sid_to_group_index(sid):
                 return "ADVENTURE_ARTIFACTS", 73
             return "ADVENTURE_ARTIFACTS", fh2m_art - 13
         return "ADVENTURE_ARTIFACTS", None
+    if sid in HOMMOE_ALTAR_ALL_SIDS:
+        # OE altar_of_magic_* / custom_altar_of_magic_* -> a RANDOM H3
+        # shrine class 88/89/90 (user decision): expressed as a random
+        # fh2m shrine-circle index; the caller maps it to the h3m class
+        # through FH2M_TO_H3M_SHRINES.
+        return "ADVENTURE_POWER_UPS", _random.choice((14, 15, 16))
     candidates = OE_SID_TO_H3.get(sid)
     if not candidates:
         return None, None
@@ -1930,6 +1954,7 @@ def _hommoe_objects_to_unified(adventure, width):
     from correspondence import H3M_TO_FH2M_MONSTERS, H3M_RANDOM_MONSTER_CLASSES
     monster_metadata = OrderedDict()
     witchhut_metadata = OrderedDict()
+    shrine_metadata = OrderedDict()
     for tile_key, obj_list in tiles.items():
         for entry in obj_list:
             if entry.get("group") != "MONSTERS":
@@ -1994,6 +2019,20 @@ def _hommoe_objects_to_unified(adventure, width):
                 entry["subclass"] = 0
                 pandora_metadata[str(entry.get("id"))] = _hommoe_pandora_to_metadata(
                     entry.get("properties") or {})
+            elif sid in HOMMOE_ALTAR_ALL_SIDS:
+                # Altar of Magic <-> H3 shrine: the shrine class is the
+                # random one picked by _hommoe_sid_to_group_index (the
+                # entry index 14-16 maps through FH2M_TO_H3M_SHRINES);
+                # the shrine spell is random (0xFF) - the altar's own
+                # school/rank (or custom spell list) has no shrine slot.
+                from correspondence import FH2M_TO_H3M_SHRINES
+                shrine_cls = FH2M_TO_H3M_SHRINES.get(entry.get("index")) \
+                    or _random.choice((88, 89, 90))
+                entry["class"] = shrine_cls
+                entry["subclass"] = 0
+                shrine_metadata[str(entry.get("id"))] = OrderedDict([
+                    ("spell", None), ("shrineClass", shrine_cls),
+                ])
             elif sid in HOMMOE_BANK_SIDS:
                 # Bank / variant sid: recover the h3m class/subtype from the
                 # correspondence (first indexed candidate).
@@ -2042,6 +2081,8 @@ def _hommoe_objects_to_unified(adventure, width):
         result["pandoraMetadata"] = pandora_metadata
     if witchhut_metadata:
         result["witchhutMetadata"] = witchhut_metadata
+    if shrine_metadata:
+        result["shrineMetadata"] = shrine_metadata
     # Raw adventure-level data with no unified equivalent, kept as-is.
     if adventure.get("rivers"):
         result["sourceRivers"] = adventure["rivers"]
@@ -5331,6 +5372,18 @@ def unified_to_hommoe(unified):
                         sid = _hommoe_random_dwelling_sid(obj, objects)
                     if sid is None:
                         sid = HOMMOE_GROUP_TO_SID.get(group)
+                if sid in HOMMOE_ALTAR_SIDS \
+                        and not (obj.get("properties") or {}).get("propRewardParams"):
+                    # altar_of_magic_*: the game editor always seeds a
+                    # propRewardParams row for these sids
+                    # (SIDS_WITH_REWARD_PARAMS_ONLY in the reference
+                    # map-write.ts); real maps carry it with EMPTY
+                    # parameters (Broken_Alliance) - the game draws from
+                    # the bank's own school/rank variants. Hommoe-sourced
+                    # objects keep their own row via the passthrough.
+                    prop_rows.setdefault("propRewardParams", []).append(OrderedDict([
+                        ("type", 0), ("id", oid), ("parameters", []),
+                    ]))
                 if group == "ADVENTURE_ARTIFACTS" and sid == "random-item":
                     # No exact OE artifact (or a random-artifact class):
                     # random-item + a propRandomItems row with the right
@@ -6267,15 +6320,22 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
                 # the h3m learning stone; the other power-up objects
                 # have no simple h3m equivalent.
                 from correspondence import FH2M_TO_H3M_SHRINES
-                h3m_shrine = FH2M_TO_H3M_SHRINES.get(index)
-                if h3m_shrine is not None:
+                if obj.get("class") in (88, 89, 90):
+                    # Shrine restored from an OE altar_of_magic (hommoe
+                    # source): the class was chosen randomly on the way
+                    # in (user decision), keep it.
                     shrine_meta = (objects_section.get("shrineMetadata") or {}).get(str(obj_id)) or {}
-                    entry = ("shrine", (x, y, z), (h3m_shrine, 0), shrine_meta)
+                    entry = ("shrine", (x, y, z), (int(obj["class"]), 0), shrine_meta)
                 else:
-                    from correspondence import FH2M_TO_H3M_MISC
-                    h3m_target = FH2M_TO_H3M_MISC.get("POWER_%d" % index)
-                    if h3m_target is not None:
-                        entry = ("generic", (x, y, z), h3m_target, None)
+                    h3m_shrine = FH2M_TO_H3M_SHRINES.get(index)
+                    if h3m_shrine is not None:
+                        shrine_meta = (objects_section.get("shrineMetadata") or {}).get(str(obj_id)) or {}
+                        entry = ("shrine", (x, y, z), (h3m_shrine, 0), shrine_meta)
+                    else:
+                        from correspondence import FH2M_TO_H3M_MISC
+                        h3m_target = FH2M_TO_H3M_MISC.get("POWER_%d" % index)
+                        if h3m_target is not None:
+                            entry = ("generic", (x, y, z), h3m_target, None)
             elif group == "ADVENTURE_MINES":
                 # The fh2m mine index maps to the h3m ownable mine
                 # (class 53, subclass per mine type). The h3m class 53
@@ -6569,8 +6629,10 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
                 buffer.write(struct.pack("<I", 0xFF))  # neutral owner
         elif kind_name == "shrine":
             # RoE shrine layout is one spell byte + 3 padding bytes; the
-            # real maps use 0xFF (random spell) there.
-            buffer.write(struct.pack("<B", 0xFF))
+            # real maps use 0xFF (random spell) there. A fixed spell from
+            # the shrineMetadata is written as-is.
+            spell = (payload or {}).get("spell") if isinstance(payload, dict) else None
+            buffer.write(struct.pack("<B", 0xFF if spell is None else int(spell) & 0xFF))
             buffer.write(b"\x00" * 3)
         elif kind_name == "generic":
             # The generic objects: signs (classes 59/91) carry a

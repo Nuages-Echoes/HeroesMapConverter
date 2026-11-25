@@ -1,4 +1,30 @@
 {
+ "altar_of_magic_shrines": {
+  "altar_sids": [
+   "altar_of_magic_1",
+   "altar_of_magic_2",
+   "altar_of_magic_3",
+   "altar_of_magic_4"
+  ],
+  "custom_altar_sids": [
+   "custom_altar_of_magic_1",
+   "custom_altar_of_magic_2",
+   "custom_altar_of_magic_3",
+   "custom_altar_of_magic_4"
+  ],
+  "h3_shrine_classes": [
+   88,
+   89,
+   90
+  ],
+  "note": "User decision: OE altar_of_magic_* (and custom_altar_of_magic_*) and H3 shrine classes 88/89/90 convert to each other randomly, both directions. School per altar sid from Core.zip DB/objects_logic/event_banks/magic_banks/altar_of_magic_N.json: 1=night, 2=day, 3=space, 4=primal (ranks 1-5 inside each). Non-custom altars carry an empty propRewardParams.parameters row on real maps (Broken_Alliance); custom_altar sids carry explicit spell sids in parameters (all_cats_go_to_heaven / c_M1) - dropped on the h3 side, where the shrine spell is random (0xFF).",
+  "schools": {
+   "altar_of_magic_1": "night",
+   "altar_of_magic_2": "day",
+   "altar_of_magic_3": "space",
+   "altar_of_magic_4": "primal"
+  }
+ },
  "artifact_equivalents": {
   "10": "ogres_club_of_havoc_artifact",
   "124": "spellbinders_hat_artifact",
