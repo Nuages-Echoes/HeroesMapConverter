@@ -470,28 +470,42 @@ tile biome (section 1c), and 216/217/218 are converted (1d-note2e).
 ------------------------------------------------------------
 
 5a. Container header (hommoedecoder.py write_hommoe / unified_to_hommoe):
-  * headerHash: all 5 test maps carry a per-map 32-hex string (e.g.
-    Broken_Alliance 169d5c1f..., template 11868446..., synthetic
-    0123456789abcdef...), ALWAYS equal to scenario.hashSum. The
-    reference (map-write.ts:18-24, 2518-2545) proves it is NOT a content
-    checksum: brute-forced md5/sha1/sha256/sha512 over block combinations
-    found no match, and resaving an unchanged map through GME produces a
-    NEW hash - it is an opaque per-map identity the game keys map
-    recognition on (a fixed cloned value makes maps collide and be
-    silently unrecognized; the reference mints crypto.randomUUID().hex).
-    Our writer emits the placeholder "0"*32 for h2/h3 -> .map outputs
-    (unified_to_hommoe line ~4923). RECOMMENDATION: mint a fresh random
-    32-hex per output map (non-deterministic, accepted like _upg_alt);
-    .map -> .map stays byte-exact via raw passthrough either way.
-  * version: real maps 0.72.30 (Broken_Alliance, all_cats, c_M1),
-    0.80.47 (olden_era_template), 0.82.08 (synthetic); writer uses
-    HOMMOE_DEFAULT_VERSION "0.72.30" - matches the majority.
-  * separator: 05 00 = 3 blocks, 0d 00 = 4 blocks (bit 0x08). Writer
-    already derives it from the block count (unified.py ~5363). All 5
-    test maps conform; trailingData is 0 bytes in all 5.
-  * gzip header: real maps FLG=0 MTIME=0 XFL=0 OS=10 - exactly our
-    write_gzip canonical header; the synthetic map (XFL=2 OS=3) keeps its
-    own via gzipHeader passthrough. No gap.
+  * headerHash: CONFIRMED opaque identity, no algorithm exists in either
+    reference. map-editor-json-tool map-write.ts:18-24 brute-forced
+    md5/sha1/sha256/sha512 over every plausible block combination - no
+    match; map-write.ts:2518-2545: resaving an UNCHANGED map through GME
+    produces a brand-new hash, so it is not a content checksum but a
+    per-map identity the game keys map recognition on (a fixed cloned
+    value makes maps collide and the game silently refuses to select
+    them - confirmed via real player.log testing); the reference mints
+    crypto.randomUUID().replace(/-/g,'') (generateMapHash, line 2544).
+    The vs-code-inspector (docs/map-format.md) independently says the
+    32-byte identifier is "shared between the samples and its meaning is
+    unresolved" and validates /^[a-f0-9]{32}$/i (parser.js:86). headerHash
+    is ALWAYS equal to scenario.hashSum in every sample. Note: our
+    input/olden_era_template.map IS the reference's bundled
+    src-tauri/resources/template.map (same headerHash
+    11868446b59baaea451add92e46796d4, version 0.80.47, separator 05 00).
+    IMPLEMENTED: the writer now mints a fresh uuid4().hex per h2/h3 ->
+    .map output and sets hashSum equal to it (was the "0"*32
+    placeholder); .map -> .map stays byte-exact via raw passthrough.
+  * version: just the game version that wrote the map - 0.72.30 (3 of
+    our real maps), 0.80.47 (template), 0.82.08 (inspector's Dia.Rush
+    samples + our synthetic map; inspector parser.js:89 warns on any
+    other version). Writer keeps HOMMOE_DEFAULT_VERSION "0.72.30"
+    (majority of real samples); KNOWN_VERSIONS lists all three.
+  * separator: semantics nailed by the reference - map-write.ts:129-134,
+    157-159: SCRIPTS_FLAG = 0x08, "Block 4 is only read when bit 0x08 of
+    the first separator byte is set: every shipped map with scripts has
+    0d 00, every 3-block map 05 00" (ensureScriptsBlock ORs the bit in).
+    The inspector's STDU fork documents the same 05 00 / 0d 00 pair. Our
+    writer derives [0x0D,0]/[0x05,0] from the block count - equivalent.
+    trailingData is 0 bytes in all 5 test maps and both Dia.Rush samples
+    ("both samples end immediately after the fourth JSON object").
+  * gzip header: single gzip stream, magic 1f 8b (inspector
+    parser.js:34); real maps + template all FLG=0 MTIME=0 XFL=0 OS=10 -
+    exactly our write_gzip canonical header; the synthetic map (XFL=2
+    OS=3) keeps its own via gzipHeader passthrough. No gap.
 
 5b. Block inventory (raw JSON sizes):
   Broken_Alliance: scenario 3973, adventure 352821, dialogQuestData 47

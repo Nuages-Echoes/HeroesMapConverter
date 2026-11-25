@@ -14,6 +14,7 @@ representation are dropped (see the description document).
 
 import random as _random
 import struct
+import uuid as _uuid
 from collections import OrderedDict
 
 from correspondence import (
@@ -4982,7 +4983,16 @@ def unified_to_hommoe(unified):
     name = unified.get("name", "") or "converted map"
     description = unified.get("description", "")
 
-    header_hash = "0" * 32
+    # The container header hash / block 1 hashSum is an opaque per-map
+    # identity, NOT a content checksum: the reference brute-forced
+    # md5/sha1/sha256/sha512 over block combinations with no match, and
+    # resaving an unchanged map through GME mints a NEW hash - a fixed
+    # cloned value makes maps collide and the game silently refuses to
+    # recognize them (map-write.ts:2518-2545). So mint a fresh random
+    # 32-hex per output map, exactly like the reference's generateMapHash()
+    # (crypto.randomUUID without dashes); hashSum below is set equal to it.
+    # .map -> .map stays byte-exact regardless via the raw passthrough.
+    header_hash = _uuid.uuid4().hex
 
     # --- block 1: scenario ---
     player_details = unified.get("playerDetails") or []
