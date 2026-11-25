@@ -5461,8 +5461,21 @@ def unified_to_hommoe(unified):
                 levels_map[index] = int(cell["sourceLevel"])
             if cell.get("sourceClimb") is not None:
                 climbs_map[index] = int(cell["sourceClimb"])
-            if cell.get("sourceRoadIndex"):
-                roads_map[index] = int(cell["sourceRoadIndex"])
+            if unified.get("sourceGame") == "hommoe":
+                # hommoe source: sourceRoadIndex is already the OE road
+                # type id (0 none / 1 dirt / 2 stone) - keep it verbatim
+                if cell.get("sourceRoadIndex"):
+                    roads_map[index] = int(cell["sourceRoadIndex"])
+            else:
+                # h3m/fh2m source: roadsMap must hold the OE road TYPE id
+                # (0/1/2), not the h3m/fh2m connection bitfield - the
+                # game's minimap/thumbnail renderer (MapData.por) indexes
+                # a road LUT with it and crashes on bitfield values
+                road_name = cell.get("sourceRoad")
+                if road_name and road_name != "None":
+                    roads_map[index] = 2 if road_name == "Cobblestone" else 1
+                elif cell.get("sourceRoadIndex"):
+                    roads_map[index] = 1
     terrain_by_pos = {}
     for cell in grid:
         terrain_by_pos[(int(cell.get("x", 0)), int(cell.get("y", 0)))] = \
