@@ -46,6 +46,11 @@ ocean/bottle/sea/...) finds only 'chest' and 'spells_in_a_bottle_artifact'
       88/89/90: converted to each other RANDOMLY, both directions; the
       fixed/custom spell is not carried (the h3 side always gets a random
       spell 0xFF). See 3b-note3.
+    - Hero starting spells: each hero uses the standard startMagics of
+      its catalog hero def (Core.zip DB/heroes/**); an h3 custom hero
+      spell bitfield is dropped on the way to OE (propHeroes carries
+      only the heroSid), and OE -> h3 rebuilds the SoD 9-byte bitfield
+      from the catalog startMagics. See 3b-note4.
     - h3 class 142 "Misc Active Object (resource generator)" - no-payload SoD
       misc passable-terrain class (position + subtype + 5 bytes only), 0
       instances in all test maps, no local source names its subtypes; the real
@@ -441,7 +446,8 @@ tile biome (section 1c), and 216/217/218 are converted (1d-note2e).
     level). NOT covered: propRewardParams spell-sid lists on OE
     custom_altar_of_magic_* objects, seer-hut spell rewards (the hut maps
     to the lost_library XP bank - reward lost by design), spell scroll
-    objects (h3 93 unmapped). Shrines 88-90 are now converted - 3b-note3.
+    objects (h3 93 unmapped). Shrines 88-90 (3b-note3) and hero starting
+    spells (3b-note4) are now converted.
 
   3b-note2. The "still not covered" spell cases, with local evidence
     (Core.zip + references + real maps):
@@ -495,6 +501,8 @@ tile biome (section 1c), and 216/217/218 are converted (1d-note2e).
     are picking the catalog hero whose startMagics best match, or losing
     the spells. Reverse OE->h3: build the bitfield from the catalog
     hero's startMagics sids (exact for the 11, else random same rank).
+    IMPLEMENTED (3b-note4): reverse builds the bitfield from the catalog
+    startMagics; forward drops the h3 custom bitfield.
 
 
   3b-note3. IMPLEMENTED (user decision "altar_of_magic from OE and
@@ -522,6 +530,29 @@ tile biome (section 1c), and 216/217/218 are converted (1d-note2e).
     shrineMetadata in the h3m output, circles 14-16 in the fh2m output.
     oe_object_correspondence.json "altar_of_magic_shrines" holds the sids,
     classes and school evidence.
+
+  3b-note4. IMPLEMENTED (user decision "hero starting spells will be
+    set to the standard spell for each hero"):
+  * OE catalog hero sid -> standard startMagics spell sids extracted
+    from Core.zip DB/heroes/**/*.json (startMagics[].sidConfig; 133 of
+    177 hero defs have some) into oe_object_correspondence.json
+    "oe_hero_start_magics".
+  * Reverse (.map -> h3m/fh2m): _hommoe_objects_to_unified builds
+    heroMetadata {sourceHeroSid, spells} for every object with a
+    defined propHeroes row; spells is the SoD 9-byte bitfield built by
+    _h3_hero_spells_bitfield from the catalog startMagics, each OE sid
+    mapped through _h3_spell_from_oe_sid (exact for the 11 name matches,
+    else a random h3 spell of the same level). The h3m encoder hero
+    branch writes flag 1 + the 9-byte bitfield at SoD (1 byte at AB)
+    when the metadata carries spells.
+  * Forward (h3/fh2m -> .map): a custom h3 hero spell bitfield cannot be
+    carried - OE propHeroes rows hold only {type, id, isDefined,
+    heroSid} (catalog heroes), so the spawned OE hero uses its def's
+    standard startMagics; the h3 custom bitfield is dropped by decision.
+  * Verified: all_cats_go_to_heaven hero-spawner nature_hero_6 ->
+    heroMetadata spells 000000000000000800, which round-trips through
+    the h3m encoder + parse_h3m_objects (hero object with
+    spells bitfield). Broken_Alliance human_hero_14 likewise.
 
 
 3c. Secondary skills: 16 of 28 H3 skills mapped. Unmapped 12:

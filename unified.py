@@ -1083,6 +1083,12 @@ def _h3_spell_from_oe_sid(sid):
     if not cands:
         cands = list(range(len(H3M_SPELL_LEVELS)))
     return _random.choice(cands)
+# OE catalog hero sid -> standard startMagics spell sids (Core.zip
+# DB/heroes/**/*.json, startMagics[].sidConfig; 133 of 177 hero defs).
+# User decision: hero starting spells are the standard spells of each
+# hero, so the way back to H3/H2 builds the hero spell bitfield from
+# these instead of trying to carry a per-map custom spell list.
+OE_HERO_START_MAGICS = OE_OBJECT_CORRESPONDENCE.get("oe_hero_start_magics") or {}
 # OE altar_of_magic_* <-> H3 shrine classes 88/89/90, converted to each
 # other RANDOMLY (user decision; see altar_of_magic_shrines in
 # oe_object_correspondence.json for the Core.zip evidence).
@@ -1092,6 +1098,22 @@ HOMMOE_CUSTOM_ALTAR_SIDS = list(_ALTAR_SHRINE.get("custom_altar_sids") or [])
 HOMMOE_ALTAR_ALL_SIDS = HOMMOE_ALTAR_SIDS + HOMMOE_CUSTOM_ALTAR_SIDS
 HOMMOE_ALTAR_H3_CLASSES = [str(c) for c in (_ALTAR_SHRINE.get("h3_shrine_classes")
                                              or [88, 89, 90])]
+
+
+def _h3_hero_spells_bitfield(hero_sid):
+    """OE catalog hero sid -> SoD 9-byte H3 spells bitfield (hex), built
+    from the hero def's standard startMagics (OE_HERO_START_MAGICS), each
+    OE spell sid mapped through _h3_spell_from_oe_sid (exact match else a
+    random H3 spell of the same level). Returns None when the hero has no
+    known starting spell."""
+    bits = 0
+    for sid in OE_HERO_START_MAGICS.get(hero_sid) or []:
+        h3_spell = _h3_spell_from_oe_sid(sid)
+        if h3_spell is not None and 0 <= h3_spell < 72:
+            bits |= 1 << h3_spell
+    if not bits:
+        return None
+    return bits.to_bytes(9, "little").hex()
 
 
 OE_H3_TERRAIN_BIOME = OE_OBJECT_CORRESPONDENCE["h3_terrain_biome"]
@@ -1955,6 +1977,7 @@ def _hommoe_objects_to_unified(adventure, width):
     monster_metadata = OrderedDict()
     witchhut_metadata = OrderedDict()
     shrine_metadata = OrderedDict()
+    hero_metadata = OrderedDict()
     for tile_key, obj_list in tiles.items():
         for entry in obj_list:
             if entry.get("group") != "MONSTERS":
@@ -2050,6 +2073,24 @@ def _hommoe_objects_to_unified(adventure, width):
                         skill = OE_SKILL_SID_TO_H3[str(params[0])]
                     witchhut_metadata[str(entry.get("id"))] = OrderedDict([
                         ("skill", skill)])
+    # Placed heroes (propHeroes rows on hero-spawner / city-spawner /
+    # random-city / ... objects): the starting spells are the catalog
+    # hero's standard startMagics (Core.zip DB/heroes/**, user decision),
+    # carried into H3 as the SoD spells bitfield (and into H2 as
+    # availableSpells) - see _h3_hero_spells_bitfield.
+    for obj_list in tiles.values():
+        for entry in obj_list:
+            row = (entry.get("properties") or {}).get("propHeroes")
+            if not isinstance(row, dict):
+                continue
+            hero_sid = row.get("heroSid") or ""
+            if not hero_sid or hero_sid == "random" or not row.get("isDefined"):
+                continue
+            hm = OrderedDict([("sourceHeroSid", hero_sid)])
+            bits_hex = _h3_hero_spells_bitfield(hero_sid)
+            if bits_hex:
+                hm["spells"] = bits_hex
+            hero_metadata[str(entry.get("id"))] = hm
     # Prop rows whose id matches no placed object/squad/marker ("orphan"
     # rows, e.g. left over from deleted objects): kept raw under
     # sourceOrphanProps so unified -> .map re-emits them (5d).
@@ -2083,6 +2124,8 @@ def _hommoe_objects_to_unified(adventure, width):
         result["witchhutMetadata"] = witchhut_metadata
     if shrine_metadata:
         result["shrineMetadata"] = shrine_metadata
+    if hero_metadata:
+        result["heroMetadata"] = hero_metadata
     # Raw adventure-level data with no unified equivalent, kept as-is.
     if adventure.get("rivers"):
         result["sourceRivers"] = adventure["rivers"]
@@ -6958,10 +7001,24 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
                 # and primary skills flags (all unset: the defaults).
                 buffer.write(struct.pack("<B", 0))  # no custom biography
                 buffer.write(struct.pack("<B", 0xFF))  # default gender
+                spells_hex = meta.get("spells")
                 if version_sod:
-                    buffer.write(struct.pack("<B", 0))  # no custom spells
+                    # SoD: flag byte + 9-byte spell bitfield when custom
+                    # spells are set (OE hero standard startMagics for
+                    # hommoe sources, see _h3_hero_spells_bitfield).
+                    if isinstance(spells_hex, str) and spells_hex:
+                        buffer.write(struct.pack("<B", 1))
+                        buffer.write(bytes.fromhex(spells_hex).ljust(9, b"\x00")[:9])
+                    else:
+                        buffer.write(struct.pack("<B", 0))  # no custom spells
                 else:
-                    buffer.write(struct.pack("<B", 0))  # AB spells byte
+                    # AB: a single spells byte (bits 0-7) always present.
+                    if isinstance(spells_hex, str) and spells_hex:
+                        buffer.write(struct.pack("<B", bytes.fromhex(spells_hex)[0]))
+                    elif isinstance(spells_hex, int):
+                        buffer.write(struct.pack("<B", spells_hex & 0xFF))
+                    else:
+                        buffer.write(struct.pack("<B", 0))  # AB spells byte
                 buffer.write(struct.pack("<B", 0))  # no custom primary skills
         elif kind_name == "town":
             # RoE town layout: owner, name, creatures (7 slots),

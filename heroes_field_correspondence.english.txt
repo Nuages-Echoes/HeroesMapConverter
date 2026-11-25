@@ -1414,6 +1414,16 @@ Heroes
    keep their identity only through sourceHeroSid when the source is
    already a .map.
 
+   Starting spells: each OE catalog hero def has fixed startMagics
+   (Core.zip DB/heroes/**/*.json, startMagics[].sidConfig; 133 of 177
+   hero defs have some - extracted to oe_object_correspondence.json
+   "oe_hero_start_magics"); propHeroes rows reference catalog heroes
+   only, so per-spawn custom spell lists do not exist in OE. Conversion
+   (user decision): OE -> H3 rebuilds the SoD 9-byte spells bitfield
+   from the hero's startMagics (exact for the 11 spell name matches,
+   else a random same-rank spell); H3 -> OE drops a custom hero spell
+   bitfield - the spawned OE hero gets its def's standard spells.
+
 Loss condition
 ----------------------------------------------------------------
 

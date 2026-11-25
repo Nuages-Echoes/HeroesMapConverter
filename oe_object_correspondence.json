@@ -1666,6 +1666,602 @@
   "8": "water",
   "9": "dirt"
  },
+ "oe_hero_start_magics": {
+  "campaign_M10_hero_demon_1": [
+   "day_15_magic_judgement",
+   "night_4_magic_despair",
+   "space_12_magic_rewind",
+   "primal_3_magic_wean",
+   "bonus_magic_pure_bolt"
+  ],
+  "campaign_M10_hero_demon_2": [
+   "day_12_magic_radiant_armor",
+   "night_8_magic_sleep",
+   "space_9_magic_impending_fate",
+   "primal_12_magic_chain_lightning",
+   "bonus_magic_pure_bolt"
+  ],
+  "campaign_M10_hero_demon_3": [
+   "day_13_magic_holy_arms",
+   "night_15_magic_deaths_call",
+   "space_8_magic_carapace",
+   "primal_11_magic_armageddon",
+   "bonus_magic_pure_bolt"
+  ],
+  "campaign_M10_hero_demon_4": [
+   "night_14_magic_nairas_kiss",
+   "day_9_magic_arinas_hymn",
+   "primal_14_magic_hksmillas_rampage",
+   "space_14_magic_doreaths_tide",
+   "primal_4_magic_fire_globe",
+   "bonus_magic_pure_bolt"
+  ],
+  "campaign_M10_hero_demon_generic_1": [
+   "bonus_magic_pure_bolt"
+  ],
+  "campaign_M10_hero_demon_generic_2": [
+   "bonus_magic_pure_bolt"
+  ],
+  "campaign_M10_hero_demon_generic_3": [
+   "bonus_magic_pure_bolt"
+  ],
+  "campaign_M10_hero_demon_generic_4": [
+   "bonus_magic_pure_bolt"
+  ],
+  "campaign_M10_hero_demon_generic_5": [
+   "bonus_magic_pure_bolt"
+  ],
+  "campaign_M10_hero_demon_generic_6": [
+   "bonus_magic_pure_bolt"
+  ],
+  "campaign_M2_hero_sylvan": [
+   "day_2_magic_sharp_edge",
+   "night_3_magic_enlarge_shadow",
+   "space_8_magic_carapace",
+   "primal_4_magic_fire_globe",
+   "bonus_magic_pure_bolt"
+  ],
+  "campaign_M3_hero_temple": [
+   "day_1_magic_healing_water",
+   "day_2_magic_sharp_edge",
+   "day_3_magic_haste",
+   "bonus_magic_pure_bolt"
+  ],
+  "campaign_M3_hero_undead": [
+   "night_1_magic_unnatural_calm",
+   "night_2_magic_web",
+   "night_4_magic_despair",
+   "bonus_magic_pure_bolt",
+   "change_use_necromancy"
+  ],
+  "campaign_M4_hero_preacher": [
+   "day_15_magic_judgement",
+   "bonus_magic_pure_bolt"
+  ],
+  "campaign_M4_hero_sylvan_1": [
+   "primal_4_magic_fire_globe",
+   "night_1_magic_unnatural_calm",
+   "day_2_magic_sharp_edge",
+   "primal_12_magic_chain_lightning",
+   "primal_6_magic_ice_bolt",
+   "space_12_magic_rewind",
+   "bonus_magic_pure_bolt"
+  ],
+  "campaign_M4_hero_sylvan_2": [
+   "day_1_magic_healing_water",
+   "day_7_magic_inner_light",
+   "space_2_magic_energy_explosion",
+   "space_9_magic_impending_fate",
+   "bonus_magic_pure_bolt"
+  ],
+  "campaign_M4_hero_sylvan_2_alt": [
+   "day_1_magic_healing_water",
+   "day_7_magic_inner_light",
+   "space_2_magic_energy_explosion",
+   "space_9_magic_impending_fate",
+   "bonus_magic_pure_bolt"
+  ],
+  "campaign_M4_hero_sylvan_3": [
+   "night_9_magic_twilight",
+   "night_4_magic_despair",
+   "primal_6_magic_ice_bolt",
+   "primal_12_magic_chain_lightning",
+   "bonus_magic_pure_bolt"
+  ],
+  "campaign_M4_hero_sylvan_3_alt": [
+   "night_9_magic_twilight",
+   "night_4_magic_despair",
+   "primal_6_magic_ice_bolt",
+   "primal_12_magic_chain_lightning",
+   "bonus_magic_pure_bolt"
+  ],
+  "campaign_M4_hero_temple_1": [
+   "day_9_magic_arinas_hymn",
+   "day_12_magic_radiant_armor",
+   "day_13_magic_holy_arms",
+   "day_14_magic_vengeance",
+   "day_15_magic_judgement",
+   "day_16_magic_arinas_chosen",
+   "bonus_magic_pure_bolt"
+  ],
+  "campaign_M4_hero_temple_2": [
+   "day_13_magic_holy_arms",
+   "day_12_magic_radiant_armor",
+   "day_9_magic_arinas_hymn",
+   "day_7_magic_inner_light",
+   "bonus_magic_pure_bolt"
+  ],
+  "campaign_M4_hero_temple_3": [
+   "day_1_magic_healing_water",
+   "day_3_magic_haste",
+   "bonus_magic_pure_bolt"
+  ],
+  "campaign_M4_hero_temple_3_alt": [
+   "day_13_magic_holy_arms",
+   "day_12_magic_radiant_armor",
+   "day_9_magic_arinas_hymn",
+   "day_7_magic_inner_light",
+   "bonus_magic_pure_bolt"
+  ],
+  "campaign_M4_hero_unfrozen": [
+   "bonus_magic_pure_bolt"
+  ],
+  "campaign_M5_hero_undead_1": [
+   "space_12_magic_rewind",
+   "bonus_magic_pure_bolt",
+   "change_use_necromancy"
+  ],
+  "campaign_M5_hero_undead_2": [
+   "night_6_magic_deaths_grip",
+   "space_12_magic_rewind",
+   "bonus_magic_pure_bolt",
+   "change_use_necromancy"
+  ],
+  "campaign_M5_hero_undead_2alt": [
+   "night_6_magic_deaths_grip",
+   "space_12_magic_rewind",
+   "night_4_magic_despair",
+   "night_11_magic_vulnerability",
+   "bonus_magic_pure_bolt",
+   "change_use_necromancy"
+  ],
+  "campaign_M9_hero_necromancer_ambush": [
+   "night_4_magic_despair",
+   "night_6_magic_deaths_grip",
+   "bonus_magic_pure_bolt",
+   "change_use_necromancy"
+  ],
+  "campaign_M9_hero_temple_1": [
+   "day_8_magic_taunt",
+   "day_12_magic_radiant_armor",
+   "day_13_magic_holy_arms",
+   "day_15_magic_judgement",
+   "bonus_magic_pure_bolt"
+  ],
+  "campaign_M9_hero_temple_2": [
+   "night_11_magic_vulnerability",
+   "night_13_magic_berserker",
+   "night_8_magic_sleep",
+   "night_7_magic_fatal_decay",
+   "bonus_magic_pure_bolt"
+  ],
+  "campaign_M9_hero_temple_3": [
+   "space_8_magic_carapace",
+   "space_4_magic_optical_illusion",
+   "space_9_magic_impending_fate",
+   "space_16_magic_reality_distortion",
+   "bonus_magic_pure_bolt"
+  ],
+  "campaign_M9_hero_temple_4": [
+   "primal_1_magic_thunderbolt",
+   "primal_5_magic_crystal_crown",
+   "primal_12_magic_chain_lightning",
+   "primal_13_magic_avalanche",
+   "bonus_magic_pure_bolt"
+  ],
+  "campaign_M9_hero_temple_main": [
+   "day_9_magic_arinas_hymn",
+   "day_1_magic_healing_water",
+   "day_11_magic_masterful_parry",
+   "day_16_magic_arinas_chosen",
+   "primal_14_magic_hksmillas_rampage",
+   "primal_4_magic_fire_globe",
+   "bonus_magic_pure_bolt"
+  ],
+  "campaign_M9_hero_undead_1": [
+   "night_2_magic_web",
+   "night_3_magic_enlarge_shadow",
+   "night_9_magic_twilight",
+   "night_14_magic_nairas_kiss",
+   "bonus_magic_pure_bolt",
+   "change_use_necromancy"
+  ],
+  "campaign_M9_hero_undead_2": [
+   "day_3_magic_haste",
+   "day_5_magic_shorten_shadow",
+   "day_11_magic_masterful_parry",
+   "day_14_magic_vengeance",
+   "bonus_magic_pure_bolt",
+   "change_use_necromancy"
+  ],
+  "campaign_M9_hero_undead_3": [
+   "primal_2_magic_thick_hide",
+   "primal_4_magic_fire_globe",
+   "primal_8_magic_cave_in",
+   "primal_14_magic_hksmillas_rampage",
+   "bonus_magic_pure_bolt",
+   "change_use_necromancy"
+  ],
+  "campaign_M9_hero_undead_4": [
+   "space_1_magic_early_start",
+   "space_9_magic_impending_fate",
+   "space_11_magic_decimate",
+   "space_14_magic_doreaths_tide",
+   "bonus_magic_pure_bolt",
+   "change_use_necromancy"
+  ],
+  "campaign_M9_hero_undead_main": [
+   "space_12_magic_rewind",
+   "day_2_magic_sharp_edge",
+   "night_1_magic_unnatural_calm",
+   "night_15_magic_deaths_call",
+   "primal_14_magic_hksmillas_rampage",
+   "primal_4_magic_fire_globe",
+   "bonus_magic_pure_bolt",
+   "change_use_necromancy"
+  ],
+  "campaign_M9_hero_undead_npc": [
+   "night_6_magic_deaths_grip",
+   "space_12_magic_rewind",
+   "bonus_magic_pure_bolt",
+   "change_use_necromancy"
+  ],
+  "campaign_hero_2": [
+   "day_2_magic_sharp_edge",
+   "night_3_magic_enlarge_shadow",
+   "space_8_magic_carapace",
+   "primal_4_magic_fire_globe"
+  ],
+  "campaign_hero_3": [
+   "day_1_magic_healing_water",
+   "day_9_magic_arinas_hymn",
+   "day_11_magic_masterful_parry",
+   "day_16_magic_arinas_chosen"
+  ],
+  "campaign_hero_4": [
+   "space_12_magic_rewind",
+   "day_2_magic_sharp_edge",
+   "night_1_magic_unnatural_calm",
+   "night_15_magic_deaths_call",
+   "change_use_necromancy"
+  ],
+  "cm_fun_hero_1": [
+   "change_use_necromancy"
+  ],
+  "cm_fun_hero_human_1": [
+   "day_1_magic_healing_water",
+   "day_2_magic_sharp_edge",
+   "day_3_magic_haste",
+   "day_4_magic_favorable_wind",
+   "day_5_magic_shorten_shadow",
+   "day_6_magic_cleansing_ray",
+   "day_7_magic_inner_light",
+   "day_9_magic_arinas_hymn",
+   "day_12_magic_radiant_armor",
+   "space_1_magic_early_start",
+   "space_3_magic_energyze",
+   "space_4_magic_optical_illusion",
+   "primal_1_magic_thunderbolt",
+   "primal_2_magic_thick_hide",
+   "primal_3_magic_wean",
+   "primal_5_magic_crystal_crown"
+  ],
+  "demon_hero_1": [
+   "day_4_magic_favorable_wind"
+  ],
+  "demon_hero_10": [
+   "space_14_magic_doreaths_tide"
+  ],
+  "demon_hero_11": [
+   "day_14_magic_vengeance"
+  ],
+  "demon_hero_12": [
+   "primal_17_magic_groundsight"
+  ],
+  "demon_hero_13": [
+   "primal_3_magic_wean"
+  ],
+  "demon_hero_14": [
+   "night_8_magic_sleep"
+  ],
+  "demon_hero_15": [
+   "day_3_magic_haste"
+  ],
+  "demon_hero_16": [
+   "space_6_magic_blink"
+  ],
+  "demon_hero_17": [
+   "primal_4_magic_fire_globe"
+  ],
+  "demon_hero_6": [
+   "primal_10_magic_primordial_purity"
+  ],
+  "dungeon_hero_10": [
+   "primal_16_magic_stone_fangs"
+  ],
+  "dungeon_hero_11": [
+   "primal_7_magic_wall_of_flame"
+  ],
+  "dungeon_hero_12": [
+   "day_16_magic_arinas_chosen"
+  ],
+  "dungeon_hero_13": [
+   "night_9_magic_twilight"
+  ],
+  "dungeon_hero_14": [
+   "space_18_magic_assemble"
+  ],
+  "dungeon_hero_15": [
+   "day_18_magic_farsight"
+  ],
+  "dungeon_hero_16": [
+   "day_8_magic_taunt"
+  ],
+  "dungeon_hero_17": [
+   "day_7_magic_inner_light"
+  ],
+  "dungeon_hero_18": [
+   "night_8_magic_sleep"
+  ],
+  "dungeon_hero_2": [
+   "space_1_magic_early_start"
+  ],
+  "dungeon_hero_7": [
+   "night_17_magic_read_minds"
+  ],
+  "dungeon_hero_9": [
+   "space_5_magic_trap_jaws"
+  ],
+  "human_hero_10": [
+   "space_17_magic_reinforcements"
+  ],
+  "human_hero_11": [
+   "day_18_magic_farsight"
+  ],
+  "human_hero_12": [
+   "day_13_magic_holy_arms"
+  ],
+  "human_hero_13": [
+   "day_15_magic_judgement"
+  ],
+  "human_hero_14": [
+   "day_1_magic_healing_water"
+  ],
+  "human_hero_15": [
+   "day_2_magic_sharp_edge"
+  ],
+  "human_hero_16": [
+   "day_9_magic_arinas_hymn"
+  ],
+  "human_hero_17": [
+   "night_11_magic_vulnerability"
+  ],
+  "human_hero_18": [
+   "day_17_magic_clear_view"
+  ],
+  "human_hero_6": [
+   "primal_17_magic_groundsight"
+  ],
+  "nature_hero_10": [
+   "primal_18_magic_primordial_chaos"
+  ],
+  "nature_hero_11": [
+   "space_3_magic_energyze"
+  ],
+  "nature_hero_12": [
+   "primal_7_magic_wall_of_flame"
+  ],
+  "nature_hero_13": [
+   "primal_6_magic_ice_bolt"
+  ],
+  "nature_hero_14": [
+   "primal_8_magic_cave_in"
+  ],
+  "nature_hero_15": [
+   "primal_12_magic_chain_lightning"
+  ],
+  "nature_hero_16": [
+   "space_10_magic_mirror_copy"
+  ],
+  "nature_hero_17": [
+   "day_6_magic_cleansing_ray"
+  ],
+  "nature_hero_18": [
+   "space_2_magic_energy_explosion"
+  ],
+  "nature_hero_4": [
+   "space_11_magic_decimate"
+  ],
+  "nature_hero_6": [
+   "night_13_magic_berserker"
+  ],
+  "nature_hero_7": [
+   "primal_4_magic_fire_globe"
+  ],
+  "necro_hero_1": [
+   "change_use_necromancy"
+  ],
+  "necro_hero_10": [
+   "space_9_magic_impending_fate",
+   "change_use_necromancy"
+  ],
+  "necro_hero_11": [
+   "night_5_magic_shade_cloak",
+   "change_use_necromancy"
+  ],
+  "necro_hero_12": [
+   "day_10_magic_second_song",
+   "change_use_necromancy"
+  ],
+  "necro_hero_13": [
+   "night_18_magic_nairas_veil",
+   "change_use_necromancy"
+  ],
+  "necro_hero_14": [
+   "night_6_magic_deaths_grip",
+   "change_use_necromancy"
+  ],
+  "necro_hero_15": [
+   "night_4_magic_despair",
+   "change_use_necromancy"
+  ],
+  "necro_hero_16": [
+   "space_12_magic_rewind",
+   "change_use_necromancy"
+  ],
+  "necro_hero_17": [
+   "night_17_magic_read_minds",
+   "change_use_necromancy"
+  ],
+  "necro_hero_18": [
+   "night_7_magic_fatal_decay",
+   "change_use_necromancy"
+  ],
+  "necro_hero_2": [
+   "change_use_necromancy"
+  ],
+  "necro_hero_3": [
+   "change_use_necromancy"
+  ],
+  "necro_hero_4": [
+   "change_use_necromancy"
+  ],
+  "necro_hero_5": [
+   "change_use_necromancy"
+  ],
+  "necro_hero_6": [
+   "night_13_magic_berserker",
+   "change_use_necromancy"
+  ],
+  "necro_hero_7": [
+   "night_2_magic_web",
+   "change_use_necromancy"
+  ],
+  "necro_hero_8": [
+   "change_use_necromancy"
+  ],
+  "necro_hero_9": [
+   "primal_18_magic_primordial_chaos",
+   "change_use_necromancy"
+  ],
+  "tutorial_M_hero_1": [
+   "primal_1_magic_thunderbolt",
+   "change_use_necromancy"
+  ],
+  "tutorial_M_hero_2": [
+   "primal_1_magic_thunderbolt",
+   "primal_2_magic_thick_hide",
+   "night_1_magic_unnatural_calm",
+   "change_use_necromancy"
+  ],
+  "tutorial_hero_1": [
+   "day_6_magic_cleansing_ray",
+   "day_2_magic_sharp_edge",
+   "night_17_magic_read_minds"
+  ],
+  "tutorial_hero_2": [
+   "primal_1_magic_thunderbolt",
+   "primal_4_magic_fire_globe",
+   "space_18_magic_assemble"
+  ],
+  "tutorial_hero_3": [
+   "day_2_magic_sharp_edge",
+   "day_5_magic_shorten_shadow",
+   "day_9_magic_arinas_hymn",
+   "primal_1_magic_thunderbolt"
+  ],
+  "tutorial_hero_4": [
+   "night_1_magic_unnatural_calm",
+   "night_4_magic_despair",
+   "space_12_magic_rewind",
+   "primal_3_magic_wean"
+  ],
+  "tutorial_hero_c1_12": [
+   "primal_1_magic_thunderbolt",
+   "primal_2_magic_thick_hide",
+   "night_1_magic_unnatural_calm",
+   "change_use_necromancy"
+  ],
+  "tutorial_hero_c1_14": [
+   "primal_1_magic_thunderbolt",
+   "primal_2_magic_thick_hide",
+   "night_1_magic_unnatural_calm",
+   "change_use_necromancy"
+  ],
+  "tutorial_hero_c1_8": [
+   "primal_1_magic_thunderbolt",
+   "primal_2_magic_thick_hide",
+   "night_1_magic_unnatural_calm",
+   "night_9_magic_twilight",
+   "day_12_magic_radiant_armor",
+   "day_13_magic_holy_arms",
+   "day_15_magic_judgement"
+  ],
+  "unfrozen_hero_1": [
+   "space_3_magic_energyze"
+  ],
+  "unfrozen_hero_10": [
+   "night_3_magic_enlarge_shadow"
+  ],
+  "unfrozen_hero_11": [
+   "day_5_magic_shorten_shadow"
+  ],
+  "unfrozen_hero_12": [
+   "day_11_magic_masterful_parry"
+  ],
+  "unfrozen_hero_13": [
+   "space_17_magic_reinforcements"
+  ],
+  "unfrozen_hero_14": [
+   "primal_13_magic_avalanche"
+  ],
+  "unfrozen_hero_15": [
+   "day_17_magic_clear_view"
+  ],
+  "unfrozen_hero_16": [
+   "space_8_magic_carapace"
+  ],
+  "unfrozen_hero_17": [
+   "night_6_magic_deaths_grip"
+  ],
+  "unfrozen_hero_18": [
+   "primal_2_magic_thick_hide"
+  ],
+  "unfrozen_hero_2": [
+   "primal_6_magic_ice_bolt"
+  ],
+  "unfrozen_hero_3": [
+   "space_4_magic_optical_illusion"
+  ],
+  "unfrozen_hero_4": [
+   "space_1_magic_early_start"
+  ],
+  "unfrozen_hero_5": [
+   "night_1_magic_unnatural_calm"
+  ],
+  "unfrozen_hero_6": [
+   "night_10_magic_silence"
+  ],
+  "unfrozen_hero_7": [
+   "primal_1_magic_thunderbolt"
+  ],
+  "unfrozen_hero_8": [
+   "space_7_magic_shackles"
+  ],
+  "unfrozen_hero_9": [
+   "space_18_magic_assemble"
+  ]
+ },
  "oe_item_names": {
   "alchemist_ring_hat_artifact": "Alchemist’s Signet‑Ring",
   "ambassadors_word_ambassadors_robe_artifact": "Diplomat’s Robe",
