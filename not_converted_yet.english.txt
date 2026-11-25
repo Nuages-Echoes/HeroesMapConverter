@@ -507,8 +507,14 @@ tile biome (section 1c), and 216/217/218 are converted (1d-note2e).
     exactly our write_gzip canonical header; the synthetic map (XFL=2
     OS=3) keeps its own via gzipHeader passthrough. No gap.
 
-5b. Block inventory (raw JSON sizes):
-  Broken_Alliance: scenario 3973, adventure 352821, dialogQuestData 47
+5b. Block inventory (raw JSON sizes) - VERIFIED LOSSLESS: blocks 3/4 are
+    carried raw in unified "scripts" and re-emitted; the writer now emits a
+    4th block only when the source .map had one or quests were actually
+    generated (real editors never emit an empty 4th chunk - map-write.ts),
+    and the separator [05 00]/[0d 00] (bit 0x08 = block 4) follows. Checked
+    on all 4 real test maps through unified -> .map: block count, separator
+    and blocks 3/4 content all equal the source.
+  (sizes) Broken_Alliance: scenario 3973, adventure 352821, dialogQuestData 47
   all_cats: scenario 2770, adventure 95104, dialogQuestData 47,
             commentAiData 16466
   c_M1: scenario 1953, adventure 92154, dialogQuestData 47,
@@ -525,15 +531,21 @@ tile biome (section 1c), and 216/217/218 are converted (1d-note2e).
     spawnPointType, isCityDefined, factionSid, isHeroDefined, heroSid,
     colorId), startSettings (sourceStartSettings), banInfoData
     (sourceBanInfoData), sizeX/sizeZ, endController (sourceEndController).
-  DROPPED (measured on Broken_Alliance): template "", gameMode 0,
+  DROPPED BEFORE, NOW CARRIED RAW (sourceScenarioExtra + sourceSpawnsRaw,
+  re-emitted verbatim by the writer for hommoe sources; verified equal on
+  all 4 real test maps incl. spawn isLocked): template, gameMode, the 4
+    difficulty arrays, campaignInfo,
     economicDifficulties/aiDifficulties/neutralDifficulties/
     quickStartDifficulties (6-bool arrays, ALL TRUE in every real map -
     reference FULL_DIFFICULTIES comment), campaignInfo (all-empty sids),
     descBlocks (810 B: localization-block list - text/spacer/size/
     players/difficulty entries referencing map_broken_alliance_desc...
     sids), dateTime {"value": 134335101333455731}, displayWinCondition,
-    hashSum, maxAlliancesCount/maxSidesCount, myControlledFractions,
-    mapCreationType, heroesInfos.
+    maxAlliancesCount/maxSidesCount, myControlledFractions,
+    mapCreationType, heroesInfos. (hashSum stays excluded - re-minted, 5a.)
+  H2/H3 -> .map now emits the reference template's scenario key set:
+  difficulty arrays all-true (FULL_DIFFICULTIES), campaignInfo (6 empty
+  sids), dateTime (template value).
   Spawn flags: isAlive=true everywhere, playerId="" everywhere;
     isLocked VARIES (Broken_Alliance: 4 true / 3 false) but the writer
     always emits isLocked:false - real loss on hommoe -> other formats.
@@ -548,22 +560,30 @@ tile biome (section 1c), and 216/217/218 are converted (1d-note2e).
     re-emitted verbatim), rivers (sourceRivers), objectsProperties rows
     ATTACHED to an object (via entry["properties"] passthrough),
     settings.mapWinConditions only.
-  DROPPED: descBlocks (810 B, same as scenario's), views (109 B - one
-    default 6x6 view), keyObjects (14 object ids in Broken_Alliance),
-    objectValuesOverrides {"list": []}, settings' other 30 keys
-    (heroCountMin/Max/Increment, enableHeroHireBan, disable* flags,
-    idSidesWithoutTimer/..., isTournamentRules, bonuses, gameMode,
-    difficulty arrays duplicated, enableCustomAI/customAISid,
-    factionLawsExpModifier, astrologyExpModifier, maxAlliancesCount),
-    banInfoData (dup of block 1's), takenHeroes (["human_hero_14"]),
-    haveCustomAreas, customAreasPainting (27648 B = sizeX*sizeZ area-id
-    grid in Broken_Alliance; 6912 B in the others - one byte per tile),
-    generatorChecksum, cliffRandomSeed (writer hardcodes 0).
+  DROPPED BEFORE, NOW CARRIED RAW (sourceAdventureExtra, re-emitted
+    verbatim for hommoe sources; verified equal on all 4 real test maps):
+    descBlocks (810 B, same as scenario's), views (109 B), keyObjects
+    (14 object ids in Broken_Alliance), objectValuesOverrides, the FULL
+    settings (30 keys incl. heroCountMin/Max/Increment, disable* flags,
+    idSidesWithout*, isTournamentRules, bonuses, gameMode, difficulty
+    arrays, enableCustomAI/customAISid, factionLawsExpModifier,
+    astrologyExpModifier, mapWinConditions), banInfoData (dup of block 1's),
+    takenHeroes (["human_hero_14"]), haveCustomAreas, customAreasPainting
+    (27648 B = sizeX*sizeZ area-id grid in Broken_Alliance), generatorChecksum,
+    cliffRandomSeed (was hardcoded 0).
+  ORPHAN objectsProperties rows NOW CARRIED (objects.sourceOrphanProps) and
+    re-emitted: Broken_Alliance 4 rows (propVariants 1, propRewardParams 2,
+    propGrowthUnits 1), c_M1 6 rows (propPortals 2, propRewardParams 4) -
+    verified equal after the loop.
   objectsFreeId/squadsFreeId/markersFreeId are recomputed (next_free).
-  ORPHAN objectsProperties rows (id matches no object/squad/marker) are
-    lost in hommoe -> unified -> other formats: Broken_Alliance 4 rows
-    (propVariants 1, propRewardParams 2, propGrowthUnits 1), c_M1 6 rows
-    (propPortals 2, propRewardParams 4). 27 prop tables exist in real
+  H2/H3 -> .map now emits template defaults: views[0] with
+    secSizeX/secSizeZ = ceil(size/16) (GME viewport rule, map-write.ts
+    buildBlankMap), keyObjects [], objectValuesOverrides {"list": []},
+    takenHeroes [], haveCustomAreas false, customAreasPainting [],
+    generatorChecksum "", and the full HOMMOE_SETTINGS_DEFAULT settings
+    (29 keys from template.map) with mapWinConditions from the unified
+    victory condition.
+  27 prop tables exist in real
     maps; the always-empty ones in the test maps: propsName (c_M1 has 1),
     propComments, propRandomHires, propResources, propDialogWindows,
     propQuestNames, propMainObjects, propActionsLegacy, propAiIntetactions,
@@ -583,14 +603,15 @@ tile biome (section 1c), and 216/217/218 are converted (1d-note2e).
     ResCounter, Difficulty; actions add SetQuestMarker, RemoveItem,
     SetAchievement, NextSubQuest, GameLose.
   interruptions: empty in both. dialogQuestData: empty everywhere.
-  Current state: blocks 3/4 pass through raw (lossless .map <-> unified);
-  h2/h3 -> .map can only GENERATE the event patterns (Print/GiveRes/
-  GiveItemHero/AddSkill*/Give*/... via _hommoe_generate_scripts), never
-  native quest features (counters, SetQuestMarker, NodeRevealed,
-  Dialog, campaign actions...); .map -> h3m/fh2m DECODES only our own
-  event_<id>/daily_event_<i> quests back to unified eventMetadata
-  (_hommoe_quests_to_events) - native OE quests stay raw and are dropped
-  on the way to h2/h3.
+  Current state (5e): blocks 3/4 pass through raw - lossless
+  .map -> unified -> .map (verified content-equal on all 4 real maps,
+  block count/separator included). STILL OPEN by design: h2/h3 -> .map can
+  only GENERATE the event patterns (Print/GiveRes/GiveItemHero/AddSkill*/
+  Give*/... via _hommoe_generate_scripts), never native quest features
+  (counters, SetQuestMarker, NodeRevealed, Dialog, campaign actions...);
+  .map -> h3m/fh2m DECODES only our own event_<id>/daily_event_<i> quests
+  back to unified eventMetadata (_hommoe_quests_to_events) - native OE
+  quests stay raw and are dropped on the way to h2/h3.
 
 5f. Other structural notes:
   * hommoe -> fh2m object coordinates use an anchor-shift heuristic
@@ -598,12 +619,12 @@ tile biome (section 1c), and 216/217/218 are converted (1d-note2e).
   * Sidecar .json: byte-identical passthrough when the input .map has
     one; generated (BOM, tab-indented, defaults stripped) only when the
     map has a commentAiData block.
-  * Writer defaults for h2/h3 -> .map emit a fixed scenario/adventure key
-    set: no difficulty arrays, campaignInfo, descBlocks, dateTime,
-    views, keyObjects, takenHeroes, customAreasPainting, generatorChecksum,
-    cliffRandomSeed (0), haveCustomAreas - the reference's from-scratch
-    maps use template.map + FULL_DIFFICULTIES (all true) + a fresh
-    generateMapHash().
+  * Writer defaults for h2/h3 -> .map: NOW match the reference's
+    from-scratch maps (template.map key set + FULL_DIFFICULTIES all-true
+    + fresh generateMapHash-style identity + views ceil(size/16) + full
+    settings defaults) - see 5c/5d above. descBlocks is not emitted for
+    h2/h3 sources (the template has none; the H2/H3 plain-text description
+    goes to mapDesc). STILL OPEN: hommoe -> fh2m anchor-shift heuristic.
 
 ------------------------------------------------------------
 6. Creature banks - CONVERTED (user-provided mapping) + Pandora's Box
