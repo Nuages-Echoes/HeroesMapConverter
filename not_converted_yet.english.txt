@@ -707,6 +707,13 @@ tile biome (section 1c), and 216/217/218 are converted (1d-note2e).
     hero class is not kept per object.
   - Roads and rivers are not OE objects: they live in the terrain layer
     (rivers node lists; roadsMap holds the road TYPE id - 0 none, 1 dirt,
+    2 stone/cobblestone). RIVERS ARE NOW CONVERTED for H2/H3 sources:
+    unified_to_hommoe collects river tiles (h3m sourceRiver cells + fh2m
+    STREAMS objects) and writes the rivers[] node list with s = 4-bit
+    cardinal connectivity bitmask (E=1, W=2, N=4, S=8, N = z+1) per
+    map-editor-json-tool river-shape.ts (mined from real maps); the loop
+    check's "lost STREAMS object" entries are just the reference-compare
+    artifact, the river itself is in the rivers array. roadsMap holds the road TYPE id - 0 none, 1 dirt,
     2 stone/cobblestone - NOT a connection bitfield: the game's map
     thumbnail/minimap renderer (Hex.Map.MapData.por, called from the
     BhMapPreview render path) indexes a road LUT with the roadsMap value
@@ -879,13 +886,19 @@ tile biome (section 1c), and 216/217/218 are converted (1d-note2e).
   interruptions: empty in both. dialogQuestData: empty everywhere.
   Current state (5e): blocks 3/4 pass through raw - lossless
   .map -> unified -> .map (verified content-equal on all 4 real maps,
-  block count/separator included). STILL OPEN by design: h2/h3 -> .map can
-  only GENERATE the event patterns (Print/GiveRes/GiveItemHero/AddSkill*/
-  Give*/... via _hommoe_generate_scripts), never native quest features
-  (counters, SetQuestMarker, NodeRevealed, Dialog, campaign actions...);
-  .map -> h3m/fh2m DECODES only our own event_<id>/daily_event_<i> quests
-  back to unified eventMetadata (_hommoe_quests_to_events) - native OE
-  quests stay raw and are dropped on the way to h2/h3.
+  block count/separator included). h2/h3 -> .map GENERATES full event
+  quests via _hommoe_event_actions: message -> Print, resources ->
+  GiveRes, experience -> GiveExpHero, primary skills/morale/luck ->
+  GiveStatsHero, mana -> ChangeManaHero, artifact -> GiveItemHero (exact
+  sid else random same-rarity-bin, _hommoe_artifact_sid), monster ->
+  GiveUnitHero, secondary skill -> AddSkillAll, spells -> AddSpellHero,
+  removeAfterVisit -> DeleteEntity (daily events use the same builder);
+  STILL OPEN by design: native OE quest features (counters, SetQuestMarker,
+  NodeRevealed, Dialog, campaign actions...) are never generated from
+  h2/h3, and .map -> h3m/fh2m DECODES only our own event_<id>/
+  daily_event_<i> quests back to unified eventMetadata
+  (_hommoe_quests_to_events, incl. DeleteEntity -> removeAfterVisit) -
+  native OE quests stay raw and are dropped on the way to h2/h3.
 
 5f. Other structural notes:
   * hommoe -> fh2m object coordinates use an anchor-shift heuristic

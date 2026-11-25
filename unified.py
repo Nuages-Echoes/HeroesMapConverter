@@ -1016,6 +1016,29 @@ OE_SCROLL_BOX_SIDS = ("scroll_box", "enchanted_scroll_box", "mythic_scroll_box")
 # name matches); see core_zip_not_converted.english.txt for the rest.
 OE_ARTIFACT_EQUIVALENTS = OE_OBJECT_CORRESPONDENCE["artifact_equivalents"]
 OE_SKILL_EQUIVALENTS = OE_OBJECT_CORRESPONDENCE["skill_equivalents"]
+# OE artifact item sids bucketed by propRandomItems rarity bin
+# (Treasure/Common=0, Minor/Rare=1, Major/Epic=2, Relic/Legendary=3),
+# extracted from Core.zip DB/items/items/*.json (rarity field).
+OE_ARTIFACT_SIDS_BY_RARITY = OE_OBJECT_CORRESPONDENCE.get(
+    "oe_artifact_sids_by_rarity") or {}
+# h3 artifact class (H3M_ARTIFACT_CLASSES 1-4) -> rarity bin 0-3
+_H3_ART_CLASS_TO_RARITY_BIN = {1: "0", 2: "1", 3: "2", 4: "3"}
+
+
+def _hommoe_artifact_sid(h3_art):
+    """h3m artifact id -> OE artifact item sid for a GiveItemHero action:
+    exact Core.zip name match when one of the 20 exists, else a random OE
+    artifact sid of the same rarity bin (user decision: artifacts random
+    is good). Returns None when nothing is known."""
+    sid = OE_ARTIFACT_EQUIVALENTS.get(str(h3_art))
+    if sid:
+        return sid
+    from correspondence import H3M_ARTIFACT_CLASSES
+    bin_ = _H3_ART_CLASS_TO_RARITY_BIN.get(H3M_ARTIFACT_CLASSES.get(h3_art, 4), "3")
+    pool = OE_ARTIFACT_SIDS_BY_RARITY.get(bin_) or []
+    if not pool:
+        pool = [s for b in OE_ARTIFACT_SIDS_BY_RARITY.values() for s in b]
+    return _random.choice(pool) if pool else None
 OE_ARTIFACT_SID_TO_H3 = {}
 for _aid, _asid in OE_ARTIFACT_EQUIVALENTS.items():
     OE_ARTIFACT_SID_TO_H3.setdefault(_asid, int(_aid))
@@ -2370,6 +2393,10 @@ def _hommoe_actions_to_event(actions, repeat):
                 evt["spells"].append(h3_spell)
             else:
                 unconverted.append("AddSpellHero:%s" % sid)
+        elif name == "DeleteEntity" and p:
+            # our generated event quests delete the event entity when the
+            # source event had removeAfterVisit
+            evt["removeAfterVisit"] = True
         elif name == "GiveUnitHero" and len(p) >= 2:
             sid = str(p[0])
             if sid in OE_UNIT_SID_TO_H3_CREATURE:
@@ -5123,15 +5150,30 @@ HOMMOE_SETTINGS_DEFAULT = OrderedDict([
 ])
 
 
+# h3 eventMetadata primary-skill names -> OE GiveStatsHero stat names
+# (shapes measured on real quests: p = [stat, heroSid, value]; blank hero
+# sid = the currently selected / visiting hero).
+_H3_TO_OE_STAT_NAME = {
+    "attack": "offence", "defense": "defence",
+    "spellPower": "spellPower", "knowledge": "intelligence",
+}
+
+
 def _hommoe_event_actions(event, obj_id):
     """Build OE script actions for an H2/H3 event object's metadata.
 
-    The message goes to a Print action and resource rewards to GiveRes
-    actions; parts that need OE sids from the game's Core.zip catalog
-    (artifact, monster, secondary skill, stat bonuses) are kept in the
-    trigger's comment instead of being guessed.
+    Every reward type the unified eventMetadata carries becomes a real
+    quest action (shapes measured on the game's own quest scripts):
+    message -> Print, resources -> GiveRes, experience -> GiveExpHero,
+    primary skills / morale / luck -> GiveStatsHero, mana ->
+    ChangeManaHero, artifact -> GiveItemHero (exact sid, else random of
+    the same rarity bin), monster -> GiveUnitHero, secondary skill ->
+    AddSkillAll, spells -> AddSpellHero, removeAfterVisit ->
+    DeleteEntity on the event entity. Only ids with no OE sid at all end
+    up in `unconverted` (and then only in the trigger comment).
     """
     actions = []
+    unconverted = []
     message = event.get("message") or ""
     if message:
         actions.append(OrderedDict([("comment", ""), ("p", [message]), ("a", "Print")]))
@@ -5142,18 +5184,47 @@ def _hommoe_event_actions(event, obj_id):
             actions.append(OrderedDict([
                 ("comment", ""), ("p", [oe_res, str(value)]), ("a", "GiveRes"),
             ]))
-    unconverted = []
+    if event.get("experience"):
+        actions.append(OrderedDict([
+            ("comment", ""), ("p", [str(event.get("experience")), ""]), ("a", "GiveExpHero"),
+        ]))
+    primaries = event.get("primarySkills") or {}
+    for h3_name, oe_name in _H3_TO_OE_STAT_NAME.items():
+        value = primaries.get(h3_name) or event.get(h3_name)
+        if value:
+            actions.append(OrderedDict([
+                ("comment", ""), ("p", [oe_name, "", str(value)]), ("a", "GiveStatsHero"),
+            ]))
+    for field, oe_name in (("morale", "moral"), ("luck", "luck")):
+        if event.get(field):
+            actions.append(OrderedDict([
+                ("comment", ""), ("p", [oe_name, "", str(event.get(field))]), ("a", "GiveStatsHero"),
+            ]))
+    if event.get("mana"):
+        actions.append(OrderedDict([
+            ("comment", ""), ("p", ["", str(event.get("mana"))]), ("a", "ChangeManaHero"),
+        ]))
     if event.get("artifact") not in (None, 0, -1):
-        art_sid = OE_ARTIFACT_EQUIVALENTS.get(str(event.get("artifact")))
+        # exact Core.zip name match, else a random OE artifact sid of the
+        # same rarity bin (user decision: artifacts random is good)
+        art_sid = _hommoe_artifact_sid(event.get("artifact"))
         if art_sid:
             # blank hero sid = the currently selected (visiting) hero
             actions.append(OrderedDict([
-                ("comment", ""), ("p", [art_sid, ""]), ("a", "GiveItemHero"),
+                ("comment", "h3 artifact {}".format(event.get("artifact"))),
+                ("p", [art_sid, ""]), ("a", "GiveItemHero"),
             ]))
         else:
             unconverted.append("artifact={}".format(event.get("artifact")))
     if event.get("monsterType") not in (None, 0, -1):
-        unconverted.append("monster={}x{}".format(event.get("monsterType"), event.get("monsterCount", 0)))
+        unit_sid = OE_CREATURE_EQUIVALENTS.get(str(event.get("monsterType")))
+        if unit_sid:
+            actions.append(OrderedDict([
+                ("comment", "h3 creature {}".format(event.get("monsterType"))),
+                ("p", [unit_sid, str(event.get("monsterCount", 0)), ""]), ("a", "GiveUnitHero"),
+            ]))
+        else:
+            unconverted.append("monster={}x{}".format(event.get("monsterType"), event.get("monsterCount", 0)))
     if event.get("secondarySkill") not in (None, 0):
         # exact name match, else a random convertible OE skill sid (user
         # decision: unmapped skills convert randomly, skill_faction_* never)
@@ -5179,11 +5250,10 @@ def _hommoe_event_actions(event, obj_id):
                 ]))
             else:
                 unconverted.append("spell={}".format(sp))
-    for stat in ("attack", "defense", "knowledge", "spellPower", "experience"):
-        if event.get(stat):
-            unconverted.append("{}={}".format(stat, event.get(stat)))
-    if event.get("morale") or event.get("luck") or event.get("mana"):
-        unconverted.append("morale/luck/mana={}/{}/{}".format(event.get("morale"), event.get("luck"), event.get("mana")))
+    if event.get("removeAfterVisit") and obj_id is not None:
+        actions.append(OrderedDict([
+            ("comment", ""), ("p", ["event_{}".format(obj_id)]), ("a", "DeleteEntity"),
+        ]))
     return actions, unconverted
 
 
@@ -5251,16 +5321,9 @@ def _hommoe_generate_scripts(unified, width):
         day = int(daily.get("firstOccurrenceDay", 1))
         week = str((day - 1) // 7 + 1)
         day_of_week = str((day - 1) % 7 + 1)
-        actions = []
-        message = daily.get("message") or ""
-        if message:
-            actions.append(OrderedDict([("comment", ""), ("p", [message]), ("a", "Print")]))
-        for name, value in (daily.get("resources") or {}).items():
-            oe_res = UNIFIED_TO_HOMMOE_RESOURCE.get(name)
-            if oe_res and value:
-                actions.append(OrderedDict([
-                    ("comment", ""), ("p", [oe_res, str(value)]), ("a", "GiveRes"),
-                ]))
+        # same reward actions as ground events (daily events share the
+        # eventMetadata shape for message/resources/primaries)
+        actions, daily_unconverted = _hommoe_event_actions(daily, None)
         quests.append(OrderedDict([
             ("sid", "daily_event_{}".format(index)),
             ("activeOnStart", True),
@@ -5503,7 +5566,8 @@ def unified_to_hommoe(unified):
             if not sid:
                 if group in ("ROADS", "STREAMS"):
                     # Roads and rivers are stored in the terrain layer
-                    # (roadsMap / rivers), not as Olden Era objects.
+                    # (roadsMap / rivers node lists built above), not as
+                    # Olden Era objects.
                     continue
                 if group in ("KINGDOM_TOWNS", "KINGDOM_HEROES"):
                     # OE towns/heroes are spawn-linked spawners, not the
@@ -5808,6 +5872,54 @@ def unified_to_hommoe(unified):
     for table in sorted(prop_rows):
         objects_properties[table] = prop_rows[table]
 
+    # Rivers (H2/H3 sources): OE stores rivers in the terrain layer as
+    # node lists, each node {n, s, isWaterfall} where s is the 4-bit
+    # cardinal connectivity bitmask over neighbouring river tiles
+    # (E=1, W=2, N=4, S=8; N = z+1) - mined from real maps and documented
+    # in map-editor-json-tool's river-shape.ts. H2/H3 STREAMS tiles and
+    # h3m river cells become river nodes here (they are still not OE
+    # objects, so the objects loop keeps skipping the STREAMS group).
+    river_tiles = set()
+    for cell in grid:
+        if cell.get("sourceRiver") and cell.get("sourceRiver") != "None":
+            river_tiles.add((int(cell.get("x", 0)), int(cell.get("y", 0))))
+    for tile_key, obj_list in (objects.get("tiles") or {}).items():
+        parts = str(tile_key).split("_")
+        if len(parts) < 2:
+            continue
+        try:
+            pos = (int(parts[0]), int(parts[1]))
+        except ValueError:
+            continue
+        if any(o.get("group") == "STREAMS" for o in obj_list):
+            river_tiles.add(pos)
+    river_nodes = []
+    for (x, y) in sorted(river_tiles):
+        if not (0 <= x < width and 0 <= y < height):
+            continue
+        s = 0
+        if (x + 1, y) in river_tiles:
+            s |= 1  # E
+        if (x - 1, y) in river_tiles:
+            s |= 2  # W
+        if (x, y + 1) in river_tiles:
+            s |= 4  # N (z grows north)
+        if (x, y - 1) in river_tiles:
+            s |= 8  # S
+        river_nodes.append(OrderedDict([
+            ("n", y * width + x), ("s", s), ("isWaterfall", False),
+        ]))
+    if river_nodes:
+        rivers_out = [OrderedDict([
+            ("sid", "test"),
+            ("randomSeed", _random.randint(0, 2 ** 31 - 1)),
+            ("nodes", river_nodes),
+        ])]
+    else:
+        rivers_out = [OrderedDict([
+            ("sid", "test"), ("randomSeed", 0), ("nodes", []),
+        ])]
+
     adventure = OrderedDict([
         ("fileMapName", name),
         ("mapName", name),
@@ -5831,7 +5943,7 @@ def unified_to_hommoe(unified):
         ("markersFreeId", next_free),
         ("areas", objects.get("sourceAreas") or []),
         ("areasVersion", 0),
-        ("rivers", objects.get("sourceRivers") or [OrderedDict([("sid", "test"), ("randomSeed", 0), ("nodes", [])])]),
+        ("rivers", objects.get("sourceRivers") or rivers_out),
         ("objectsProperties", objects_properties),
         ("settings", OrderedDict([("mapWinConditions", map_win_conditions)])),
         ("banInfoData", scenario["banInfoData"]),
