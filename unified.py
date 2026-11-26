@@ -4476,6 +4476,43 @@ def _h3m_seer_to_fh2m_sphinx(seer_meta):
     ])
 
 
+def _fh2m_sphinx_to_h3m_seer(sphinx_meta):
+    """
+    Build an h3m seer hut payload (quest/reward) from an fh2m
+    sphinxMetadata entry: the sphinx asks a riddle instead of a quest,
+    so the quest is empty and the reward carries the sphinx bonus -
+    the artifact when one is set (falling back to the h3m random
+    artifact of the same Heroes II class), else the first non-zero
+    resource as a resource reward. The riddle and the answers have no
+    seer hut equivalent and are lost.
+    """
+    from correspondence import (FH2M_TO_H3M_ARTIFACTS,
+                                  FH2M_ARTIFACT_CLASSES)
+
+    sphinx_meta = sphinx_meta or {}
+    reward = None
+    fh2m_artifact = sphinx_meta.get("artifact") or 0
+    if fh2m_artifact:
+        h3m_artifact = FH2M_TO_H3M_ARTIFACTS.get(fh2m_artifact)
+        if h3m_artifact is None:
+            fh2m_class = FH2M_ARTIFACT_CLASSES.get(fh2m_artifact)
+            h3m_artifact = {1: 66, 2: 67, 3: 68, 4: 69}.get(fh2m_class)
+        if h3m_artifact is not None:
+            reward = OrderedDict([("type", 8), ("artifact", h3m_artifact)])
+    if reward is None:
+        resources = sphinx_meta.get("resources") or {}
+        resource_names = ["wood", "mercury", "ore", "sulfur",
+                          "crystal", "gems", "gold"]
+        for resource_index, name in enumerate(resource_names):
+            amount = resources.get(name) or 0
+            if amount:
+                reward = OrderedDict([("type", 5),
+                                      ("resourceType", resource_index),
+                                      ("amount", amount)])
+                break
+    return OrderedDict([("quest", None), ("reward", reward)])
+
+
 def _h3m_event_to_fh2m_event(event_meta):
     """
     Build an fh2m adventureMapEventMetadata entry from an h3m ground
@@ -6988,8 +7025,17 @@ def _encode_h3m_objects(unified, version_ab, version_sod, tile_terrains=None):
                     h3m_target = FH2M_TO_H3M_MISC.get(h3m_key)
                     if h3m_target is not None:
                         obj_class, obj_subclass = h3m_target
-                        meta = (objects_section.get("signMetadata") or {}).get(str(obj_id)) or {}
-                        entry = ("generic", (x, y, z), (obj_class, obj_subclass), meta)
+                        if obj_class == 83:
+                            # The sphinx maps to the h3m seer hut, whose
+                            # instance bytes carry a quest + reward
+                            # payload: a generic instance would miss those
+                            # bytes and shift the whole instance stream.
+                            sphinx_meta = (objects_section.get("sphinxMetadata") or {}).get(str(obj_id)) or {}
+                            entry = ("seerHut", (x, y, z), (obj_class, obj_subclass),
+                                     _fh2m_sphinx_to_h3m_seer(sphinx_meta))
+                        else:
+                            meta = (objects_section.get("signMetadata") or {}).get(str(obj_id)) or {}
+                            entry = ("generic", (x, y, z), (obj_class, obj_subclass), meta)
             elif group == "ADVENTURE_POWER_UPS":
                 # The shrine circles (index 14-16) map back to the
                 # h3m shrine classes 88-90; the Gazebo (11) maps to
