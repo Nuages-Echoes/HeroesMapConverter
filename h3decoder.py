@@ -234,8 +234,11 @@ def parse_h3m(file_path):
             0: artifact_id_bytes, 1: creature_id_bytes + 4, 2: 5,
             3: 5, 4: 3, 5: 3, 6: 3, 7: 3, 8: 0, 9: 0, 10: 4
         }.get(vic_type, 6)
-        safe_read(buffer, detail_size)
-        data['Victory Condition'] = OrderedDict([('Type', hex(vic_type))])
+        detail = safe_read(buffer, detail_size)
+        vic_entry = OrderedDict([('Type', hex(vic_type))])
+        if detail:
+            vic_entry['Detail'] = detail.hex()
+        data['Victory Condition'] = vic_entry
 
     # === Special Loss Condition ===
     loss_type = struct.unpack('<b', safe_read(buffer, 1, b'\xff'))[0]
@@ -243,8 +246,11 @@ def parse_h3m(file_path):
         data['Loss Condition'] = OrderedDict([('Type', 'None')])
     else:
         detail_size = {0: 3, 1: 3, 2: 2}.get(loss_type, 3)
-        safe_read(buffer, detail_size)
-        data['Loss Condition'] = OrderedDict([('Type', hex(loss_type))])
+        detail = safe_read(buffer, detail_size)
+        loss_entry = OrderedDict([('Type', hex(loss_type))])
+        if detail:
+            loss_entry['Detail'] = detail.hex()
+        data['Loss Condition'] = loss_entry
 
     # === Teams ===
     num_teams = struct.unpack('<B', safe_read(buffer, 1))[0]
@@ -631,7 +637,11 @@ def write_h3m(map_data, output_path):
             loss_byte = 0
         buffer.write(struct.pack('<B', loss_byte))
         detail_size = {0: 3, 1: 3, 2: 2}.get(loss_byte, 3)
-        buffer.write(b'\x00' * detail_size)
+        detail = loss.get('Detail')
+        if isinstance(detail, str) and detail:
+            buffer.write(bytes.fromhex(detail).ljust(detail_size, b'\x00')[:detail_size])
+        else:
+            buffer.write(b'\x00' * detail_size)
 
     # === Teams ===
     teams = map_data.get('Teams', {})

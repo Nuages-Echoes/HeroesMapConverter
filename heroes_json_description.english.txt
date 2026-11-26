@@ -179,7 +179,8 @@ Description of the unified JSON format produced from .h3m and .fh2m maps
                                         (fh2m) 3 (LOSS_OUT_OF_TIME)
                                         (h3m) 0x2
      "metadata"        list        Raw condition metadata values of the
-                                    source game
+                                    source game (4-byte values for fh2m;
+                                    the raw detail bytes for h3m)
 
 
 ████████████████████████████════════════════════════════████████████████

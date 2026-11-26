@@ -342,7 +342,10 @@ def convert_h3m_to_unified(map_data):
         victory["type"] = H3M_VICTORY_CONDITIONS.get(int(vic_type, 16), "unknown")
         victory["allowNormalVictory"] = True
         victory["appliesToAI"] = True
-        victory["metadata"] = []
+        # h3m sources: keep the raw detail bytes so the writer can
+        # restore them verbatim (round-trip fidelity).
+        vic_detail = map_data.get("Victory Condition", {}).get("Detail")
+        victory["metadata"] = list(bytes.fromhex(vic_detail)) if vic_detail else []
     unified["victoryCondition"] = victory
 
     # Loss condition
@@ -352,7 +355,8 @@ def convert_h3m_to_unified(map_data):
         loss["type"] = "loseEverything"
     else:
         loss["type"] = H3M_LOSS_CONDITIONS.get(int(loss_type, 16), "unknown")
-    loss["metadata"] = []
+    loss_detail = map_data.get("Loss Condition", {}).get("Detail")
+    loss["metadata"] = list(bytes.fromhex(loss_detail)) if loss_detail else []
     unified["lossCondition"] = loss
 
     # Rumors
@@ -967,6 +971,55 @@ def unified_to_h3m(unified):
     victory_metadata = victory.get("metadata") or []
     allow_normal = bool(victory.get("allowNormalVictory", True))
     applies_ai = bool(victory.get("appliesToAI", True))
+
+    def _condition_detail(cond_type, metadata, is_victory):
+        """h3m detail bytes (hex) for a victory/loss condition.
+
+        h3m sources carry the raw detail bytes in the metadata (kept
+        verbatim by convert_h3m_to_unified). fh2m sources carry the
+        Heroes II metadata values: a tile index for the positional
+        conditions (captureTown/killHero/defeatMonster/loseTown/
+        loseHero), an artifact id for obtainArtifact, a resource id
+        + amount for collectGold and a day count for outOfTime. The
+        h3m positional details are the target object's actionable
+        spot, which for a town is its entrance cell - exactly the
+        tile the fh2m map stores the town on (the h3m town instance
+        is placed at entrance + (2, 0)).
+        """
+        if unified.get("sourceGame") == "h3m":
+            if metadata:
+                return bytes(v & 0xFF for v in metadata).hex()
+            return None
+        if not metadata:
+            return None
+        if is_victory and cond_type in ("captureTown", "killHero", "defeatMonster") \
+                or not is_victory and cond_type in ("loseTown", "loseHero"):
+            tile_id = int(metadata[0])
+            z = int(metadata[1]) if len(metadata) > 1 and metadata[1] in (0, 1) else 0
+            level_cells = map_size * map_size
+            if has_underground and tile_id >= level_cells:
+                z = 1
+                tile_id -= level_cells
+            return bytes((tile_id % map_size, tile_id // map_size, z)).hex()
+        if is_victory and cond_type == "obtainArtifact":
+            from correspondence import FH2M_TO_H3M_ARTIFACTS, FH2M_ARTIFACT_CLASSES
+            art = FH2M_TO_H3M_ARTIFACTS.get(int(metadata[0]))
+            if art is None:
+                # No h3m equivalent: fall back to the h3m random
+                # artifact of the same Heroes II class (Treasure -> 66,
+                # Minor -> 67, Major -> 68, Relic -> 69), the same
+                # fallback as the artifact objects.
+                fh2m_class = FH2M_ARTIFACT_CLASSES.get(int(metadata[0]))
+                art = {1: 66, 2: 67, 3: 68, 4: 69}.get(fh2m_class, 0)
+            return struct.pack("<H", art).hex()
+        if is_victory and cond_type == "collectGold":
+            resource = max(0, min(6, int(metadata[0])))
+            amount = int(metadata[1]) if len(metadata) > 1 else 0
+            return (struct.pack("<B", resource) + struct.pack("<I", amount)).hex()
+        if not is_victory and cond_type == "outOfTime":
+            return struct.pack("<H", int(metadata[0]) & 0xFFFF).hex()
+        return None
+
     if victory_type in ("defeatEveryone", "defeatOtherSide"):
         data["Victory Condition"] = OrderedDict([("Type", "None")])
     elif victory_type == "obtainArtifact" and victory_metadata and victory_metadata[0] == 0:
@@ -980,21 +1033,30 @@ def unified_to_h3m(unified):
             ("Detail", "ffffff"),
         ])
     else:
-        data["Victory Condition"] = OrderedDict([
+        vic_entry = OrderedDict([
             ("Type", hex(victory_codes.get(victory_type, 0x6))),
             ("Allow Normal Victory", allow_normal),
             ("Applies To AI", applies_ai),
         ])
+        vic_detail = _condition_detail(victory_type, victory_metadata, True)
+        if vic_detail:
+            vic_entry["Detail"] = vic_detail
+        data["Victory Condition"] = vic_entry
 
     loss = unified.get("lossCondition", {})
     loss_type = loss.get("type", "loseEverything")
     loss_codes = {name: code for code, name in H3M_LOSS_CONDITIONS.items()}
+    loss_metadata = loss.get("metadata") or []
     if loss_type == "loseEverything":
         data["Loss Condition"] = OrderedDict([("Type", "None")])
     else:
-        data["Loss Condition"] = OrderedDict([
+        loss_entry = OrderedDict([
             ("Type", hex(loss_codes.get(loss_type, 0x0))),
         ])
+        loss_detail = _condition_detail(loss_type, loss_metadata, False)
+        if loss_detail:
+            loss_entry["Detail"] = loss_detail
+        data["Loss Condition"] = loss_entry
 
     teams = unified.get("teams", [])
     team_data = OrderedDict([("Number of Teams", len(teams))])
