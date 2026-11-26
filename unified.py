@@ -5783,7 +5783,11 @@ def unified_to_hommoe(unified):
             tiles_map[index] = UNIFIED_TO_HOMMOE_TILE.get(terrain, 1)
             if terrain == "Water":
                 water_map[index] = HOMMOE_WATER_ID
-            if cell.get("sourceLevel") is not None:
+                # OE renders water only in a lowered basin: every water
+                # tile of the reference maps has levelsMap -1 (a water
+                # tile at level 0 shows no water in game).
+                levels_map[index] = -1
+            if cell.get("sourceLevel") is not None and terrain != "Water":
                 levels_map[index] = int(cell["sourceLevel"])
             if cell.get("sourceClimb") is not None:
                 climbs_map[index] = int(cell["sourceClimb"])
