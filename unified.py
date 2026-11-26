@@ -5515,6 +5515,30 @@ def _hommoe_generate_scripts(unified, width):
     return scripting, prop_entities
 
 
+def _hommoe_town_race(obj, objects):
+    """Race name of a unified KINGDOM_TOWNS object: fh2m keeps it in
+    castleMetadata.raceName, h3m in townMetadata.type / class 98 subtype,
+    fh2m objects via the town index (race * 2 [+ 1])."""
+    from correspondence import FH2M_TOWN_RACE_ORDER, H3M_TOWN_TYPE_TO_FH2M_RACE
+    oid = str(obj.get("id"))
+    meta = (objects.get("castleMetadata") or {}).get(oid) or {}
+    race = meta.get("raceName")
+    if not race:
+        tm = (objects.get("townMetadata") or {}).get(oid) or {}
+        tt = tm.get("type")
+        if tt is None and obj.get("class") == 98:
+            tt = obj.get("subclass")
+        if tt is not None:
+            race = H3M_TOWN_TYPE_TO_FH2M_RACE.get(tt)
+    if not race and obj.get("class") is None and obj.get("index") is not None:
+        # fh2m town object: index = race * 2 (+1 village); 12/13 are the
+        # random-town indices (h3m class 77), which carry no race
+        idx = int(obj["index"]) // 2
+        if 0 <= idx < len(FH2M_TOWN_RACE_ORDER):
+            race = FH2M_TOWN_RACE_ORDER[idx]
+    return race
+
+
 def _hommoe_faction_sid(detail):
     """Unified playerDetails[] entry -> Olden Era spawn factionSid.
 
@@ -5578,6 +5602,56 @@ def unified_to_hommoe(unified):
     computer_colors = players.get("computerColors") or []
     available_colors = players.get("availableColors") or []
     spawns = []
+    # --- player start resolution for h2/h3 sources ---
+    # fh2m stores town ownership on the flag objects (castleMetadata
+    # ownerColor); h3m stores the main town in playerDetails. Mirror the
+    # h3m writer's fallback: an active player with an owned town gets it
+    # as main town (OE spawnPointType 0 / city-spawner + propSpawns /
+    # propCities rows, otherwise the game logs "Can not find objects of
+    # type: City" at load); a player without a town gets a hero start
+    # (spawnPointType 1 / hero-spawner + propSpawns / propHeroes). The
+    # owned town's race also resolves a Random/Unknown player race to a
+    # real factionSid (otherwise the game shows "random faction").
+    _objs0 = unified.get("objects") or {}
+    _castle_meta = _objs0.get("castleMetadata") or {}
+    _town_obj_by_tile = {}
+    for _tk, _ol in (_objs0.get("tiles") or {}).items():
+        for _o in _ol:
+            if _o.get("group") == "KINGDOM_TOWNS":
+                _town_obj_by_tile[_tk] = _o
+    town_owner_tile = {}   # h3m-aliased color -> tile_key of owned town
+    color_race = {}        # h3m-aliased color -> race name of owned town
+    for _oid, _meta in _castle_meta.items():
+        _oc = _meta.get("ownerColor")
+        if not _oc:
+            continue
+        for _tk, _o in _town_obj_by_tile.items():
+            if str(_o.get("id")) == str(_oid):
+                if _oc not in town_owner_tile:
+                    town_owner_tile[_oc] = _tk
+                _rn = _meta.get("raceName") or _hommoe_town_race(_o, _objs0)
+                if _rn:
+                    color_race.setdefault(_oc, _rn)
+                break
+    main_town_tile = {}    # tile_key -> (owner, spawnType, factionSid)
+    for detail in player_details:
+        mt = detail.get("mainTown")
+        if not mt:
+            continue
+        _c = detail.get("color")
+        _z = int(mt.get("z", 0) or 0)
+        for _cand in ("%d_%d_%d" % (int(mt.get("x", 0)), int(mt.get("y", 0)), _z),
+                      "%d_%d_%d" % (int(mt.get("x", 0)) + 2, int(mt.get("y", 0)), _z)):
+            _o = _town_obj_by_tile.get(_cand)
+            if _o is not None:
+                main_town_tile[_cand] = None  # filled in the spawn loop below
+                if _c not in color_race:
+                    _rn = _hommoe_town_race(_o, _objs0)
+                    if _rn:
+                        color_race[_c] = _rn
+                break
+    hero_start_queue = []  # (owner, spawnType, detail) in spawn order
+
     color_owner = {}
     for detail in player_details:
         color = detail.get("color")
@@ -5598,13 +5672,32 @@ def unified_to_hommoe(unified):
         oe_color = FH2M_TO_H3M_COLOR_ALIAS.get(color, color)
         color_id = HOMMOE_PLAYER_COLORS.index(oe_color) \
             if oe_color in HOMMOE_PLAYER_COLORS else -1
+        spawn_type = 0 if human else (1 if available else 2)
+        # main town: explicit (h3m) or the first owned town (fh2m flags)
+        owner = len(spawns) + 1
+        mt_tile = town_owner_tile.get(color)
+        if detail.get("mainTown"):
+            _z = int(detail["mainTown"].get("z", 0) or 0)
+            for _cand in ("%d_%d_%d" % (int(detail["mainTown"].get("x", 0)),
+                                        int(detail["mainTown"].get("y", 0)), _z),
+                          "%d_%d_%d" % (int(detail["mainTown"].get("x", 0)) + 2,
+                                        int(detail["mainTown"].get("y", 0)), _z)):
+                if _cand in main_town_tile or _cand in _town_obj_by_tile:
+                    mt_tile = _cand
+                    break
+        has_town = mt_tile is not None
+        faction_sid = _hommoe_faction_sid(detail)
+        if not faction_sid and color in color_race:
+            faction_sid = UNIFIED_TO_HOMMOE_FACTION_SID.get(color_race[color], "")
+        if has_town:
+            main_town_tile[mt_tile] = (owner, spawn_type, faction_sid)
         spawn = OrderedDict([
-            ("owner", len(spawns) + 1),
-            ("spawnType", 0 if human else (1 if available else 2)),
+            ("owner", owner),
+            ("spawnType", spawn_type),
             ("playerId", ""),
-            ("spawnPointType", 0 if detail.get("mainTown") else 1),
-            ("isCityDefined", bool(detail.get("mainTown"))),
-            ("factionSid", _hommoe_faction_sid(detail)),
+            ("spawnPointType", 0 if has_town else 1),
+            ("isCityDefined", has_town),
+            ("factionSid", faction_sid),
             ("isHeroDefined", bool(detail.get("sourceHeroSid"))),
             ("heroSid", detail.get("sourceHeroSid", "")),
             ("colorId", color_id),
@@ -5612,7 +5705,9 @@ def unified_to_hommoe(unified):
             ("isLocked", False),
         ])
         spawns.append(spawn)
-        color_owner[color] = len(spawns)
+        color_owner[color] = owner
+        if not has_town:
+            hero_start_queue.append((owner, spawn_type, detail))
     scenario = OrderedDict([
         ("title", name),
         ("template", ""),
@@ -5751,10 +5846,98 @@ def unified_to_hommoe(unified):
                     # (roadsMap / rivers node lists built above), not as
                     # Olden Era objects.
                     continue
-                if group in ("KINGDOM_TOWNS", "KINGDOM_HEROES"):
-                    # OE towns/heroes are spawn-linked spawners, not the
-                    # reference's stock city/hero sids.
-                    sid = HOMMOE_GROUP_TO_SID.get(group)
+                if group == "KINGDOM_TOWNS":
+                    # OE towns are spawn-linked city-spawners: the game
+                    # resolves a spawnPointType-0 start through
+                    # propSpawns.owner -> the city-spawner object ->
+                    # propCities, and logs "Can not find objects of type:
+                    # City" when those rows are missing.
+                    sid = "city-spawner"
+                    mt = main_town_tile.get(tile_key)
+                    race = _hommoe_town_race(obj, objects)
+                    town_faction = UNIFIED_TO_HOMMOE_FACTION_SID.get(race, "") if race else ""
+                    if mt is not None:
+                        _owner, _spawn_type, _spawn_faction = mt
+                        faction = _spawn_faction or town_faction
+                        is_defined = bool(faction)
+                        prop_rows.setdefault("propSpawns", []).append(OrderedDict([
+                            ("type", 0), ("id", oid), ("owner", _owner),
+                            ("spawnType", _spawn_type), ("spawnPointType", 0),
+                            ("isLocked", False),
+                        ]))
+                        prop_rows.setdefault("propCities", []).append(OrderedDict([
+                            ("type", 0), ("id", oid),
+                            ("isDefined", is_defined), ("factionSid", faction),
+                            # an isDefined city with spawnHero but no real
+                            # propHeroes row crashes at load; an unconfigured
+                            # city (isDefined false) with spawnHero and no row
+                            # is the confirmed-safe GME default
+                            ("spawnHero", not is_defined),
+                            ("buildingsConstructionSid", "default_buildings_construction"),
+                            ("buildingsBanSid", "default_buildings_ban"),
+                            ("buildingsSettingsSid", "default_buildings_settings"),
+                            ("customCityName", ""),
+                        ]))
+                        prop_rows.setdefault("propGrowthUnits", []).append(OrderedDict([
+                            ("type", 0), ("id", oid),
+                            ("isConstantGrowth", True), ("countGrowth", 1),
+                        ]))
+                        # every real city-spawner carries a guard squad row
+                        prop_rows.setdefault("propRandomSquads", []).append(OrderedDict([
+                            ("type", 0), ("id", oid), ("sids", []),
+                            ("requestedValue", 0.0), ("fraction", ""),
+                            ("tier", 0), ("isMainGuard", False),
+                            ("reactionType", 2), ("customTopUnit", ""),
+                            ("weeklyIncrementBonus", 0.0),
+                            ("diplomacyUnitsCountBonus", 0.0),
+                            ("isEscape", True), ("isAutobatle", True),
+                            ("isFreeDiplomacy", False),
+                            ("isCampaignFreeDiplomacy", False),
+                            ("isCampaignDiplomacy", False),
+                            ("isIgnoreMultiply", False), ("obstruction", ""),
+                            ("customStacks", 0),
+                        ]))
+                    else:
+                        # neutral / non-start town: unconfigured city-spawner
+                        # plus ownership when the h2 flags gave an owner
+                        prop_rows.setdefault("propCities", []).append(OrderedDict([
+                            ("type", 0), ("id", oid), ("isDefined", False),
+                            ("factionSid", ""), ("spawnHero", False),
+                            ("customCityName", ""),
+                        ]))
+                        _own = (objects.get("castleMetadata") or {}).get(str(oid)) or {}
+                        _oc = _own.get("ownerColor")
+                        if _oc in color_owner:
+                            prop_rows.setdefault("propOwners", []).append(OrderedDict([
+                                ("type", 0), ("id", oid), ("owner", color_owner[_oc]),
+                            ]))
+                        else:
+                            prop_rows.setdefault("propOwners", []).append(OrderedDict([
+                                ("type", 0), ("id", oid),
+                            ]))
+                elif group == "KINGDOM_HEROES":
+                    # hero-spawner for each player without a town start;
+                    # extra placed heroes become random-hero spawners
+                    if hero_start_queue:
+                        _owner, _spawn_type, _hdetail = hero_start_queue.pop(0)
+                        _hsid = _hdetail.get("sourceHeroSid") or "random"
+                        sid = "hero-spawner"
+                        prop_rows.setdefault("propSpawns", []).append(OrderedDict([
+                            ("type", 0), ("id", oid), ("owner", _owner),
+                            ("spawnType", _spawn_type), ("spawnPointType", 1),
+                            ("isLocked", False),
+                        ]))
+                        prop_rows.setdefault("propHeroes", []).append(OrderedDict([
+                            ("type", 0), ("id", oid),
+                            ("isDefined", bool(_hdetail.get("sourceHeroSid"))),
+                            ("heroSid", _hsid),
+                        ]))
+                    else:
+                        sid = "random-hero"
+                        prop_rows.setdefault("propHeroes", []).append(OrderedDict([
+                            ("type", 0), ("id", oid),
+                            ("isDefined", False), ("heroSid", "random"),
+                        ]))
                 else:
                     if obj.get("class") in HOMMOE_DROPPED_MESSAGE_CLASSES:
                         # Sign / ocean bottle: dropped by decision - OE has

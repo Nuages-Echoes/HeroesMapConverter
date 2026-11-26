@@ -875,6 +875,26 @@ tile biome (section 1c), and 216/217/218 are converted (1d-note2e).
     water/road) so they are unpathable like underground rock (the
     reference's paint_envelope_padding_elevated_dirt policy). views[0]
     then has secSizeX/Z = size//16 exactly (was ceil(size/16)).
+  PLAYER STARTS / SPawner ROWS (game log "Can not find objects of type:
+    City" + "random faction" display): h2/h3 -> .map now resolves each
+    active player's start: explicit h3m mainTown, else the first town
+    owned via the fh2m flag objects (castleMetadata.ownerColor). A player
+    with a town gets spawnPointType 0 / isCityDefined + that town's
+    city-spawner object with propSpawns {owner, spawnType,
+    spawnPointType:0} + propCities {isDefined, factionSid, spawnHero,
+    buildingsConstructionSid/BanSid/SettingsSid = default_*,
+    customCityName} + propGrowthUnits + a guard propRandomSquads row
+    (reference h3-import contract; spawnHero only when isDefined is
+    false - an isDefined city with spawnHero and no real propHeroes row
+    crashes at load). Players without a town get spawnPointType 1 and a
+    hero-spawner + propSpawns spawnPointType 1 + propHeroes
+    {isDefined:false, heroSid:'random'}; extra placed heroes become
+    random-hero. Non-start towns keep city-spawner sid with an
+    unconfigured propCities row + propOwners (owner when flagged).
+    factionSid falls back from Random/Unknown player race to the owned
+    town's race (_hommoe_town_race: castleMetadata.raceName, h3m
+    townMetadata.type / class-98 subtype, fh2m town index race*2; random
+    towns 12/13 and class 77 stay faction-less).
   27 prop tables exist in real
     maps; the always-empty ones in the test maps: propsName (c_M1 has 1),
     propComments, propRandomHires, propResources, propDialogWindows,
