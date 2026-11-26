@@ -5543,6 +5543,20 @@ def unified_to_hommoe(unified):
     """
     width = int(unified.get("mapSize", {}).get("width", 0))
     height = int(unified.get("mapSize", {}).get("height", width))
+    # OE maps must be sector-aligned: sizeX_/sizeZ_ are multiples of 16 and
+    # views[0].secSizeX/Z = size // 16 (reference translator's
+    # align_to_sector / validate_map.py: "map dimensions must be
+    # sector-aligned (16)"). A non-aligned h2/h3 size (36/72/108...) makes
+    # the game's Map.pmd -> byu.pxp(a, b, MapViewData[]) index out of range
+    # at map load (IndexOutOfRangeException). Pad the atlas to the next
+    # 16 boundary; padding cells become elevated dirt (tile 7, levelsMap 1,
+    # climbs 0) so they are unpathable, like underground rock - the
+    # reference's paint_envelope_padding_elevated_dirt policy. hommoe
+    # sources pass through raw and are already aligned.
+    src_width, src_height = width, height
+    if unified.get("sourceGame") != "hommoe" and width and height:
+        width = -(-width // 16) * 16
+        height = -(-height // 16) * 16
     name = unified.get("name", "") or "converted map"
     description = unified.get("description", "")
 
@@ -5693,6 +5707,20 @@ def unified_to_hommoe(unified):
                     roads_map[index] = 2 if road_name == "Cobblestone" else 1
                 elif cell.get("sourceRoadIndex"):
                     roads_map[index] = 1
+    if width != src_width or height != src_height:
+        # atlas padding (cells right/below the source rectangle): elevated
+        # dirt with no water/road/climb - unpathable like underground rock
+        padding_tile = UNIFIED_TO_HOMMOE_TILE.get("Dirt", 7)
+        for y in range(height):
+            for x in range(width):
+                if x < src_width and y < src_height:
+                    continue
+                index = y * width + x
+                tiles_map[index] = padding_tile
+                levels_map[index] = 1
+                climbs_map[index] = 0
+                water_map[index] = 0
+                roads_map[index] = 0
     terrain_by_pos = {}
     for cell in grid:
         terrain_by_pos[(int(cell.get("x", 0)), int(cell.get("y", 0)))] = \

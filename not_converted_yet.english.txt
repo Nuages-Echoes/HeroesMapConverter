@@ -858,12 +858,23 @@ tile biome (section 1c), and 216/217/218 are converted (1d-note2e).
     verified equal after the loop.
   objectsFreeId/squadsFreeId/markersFreeId are recomputed (next_free).
   H2/H3 -> .map now emits template defaults: views[0] with
-    secSizeX/secSizeZ = ceil(size/16) (GME viewport rule, map-write.ts
-    buildBlankMap), keyObjects [], objectValuesOverrides {"list": []},
-    takenHeroes [], haveCustomAreas false, customAreasPainting [],
-    generatorChecksum "", and the full HOMMOE_SETTINGS_DEFAULT settings
-    (29 keys from template.map) with mapWinConditions from the unified
-    victory condition.
+    secSizeX/secSizeZ = atlasSize//16, keyObjects [],
+    objectValuesOverrides {"list": []}, takenHeroes [], haveCustomAreas
+    false, customAreasPainting [], generatorChecksum "", and the full
+    HOMMOE_SETTINGS_DEFAULT settings (29 keys from template.map) with
+    mapWinConditions from the unified victory condition.
+  SECTOR ALIGNMENT (game crash fix): OE maps must have sizeX_/sizeZ_ as
+    multiples of 16 (reference translator align_to_sector + validate_map.py
+    "map dimensions must be sector-aligned (16)"); with a non-aligned
+    h2/h3 size (36/72/108...) the game's Map.pmd -> byu.pxp(a, b,
+    MapViewData[]) throws IndexOutOfRangeException at map load. h2/h3 ->
+    .map now pads the atlas to the next 16 boundary (36->48, 72->80,
+    108->112): all flat arrays, object/squad/marker nodes, river nodes,
+    areas[0].nodes and scenario sizeX/sizeZ use the padded size, and
+    padding cells are elevated dirt (tile 7, levelsMap 1, climbs 0, no
+    water/road) so they are unpathable like underground rock (the
+    reference's paint_envelope_padding_elevated_dirt policy). views[0]
+    then has secSizeX/Z = size//16 exactly (was ceil(size/16)).
   27 prop tables exist in real
     maps; the always-empty ones in the test maps: propsName (c_M1 has 1),
     propComments, propRandomHires, propResources, propDialogWindows,
@@ -927,8 +938,8 @@ tile biome (section 1c), and 216/217/218 are converted (1d-note2e).
     map has a commentAiData block.
   * Writer defaults for h2/h3 -> .map: NOW match the reference's
     from-scratch maps (template.map key set + FULL_DIFFICULTIES all-true
-    + fresh generateMapHash-style identity + views ceil(size/16) + full
-    settings defaults) - see 5c/5d above. descBlocks is not emitted for
+    + fresh generateMapHash-style identity + sector-aligned padded atlas
+    with views size//16 + full settings defaults) - see 5c/5d above. descBlocks is not emitted for
     h2/h3 sources (the template has none; the H2/H3 plain-text description
     goes to mapDesc). STILL OPEN: hommoe -> fh2m anchor-shift heuristic.
 
