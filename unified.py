@@ -6172,8 +6172,9 @@ def unified_to_hommoe(unified):
                         _own = (objects.get("castleMetadata") or {}).get(str(oid)) or {}
                         _oc = _own.get("ownerColor")
                         if _oc in color_owner:
+                            # propOwners.owner is 0-based (stored 0 = Player 1)
                             prop_rows.setdefault("propOwners", []).append(OrderedDict([
-                                ("type", 0), ("id", eid), ("owner", color_owner[_oc]),
+                                ("type", 0), ("id", eid), ("owner", color_owner[_oc] - 1),
                             ]))
                         else:
                             prop_rows.setdefault("propOwners", []).append(OrderedDict([
@@ -6228,9 +6229,12 @@ def unified_to_hommoe(unified):
                             ("type", 0), ("id", eid),
                             ("isDefined", False), ("heroSid", "random"),
                         ]))
+                        # propOwners.owner is 0-BASED (stored 0 = Player 1),
+                        # unlike block-1 spawns/propSpawns owners which are
+                        # 1-based - same convention as _hommoe_owner_prop_value
                         prop_rows.setdefault("propOwners", []).append(OrderedDict([
                             ("type", 0), ("id", eid),
-                            ("owner", _howner if _howner is not None else -1),
+                            ("owner", _howner - 1 if _howner is not None else -1),
                         ]))
                 else:
                     if obj.get("class") in HOMMOE_DROPPED_MESSAGE_CLASSES:
