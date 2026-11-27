@@ -1711,6 +1711,29 @@ def _oe_node(x, y, width, height):
     return (height - 1 - int(y)) * width + int(x)
 
 
+def _h3m_footprint_nw(ref):
+    """(min_dx, min_dy) of an h3m def's blocked cells relative to the
+    h3m-convention anchor (the SE corner of the footprint), decoded from
+    the def's passability mask; (0, 0) when the def is unknown.
+
+    Placement rule (AGENTS.md): prioritize the footprint over the anchor
+    tile. The unified anchor is the h3m SE corner, while Olden Era places
+    the node at the footprint's NW corner (x = anchorX + lx - pivotX,
+    z = anchorZ - lz + pivotZ, i.e. the footprint grows east/south of the
+    node), so converting the anchor alone mirrors multi-tile objects about
+    the anchor; offsetting by the NW corner aligns the footprints."""
+    if not ref:
+        return (0, 0)
+    from correspondence import _h3m_def_body, h3m_passability_cells
+    body = _h3m_def_body(ref[0], ref[1], ref[2])
+    if not body:
+        return (0, 0)
+    cells = h3m_passability_cells(body[1][:12])
+    if not cells:
+        return (0, 0)
+    return (min(dx for dx, _ in cells), min(dy for _, dy in cells))
+
+
 def _hommoe_main_town(spawn, adventure, width, height=0):
     """Resolve a spawn entry's main town (spawnPointType 0 = city spawner).
 
@@ -1727,6 +1750,7 @@ def _hommoe_main_town(spawn, adventure, width, height=0):
     if spawn_id is None:
         return None
     node = None
+    spawn_sid = None
     for group in adventure.get("objects", []):
         ids = group.get("ids") or []
         if spawn_id in ids:
@@ -1734,6 +1758,7 @@ def _hommoe_main_town(spawn, adventure, width, height=0):
             nodes = group.get("nodes") or []
             if j < len(nodes):
                 node = nodes[j]
+            spawn_sid = group.get("sid")
             break
     if node is None:
         return None
@@ -1743,6 +1768,13 @@ def _hommoe_main_town(spawn, adventure, width, height=0):
             generate_hero = bool(row.get("spawnHero", True))
             break
     x, y = _oe_xy(node, width, height)
+    # footprint over anchor: unified anchor = SE corner of the footprint
+    sid_str = spawn_sid if isinstance(spawn_sid, str) else (
+        ",".join(spawn_sid) if isinstance(spawn_sid, list) else str(spawn_sid))
+    dx, dy = _h3m_footprint_nw(_unified_obj_h3m_ref(
+        {"group": _hommoe_sid_group(sid_str), "index": 0}))
+    x -= dx
+    y -= dy
     return OrderedDict([
         ("generateHero", generate_hero),
         ("x", x),
@@ -2051,6 +2083,13 @@ def _hommoe_objects_to_unified(adventure, width, height=0):
 
     def add_object(oid, group_name, sid, node, rotation, level, index=None):
         x, y = _oe_xy(node, width, height)
+        # footprint over anchor: the OE node is the footprint's NW corner,
+        # the unified anchor is the h3m-convention SE corner of the same
+        # footprint (approximated with the resolved h3m def's mask)
+        dx, dy = _h3m_footprint_nw(_unified_obj_h3m_ref(
+            {"group": group_name, "index": index or 0, "sourceSid": sid}))
+        x -= dx
+        y -= dy
         if index is None:
             index = group_counters.get(group_name, 0)
             group_counters[group_name] = index + 1
@@ -6113,7 +6152,9 @@ def unified_to_hommoe(unified):
                         biome_id = UNIFIED_TO_HOMMOE_TILE.get(bf_biome, 1)
                         try:
                             _bx, _by, _bz = tile_key.split("_")
-                            _bidx = _oe_node(int(_bx), int(_by), width, height)
+                            _dx, _dy = _h3m_footprint_nw(ref)
+                            _bidx = _oe_node(int(_bx) + _dx, int(_by) + _dy,
+                                             width, height)
                             if 0 <= _bidx < total:
                                 tiles_map[_bidx] = biome_id
                         except (ValueError, IndexError):
@@ -6164,7 +6205,19 @@ def unified_to_hommoe(unified):
             node = None
             try:
                 x, y, _z = tile_key.split("_")
-                node = _oe_node(int(x), int(y), width, height)
+                if unified.get("sourceGame") == "hommoe" \
+                        and obj.get("sourceNode") is not None:
+                    # lossless passthrough: keep the original OE node
+                    node = int(obj["sourceNode"])
+                else:
+                    # footprint over anchor: the OE node is the footprint's
+                    # NW corner, the unified anchor its SE corner
+                    _ref = ref
+                    if _ref is None:
+                        _ref = _unified_obj_h3m_ref(
+                            obj, terrain_by_pos.get((int(x), int(y)), "Grass"))
+                    _dx, _dy = _h3m_footprint_nw(_ref)
+                    node = _oe_node(int(x) + _dx, int(y) + _dy, width, height)
             except (ValueError, IndexError):
                 node = 0
             rotation = obj.get("rotation", 0)
