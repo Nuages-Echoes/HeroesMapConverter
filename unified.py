@@ -1003,6 +1003,13 @@ with open(_os.path.join(_os.path.dirname(_os.path.abspath(__file__)),
                         "oe_object_footprints.json"), encoding="utf-8") as _f:
     OE_OBJECT_FOOTPRINTS = _json.load(_f).get("footprints", {})
 
+# Unified groups converted as landscape/scenery objects: when no OE object
+# of the exact source footprint exists, these are split into several
+# same-family pieces (see _oe_landscape_pieces).
+_OE_LANDSCAPE_GROUPS = ("LANDSCAPE_TREES", "LANDSCAPE_MOUNTAINS",
+                        "LANDSCAPE_ROCKS", "LANDSCAPE_MISCELLANEOUS",
+                        "LANDSCAPE_WATER", "ADVENTURE_WATER")
+
 OE_EMIT_SID = OE_OBJECT_CORRESPONDENCE["emit"]
 OE_DISPATCH = OE_OBJECT_CORRESPONDENCE["dispatch"]
 OE_SCENERY_ROLE = OE_OBJECT_CORRESPONDENCE["scenery"]
@@ -1318,8 +1325,7 @@ OE_SID_LANDSCAPE_REVERSE = {}
 
 
 def _build_oe_sid_landscape_reverse():
-    groups = ("LANDSCAPE_TREES", "LANDSCAPE_MOUNTAINS", "LANDSCAPE_ROCKS",
-              "LANDSCAPE_MISCELLANEOUS", "LANDSCAPE_WATER", "ADVENTURE_WATER")
+    groups = _OE_LANDSCAPE_GROUPS
     terrains = list(H3M_TERRAIN_ID_BY_NAME)
     candidates = {}
     for group in groups:
@@ -1744,13 +1750,117 @@ def _h3m_footprint_nw(ref):
 
 
 def _oe_sid_footprint(sid):
-    """(pivotX, pivotZ, minLx, minLz, maxLx, maxLz) of an OE template's
-    blocked cells from the Core.zip object catalog, or None when the sid
-    has no known footprint (treated as a single cell at the anchor)."""
-    fp = OE_OBJECT_FOOTPRINTS.get(sid)
-    if not fp:
+    """Footprint record of an OE template from the Core.zip object catalog
+    (oe_object_footprints.json: sizeX/sizeZ/pivotX/pivotZ/biome/cells), or
+    None when the sid has no known footprint (treated as a single cell at
+    the anchor)."""
+    return OE_OBJECT_FOOTPRINTS.get(sid)
+
+
+def _oe_fp_bbox(fp):
+    """(minLx, minLz, maxLx, maxLz) of a footprint record's occupied cells."""
+    cells = fp["cells"]
+    return (min(c[0] for c in cells), min(c[1] for c in cells),
+            max(c[0] for c in cells), max(c[1] for c in cells))
+
+
+def _oe_sid_stem(sid):
+    """Family stem of an OE sid: strip the trailing variant number and the
+    size suffix, so e.g. pool_dirt_small_1 and pool_dirt_big_2 both map to
+    pool_dirt."""
+    s = sid
+    if "_" in s and s.rsplit("_", 1)[1].isdigit():
+        s = s.rsplit("_", 1)[0]
+    for suffix in ("_small", "_big"):
+        if s.endswith(suffix):
+            return s[:-len(suffix)]
+    return s
+
+
+def _oe_landscape_family(sid):
+    """All catalog sids of the same family (same stem and biome) as `sid`,
+    as (sid, footprint) pairs - the pieces a landscape object can be split
+    into when no single OE object has the exact source footprint."""
+    me = OE_OBJECT_FOOTPRINTS.get(sid)
+    stem = _oe_sid_stem(sid)
+    biome = (me or {}).get("biome", "")
+    out = []
+    for c, fp in OE_OBJECT_FOOTPRINTS.items():
+        if _oe_sid_stem(c) != stem:
+            continue
+        if biome and fp.get("biome") not in ("", biome):
+            continue
+        out.append((c, fp))
+    return out
+
+
+def _oe_landscape_pieces(sid, ref):
+    """Split a landscape object into OE pieces covering the same footprint
+    and passability, like the H2/H3 forest conversion: a single exact-size
+    object when one exists in the catalog, otherwise a combination of
+    smaller same-family objects tiling the source blocked cells.
+
+    Returns a list of (sid, dx, dy) - the piece's occupied-bbox NW corner
+    relative to the source anchor - or None to keep the single placement
+    of the resolved sid."""
+    if not ref:
         return None
-    return (fp[2], fp[3], fp[4], fp[5], fp[6], fp[7])
+    from correspondence import _h3m_def_body, h3m_passability_cells, \
+        _normalized_cells
+    body = _h3m_def_body(ref[0], ref[1], ref[2])
+    if not body:
+        return None
+    cells = h3m_passability_cells(body[1][:12])
+    if not cells:
+        return None
+    src = set(cells)
+    src_norm = _normalized_cells(cells)
+    me = _oe_sid_footprint(sid)
+    if me and _normalized_cells([tuple(c) for c in me["cells"]]) == src_norm:
+        return None  # the resolved sid already matches the source exactly
+    family = _oe_landscape_family(sid)
+    if not family:
+        return None  # no catalog family: keep the single placement
+    # an exact-shape sibling of the same family: one instance covers all,
+    # aligned on the source footprint's NW corner
+    src_minx = min(c[0] for c in cells)
+    src_miny = min(c[1] for c in cells)
+    for c, fp in family:
+        ccells = [tuple(p) for p in fp["cells"]]
+        if _normalized_cells(ccells) == src_norm:
+            return [(c, src_minx - min(p[0] for p in ccells),
+                     src_miny - min(p[1] for p in ccells))]
+    # otherwise tile the source blocked cells greedily, largest piece first
+    cands = sorted(family, key=lambda cf: -len(cf[1]["cells"]))
+    remaining = set(src)
+    pieces = []
+    while remaining:
+        placed = False
+        # try to cover the northernmost-western remaining cell with the
+        # largest piece that stays inside the source footprint
+        target = min(remaining, key=lambda c: (c[1], c[0]))
+        for c, fp in cands:
+            fcells = [tuple(p) for p in fp["cells"]]
+            minlx, minlz, _, _ = _oe_fp_bbox(fp)
+            dx = target[0] - minlx
+            dy = target[1] - minlz
+            shifted = {(cx + dx, cy + dy) for cx, cy in fcells}
+            if shifted <= src and shifted & remaining:
+                pieces.append((c, dx, dy))
+                remaining -= shifted
+                placed = True
+                break
+        if not placed:
+            # no piece fits inside the footprint: cover the cell with a 1x1
+            # piece when the family has one (keeps the passability exact),
+            # else overlap with the smallest piece (like the H2/H3 pair-tree
+            # overlap)
+            ones = [cf for cf in cands if len(cf[1]["cells"]) == 1]
+            c, fp = ones[0] if ones else cands[-1]
+            minlx, minlz, _, _ = _oe_fp_bbox(fp)
+            pieces.append((c, target[0] - minlx, target[1] - minlz))
+            remaining.discard(target)
+    return pieces
 
 
 def _hommoe_main_town(spawn, adventure, width, height=0):
@@ -1792,9 +1902,9 @@ def _hommoe_main_town(spawn, adventure, width, height=0):
         ",".join(spawn_sid) if isinstance(spawn_sid, list) else str(spawn_sid))
     _fp = _oe_sid_footprint(sid_str)
     if _fp:
-        _pivx, _pivz, _, _, _maxlx, _maxlz = _fp
-        x += _maxlx - _pivx
-        y += _maxlz - _pivz
+        _, _, _maxlx, _maxlz = _oe_fp_bbox(_fp)
+        x += _maxlx - _fp["pivotX"]
+        y += _maxlz - _fp["pivotZ"]
     else:
         dx, dy = _h3m_footprint_nw(_unified_obj_h3m_ref(
             {"group": _hommoe_sid_group(sid_str), "index": 0}))
@@ -2115,9 +2225,9 @@ def _hommoe_objects_to_unified(adventure, width, height=0):
         # else approximated with the resolved h3m def's mask
         _fp = _oe_sid_footprint(sid)
         if _fp:
-            _pivx, _pivz, _, _, _maxlx, _maxlz = _fp
-            x += _maxlx - _pivx
-            y += _maxlz - _pivz
+            _, _, _maxlx, _maxlz = _oe_fp_bbox(_fp)
+            x += _maxlx - _fp["pivotX"]
+            y += _maxlz - _fp["pivotZ"]
         else:
             dx, dy = _h3m_footprint_nw(_unified_obj_h3m_ref(
                 {"group": group_name, "index": index or 0, "sourceSid": sid}))
@@ -6237,6 +6347,50 @@ def unified_to_hommoe(unified):
                     prop_rows.setdefault("propOwners", []).append(OrderedDict([
                         ("type", 0), ("id", oid), ("owner", stored_owner),
                     ]))
+            # Landscape objects: like the H2/H3 conversion, when no OE object
+            # of the exact same footprint exists, combine several same-family
+            # OE objects to cover the same cells and passability. The first
+            # piece keeps the original object id (and its prop rows).
+            if group in _OE_LANDSCAPE_GROUPS and sid and ref is not None \
+                    and unified.get("sourceGame") != "hommoe":
+                try:
+                    _lx, _ly, _lz = (int(p) for p in tile_key.split("_"))
+                except (ValueError, IndexError):
+                    _lx = _ly = 0
+                _pieces = _oe_landscape_pieces(sid, ref)
+                if _pieces:
+                    _first = True
+                    for (_psid, _pdx, _pdy) in _pieces:
+                        _pfp = _oe_sid_footprint(_psid)
+                        if _pfp:
+                            _pminlx, _pminlz, _pmaxlx, _pmaxlz = _oe_fp_bbox(_pfp)
+                            _ppx, _ppz = _pfp["pivotX"], _pfp["pivotZ"]
+                            _pnx = _lx + _pdx + _ppx - _pminlx
+                            _pny = _ly + _pdy + _ppz - _pminlz
+                            _pnx = min(max(_pnx, _ppx - _pminlx),
+                                       width - 1 - _pmaxlx + _ppx)
+                            _pny = min(max(_pny, _pminlz - _ppz),
+                                       height - 1 - _pmaxlz + _ppz)
+                        else:
+                            _pnx = min(max(_lx + _pdx, 0), width - 1)
+                            _pny = min(max(_ly + _pdy, 0), height - 1)
+                        _pnode = _oe_node(_pnx, _pny, width, height)
+                        _pid = oid if _first else next_free
+                        if not _first:
+                            next_free += 1
+                        if _psid not in groups:
+                            groups[_psid] = {"ids": [], "nodes": [],
+                                             "rotations": [], "levels": []}
+                            order.append(_psid)
+                        groups[_psid]["ids"].append(_pid)
+                        groups[_psid]["nodes"].append(_pnode)
+                        groups[_psid]["rotations"].append(obj.get("rotation", 0))
+                        groups[_psid]["levels"].append(obj.get("level", 0))
+                        _first = False
+                    if obj.get("properties"):
+                        for table, row in obj["properties"].items():
+                            prop_rows.setdefault(table, []).append(row)
+                    continue
             node = None
             try:
                 x, y, _z = tile_key.split("_")
@@ -6255,7 +6409,8 @@ def unified_to_hommoe(unified):
                     _sdx, _sdy = _h3m_footprint_nw(_ref)
                     _fp = _oe_sid_footprint(sid) if sid else None
                     if _fp:
-                        _pivx, _pivz, _minlx, _minlz, _maxlx, _maxlz = _fp
+                        _pivx, _pivz = _fp["pivotX"], _fp["pivotZ"]
+                        _minlx, _minlz, _maxlx, _maxlz = _oe_fp_bbox(_fp)
                         _nx = int(x) + _sdx + _pivx - _minlx
                         _ny = int(y) + _sdy + _pivz - _minlz
                         # an edge object's footprint may overhang the map
