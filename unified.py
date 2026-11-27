@@ -6453,31 +6453,27 @@ def unified_to_hommoe(unified):
                     # lossless passthrough: keep the original OE node
                     node = int(obj["sourceNode"])
                 else:
-                    # footprint over anchor: align the OE template's blocked
-                    # bbox NW corner with the source footprint's NW corner
-                    # (unified anchor = h3m SE corner of the source def)
-                    _ref = ref
-                    if _ref is None:
-                        _ref = _unified_obj_h3m_ref(
-                            obj, terrain_by_pos.get((int(x), int(y)), "Grass"))
-                    _sdx, _sdy = _h3m_footprint_nw(_ref)
+                    # Place at the source anchor (flipped), like the reference
+                    # h3-import: every non-landscape object is placed directly
+                    # at its H3 anchor - the OE node is where the template's
+                    # pivot cell lands, and the OE catalog pivots correspond to
+                    # the H3 anchors (only tree/mountain clusters are spread
+                    # over the H3 footprint cells, see the landscape path
+                    # above). Clamp the node so the template's footprint
+                    # stays on the atlas when the anchor sits near an edge
+                    # (H3 allows footprints overhanging the border; the game
+                    # clamps them inward, like clampAnchorToFootprintBounds).
                     _fp = _oe_sid_footprint(sid) if sid else None
                     if _fp:
                         _pivx, _pivz = _fp["pivotX"], _fp["pivotZ"]
                         _minlx, _minlz, _maxlx, _maxlz = _oe_fp_bbox(_fp)
-                        _nx = int(x) + _sdx + _pivx - _minlx
-                        _ny = int(y) + _sdy + _pivz - _minlz
-                        # an edge object's footprint may overhang the map
-                        # border (H3 allows it); clamp the node so the whole
-                        # footprint stays on the atlas, like the game's own
-                        # clampAnchorToFootprintBounds
-                        _nx = min(max(_nx, _pivx - _minlx),
+                        _nx = min(max(int(x), _pivx - _minlx),
                                   width - 1 - _maxlx + _pivx)
-                        _ny = min(max(_ny, _minlz - _pivz),
+                        _ny = min(max(int(y), _minlz - _pivz),
                                   height - 1 - _maxlz + _pivz)
                     else:
-                        _nx = min(max(int(x) + _sdx, 0), width - 1)
-                        _ny = min(max(int(y) + _sdy, 0), height - 1)
+                        _nx = min(max(int(x), 0), width - 1)
+                        _ny = min(max(int(y), 0), height - 1)
                     node = _oe_node(_nx, _ny, width, height)
             except (ValueError, IndexError):
                 node = 0
