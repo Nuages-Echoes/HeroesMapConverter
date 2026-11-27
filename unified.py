@@ -6073,12 +6073,34 @@ def unified_to_hommoe(unified):
     markers_out = []
     prop_rows = {}
     next_free = 1
+    # OE requires unique object ids per namespace - the game throws
+    # ArgumentException at map load on duplicates (Hex.Map.MapObjects.pvc).
+    # h2/h3 sources can carry colliding ids (fh2m town flags repeat ids), so
+    # emitted ids are remapped to fresh unique ones when they collide; the
+    # original id is kept for the unified metadata lookups below.
+    used_ids = set()
+
+    def _fresh_id():
+        nonlocal next_free
+        while next_free in used_ids:
+            next_free += 1
+        new_id = next_free
+        used_ids.add(new_id)
+        next_free = new_id + 1
+        return new_id
+
     for tile_key, obj_list in (objects.get("tiles") or {}).items():
         for obj in obj_list:
             oid = obj.get("id")
+            eid = oid
+            if oid is None or (unified.get("sourceGame") != "hommoe"
+                               and int(oid) in used_ids):
+                eid = _fresh_id()
+            else:
+                used_ids.add(int(oid))
+                next_free = max(next_free, int(oid) + 1)
             if oid is None:
-                oid = next_free
-            next_free = max(next_free, int(oid) + 1)
+                oid = eid
             group = obj.get("group")
             sid = obj.get("sourceSid")
             ref = None
@@ -6103,12 +6125,12 @@ def unified_to_hommoe(unified):
                         faction = _spawn_faction or town_faction
                         is_defined = bool(faction)
                         prop_rows.setdefault("propSpawns", []).append(OrderedDict([
-                            ("type", 0), ("id", oid), ("owner", _owner),
+                            ("type", 0), ("id", eid), ("owner", _owner),
                             ("spawnType", _spawn_type), ("spawnPointType", 0),
                             ("isLocked", False),
                         ]))
                         prop_rows.setdefault("propCities", []).append(OrderedDict([
-                            ("type", 0), ("id", oid),
+                            ("type", 0), ("id", eid),
                             ("isDefined", is_defined), ("factionSid", faction),
                             # an isDefined city with spawnHero but no real
                             # propHeroes row crashes at load; an unconfigured
@@ -6121,12 +6143,12 @@ def unified_to_hommoe(unified):
                             ("customCityName", ""),
                         ]))
                         prop_rows.setdefault("propGrowthUnits", []).append(OrderedDict([
-                            ("type", 0), ("id", oid),
+                            ("type", 0), ("id", eid),
                             ("isConstantGrowth", True), ("countGrowth", 1),
                         ]))
                         # every real city-spawner carries a guard squad row
                         prop_rows.setdefault("propRandomSquads", []).append(OrderedDict([
-                            ("type", 0), ("id", oid), ("sids", []),
+                            ("type", 0), ("id", eid), ("sids", []),
                             ("requestedValue", 0.0), ("fraction", ""),
                             ("tier", 0), ("isMainGuard", False),
                             ("reactionType", 2), ("customTopUnit", ""),
@@ -6143,7 +6165,7 @@ def unified_to_hommoe(unified):
                         # neutral / non-start town: unconfigured city-spawner
                         # plus ownership when the h2 flags gave an owner
                         prop_rows.setdefault("propCities", []).append(OrderedDict([
-                            ("type", 0), ("id", oid), ("isDefined", False),
+                            ("type", 0), ("id", eid), ("isDefined", False),
                             ("factionSid", ""), ("spawnHero", False),
                             ("customCityName", ""),
                         ]))
@@ -6151,11 +6173,11 @@ def unified_to_hommoe(unified):
                         _oc = _own.get("ownerColor")
                         if _oc in color_owner:
                             prop_rows.setdefault("propOwners", []).append(OrderedDict([
-                                ("type", 0), ("id", oid), ("owner", color_owner[_oc]),
+                                ("type", 0), ("id", eid), ("owner", color_owner[_oc]),
                             ]))
                         else:
                             prop_rows.setdefault("propOwners", []).append(OrderedDict([
-                                ("type", 0), ("id", oid),
+                                ("type", 0), ("id", eid),
                             ]))
                 elif group == "KINGDOM_HEROES":
                     # hero-spawner for each player without a town start;
@@ -6165,19 +6187,19 @@ def unified_to_hommoe(unified):
                         _hsid = _hdetail.get("sourceHeroSid") or "random"
                         sid = "hero-spawner"
                         prop_rows.setdefault("propSpawns", []).append(OrderedDict([
-                            ("type", 0), ("id", oid), ("owner", _owner),
+                            ("type", 0), ("id", eid), ("owner", _owner),
                             ("spawnType", _spawn_type), ("spawnPointType", 1),
                             ("isLocked", False),
                         ]))
                         prop_rows.setdefault("propHeroes", []).append(OrderedDict([
-                            ("type", 0), ("id", oid),
+                            ("type", 0), ("id", eid),
                             ("isDefined", bool(_hdetail.get("sourceHeroSid"))),
                             ("heroSid", _hsid),
                         ]))
                     else:
                         sid = "random-hero"
                         prop_rows.setdefault("propHeroes", []).append(OrderedDict([
-                            ("type", 0), ("id", oid),
+                            ("type", 0), ("id", eid),
                             ("isDefined", False), ("heroSid", "random"),
                         ]))
                 else:
@@ -6227,7 +6249,7 @@ def unified_to_hommoe(unified):
                     # the bank's own school/rank variants. Hommoe-sourced
                     # objects keep their own row via the passthrough.
                     prop_rows.setdefault("propRewardParams", []).append(OrderedDict([
-                        ("type", 0), ("id", oid), ("parameters", []),
+                        ("type", 0), ("id", eid), ("parameters", []),
                     ]))
                 if group == "ADVENTURE_ARTIFACTS" and sid == "random-item":
                     # No exact OE artifact (or a random-artifact class):
@@ -6244,7 +6266,7 @@ def unified_to_hommoe(unified):
                             rarity = HOMMOE_ARTIFACT_CLASS_RARITY.get(cls)
                     if rarity is not None:
                         prop_rows.setdefault("propRandomItems", []).append(OrderedDict([
-                            ("type", 0), ("id", oid), ("rarity", rarity),
+                            ("type", 0), ("id", eid), ("rarity", rarity),
                         ]))
                 if sid == "pandora_box":
                     # Pandora's Box: emit the prop rows (variant, guards,
@@ -6280,11 +6302,11 @@ def unified_to_hommoe(unified):
                             if sk_sid:
                                 reward_params = [sk_sid]
                     prop_rows.setdefault("propVariants", []).append(OrderedDict([
-                        ("type", 0), ("id", oid), ("selectedVar", -1),
+                        ("type", 0), ("id", eid), ("selectedVar", -1),
                         ("typeVariant", 0), ("fraction", 0), ("unitVersion", 0),
                     ]))
                     prop_rows.setdefault("propRewardParams", []).append(OrderedDict([
-                        ("type", 0), ("id", oid), ("parameters", reward_params),
+                        ("type", 0), ("id", eid), ("parameters", reward_params),
                     ]))
                 if not sid:
                     bf_class = obj.get("class")
@@ -6337,7 +6359,7 @@ def unified_to_hommoe(unified):
                 if stored_owner is not None \
                         and not (obj.get("properties") or {}).get("propOwners"):
                     prop_rows.setdefault("propOwners", []).append(OrderedDict([
-                        ("type", 0), ("id", oid), ("owner", stored_owner),
+                        ("type", 0), ("id", eid), ("owner", stored_owner),
                     ]))
             if obj.get("class") in HOMMOE_RANDOM_DWELLING_CLASSES:
                 rd_meta = (objects.get("randomDwellingMetadata") or {}).get(str(oid)) or {}
@@ -6345,7 +6367,7 @@ def unified_to_hommoe(unified):
                                                          color_owner)
                 if stored_owner is not None:
                     prop_rows.setdefault("propOwners", []).append(OrderedDict([
-                        ("type", 0), ("id", oid), ("owner", stored_owner),
+                        ("type", 0), ("id", eid), ("owner", stored_owner),
                     ]))
             # Landscape objects: like the H2/H3 conversion, when no OE object
             # of the exact same footprint exists, combine several same-family
@@ -6375,9 +6397,7 @@ def unified_to_hommoe(unified):
                             _pnx = min(max(_lx + _pdx, 0), width - 1)
                             _pny = min(max(_ly + _pdy, 0), height - 1)
                         _pnode = _oe_node(_pnx, _pny, width, height)
-                        _pid = oid if _first else next_free
-                        if not _first:
-                            next_free += 1
+                        _pid = eid if _first else _fresh_id()
                         if _psid not in groups:
                             groups[_psid] = {"ids": [], "nodes": [],
                                              "rotations": [], "levels": []}
@@ -6431,7 +6451,7 @@ def unified_to_hommoe(unified):
             level = obj.get("level", 0)
             if obj.get("group") == "MAP_EXTRAS":
                 markers_out.append(OrderedDict([
-                    ("node", node), ("id", oid), ("sid", sid), ("v", ""),
+                    ("node", node), ("id", eid), ("sid", sid), ("v", ""),
                 ]))
                 continue
             if group == "MONSTERS":
@@ -6452,7 +6472,7 @@ def unified_to_hommoe(unified):
                     monster_class = 71 + (obj.get("index") + 1 - 67)
                 if monster_class is not None:
                     prop_rows.setdefault("propRandomSquads", []).append(OrderedDict([
-                        ("type", 0), ("id", oid), ("sids", []),
+                        ("type", 0), ("id", eid), ("sids", []),
                         ("requestedValue", 0.0), ("fraction", ""),
                         ("tier", monster_class - 70),
                         ("isMainGuard", False), ("reactionType", 2),
@@ -6473,7 +6493,7 @@ def unified_to_hommoe(unified):
                         unit_sid = _random.choice((unit_sid, unit_sid + "_alt"))
                     if unit_sid:
                         prop_rows.setdefault("propSquads", []).append(OrderedDict([
-                            ("type", 0), ("id", oid),
+                            ("type", 0), ("id", eid),
                             ("isMainGuard", False),
                             ("isStartBattleImmediately", False),
                             ("reactionType", 2),
@@ -6484,12 +6504,12 @@ def unified_to_hommoe(unified):
                             ])]),
                         ]))
             if group == "MONSTERS" and sid.startswith("squad"):
-                squads_out.append((sid, oid, node))
+                squads_out.append((sid, eid, node))
                 continue
             if sid not in groups:
                 groups[sid] = {"ids": [], "nodes": [], "rotations": [], "levels": []}
                 order.append(sid)
-            groups[sid]["ids"].append(oid)
+            groups[sid]["ids"].append(eid)
             groups[sid]["nodes"].append(node)
             groups[sid]["rotations"].append(rotation)
             groups[sid]["levels"].append(level)

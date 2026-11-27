@@ -44,6 +44,31 @@ def normalize_hommoe(data):
     return json.loads(json.dumps(data, sort_keys=True))
 
 
+def check_hommoe_ids(output_path):
+    """The game rejects a .map with duplicate ids inside one namespace
+    (ArgumentException at load, Hex.Map.MapObjects.pvc). Returns a failure
+    message or None."""
+    data = parse_hommoe(output_path)
+    adventure = None
+    for block in data.get("blocks", []):
+        if isinstance(block, dict) and isinstance(block.get("data"), dict) \
+                and "objects" in block["data"]:
+            adventure = block["data"]
+            break
+    if adventure is None:
+        return None
+    for key in ("objects", "squads"):
+        ids = [i for g in adventure.get(key) or [] for i in (g.get("ids") or [])]
+        dup = sorted({i for i in ids if ids.count(i) > 1})
+        if dup:
+            return f"{os.path.basename(output_path)} : duplicate {key} ids {dup[:8]}"
+    markers = [m.get("id") for m in adventure.get("markers") or []]
+    dup = sorted({i for i in markers if i is not None and markers.count(i) > 1})
+    if dup:
+        return f"{os.path.basename(output_path)} : duplicate markers ids {dup[:8]}"
+    return None
+
+
 def content_equal_fh2m(input_path, output_path):
     """Compare the logical content of two .fh2m files."""
     with open(input_path, "rb") as f:
@@ -141,6 +166,14 @@ def main():
         if not ok:
             failures.append(f"{file_name} : {message}")
             continue
+        # Every generated .map (including from h2/h3 inputs) must carry
+        # unique object ids per namespace - the game throws on duplicates.
+        map_output = os.path.join(output_dir, base_name + ".map")
+        if os.path.exists(map_output):
+            id_failure = check_hommoe_ids(map_output)
+            if id_failure:
+                failures.append(id_failure)
+                continue
         # The scenario sidecar .json of a .map input is copied verbatim
         # when present and must round-trip byte-identical.
         if kind == "hommoe":
