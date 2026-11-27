@@ -1694,7 +1694,24 @@ def _hommoe_sid_group(sid):
 _build_oe_sid_landscape_reverse()
 
 
-def _hommoe_main_town(spawn, adventure, width):
+def _oe_xy(node, width, height):
+    """Olden Era flat node -> unified (x, y).
+
+    OE numbers rows with z = 0 at the BOTTOM of the map (z grows north),
+    while the unified format follows the H3 convention with y = 0 at the
+    TOP (y grows south), so the vertical axis is flipped at the OE boundary.
+    """
+    if not width:
+        return 0, 0
+    return int(node) % width, height - 1 - int(node) // width
+
+
+def _oe_node(x, y, width, height):
+    """unified (x, y) -> Olden Era flat node (vertical axis flipped, see _oe_xy)."""
+    return (height - 1 - int(y)) * width + int(x)
+
+
+def _hommoe_main_town(spawn, adventure, width, height=0):
     """Resolve a spawn entry's main town (spawnPointType 0 = city spawner).
 
     The link goes spawn.owner -> objectsProperties.propSpawns (owner) ->
@@ -1725,10 +1742,11 @@ def _hommoe_main_town(spawn, adventure, width):
         if isinstance(row, dict) and row.get("id") == spawn_id:
             generate_hero = bool(row.get("spawnHero", True))
             break
+    x, y = _oe_xy(node, width, height)
     return OrderedDict([
         ("generateHero", generate_hero),
-        ("x", int(node) % width if width else 0),
-        ("y", int(node) // width if width else 0),
+        ("x", x),
+        ("y", y),
         ("z", 0),
     ])
 
@@ -2012,7 +2030,7 @@ def _hommoe_pandora_to_metadata(props):
     return meta
 
 
-def _hommoe_objects_to_unified(adventure, width):
+def _hommoe_objects_to_unified(adventure, width, height=0):
     """
     Convert the adventure block's object groups into the unified objects
     section: objects stored per tile ("x_y_z" -> list), each carrying its
@@ -2032,8 +2050,7 @@ def _hommoe_objects_to_unified(adventure, width):
     artifact_metadata = {}
 
     def add_object(oid, group_name, sid, node, rotation, level, index=None):
-        x = int(node) % width if width else 0
-        y = int(node) // width if width else 0
+        x, y = _oe_xy(node, width, height)
         if index is None:
             index = group_counters.get(group_name, 0)
             group_counters[group_name] = index + 1
@@ -2742,7 +2759,7 @@ def convert_hommoe_to_unified(map_data):
         if spawn.get("isHeroDefined") and spawn.get("heroSid"):
             detail["sourceHeroSid"] = spawn["heroSid"]
         if spawn.get("spawnPointType") == 0:
-            main_town = _hommoe_main_town(spawn, adventure, width)
+            main_town = _hommoe_main_town(spawn, adventure, width, height)
             if main_town is not None:
                 detail["mainTown"] = main_town
         player_details.append(detail)
@@ -2827,8 +2844,7 @@ def convert_hommoe_to_unified(map_data):
     climbs_map = adventure.get("climbsMap", [])
     roads_map = adventure.get("roadsMap", [])
     for index, tile_id in enumerate(tiles_map):
-        x = index % width if width else 0
-        y = index // width if width else 0
+        x, y = _oe_xy(index, width, height)
         water_id = water_map[index] if index < len(water_map) else 0
         if water_id:
             terrain = "Water"
@@ -2855,7 +2871,7 @@ def convert_hommoe_to_unified(map_data):
         ("levels", [OrderedDict([("grid", grid)])]),
     ])
 
-    unified["objects"] = _hommoe_objects_to_unified(adventure, width)
+    unified["objects"] = _hommoe_objects_to_unified(adventure, width, height)
     _hommoe_owners_to_unified(unified)
     _hommoe_quests_to_events(unified)
 
@@ -4849,8 +4865,9 @@ def unified_to_fh2m(unified):
     data["lossConditionMetadata"] = list(loss.get("metadata", []))
 
     width = unified.get("mapSize", {}).get("width", 0)
+    height = unified.get("mapSize", {}).get("height", width)
     data["width"] = width
-    data["height"] = unified.get("mapSize", {}).get("height", width)
+    data["height"] = height
     data["mainLanguage"] = unified.get("mainLanguage", 0)
     data["name"] = unified.get("name", "")
     data["description"] = unified.get("description", "")
@@ -5065,7 +5082,7 @@ def unified_to_fh2m(unified):
                 for node in river.get("nodes") or []:
                     n = node.get("n")
                     if n is not None and width:
-                        river_tiles[(int(n) % width, int(n) // width)] = "Clear"
+                        river_tiles[_oe_xy(int(n), width, height)] = "Clear"
 
         def _direction_bitfield(present_set, x, y):
             bits = 0
@@ -5815,7 +5832,7 @@ def unified_to_hommoe(unified):
     for cell in grid:
         x, y = int(cell.get("x", 0)), int(cell.get("y", 0))
         if 0 <= x < width and 0 <= y < height:
-            index = y * width + x
+            index = _oe_node(x, y, width, height)
             terrain = cell.get("terrain", "Grass")
             tiles_map[index] = UNIFIED_TO_HOMMOE_TILE.get(terrain, 1)
             if terrain == "Water":
@@ -5851,7 +5868,7 @@ def unified_to_hommoe(unified):
             for x in range(width):
                 if x < src_width and y < src_height:
                     continue
-                index = y * width + x
+                index = _oe_node(x, y, width, height)
                 tiles_map[index] = padding_tile
                 levels_map[index] = 1
                 climbs_map[index] = 0
@@ -6096,7 +6113,7 @@ def unified_to_hommoe(unified):
                         biome_id = UNIFIED_TO_HOMMOE_TILE.get(bf_biome, 1)
                         try:
                             _bx, _by, _bz = tile_key.split("_")
-                            _bidx = int(_by) * width + int(_bx)
+                            _bidx = _oe_node(int(_bx), int(_by), width, height)
                             if 0 <= _bidx < total:
                                 tiles_map[_bidx] = biome_id
                         except (ValueError, IndexError):
@@ -6147,7 +6164,7 @@ def unified_to_hommoe(unified):
             node = None
             try:
                 x, y, _z = tile_key.split("_")
-                node = int(y) * width + int(x)
+                node = _oe_node(int(x), int(y), width, height)
             except (ValueError, IndexError):
                 node = 0
             rotation = obj.get("rotation", 0)
@@ -6308,12 +6325,14 @@ def unified_to_hommoe(unified):
             s |= 1  # E
         if (x - 1, y) in river_tiles:
             s |= 2  # W
-        if (x, y + 1) in river_tiles:
-            s |= 4  # N (z grows north)
+        # the vertical axis is flipped into OE node space (z grows north):
+        # unified y-1 is screen-north, which is OE z+1 (bit N), and y+1 is S
         if (x, y - 1) in river_tiles:
+            s |= 4  # N (z+1 in OE node space)
+        if (x, y + 1) in river_tiles:
             s |= 8  # S
         river_nodes.append(OrderedDict([
-            ("n", y * width + x), ("s", s), ("isWaterfall", False),
+            ("n", _oe_node(x, y, width, height)), ("s", s), ("isWaterfall", False),
         ]))
     if river_nodes:
         rivers_out = [OrderedDict([
