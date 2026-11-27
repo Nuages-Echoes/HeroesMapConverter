@@ -6255,16 +6255,20 @@ def unified_to_hommoe(unified):
                     _sdx, _sdy = _h3m_footprint_nw(_ref)
                     _fp = _oe_sid_footprint(sid) if sid else None
                     if _fp:
-                        _pivx, _pivz, _minlx, _minlz, _, _ = _fp
+                        _pivx, _pivz, _minlx, _minlz, _maxlx, _maxlz = _fp
                         _nx = int(x) + _sdx + _pivx - _minlx
                         _ny = int(y) + _sdy + _pivz - _minlz
+                        # an edge object's footprint may overhang the map
+                        # border (H3 allows it); clamp the node so the whole
+                        # footprint stays on the atlas, like the game's own
+                        # clampAnchorToFootprintBounds
+                        _nx = min(max(_nx, _pivx - _minlx),
+                                  width - 1 - _maxlx + _pivx)
+                        _ny = min(max(_ny, _minlz - _pivz),
+                                  height - 1 - _maxlz + _pivz)
                     else:
-                        _nx = int(x) + _sdx
-                        _ny = int(y) + _sdy
-                    # an edge object's footprint may overhang the map border
-                    # (H3 allows it); clamp the node inward like the game does
-                    _nx = min(max(_nx, 0), width - 1)
-                    _ny = min(max(_ny, 0), height - 1)
+                        _nx = min(max(int(x) + _sdx, 0), width - 1)
+                        _ny = min(max(int(y) + _sdy, 0), height - 1)
                     node = _oe_node(_nx, _ny, width, height)
             except (ValueError, IndexError):
                 node = 0

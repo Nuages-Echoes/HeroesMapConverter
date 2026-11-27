@@ -390,6 +390,16 @@
    0,
    0
   ],
+  "city-spawner": [
+   3,
+   3,
+   0,
+   0,
+   0,
+   0,
+   2,
+   2
+  ],
   "coffins_1": [
    1,
    1,
@@ -769,6 +779,16 @@
    0,
    1,
    1
+  ],
+  "hero-spawner": [
+   3,
+   3,
+   0,
+   0,
+   0,
+   0,
+   2,
+   2
   ],
   "hill_autumn_1": [
    1,
@@ -2080,6 +2100,66 @@
    0,
    0
   ],
+  "random-city": [
+   3,
+   3,
+   0,
+   0,
+   0,
+   0,
+   2,
+   2
+  ],
+  "random-hero": [
+   3,
+   3,
+   1,
+   1,
+   0,
+   0,
+   2,
+   2
+  ],
+  "random-hire": [
+   3,
+   3,
+   0,
+   0,
+   0,
+   0,
+   2,
+   2
+  ],
+  "random-item": [
+   3,
+   3,
+   1,
+   1,
+   0,
+   0,
+   2,
+   2
+  ],
+  "random-res": [
+   3,
+   3,
+   1,
+   1,
+   0,
+   0,
+   2,
+   2
+  ],
+  "random-squad": [
+   3,
+   3,
+   1,
+   1,
+   0,
+   0,
+   2,
+   2
+  ],
   "rocks_1": [
    1,
    1,
@@ -2532,6 +2612,7 @@
   ]
  },
  "sources": [
-  "Core/DB/map/objects/1_environments.json"
+  "Core/DB/map/objects/1_environments.json",
+  "Core/DB/map/objects/7_spawns.json"
  ]
 }
