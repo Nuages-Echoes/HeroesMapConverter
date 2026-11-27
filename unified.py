@@ -6180,10 +6180,36 @@ def unified_to_hommoe(unified):
                                 ("type", 0), ("id", eid),
                             ]))
                 elif group == "KINGDOM_HEROES":
-                    # hero-spawner for each player without a town start;
-                    # extra placed heroes become random-hero spawners
-                    if hero_start_queue:
-                        _owner, _spawn_type, _hdetail = hero_start_queue.pop(0)
+                    # Resolve the hero's owner: h3m heroMetadata.owner is an
+                    # H3M_PLAYER_COLORS index (255 = neutral), an fh2m hero
+                    # encodes it in the object index (color*7 + race). An
+                    # owned hero must stay linked to its player in OE: a
+                    # townless player's hero becomes their hero-spawner start
+                    # (propSpawns + the block-1 entry), while a hero of a
+                    # player who already has a city start stays a random-hero
+                    # linked through propOwners (a random-hero takes no player
+                    # slot of its own; real .map files link free-standing
+                    # heroes to a player via propOwners.owner, -1 = neutral).
+                    _hmeta = (objects.get("heroMetadata") or {}).get(str(oid)) or {}
+                    _hcolor = None
+                    if "owner" in _hmeta:
+                        _oi = _hmeta.get("owner")
+                        if _oi is not None and 0 <= int(_oi) < len(H3M_PLAYER_COLORS):
+                            _hcolor = H3M_PLAYER_COLORS[int(_oi)]
+                    else:
+                        _idx = obj.get("index")
+                        if _idx is not None and 0 <= int(_idx) < 7 * len(FH2M_PLAYER_COLORS):
+                            _hcolor = FH2M_PLAYER_COLORS[int(_idx) // 7]
+                    _hcolor = FH2M_TO_H3M_COLOR_ALIAS.get(_hcolor, _hcolor) if _hcolor else None
+                    _howner = color_owner.get(_hcolor) if _hcolor else None
+                    _qpos = None
+                    if _howner is not None:
+                        for _qi, _q in enumerate(hero_start_queue):
+                            if _q[0] == _howner:
+                                _qpos = _qi
+                                break
+                    if _qpos is not None:
+                        _owner, _spawn_type, _hdetail = hero_start_queue.pop(_qpos)
                         _hsid = _hdetail.get("sourceHeroSid") or "random"
                         sid = "hero-spawner"
                         prop_rows.setdefault("propSpawns", []).append(OrderedDict([
@@ -6201,6 +6227,10 @@ def unified_to_hommoe(unified):
                         prop_rows.setdefault("propHeroes", []).append(OrderedDict([
                             ("type", 0), ("id", eid),
                             ("isDefined", False), ("heroSid", "random"),
+                        ]))
+                        prop_rows.setdefault("propOwners", []).append(OrderedDict([
+                            ("type", 0), ("id", eid),
+                            ("owner", _howner if _howner is not None else -1),
                         ]))
                 else:
                     if obj.get("class") in HOMMOE_DROPPED_MESSAGE_CLASSES:
