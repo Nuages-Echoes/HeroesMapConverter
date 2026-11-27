@@ -994,6 +994,15 @@ with open(_os.path.join(_os.path.dirname(_os.path.abspath(__file__)),
                         "oe_object_correspondence.json"), encoding="utf-8") as _f:
     OE_OBJECT_CORRESPONDENCE = _json.load(_f)
 
+# OE map-object footprints extracted from the game's own
+# Core/DB/map/objects/*.json catalogs (oe_object_footprints.json):
+# sid -> [sizeX, sizeZ, pivotX, pivotZ, minLx, minLz, maxLx, maxLz] where the
+# blocked-cell (nodes[]==1) bounding box is in template-local coordinates and
+# the anchor math is x = anchorX + lx - pivotX, z = anchorZ - lz + pivotZ.
+with open(_os.path.join(_os.path.dirname(_os.path.abspath(__file__)),
+                        "oe_object_footprints.json"), encoding="utf-8") as _f:
+    OE_OBJECT_FOOTPRINTS = _json.load(_f).get("footprints", {})
+
 OE_EMIT_SID = OE_OBJECT_CORRESPONDENCE["emit"]
 OE_DISPATCH = OE_OBJECT_CORRESPONDENCE["dispatch"]
 OE_SCENERY_ROLE = OE_OBJECT_CORRESPONDENCE["scenery"]
@@ -1734,6 +1743,16 @@ def _h3m_footprint_nw(ref):
     return (min(dx for dx, _ in cells), min(dy for _, dy in cells))
 
 
+def _oe_sid_footprint(sid):
+    """(pivotX, pivotZ, minLx, minLz, maxLx, maxLz) of an OE template's
+    blocked cells from the Core.zip object catalog, or None when the sid
+    has no known footprint (treated as a single cell at the anchor)."""
+    fp = OE_OBJECT_FOOTPRINTS.get(sid)
+    if not fp:
+        return None
+    return (fp[2], fp[3], fp[4], fp[5], fp[6], fp[7])
+
+
 def _hommoe_main_town(spawn, adventure, width, height=0):
     """Resolve a spawn entry's main town (spawnPointType 0 = city spawner).
 
@@ -1768,13 +1787,21 @@ def _hommoe_main_town(spawn, adventure, width, height=0):
             generate_hero = bool(row.get("spawnHero", True))
             break
     x, y = _oe_xy(node, width, height)
-    # footprint over anchor: unified anchor = SE corner of the footprint
+    # footprint over anchor: unified anchor = SE corner of the blocked bbox
     sid_str = spawn_sid if isinstance(spawn_sid, str) else (
         ",".join(spawn_sid) if isinstance(spawn_sid, list) else str(spawn_sid))
-    dx, dy = _h3m_footprint_nw(_unified_obj_h3m_ref(
-        {"group": _hommoe_sid_group(sid_str), "index": 0}))
-    x -= dx
-    y -= dy
+    _fp = _oe_sid_footprint(sid_str)
+    if _fp:
+        _pivx, _pivz, _, _, _maxlx, _maxlz = _fp
+        x += _maxlx - _pivx
+        y += _maxlz - _pivz
+    else:
+        dx, dy = _h3m_footprint_nw(_unified_obj_h3m_ref(
+            {"group": _hommoe_sid_group(sid_str), "index": 0}))
+        x -= dx
+        y -= dy
+    x = min(max(x, 0), width - 1)
+    y = min(max(y, 0), height - 1)
     return OrderedDict([
         ("generateHero", generate_hero),
         ("x", x),
@@ -2083,13 +2110,21 @@ def _hommoe_objects_to_unified(adventure, width, height=0):
 
     def add_object(oid, group_name, sid, node, rotation, level, index=None):
         x, y = _oe_xy(node, width, height)
-        # footprint over anchor: the OE node is the footprint's NW corner,
-        # the unified anchor is the h3m-convention SE corner of the same
-        # footprint (approximated with the resolved h3m def's mask)
-        dx, dy = _h3m_footprint_nw(_unified_obj_h3m_ref(
-            {"group": group_name, "index": index or 0, "sourceSid": sid}))
-        x -= dx
-        y -= dy
+        # footprint over anchor: the unified anchor is the SE corner of the
+        # object's blocked bbox; from the OE catalog when the sid is known,
+        # else approximated with the resolved h3m def's mask
+        _fp = _oe_sid_footprint(sid)
+        if _fp:
+            _pivx, _pivz, _, _, _maxlx, _maxlz = _fp
+            x += _maxlx - _pivx
+            y += _maxlz - _pivz
+        else:
+            dx, dy = _h3m_footprint_nw(_unified_obj_h3m_ref(
+                {"group": group_name, "index": index or 0, "sourceSid": sid}))
+            x -= dx
+            y -= dy
+        x = min(max(x, 0), width - 1)
+        y = min(max(y, 0), height - 1)
         if index is None:
             index = group_counters.get(group_name, 0)
             group_counters[group_name] = index + 1
@@ -6210,14 +6245,27 @@ def unified_to_hommoe(unified):
                     # lossless passthrough: keep the original OE node
                     node = int(obj["sourceNode"])
                 else:
-                    # footprint over anchor: the OE node is the footprint's
-                    # NW corner, the unified anchor its SE corner
+                    # footprint over anchor: align the OE template's blocked
+                    # bbox NW corner with the source footprint's NW corner
+                    # (unified anchor = h3m SE corner of the source def)
                     _ref = ref
                     if _ref is None:
                         _ref = _unified_obj_h3m_ref(
                             obj, terrain_by_pos.get((int(x), int(y)), "Grass"))
-                    _dx, _dy = _h3m_footprint_nw(_ref)
-                    node = _oe_node(int(x) + _dx, int(y) + _dy, width, height)
+                    _sdx, _sdy = _h3m_footprint_nw(_ref)
+                    _fp = _oe_sid_footprint(sid) if sid else None
+                    if _fp:
+                        _pivx, _pivz, _minlx, _minlz, _, _ = _fp
+                        _nx = int(x) + _sdx + _pivx - _minlx
+                        _ny = int(y) + _sdy + _pivz - _minlz
+                    else:
+                        _nx = int(x) + _sdx
+                        _ny = int(y) + _sdy
+                    # an edge object's footprint may overhang the map border
+                    # (H3 allows it); clamp the node inward like the game does
+                    _nx = min(max(_nx, 0), width - 1)
+                    _ny = min(max(_ny, 0), height - 1)
+                    node = _oe_node(_nx, _ny, width, height)
             except (ValueError, IndexError):
                 node = 0
             rotation = obj.get("rotation", 0)
